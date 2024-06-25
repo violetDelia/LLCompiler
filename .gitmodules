@@ -1,0 +1,4 @@
+[submodule "3rdparty/onnx"]
+	path = 3rdparty/onnx
+	url = https://github.com/onnx/onnx.git
+	#branch = rel-1.16.0
