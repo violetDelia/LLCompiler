@@ -8,23 +8,17 @@ unset(STATIC_WINDOWS_RUNTIME CACHE)
 # cant set to OFF
 option(BUILD_SHARED_LIBS "build shared libs" OFF)
 option(TEST "run test" ON)
-# cant set to OFF
-set(STATIC_WINDOWS_RUNTIME OFF)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 
-message(STATUS BUILD_SHARED_LIBS:${BUILD_SHARED_LIBS})
-message(STATUS STATIC_WINDOWS_RUNTIME:${STATIC_WINDOWS_RUNTIME})
+
 ##---------- cmake setting ----------##
 CMAKE_MINIMUM_REQUIRED(VERSION 3.25)
 project(LLCompiler LANGUAGES C CXX)
-
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install")
 ##---------- policy ----------##
-if (POLICY CMP0135)
-    cmake_policy(SET CMP0135 NEW)
-endif ()
-if(POLICY CMP0148)
-    cmake_policy(SET CMP0148 NEW)
-endif () 
+cmake_policy(SET CMP0135 NEW)
+cmake_policy(SET CMP0148 NEW)
 cmake_policy(SET CMP0091 NEW)
 
 ##---------- define absolute path ----------##
@@ -32,7 +26,7 @@ cmake_path(APPEND LLCOMPILER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} "include")
 cmake_path(APPEND LLCOMPILER_SOUCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} "src")
 cmake_path(APPEND LLCOMPILER_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR} "cmake")
 cmake_path(APPEND LLCOMPILER_TOOLS_DIR ${CMAKE_CURRENT_SOURCE_DIR} "tools")
-cmake_path(APPEND LLCOMPILER_THIRDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR} "thirdparty")
+cmake_path(APPEND LLCOMPILER_THIRDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR} "third_party")
 
 
 ##---------- define install absolute path ----------##
@@ -58,31 +52,10 @@ if(MSVC)
     if(STATIC_WINDOWS_RUNTIME)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
-    set(CMAKE_EXE_LINKER_FLAGS
-      "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:msvcprt")
-    # foreach(COMPILE_FLAG
-    #     CMAKE_C_FLAGS_DEBUG
-    #     CMAKE_C_FLAGS_RELEASE
-    #     CMAKE_C_FLAGS_MINSIZEREL
-    #     CMAKE_C_FLAGS_RELWITHDEBINFO 
-    #     CMAKE_CXX_FLAGS_DEBUG
-    #     CMAKE_CXX_FLAGS_RELEASE
-    #     CMAKE_CXX_FLAGS_MINSIZEREL
-    #     CMAKE_CXX_FLAGS_RELWITHDEBINFO
-    # )
-    #     if (${COMPILE_FLAG} MATCHES "/MD")
-    #         string(REGEX REPLACE "/MD" "/MT" ${COMPILE_FLAG} "${${COMPILE_FLAG}}")
-    #     else()
-    #         set(Flags "")
-    #         set(${COMPILE_FLAG} "${${COMPILE_FLAG}} /MT")
-    #     endif()
-    #     message("${${COMPILE_FLAG}}")
-    # endforeach()
+    # set(CMAKE_EXE_LINKER_FLAGS
+    #   "${CMAKE_EXE_LINKER_FLAGS} /NODEFAULTLIB:msvcprt")
 endif()
 
-message(${CMAKE_C_FLAGS})
-message(${CMAKE_C_FLAGS_DEBUG})
-message(${CMAKE_C_FLAGS_RELEASE})
 ##---------- external library ----------##
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
 
@@ -91,6 +64,13 @@ add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 target_include_directories(main PRIVATE $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
 $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
 )
-target_link_libraries(main PRIVATE onnx)
+target_link_libraries(main PRIVATE  spdlog
+#onnx
+)
 
 
+message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})
+message(STATUS STATIC_WINDOWS_RUNTIME: ${STATIC_WINDOWS_RUNTIME})
+message(STATUS CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS})
+
+message(STATUS CMAKE_MODULE_PATH: ${CMAKE_MODULE_PATH})

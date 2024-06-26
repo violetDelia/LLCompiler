@@ -1,4 +1,19 @@
-[submodule "3rdparty/onnx"]
-	path = 3rdparty/onnx
+[submodule "third_party/onnx"]
+	path = third_party/onnx
 	url = https://github.com/onnx/onnx.git
-	#branch = rel-1.16.0
+	brach = rel-1.16.0
+
+[submodule "third_party/googletest"]
+	path = third_party/googletest
+	url = https://github.com/google/googletest.git
+	brach = v1.14.x
+
+[submodule "third_party/spdlog"]
+	path = third_party/spdlog
+	url = https://github.com/gabime/spdlog.git
+	branch = v2.x-fix-2113
+
+[submodule "third_party/llvm"]
+	path = third_party/llvm
+	url = https://github.com/llvm/llvm-project.git
+	branch = 18.x
