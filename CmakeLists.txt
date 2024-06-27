@@ -59,12 +59,15 @@ endif()
 ##---------- external library ----------##
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
 
+##---------- llcimpiler ----------##
+#add_library(llcompiler )
+
 ##---------- main ----------##
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 target_include_directories(main PRIVATE $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
 $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
 )
-target_link_libraries(main PRIVATE  spdlog
+target_link_libraries(main PRIVATE spdlog
 #onnx
 )
 

@@ -2,7 +2,7 @@
  * @Author: lfr 1733535832@qq.com
  * @Date: 2024-06-27 00:14:56
  * @LastEditors: lfr 1733535832@qq.com
- * @LastEditTime: 2024-06-27 01:51:22
+ * @LastEditTime: 2024-06-27 02:07:51
  * @FilePath: \LLCompiler\include\llcompiler\utils\logger.h
  * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置
  * 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
@@ -46,7 +46,7 @@ enum LOG_LEVER {
   LOG_LEVER_FATAL = 5,
 };
 
-void register_logger(const char *name, const char *filename) {
+void register_logger(const char *module, const char *filename) {
   spdlog::sinks_init_list sinks;
   if (filename == "") {
     auto sink_c = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
@@ -54,11 +54,38 @@ void register_logger(const char *name, const char *filename) {
   } else {
     auto sink_c = std::make_shared<spdlog::sinks::stdout_color_sink_st>();
     auto sink_f = std::make_shared<spdlog::sinks::basic_file_sink_st>(
-        fmt::format("{}/{}.log", filename, name));
+        fmt::format("{}/{}.log", filename, module));
     spdlog::sinks_init_list sinks = {sink_c, sink_f};
   }
-  auto log = std::make_shared<spdlog::logger>(name, sinks.begin(), sinks.end());
+  auto log = std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
   spdlog::register_logger(log);
 }
-
 } // namespace llc::logger
+// #define LOG_ERROR(msg...)                                           \
+//     if (LITE_ERROR >= g_log_level) {                                \
+//         __tinynn_log__("TinyNN ERROR:%s@%d: ", __func__, __LINE__); \
+//         __tinynn_log__(msg);                                        \
+//     }
+// #define LOG_ERROR_NO_PREFIX(msg...)  \
+//     if (LITE_ERROR >= g_log_level) { \
+//         __tinynn_log__(msg);         \
+//     }
+// #define LOG_WARNING(msg...)                                        \
+//     if (LITE_WARN >= g_log_level) {                                \
+//         __tinynn_log__("TinyNN WARN:%s@%d: ", __func__, __LINE__); \
+//         __tinynn_log__(msg);                                       \
+//     }
+// #define LOG_INFO(msg...)                                           \
+//     if (LITE_INFO >= g_log_level) {                                \
+//         __tinynn_log__("TinyNN INFO:%s@%d: ", __func__, __LINE__); \
+//         __tinynn_log__(msg);                                       \
+//     }
+// #define LOG_DEBUG(msg...)                                           \
+//     if (LITE_DEBUG >= g_log_level) {                                \
+//         __tinynn_log__("TinyNN DEBUG:%s@%d: ", __func__, __LINE__); \
+//         __tinynn_log__(msg);                                        \
+//     }
+// #define LOG_DEBUG_NO_PREFIX(msg...)  \
+//     if (LITE_DEBUG >= g_log_level) { \
+//         __tinynn_log__(msg);         \
+//     }

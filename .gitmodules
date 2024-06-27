@@ -15,5 +15,5 @@
 
 [submodule "third_party/llvm"]
 	path = third_party/llvm
-	url = https://github.com/llvm/llvm-project.git
+	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git
 	branch = 18.x
