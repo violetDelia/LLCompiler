@@ -22,48 +22,45 @@
 namespace llc::logger {
 void register_logger(const char *module, const char *root_path,
                      const LOG_LEVER lever) {
-  spdlog::sinks_init_list sinks;
-  if (root_path == "") {
-    auto sink_c = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    spdlog::sinks_init_list sinks = {sink_c};
-  } else {
-    auto sink_c = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-    auto sink_f = std::make_shared<spdlog::sinks::basic_file_sink_mt>(
-        fmt::format("{}/{}.log", root_path, module));
-    spdlog::sinks_init_list sinks = {sink_c, sink_f};
+  std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> sink_c =
+      std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+  std::shared_ptr<spdlog::sinks::basic_file_sink_mt> sink_f;
+  if (root_path != "") {
+    auto module_file = fmt::format("{}/{}.log", root_path, module);
+    sink_f =
+        std::make_shared<spdlog::sinks::basic_file_sink_mt>(module_file, true);
   }
+  spdlog::sinks_init_list sinks = {sink_c, sink_f};
   auto log =
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
   log->set_level(static_cast<spdlog::level>(lever));
   spdlog::register_logger(log);
 }
 
-LLC_CONSTEXPR
-llc::logger::Logger_Stream::Logger_Stream(const char *module,
-                                          llc::logger::LOG_LEVER level)
-    : _module(module), _level(level) {};
+LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log) : logger_(log) {};
+LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const char *message) {
+  message_ << message;
+  return *this;
+}
 
-void llc::logger::Logger_Stream::operator<<(const char *message) {
-  auto logger = spdlog::get(this->_module);
-  switch (this->_level) {
-  case TRACE:
-    logger->trace(message);
-    break;
-  case DEBUG:
-    logger->debug(message);
-    break;
-  case INFO:
-    logger->info(message);
-    break;
-  case WARN:
-    logger->warn(message);
-    break;
-  case ERROR:
-    logger->error(message);
-    break;
-  case FATAL:
-    logger->critical(message);
-    break;
-  }
-};
+LLC_CONSTEXPR LoggerStream::~LoggerStream() {
+  logger_->info(message_.str().c_str());
+}
+
+LLC_CONSTEXPR Logger::Logger(const char *module, LOG_LEVER level)
+    : module_(module), level_(level) {}
+
+LLC_CONSTEXPR LoggerStream Logger::stream() { return LoggerStream(this); }
+
+LLC_CONSTEXPR void Logger::info(const char *message) {
+  std::shared_ptr<spdlog::logger> spd_logger = spdlog::get(this->module_);
+  spd_logger->log(static_cast<spdlog::level>(this->level_), message);
+}
+
+LLC_CONSTEXPR Logger::~Logger(){};
+
+LLC_CONSTEXPR NullStream &NullStream::operator<<(const char *message) {
+  return *this;
+}
+
 } // namespace llc::logger

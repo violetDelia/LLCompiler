@@ -20,3 +20,9 @@
 #define LLC_CONSTEXPR
 #endif // __cplusplus > 201703L
 #endif // LLCOMPILER_CORE_H
+
+namespace llc {
+// option log module
+static const char *const OPTION = "option";
+
+} // namespace llc

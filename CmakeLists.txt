@@ -1,4 +1,5 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.20)
+include(${LLCOMPILER_CMAKE_DIR}/cmake/functions.cmake)
 ##---------- options cache ----------##
 unset(BUILD_SHARED_LIBS CACHE)
 unset(TEST CACHE)
@@ -11,15 +12,21 @@ option(TEST "run test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 
 ##---------- policy ----------##
-if(POLICY CMP0135)
-    cmake_policy(SET CMP0135 NEW)
-endif()
-if(POLICY CMP0148)
-    cmake_policy(SET CMP0148 NEW)
-endif()
-if(POLICY CMP0091)
-    cmake_policy(SET CMP0091 NEW)
-endif()
+NEW_POLICY(CMP0135)
+NEW_POLICY(CMP0148)
+NEW_POLICY(CMP0091)
+NEW_POLICY(CMP0114)
+NEW_POLICY(CMP0116)
+# if(POLICY CMP0135)
+#     cmake_policy(SET CMP0135 NEW)
+# endif()
+# if(POLICY CMP0148)
+#     cmake_policy(SET CMP0148 NEW)
+# endif()
+# if(POLICY CMP0091)
+#     cmake_policy(SET CMP0091 NEW)
+# endif()
+set(CMAKE_POLICY_DEFAULT_CMP0126 NEW)
 
 
 ##---------- cmake setting ----------##
@@ -63,10 +70,8 @@ cmake_path(APPEND LLCOMPILER_INSTALL_CMAKE_DIR ${INSTALL_DIR} "cmake")
 
 ##---------- external library ----------##
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
-
 ##---------- serach sorce file ----------##
 file(GLOB_RECURSE LLCOMPILER_SOURCE_FILES ${LLCOMPILER_SOURCE_DIR}/*cpp )
-message(${LLCOMPILER_SOURCE_FILES})
 ##---------- compile llcimpiler ----------##
 if(BUILD_SHARED_LIBS)
     add_library(llcompiler SHARED ${LLCOMPILER_SOURCE_FILES})

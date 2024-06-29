@@ -25,10 +25,12 @@
 #ifndef LLCOMPILER_UTILS_LOGGER_H
 #define LLCOMPILER_UTILS_LOGGER_H
 #include "llcompiler/core.h"
-
+#include <sstream>
 namespace llc::logger {
+class Logger;
+class LoggerStream;
+
 enum LOG_LEVER {
-  TRACE = 0,
   DEBUG = 1,
   INFO = 2,
   WARN = 3,
@@ -36,52 +38,60 @@ enum LOG_LEVER {
   FATAL = 5,
 };
 
-/**
- * @brief 注册日志
- * @param  module 模块名
- * @param  root_path 日志根目录
- * @author 时光丶人爱 (1733535832@qq.com)
- * @date 2024-06-27
- */
 void register_logger(const char *module, const char *root_path,
                      const LOG_LEVER lever);
 
-/**
- * @brief 日志流,用来辅助实现宏
- * @author 时光丶人爱 (1733535832@qq.com)
- * @date 2024-06-28
- */
-class Logger_Stream {
+class LoggerStream {
 public:
-  LLC_CONSTEXPR Logger_Stream(const char *module, LOG_LEVER level);
-
-  /**
-   * @brief 输入日志信息
-   * @param  message 日志信息
-   * @author 时光丶人爱 (1733535832@qq.com)
-   * @date 2024-06-28
-   */
-  void operator<<(const char *message);
+  LLC_CONSTEXPR LoggerStream(Logger *log);
+  LLC_CONSTEXPR LoggerStream &operator<<(const char *message);
+  LLC_CONSTEXPR virtual ~LoggerStream();
 
 protected:
-  const char *_module;
-  LOG_LEVER _level;
+  std::stringstream message_;
+  Logger *logger_;
+};
+
+class Logger {
+public:
+  LLC_CONSTEXPR Logger(const char *module, LOG_LEVER level);
+  LLC_CONSTEXPR LoggerStream stream();
+  LLC_CONSTEXPR void info(const char *message);
+  LLC_CONSTEXPR virtual ~Logger();
+
+protected:
+  const char *module_;
+  LOG_LEVER level_;
+};
+
+class NullStream {
+public:
+  LLC_CONSTEXPR NullStream &operator<<(const char *message);
 };
 
 } // namespace llc::logger
 #ifdef LLCOMPILER_HAS_LOG
-#define LLCOMPILER_INIT_LOGGER(module, root, lever) register_logger(module, root, lever);
+#define LLCOMPILER_INIT_LOGGER(module, root, lever)                            \
+  register_logger(module, root, lever);
+#define LOG(module, lever) llc::logger::Logger(module, lever).stream()
+#define CHECK_LOG(module, condition, lever)                                    \
+  if (condition) {                                                             \
+    LOG(module, lever)                                                         \
+  }
+#else
+#define LLCOMPILER_INIT_LOGGER(module, root, lever)
+#define LOG(module, lever) llc::logger::NullStream()
+#define CHECK_LOG(module, condition, lever) llc::logger::NullStream()
+#endif // LLCOMPILER_HAS_LOG
 
-#define LOG(module, lever) llc::logger::Logger_Stream(module, lever)
-#define TRACE(module) llc::logger::Logger_Stream(module, llc::logger::TRACE)
-#define INFO(module) llc::logger::Logger_Stream(module, llc::logger::INFO)
-#define WARN(module) llc::logger::Logger_Stream(module, llc::logger::WARN)
-#define ERROR(module) llc::logger::Logger_Stream(module, llc::logger::ERROR)
-#define FATAL(module) llc::logger::Logger_Stream(module, llc::logger::FATAL)
+#define DEBUG(module) LOG(module, llc::logger::DEBUG)
+#define INFO(module) LOG(module, llc::logger::INFO)
+#define WARN(module) LOG(module, llc::logger::WARN)
+#define ERROR(module) LOG(module, llc::logger::ERROR)
+#define FATAL(module) LOG(module, llc::logger::FATAL)
 
 #define CHECK(module, condition)                                               \
-  if (condition)                                                               \
-  ERROR(module)
+  CHECK_LOG(module, condition, llc::logger::ERROR)
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
 #define CHECK_NE(module, val1, val2) CHECK(module, val1 != val2)
 #define CHECK_LT(module, val1, val2) CHECK(module, val1 < val2)
@@ -89,32 +99,20 @@ protected:
 #define CHECK_GT(module, val1, val2) CHECK(module, val1 > val2)
 #define CHECK_GE(module, val1, val2) CHECK(module, val1 >= val2)
 
-#define CHECK_LOG(module, condition, lever)                                    \
-  if (condition)                                                               \
-  LOG(module, lever)
-#define LOG_EQ(module, val1, val2, lever) CHECK(module, val1 == val2, lever)
-#define LOG_NE(module, val1, val2, lever) CHECK(module, val1 != val2, lever)
-#define LOG_LT(module, val1, val2, lever) CHECK(module, val1 < val2, lever)
-#define LOG_LE(module, val1, val2, lever) CHECK(module, val1 <= val2, lever)
-#define LOG_GT(module, val1, val2, lever) CHECK(module, val1 > val2, lever)
-#define LOG_GE(module, val1, val2, lever) CHECK(module, val1 >= val2, lever)
-#else
-#define LLCOMPILER_INIT_LOGGER(module, root, lever)
+#define DCHECK(module, condition)                                              \
+  CHECK_LOG(module, condition, llc::logger::DEBUG)
+#define DCHECK_EQ(module, val1, val2) DCHECK(module, val1 == val2)
+#define DCHECK_NE(module, val1, val2) DCHECK(module, val1 != val2)
+#define DCHECK_LT(module, val1, val2) DCHECK(module, val1 < val2)
+#define DCHECK_LE(module, val1, val2) DCHECK(module, val1 <= val2)
+#define DCHECK_GT(module, val1, val2) DCHECK(module, val1 > val2)
+#define DCHECK_GE(module, val1, val2) DCHECK(module, val1 >= val2)
 
-#define CHECK(module, condition)
-#define CHECK_EQ(module, val1, val2)
-#define CHECK_NE(module, val1, val2)
-#define CHECK_LT(module, val1, val2)
-#define CHECK_LE(module, val1, val2)
-#define CHECK_GT(module, val1, val2)
-#define CHECK_GE(module, val1, val2)
+#define LOG_EQ(module, val1, val2, lever) CHECK_LOG(module, val1 == val2, lever)
+#define LOG_NE(module, val1, val2, lever) CHECK_LOG(module, val1 != val2, lever)
+#define LOG_LT(module, val1, val2, lever) CHECK_LOG(module, val1 < val2, lever)
+#define LOG_LE(module, val1, val2, lever) CHECK_LOG(module, val1 <= val2, lever)
+#define LOG_GT(module, val1, val2, lever) CHECK_LOG(module, val1 > val2, lever)
+#define LOG_GE(module, val1, val2, lever) CHECK_LOG(module, val1 >= val2, lever)
 
-#define CHECK_LOG(module, condition, lever)
-#define LOG_EQ(module, val1, val2, lever)
-#define LOG_NE(module, val1, val2, lever)
-#define LOG_LT(module, val1, val2, lever)
-#define LOG_LE(module, val1, val2, lever)
-#define LOG_GT(module, val1, val2, lever)
-#define LOG_GE(module, val1, val2, lever)
-#endif // LLCOMPILER_HAS_LOG
 #endif // LLCOMPILER_UTILS_LOGGER_H
