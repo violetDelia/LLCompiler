@@ -14,30 +14,21 @@
 
 #include "llcompiler/compiler/option.h"
 
-namespace llc::option {
+namespace llc::option {}  // namespace llc::option
 
-ALIAS_FUNCTION(InitAttr, llvm::cl::init)
-using DescAttr = llvm::cl::desc;
-using ValueDescAttr = llvm::cl::value_desc;
-using CatAtrr = llvm::cl::cat;
-ALIAS_FUNCTION(ValuesAttr, llvm::cl::values)
+llvm::cl::OptionCategory LLC_CommonOption_Cat("global options", "");
 
-}  // namespace llc::option
+llvm::cl::opt<std::string> LLC_logRoot(
+    "log-root", llvm::cl::desc("the root to save log files"),
+    llvm::cl::value_desc("root_path"), llvm::cl::init(""),
+    llvm::cl::cat(LLC_CommonOption_Cat));
 
-llc::option::Category LLC_CommonOption_Cat("global options", "");
-
-llc::option::Option<llc::String> LLC_logRoot(
-    "log-root", llc::option::DescAttr("the root to save log files"),
-    llc::option::ValueDescAttr("root_path"), llc::option::InitAttr(""),
-    llc::option::CatAtrr(LLC_CommonOption_Cat));
-
-llc::option::Option<llc::option::LOG_LEVER> LLC_logLevel(
-    "log-lever", llc::option::DescAttr("log level"),
-    llc::option::ValuesAttr(
-        clEnumValN(llc::option::LOG_LEVER::DEBUG, "debug", ""),
-        clEnumValN(llc::option::LOG_LEVER::INFO, "info", ""),
-        clEnumValN(llc::option::LOG_LEVER::WARN, "warning", ""),
-        clEnumValN(llc::option::LOG_LEVER::ERROR, "error", ""),
-        clEnumValN(llc::option::LOG_LEVER::FATAL, "fatal", "")),
-    llc::option::InitAttr(llc::option::LOG_LEVER::DEBUG),
-    llc::option::CatAtrr(LLC_CommonOption_Cat));
+llvm::cl::opt<llc::logger::LOG_LEVER> LLC_logLevel(
+    "log-lever", llvm::cl::desc("log level"),
+    llvm::cl::values(clEnumValN(llc::logger::LOG_LEVER::DEBUG, "debug", ""),
+                     clEnumValN(llc::logger::LOG_LEVER::INFO, "info", ""),
+                     clEnumValN(llc::logger::LOG_LEVER::WARN, "warning", ""),
+                     clEnumValN(llc::logger::LOG_LEVER::ERROR, "error", ""),
+                     clEnumValN(llc::logger::LOG_LEVER::FATAL, "fatal", "")),
+    llvm::cl::init(llc::logger::LOG_LEVER::DEBUG),
+    llvm::cl::cat(LLC_CommonOption_Cat));

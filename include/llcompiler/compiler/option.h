@@ -14,19 +14,15 @@
 #ifndef INCLUDE_LLCOMPILER_COMPILER_OPTION_H_
 #define INCLUDE_LLCOMPILER_COMPILER_OPTION_H_
 
+#include <string>
+
 #include "llcompiler/core.h"
 #include "llcompiler/utils/logger.h"
 #include "llvm/Support/CommandLine.h"
 
-namespace llc::option {
-ALIAS_CLASS_1(Option, llvm::cl::opt)
-ALIAS_CLASS(Category, llvm::cl::OptionCategory)
-using logger::LOG_LEVER;
+namespace llc::option {}  // namespace llc::option
 
-}  // namespace llc::option
-
-extern llc::option::Category LLC_CommonOption_Cat;
-
-extern llc::option::Option<llc::String> LLC_logRoot;
-extern llc::option::Option<llc::option::LOG_LEVER> LLC_logLevel;
+extern llvm::cl::OptionCategory LLC_CommonOption_Cat;
+extern llvm::cl::opt<std::string> LLC_logRoot;
+extern llvm::cl::opt<llc::logger::LOG_LEVER> LLC_logLevel;
 #endif  // INCLUDE_LLCOMPILER_COMPILER_OPTION_H_

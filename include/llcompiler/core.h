@@ -38,10 +38,7 @@
   }
 namespace llc {
 /**********  external class define  **********/
-ALIAS_CLASS(String, std::string)
-ALIAS_CLASS_1(SharedPtr, std::shared_ptr)
-
 }  // namespace llc
 
 /**********  log module define  **********/
-extern const char  *LLC_OPTION;
+extern const char *LLC_OPTION;

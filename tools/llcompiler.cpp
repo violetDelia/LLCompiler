@@ -30,14 +30,9 @@
 //   }
 // }
 
-
-
 int main(int argc, char **argv) {
   llvm::cl::ParseCommandLineOptions(argc, argv);
   LLCOMPILER_INIT_LOGGER(LLC_OPTION, LLC_logRoot.getValue().data(),
                          LLC_logLevel.getValue());
-  INFO(LLC_OPTION) << "test";
-  INFO(LLC_OPTION) << "LOG_LEVER: ";
-  INFO(LLC_OPTION) << "LOG_ROOT_DIR: ";
   return 0;
 }

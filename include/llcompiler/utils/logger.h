@@ -24,8 +24,7 @@
  */
 #ifndef INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
 #define INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
-#include <sstream>
-
+#include <string>
 #include "llcompiler/core.h"
 
 namespace llc::logger {
@@ -47,10 +46,13 @@ class LoggerStream {
  public:
   LLC_CONSTEXPR LoggerStream(Logger *log);
   LLC_CONSTEXPR LoggerStream &operator<<(const char *message);
+  LLC_CONSTEXPR LoggerStream &operator<<(const std::string &str);
+  LLC_CONSTEXPR LoggerStream &operator<<(const int value);
+  LLC_CONSTEXPR LoggerStream &operator<<(const double value);
   LLC_CONSTEXPR virtual ~LoggerStream();
 
  protected:
-  std::stringstream message_;
+  std::string message_;
   Logger *logger_;
 };
 
@@ -68,7 +70,8 @@ class Logger {
 
 class NullStream {
  public:
-  LLC_CONSTEXPR NullStream &operator<<(const char *message);
+  template <class Ty>
+  LLC_CONSTEXPR NullStream &operator<<(Ty val);
 };
 
 }  // namespace llc::logger
