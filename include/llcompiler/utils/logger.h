@@ -25,7 +25,9 @@
 #ifndef INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
 #define INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
 #include <string>
+
 #include "llcompiler/core.h"
+
 
 namespace llc::logger {
 class Logger;

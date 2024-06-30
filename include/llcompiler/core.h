@@ -11,7 +11,16 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-
+/**
+ * @file logger.
+ * @brief Logger and macros for logging
+ * @author 时光丶人爱 (1733535832@qq.com)
+ * @version 1.0
+ * @date 2024-06-27
+ *
+ * @copyright Copyright (c) 2024  时光丶人爱
+ *
+ */
 #ifndef INCLUDE_LLCOMPILER_CORE_H_
 #define INCLUDE_LLCOMPILER_CORE_H_
 #if __cplusplus > 201703L
@@ -20,10 +29,7 @@
 #define LLC_CONSTEXPR
 #endif  // __cplusplus > 201703L
 #endif  // INCLUDE_LLCOMPILER_CORE_H_
-#include <memory>
-#include <string>
 #include <utility>
-
 /**********  alias define  **********/
 #define ALIAS_CLASS(Alias_Class, Original_Class) \
   using Alias_Class = Original_Class;

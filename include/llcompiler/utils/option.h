@@ -11,9 +11,18 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef INCLUDE_LLCOMPILER_COMPILER_OPTION_H_
-#define INCLUDE_LLCOMPILER_COMPILER_OPTION_H_
-
+#ifndef INCLUDE_LLCOMPILER_UTILS_OPTION_H_
+#define INCLUDE_LLCOMPILER_UTILS_OPTION_H_
+/**
+ * @file option.h
+ * @brief global options define
+ * @author 时光丶人爱 (1733535832@qq.com)
+ * @version 1.0
+ * @date 2024-07-01
+ *
+ * @copyright Copyright (c) 2024 时光丶人爱
+ *
+ */
 #include <string>
 
 #include "llcompiler/core.h"
@@ -25,4 +34,4 @@ namespace llc::option {}  // namespace llc::option
 extern llvm::cl::OptionCategory LLC_CommonOption_Cat;
 extern llvm::cl::opt<std::string> LLC_logRoot;
 extern llvm::cl::opt<llc::logger::LOG_LEVER> LLC_logLevel;
-#endif  // INCLUDE_LLCOMPILER_COMPILER_OPTION_H_
+#endif  // INCLUDE_LLCOMPILER_UTILS_OPTION_H_
