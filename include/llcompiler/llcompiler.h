@@ -4,7 +4,8 @@
  * @LastEditors: lfr 1733535832@qq.com
  * @LastEditTime: 2024-06-28 01:16:14
  * @FilePath: \LLCompiler\include\llcompiler\llcompiler.h
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
+ * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置
+ * 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
  */
 //    Copyright 2024 时光丶人爱
 
@@ -20,7 +21,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef LLCOMPILER_LLCOMPILER_H
-#define LLCOMPILER_LLCOMPILER_H
+#ifndef INCLUDE_LLCOMPILER_LLCOMPILER_H_
+#define INCLUDE_LLCOMPILER_LLCOMPILER_H_
 #include "llcompiler/utils/logger.h"
-#endif // LLCOMPILER_LLCOMPILER_H
+#endif // INCLUDE_LLCOMPILER_LLCOMPILER_H_

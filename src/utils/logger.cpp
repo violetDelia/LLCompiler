@@ -15,29 +15,37 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
-#include <iostream>
+#include <iomanip>
 #include <memory>
 #include <string>
 
 namespace llc::logger {
 void register_logger(const char *module, const char *root_path,
                      const LOG_LEVER lever) {
-  std::shared_ptr<spdlog::sinks::stdout_color_sink_mt> sink_c =
-      std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-  std::shared_ptr<spdlog::sinks::basic_file_sink_mt> sink_f;
-  if (root_path != "") {
-    auto module_file = fmt::format("{}/{}.log", root_path, module);
-    sink_f =
-        std::make_shared<spdlog::sinks::basic_file_sink_mt>(module_file, true);
+  using console_sink = spdlog::sinks::stdout_color_sink_mt;
+  using file_sink = spdlog::sinks::basic_file_sink_mt;
+
+  auto sink_c = std::make_shared<console_sink>();
+  std::shared_ptr<file_sink> sink_f;
+  if (strcmp(root_path, "")) {
+    auto now = std::chrono::system_clock::now();
+    auto time_now = std::chrono::system_clock::to_time_t(now);
+    std::stringstream time_ss;
+    time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%/d%H:%M");
+    auto time_str = time_ss.str().c_str();
+    auto log_file = fmt::format("{}-{}/{}.log", root_path, time_str, module);
+    sink_f = std::make_shared<file_sink>(log_file, true);
   }
   spdlog::sinks_init_list sinks = {sink_c, sink_f};
-  auto log =
-      std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
+  auto log = std::make_shared<spdlog::logger>(module, sinks);
   log->set_level(static_cast<spdlog::level>(lever));
   spdlog::register_logger(log);
+  INFO(llc::OPTION) << "LOG_LEVER: ";
+  INFO(llc::OPTION) << "LOG_ROOT_DIR: ";
 }
 
-LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log) : logger_(log) {};
+LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log) : logger_(log) {}
+
 LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const char *message) {
   message_ << message;
   return *this;
@@ -57,7 +65,7 @@ LLC_CONSTEXPR void Logger::info(const char *message) {
   spd_logger->log(static_cast<spdlog::level>(this->level_), message);
 }
 
-LLC_CONSTEXPR Logger::~Logger(){};
+LLC_CONSTEXPR Logger::~Logger() {}
 
 LLC_CONSTEXPR NullStream &NullStream::operator<<(const char *message) {
   return *this;

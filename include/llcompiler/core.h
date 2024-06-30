@@ -12,14 +12,14 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef LLCOMPILER_CORE_H
-#define LLCOMPILER_CORE_H
+#ifndef INCLUDE_LLCOMPILER_CORE_H_
+#define INCLUDE_LLCOMPILER_CORE_H_
 #if __cplusplus > 201703L
 #define LLC_CONSTEXPR constexpr
 #else
 #define LLC_CONSTEXPR
 #endif // __cplusplus > 201703L
-#endif // LLCOMPILER_CORE_H
+#endif // INCLUDE_LLCOMPILER_CORE_H_
 
 namespace llc {
 // option log module

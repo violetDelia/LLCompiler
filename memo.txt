@@ -1,0 +1,8 @@
+#build mlir in windows
+cmake -G "Visual Studio 17 2022" ../llvm -DLLVM_ENABLE_PROJECTS=mlir -DLLVM_BUILD_EXAMPLES=ON -DLLVM_TARGETS_TO_BUILD="Native;NVPTX;AMDGPU" -DCMAKE_BUILD_TYPE=Release -DLLVM_ENABLE_ASSERTIONS=ON
+
+#enter python env
+./torch_mlir/Scripts/activate
+
+# install python librarys
+pip install -r requirements.txt

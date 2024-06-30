@@ -2,3 +2,7 @@ build
 .vscode
 models
 other_party
+log
+torch_mlir
+install
+__pycache__

@@ -1,4 +1,4 @@
-#git submodule update --init --recursive
+# git submodule update --init --recursive
 [submodule "third_party/onnx"]
 	path = third_party/onnx
 	url = https://github.com/onnx/onnx.git
@@ -18,3 +18,8 @@
 	path = third_party/llvm-project
 	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git
 	branch = 18.x
+
+[submodule "third_party/pybind11"]
+    path = third_party/pybind11
+    url = https://github.com/pybind/pybind11.git
+    branch = master

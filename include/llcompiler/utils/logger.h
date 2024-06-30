@@ -22,8 +22,8 @@
  * @copyright Copyright (c) 2024  时光丶人爱
  *
  */
-#ifndef LLCOMPILER_UTILS_LOGGER_H
-#define LLCOMPILER_UTILS_LOGGER_H
+#ifndef INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
+#define INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
 #include "llcompiler/core.h"
 #include <sstream>
 namespace llc::logger {
@@ -115,4 +115,4 @@ public:
 #define LOG_GT(module, val1, val2, lever) CHECK_LOG(module, val1 > val2, lever)
 #define LOG_GE(module, val1, val2, lever) CHECK_LOG(module, val1 >= val2, lever)
 
-#endif // LLCOMPILER_UTILS_LOGGER_H
+#endif // INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
