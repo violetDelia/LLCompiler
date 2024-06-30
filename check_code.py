@@ -14,11 +14,17 @@ for root in check_dirs:
 
 
 def cpplint():
-    cpplint_filters = ["-build/include_order","-build/namespaces","-whitespace/comments","-whitespace/indent"]
+    cpplint_filters = [
+        # "-build/include_order",
+        # "-build/namespaces",
+        # "-whitespace/comments",
+        # "-whitespace/indent",
+    ]
     command = "cpplint "
-    command += "--filter="
-    for filter in cpplint_filters:
-        command += "{},".format(filter)
+    if len(cpplint_filters) != 0:
+        command += "--filter="
+        for filter in cpplint_filters:
+            command += "{},".format(filter)
     for file in cpp_files:
         os.system("{} {}".format(command, file))
     for file in h_files:

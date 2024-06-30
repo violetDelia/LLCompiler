@@ -11,13 +11,15 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <string>
+
 #include "llcompiler/utils/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
-#include <iomanip>
-#include <memory>
-#include <string>
 
 namespace llc::logger {
 void register_logger(const char *module, const char *root_path,
@@ -40,11 +42,13 @@ void register_logger(const char *module, const char *root_path,
   auto log = std::make_shared<spdlog::logger>(module, sinks);
   log->set_level(static_cast<spdlog::level>(lever));
   spdlog::register_logger(log);
-  INFO(llc::OPTION) << "LOG_LEVER: ";
-  INFO(llc::OPTION) << "LOG_ROOT_DIR: ";
+  // INFO(LLC_OPTION) << "LOG_LEVER: ";
+  // INFO(LLC_OPTION) << "LOG_ROOT_DIR: ";
 }
 
-LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log) : logger_(log) {}
+LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log) : logger_(log) {
+  std::cout << "LoggerStream" << std::endl;
+}
 
 LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const char *message) {
   message_ << message;
@@ -53,22 +57,28 @@ LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const char *message) {
 
 LLC_CONSTEXPR LoggerStream::~LoggerStream() {
   logger_->info(message_.str().c_str());
+  std::cout << "~LoggerStream" << std::endl;
 }
 
 LLC_CONSTEXPR Logger::Logger(const char *module, LOG_LEVER level)
-    : module_(module), level_(level) {}
+    : module_(module), level_(level) {
+  std::cout << "Logger" << std::endl;
+}
 
 LLC_CONSTEXPR LoggerStream Logger::stream() { return LoggerStream(this); }
 
 LLC_CONSTEXPR void Logger::info(const char *message) {
+  std::cout << "info" << std::endl;
   std::shared_ptr<spdlog::logger> spd_logger = spdlog::get(this->module_);
-  spd_logger->log(static_cast<spdlog::level>(this->level_), message);
+  std::cout << "message: " << message << std::endl;
+  spd_logger->info(message);
+  std::cout << "out info" << std::endl;
 }
 
-LLC_CONSTEXPR Logger::~Logger() {}
+LLC_CONSTEXPR Logger::~Logger() { std::cout << "~Logger" << std::endl; }
 
 LLC_CONSTEXPR NullStream &NullStream::operator<<(const char *message) {
   return *this;
 }
 
-} // namespace llc::logger
+}  // namespace llc::logger

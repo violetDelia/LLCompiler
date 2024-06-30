@@ -24,8 +24,10 @@
  */
 #ifndef INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
 #define INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
-#include "llcompiler/core.h"
 #include <sstream>
+
+#include "llcompiler/core.h"
+
 namespace llc::logger {
 class Logger;
 class LoggerStream;
@@ -42,47 +44,47 @@ void register_logger(const char *module, const char *root_path,
                      const LOG_LEVER lever);
 
 class LoggerStream {
-public:
+ public:
   LLC_CONSTEXPR LoggerStream(Logger *log);
   LLC_CONSTEXPR LoggerStream &operator<<(const char *message);
   LLC_CONSTEXPR virtual ~LoggerStream();
 
-protected:
+ protected:
   std::stringstream message_;
   Logger *logger_;
 };
 
 class Logger {
-public:
+ public:
   LLC_CONSTEXPR Logger(const char *module, LOG_LEVER level);
   LLC_CONSTEXPR LoggerStream stream();
   LLC_CONSTEXPR void info(const char *message);
   LLC_CONSTEXPR virtual ~Logger();
 
-protected:
+ protected:
   const char *module_;
   LOG_LEVER level_;
 };
 
 class NullStream {
-public:
+ public:
   LLC_CONSTEXPR NullStream &operator<<(const char *message);
 };
 
-} // namespace llc::logger
+}  // namespace llc::logger
 #ifdef LLCOMPILER_HAS_LOG
-#define LLCOMPILER_INIT_LOGGER(module, root, lever)                            \
-  register_logger(module, root, lever);
+#define LLCOMPILER_INIT_LOGGER(module, root, lever) \
+  llc::logger::register_logger(module, root, lever);
 #define LOG(module, lever) llc::logger::Logger(module, lever).stream()
-#define CHECK_LOG(module, condition, lever)                                    \
-  if (condition) {                                                             \
-    LOG(module, lever)                                                         \
+#define CHECK_LOG(module, condition, lever) \
+  if (condition) {                          \
+    LOG(module, lever)                      \
   }
 #else
 #define LLCOMPILER_INIT_LOGGER(module, root, lever)
 #define LOG(module, lever) llc::logger::NullStream()
 #define CHECK_LOG(module, condition, lever) llc::logger::NullStream()
-#endif // LLCOMPILER_HAS_LOG
+#endif  // LLCOMPILER_HAS_LOG
 
 #define DEBUG(module) LOG(module, llc::logger::DEBUG)
 #define INFO(module) LOG(module, llc::logger::INFO)
@@ -90,7 +92,7 @@ public:
 #define ERROR(module) LOG(module, llc::logger::ERROR)
 #define FATAL(module) LOG(module, llc::logger::FATAL)
 
-#define CHECK(module, condition)                                               \
+#define CHECK(module, condition) \
   CHECK_LOG(module, condition, llc::logger::ERROR)
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
 #define CHECK_NE(module, val1, val2) CHECK(module, val1 != val2)
@@ -99,7 +101,7 @@ public:
 #define CHECK_GT(module, val1, val2) CHECK(module, val1 > val2)
 #define CHECK_GE(module, val1, val2) CHECK(module, val1 >= val2)
 
-#define DCHECK(module, condition)                                              \
+#define DCHECK(module, condition) \
   CHECK_LOG(module, condition, llc::logger::DEBUG)
 #define DCHECK_EQ(module, val1, val2) DCHECK(module, val1 == val2)
 #define DCHECK_NE(module, val1, val2) DCHECK(module, val1 != val2)
@@ -115,4 +117,6 @@ public:
 #define LOG_GT(module, val1, val2, lever) CHECK_LOG(module, val1 > val2, lever)
 #define LOG_GE(module, val1, val2, lever) CHECK_LOG(module, val1 >= val2, lever)
 
-#endif // INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
+#define TYPE(val) typeid(val).name()
+
+#endif  // INCLUDE_LLCOMPILER_UTILS_LOGGER_H_

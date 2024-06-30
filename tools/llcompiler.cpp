@@ -11,33 +11,33 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-
+#ifndef LLCOMPILER_HAS_LOG
 #define LLCOMPILER_HAS_LOG
-#include "llcompiler/llcompiler.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/InitLLVM.h"
+#endif
 #include <fstream>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
-using namespace llvm;
-using namespace std;
 
-static cl::OptionCategory cat("split-file Options");
-static cl::opt<string> loggerRoot(cl::Positional, cl::desc("<input file>"),
-                                  cl::init("-"));
+#include "llcompiler/llcompiler.h"
+#include "llcompiler/utils/logger.h"
 
-cl::opt<string> OutputFilename("o", cl::desc("Specify output filename"),
-                               cl::value_desc("filename"));
-// cl::opt<string> InputFilename(cl::Positional, cl::desc("<input file>"),
-// cl::init("-")); cl::opt<string> InputFilename(cl::Positional,
-// cl::desc("<input file>"), cl::Required); cl::opt<string>
-// InputFilename(cl::Positional, cl::Required, cl::desc("<input file>"));
+// void force_hidden_options(
+//     llvm::ArrayRef<const llvm::cl::OptionCategory *> categories) {
+//   for (const auto &category : categories) {
+//     category->
+//   }
+// }
+
+
 
 int main(int argc, char **argv) {
-  cl::ParseCommandLineOptions(argc, argv);
-  LLCOMPILER_INIT_LOGGER(llc::OPTION, "", llc::logger::DEBUG);
-
+  llvm::cl::ParseCommandLineOptions(argc, argv);
+  LLCOMPILER_INIT_LOGGER(LLC_OPTION, LLC_logRoot.getValue().data(),
+                         LLC_logLevel.getValue());
+  INFO(LLC_OPTION) << "test";
+  INFO(LLC_OPTION) << "LOG_LEVER: ";
+  INFO(LLC_OPTION) << "LOG_ROOT_DIR: ";
   return 0;
 }

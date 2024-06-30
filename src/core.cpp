@@ -11,7 +11,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef INCLUDE_LLCOMPILER_UTILS_OPTION_H_
-#define INCLUDE_LLCOMPILER_UTILS_OPTION_H_
-namespace llc::option {}
-#endif // INCLUDE_LLCOMPILER_UTILS_OPTION_H_
+#include "llcompiler/core.h"
+
+namespace llc {}  // namespace llc
+const char *LLC_OPTION = "option";

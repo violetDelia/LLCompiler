@@ -1,12 +1,3 @@
-/*
- * @Author: lfr 1733535832@qq.com
- * @Date: 2024-06-28 01:12:56
- * @LastEditors: lfr 1733535832@qq.com
- * @LastEditTime: 2024-06-28 01:16:14
- * @FilePath: \LLCompiler\include\llcompiler\llcompiler.h
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置
- * 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
 //    Copyright 2024 时光丶人爱
 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,11 +11,22 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#ifndef INCLUDE_LLCOMPILER_COMPILER_OPTION_H_
+#define INCLUDE_LLCOMPILER_COMPILER_OPTION_H_
 
-#ifndef INCLUDE_LLCOMPILER_LLCOMPILER_H_
-#define INCLUDE_LLCOMPILER_LLCOMPILER_H_
-#include "llcompiler/compiler/option.h"
+#include "llcompiler/core.h"
 #include "llcompiler/utils/logger.h"
-#include "llcompiler/llcompiler.h"
+#include "llvm/Support/CommandLine.h"
 
-#endif  // INCLUDE_LLCOMPILER_LLCOMPILER_H_
+namespace llc::option {
+ALIAS_CLASS_1(Option, llvm::cl::opt)
+ALIAS_CLASS(Category, llvm::cl::OptionCategory)
+using logger::LOG_LEVER;
+
+}  // namespace llc::option
+
+extern llc::option::Category LLC_CommonOption_Cat;
+
+extern llc::option::Option<llc::String> LLC_logRoot;
+extern llc::option::Option<llc::option::LOG_LEVER> LLC_logLevel;
+#endif  // INCLUDE_LLCOMPILER_COMPILER_OPTION_H_

@@ -18,11 +18,30 @@
 #define LLC_CONSTEXPR constexpr
 #else
 #define LLC_CONSTEXPR
-#endif // __cplusplus > 201703L
-#endif // INCLUDE_LLCOMPILER_CORE_H_
+#endif  // __cplusplus > 201703L
+#endif  // INCLUDE_LLCOMPILER_CORE_H_
+#include <memory>
+#include <string>
+#include <utility>
 
+/**********  alias define  **********/
+#define ALIAS_CLASS(Alias_Class, Original_Class) \
+  using Alias_Class = Original_Class;
+#define ALIAS_CLASS_1(Alias_Class, Original_Class) \
+  template <class Arg>                             \
+  using Alias_Class = Original_Class<Arg>;
+#define ALIAS_FUNCTION(Alias_Func, Original_Func)                            \
+  template <typename... Args>                                                \
+  inline auto Alias_Func(Args &&...args) -> decltype(Original_Func(          \
+                                             std::forward<Args>(args)...)) { \
+    return Original_Func(std::forward<Args>(args)...);                       \
+  }
 namespace llc {
-// option log module
-static const char *const OPTION = "option";
+/**********  external class define  **********/
+ALIAS_CLASS(String, std::string)
+ALIAS_CLASS_1(SharedPtr, std::shared_ptr)
 
-} // namespace llc
+}  // namespace llc
+
+/**********  log module define  **********/
+extern const char  *LLC_OPTION;
