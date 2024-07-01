@@ -29,10 +29,11 @@
 #include "llcompiler/utils/logger.h"
 #include "llvm/Support/CommandLine.h"
 
-namespace llc::option {}  // namespace llc::option
-
-/**********  options define  **********/
+namespace llc::option {
+/**********  options extern  **********/
 extern llvm::cl::OptionCategory commonOption_Cat;
 extern llvm::cl::opt<std::string> logRoot;
 extern llvm::cl::opt<llc::logger::LOG_LEVER> logLevel;
+}  // namespace llc::option
+
 #endif  // INCLUDE_LLCOMPILER_UTILS_OPTION_H_

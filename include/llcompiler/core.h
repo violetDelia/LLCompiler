@@ -43,8 +43,7 @@
     return Original_Func(std::forward<Args>(args)...);                       \
   }
 namespace llc {
-/**********  external class define  **********/
-}  // namespace llc
 
-/**********  log module define  **********/
-extern const char *GLOBAL_M;
+/**********  log module extern  **********/
+extern const char *GLOBAL;
+}  // namespace llc

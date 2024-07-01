@@ -17,8 +17,8 @@ namespace llc {
 
 void init_compiler(int argc, char **argv) {
   llvm::InitLLVM compiler(argc, argv);
-  LLCOMPILER_INIT_LOGGER(GLOBAL_M, logRoot.getValue().data(),
-                         logLevel.getValue())
+  LLCOMPILER_INIT_LOGGER(GLOBAL, option::logRoot.getValue().data(),
+                         option::logLevel.getValue())
   // LLCOMPILER_INIT_LOGGERS(logRoot.getValue().data(), logLevel.getValue(),
   //                         GLOBAL_M, "test");
 };

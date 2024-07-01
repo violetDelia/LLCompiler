@@ -32,7 +32,6 @@ namespace llc::logger {
 class Logger;
 class LoggerStream;
 
-
 enum LOG_LEVER {
   DEBUG = 1,
   INFO = 2,
@@ -44,7 +43,12 @@ enum LOG_LEVER {
 void register_logger(const char *module, const char *root_path,
                      const LOG_LEVER lever);
 
-class LoggerStream {
+class NullStream {
+ public:
+  template <class Ty>
+  LLC_CONSTEXPR NullStream &operator<<(Ty val);
+};
+class LoggerStream :public NullStream {
  public:
   LLC_CONSTEXPR LoggerStream(Logger *log);
   LLC_CONSTEXPR LoggerStream &operator<<(const char *message);
@@ -58,6 +62,8 @@ class LoggerStream {
   Logger *logger_;
 };
 
+
+
 class Logger {
  public:
   LLC_CONSTEXPR Logger(const char *module, LOG_LEVER level);
@@ -70,21 +76,14 @@ class Logger {
   LOG_LEVER level_;
 };
 
-class NullStream {
- public:
-  template <class Ty>
-  LLC_CONSTEXPR NullStream &operator<<(Ty val);
-};
-
 }  // namespace llc::logger
 #ifdef LLCOMPILER_HAS_LOG
 #define LLCOMPILER_INIT_LOGGER(module, root, lever) \
   llc::logger::register_logger(module, root, lever);
 #define LOG(module, lever) llc::logger::Logger(module, lever).stream()
-#define CHECK_LOG(module, condition, lever) \
-  if (condition) {                          \
-    LOG(module, lever)                      \
-  }
+#define CHECK_LOG(module, condition, lever)               \
+  condition ? llc::logger::Logger(module, lever).stream() \
+            : llc::logger::NullStream()
 #else
 #define LLCOMPILER_INIT_LOGGER(module, root, lever)
 #define LOG(module, lever) llc::logger::NullStream()

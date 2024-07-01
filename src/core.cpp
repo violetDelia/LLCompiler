@@ -14,6 +14,6 @@
 #include "llcompiler/core.h"
 
 namespace llc {
-const char const* GLOBAL_M = "global";
-
+/**********  log module define  **********/
+const char* GLOBAL = "global";
 }  // namespace llc
