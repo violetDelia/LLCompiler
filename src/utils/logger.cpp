@@ -41,8 +41,9 @@ void register_logger(const char *module, const char *root_path,
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
   log->set_level(static_cast<spdlog::level>(lever));
   spdlog::register_logger(log);
-  INFO(LLC_OPTION) << "LOG_LEVER: " << static_cast<int>(lever);
-  INFO(LLC_OPTION) << "LOG_ROOT_DIR: " << root_path;
+  INFO(GLOBAL_M) << "LOG_LEVER: " << static_cast<int>(lever);
+  INFO(GLOBAL_M) << "LOG_ROOT_DIR: " << root_path;
+  CHECK_LOG(GLOBAL_M, strcmp(root_path, ""), INFO) << "test";
 }
 
 LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log) : logger_(log) {}

@@ -13,5 +13,7 @@
 //    limitations under the License.
 #include "llcompiler/core.h"
 
-namespace llc {}  // namespace llc
-const char *LLC_OPTION = "option";
+namespace llc {
+const char const* GLOBAL_M = "global";
+
+}  // namespace llc

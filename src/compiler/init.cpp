@@ -11,25 +11,16 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLCOMPILER_HAS_LOG
-#define LLCOMPILER_HAS_LOG
-#endif
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <sstream>
-#include <string>
+#include "llcompiler/utils/option.h"
+#include "llvm/Support/InitLLVM.h"
+namespace llc {
 
-#include "llcompiler/llcompiler.h"
+void init_compiler(int argc, char **argv) {
+  llvm::InitLLVM compiler(argc, argv);
+  LLCOMPILER_INIT_LOGGER(GLOBAL_M, logRoot.getValue().data(),
+                         logLevel.getValue())
+  // LLCOMPILER_INIT_LOGGERS(logRoot.getValue().data(), logLevel.getValue(),
+  //                         GLOBAL_M, "test");
+};
 
-// void force_hidden_options(
-//     llvm::ArrayRef<const llvm::cl::OptionCategory *> categories) {
-//   for (const auto &category : categories) {
-//     category->
-//   }
-// }
-
-int main(int argc, char **argv) {
-  llc::init_compiler(argc, argv);
-  return 0;
-}
+}  // namespace llc

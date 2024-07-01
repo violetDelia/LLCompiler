@@ -47,4 +47,4 @@ namespace llc {
 }  // namespace llc
 
 /**********  log module define  **********/
-extern const char *LLC_OPTION;
+extern const char *GLOBAL_M;

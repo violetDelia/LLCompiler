@@ -1,12 +1,3 @@
-/*
- * @Author: lfr 1733535832@qq.com
- * @Date: 2024-06-28 01:12:56
- * @LastEditors: lfr 1733535832@qq.com
- * @LastEditTime: 2024-06-28 01:16:14
- * @FilePath: \LLCompiler\include\llcompiler\llcompiler.h
- * @Description: 这是默认设置,请设置`customMade`, 打开koroFileHeader查看配置
- * 进行设置: https://github.com/OBKoro1/koro1FileHeader/wiki/%E9%85%8D%E7%BD%AE
- */
 //    Copyright 2024 时光丶人爱
 
 //    Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,8 +23,8 @@
  */
 #ifndef INCLUDE_LLCOMPILER_LLCOMPILER_H_
 #define INCLUDE_LLCOMPILER_LLCOMPILER_H_
-#include "llcompiler/compiler/option.h"
-#include "llcompiler/llcompiler.h"
+#include "llcompiler/utils/option.h"
+#include "llcompiler/compiler/init.h"
 #include "llcompiler/utils/logger.h"
 
 

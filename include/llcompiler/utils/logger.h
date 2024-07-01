@@ -28,10 +28,10 @@
 
 #include "llcompiler/core.h"
 
-
 namespace llc::logger {
 class Logger;
 class LoggerStream;
+
 
 enum LOG_LEVER {
   DEBUG = 1,

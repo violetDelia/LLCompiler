@@ -12,23 +12,27 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/compiler/option.h"
+#include <string>
 
-namespace llc::option {}  // namespace llc::option
+#include "llcompiler/utils/logger.h"
+#include "llcompiler/utils/option.h"
+#include "llvm/Support/CommandLine.h"
 
-llvm::cl::OptionCategory LLC_CommonOption_Cat("global options", "");
+namespace llc::option {
+llvm::cl::OptionCategory commonOptions("global options", "");
 
-llvm::cl::opt<std::string> LLC_logRoot(
-    "log-root", llvm::cl::desc("the root to save log files"),
-    llvm::cl::value_desc("root_path"), llvm::cl::init(""),
-    llvm::cl::cat(LLC_CommonOption_Cat));
+llvm::cl::opt<std::string> logRoot("log-root",
+                                   llvm::cl::desc("the root to save log files"),
+                                   llvm::cl::value_desc("root_path"),
+                                   llvm::cl::init(""),
+                                   llvm::cl::cat(commonOptions));
 
-llvm::cl::opt<llc::logger::LOG_LEVER> LLC_logLevel(
+llvm::cl::opt<logger::LOG_LEVER> logLevel(
     "log-lever", llvm::cl::desc("log level"),
-    llvm::cl::values(clEnumValN(llc::logger::LOG_LEVER::DEBUG, "debug", ""),
-                     clEnumValN(llc::logger::LOG_LEVER::INFO, "info", ""),
-                     clEnumValN(llc::logger::LOG_LEVER::WARN, "warning", ""),
-                     clEnumValN(llc::logger::LOG_LEVER::ERROR, "error", ""),
-                     clEnumValN(llc::logger::LOG_LEVER::FATAL, "fatal", "")),
-    llvm::cl::init(llc::logger::LOG_LEVER::DEBUG),
-    llvm::cl::cat(LLC_CommonOption_Cat));
+    llvm::cl::values(clEnumValN(logger::LOG_LEVER::DEBUG, "debug", ""),
+                     clEnumValN(logger::LOG_LEVER::INFO, "info", ""),
+                     clEnumValN(logger::LOG_LEVER::WARN, "warning", ""),
+                     clEnumValN(logger::LOG_LEVER::ERROR, "error", ""),
+                     clEnumValN(logger::LOG_LEVER::FATAL, "fatal", "")),
+    llvm::cl::init(logger::LOG_LEVER::DEBUG), llvm::cl::cat(commonOptions));
+}  // namespace llc::option

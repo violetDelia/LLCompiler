@@ -31,7 +31,8 @@
 
 namespace llc::option {}  // namespace llc::option
 
-extern llvm::cl::OptionCategory LLC_CommonOption_Cat;
-extern llvm::cl::opt<std::string> LLC_logRoot;
-extern llvm::cl::opt<llc::logger::LOG_LEVER> LLC_logLevel;
+/**********  options define  **********/
+extern llvm::cl::OptionCategory commonOption_Cat;
+extern llvm::cl::opt<std::string> logRoot;
+extern llvm::cl::opt<llc::logger::LOG_LEVER> logLevel;
 #endif  // INCLUDE_LLCOMPILER_UTILS_OPTION_H_

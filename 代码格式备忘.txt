@@ -1,3 +1,4 @@
+模块名: MODULENAME_M
 全局变量: globalValue
 函数: function_name(type val_1, type val_2,...)
 类名: ClassName

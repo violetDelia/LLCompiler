@@ -11,25 +11,20 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLCOMPILER_HAS_LOG
-#define LLCOMPILER_HAS_LOG
-#endif
-#include <fstream>
-#include <iostream>
-#include <memory>
-#include <sstream>
-#include <string>
 
-#include "llcompiler/llcompiler.h"
+/**
+ * @file init.h
+ * @brief initializing compiler
+ * @author 时光丶人爱 (1733535832@qq.com)
+ * @version 1.0
+ * @date 2024-07-01
+ *
+ * @copyright Copyright (c) 2024 时光丶人爱
+ *
+ */
 
-// void force_hidden_options(
-//     llvm::ArrayRef<const llvm::cl::OptionCategory *> categories) {
-//   for (const auto &category : categories) {
-//     category->
-//   }
-// }
+namespace llc {
 
-int main(int argc, char **argv) {
-  llc::init_compiler(argc, argv);
-  return 0;
+void init_compiler(int argc, char **argv);
+
 }
