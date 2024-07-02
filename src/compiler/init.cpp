@@ -21,6 +21,6 @@ void init_compiler(int argc, char **argv) {
                          option::logLevel.getValue())
   // LLCOMPILER_INIT_LOGGERS(logRoot.getValue().data(), logLevel.getValue(),
   //                         GLOBAL_M, "test");
-};
+}
 
 }  // namespace llc

@@ -33,7 +33,7 @@ namespace llc::option {
 /**********  options extern  **********/
 extern llvm::cl::OptionCategory commonOption_Cat;
 extern llvm::cl::opt<std::string> logRoot;
-extern llvm::cl::opt<llc::logger::LOG_LEVER> logLevel;
+extern llvm::cl::opt<llc::LOG_LEVER> logLevel;
 }  // namespace llc::option
 
 #endif  // INCLUDE_LLCOMPILER_UTILS_OPTION_H_

@@ -22,9 +22,11 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
-
+#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 namespace llc {
 
 void init_compiler(int argc, char **argv);
 
 }
+#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_

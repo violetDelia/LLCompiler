@@ -27,12 +27,12 @@ llvm::cl::opt<std::string> logRoot("log-root",
                                    llvm::cl::init(""),
                                    llvm::cl::cat(commonOptions));
 
-llvm::cl::opt<logger::LOG_LEVER> logLevel(
+llvm::cl::opt<LOG_LEVER> logLevel(
     "log-lever", llvm::cl::desc("log level"),
-    llvm::cl::values(clEnumValN(logger::LOG_LEVER::DEBUG, "debug", ""),
-                     clEnumValN(logger::LOG_LEVER::INFO, "info", ""),
-                     clEnumValN(logger::LOG_LEVER::WARN, "warning", ""),
-                     clEnumValN(logger::LOG_LEVER::ERROR, "error", ""),
-                     clEnumValN(logger::LOG_LEVER::FATAL, "fatal", "")),
-    llvm::cl::init(logger::LOG_LEVER::DEBUG), llvm::cl::cat(commonOptions));
+    llvm::cl::values(clEnumValN(LOG_LEVER::DEBUG, "debug", ""),
+                     clEnumValN(LOG_LEVER::INFO, "info", ""),
+                     clEnumValN(LOG_LEVER::WARN, "warning", ""),
+                     clEnumValN(LOG_LEVER::ERROR, "error", ""),
+                     clEnumValN(LOG_LEVER::FATAL, "fatal", "")),
+    llvm::cl::init(LOG_LEVER::DEBUG), llvm::cl::cat(commonOptions));
 }  // namespace llc::option

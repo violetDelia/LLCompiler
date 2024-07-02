@@ -1,5 +1,6 @@
 import os
 import glob
+import cpphint
 
 root_path = path = os.getcwd()
 include_dir = os.path.join(root_path, "include")

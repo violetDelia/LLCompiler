@@ -43,48 +43,66 @@ void register_logger(const char *module, const char *root_path,
   spdlog::register_logger(log);
   INFO(GLOBAL) << "LOG_LEVER: " << static_cast<int>(lever);
   INFO(GLOBAL) << "LOG_ROOT_DIR: " << root_path;
-  CHECK_LOG(GLOBAL, strcmp(root_path, ""), INFO) << "test";
+  LOG(GLOBAL, strcmp(root_path, ""), LOG_LEVER::INFO) << "test" << "test2";
+  LOG(GLOBAL, !strcmp(root_path, ""), LOG_LEVER::INFO) << "test" << "test2";
+  CHECK(GLOBAL, strcmp(root_path, ""), LOG_LEVER::INFO) << "ctest" << "ctest2";
+  // CHECK_NE(GLOBAL, strcmp(root_path, ""), LOG_LEVER::INFO) << "test";
 }
-
-LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log) : logger_(log) {}
-
-LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const char *message) {
-  message_ += message;
-  return *this;
-}
-
-LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const std::string &str) {
-  message_ += str;
-  return *this;
-}
-
-LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const int value) {
-  message_ += std::to_string(value);
-  return *this;
-}
-
-LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const double value) {
-  message_ += std::to_string(value);
-  return *this;
-}
-
-LLC_CONSTEXPR LoggerStream::~LoggerStream() { logger_->info(message_.c_str()); }
 
 LLC_CONSTEXPR Logger::Logger(const char *module, LOG_LEVER level)
     : module_(module), level_(level) {}
 
-LLC_CONSTEXPR LoggerStream Logger::stream() { return LoggerStream(this); }
+LLC_CONSTEXPR Logger::~Logger() {}
+
+LLC_CONSTEXPR LoggerStream Logger::stream(const bool not_emit_message) {
+  return LoggerStream(this, not_emit_message);
+}
 
 LLC_CONSTEXPR void Logger::info(const char *message) {
   std::shared_ptr<spdlog::logger> spd_logger = spdlog::get(this->module_);
   spd_logger->log(static_cast<spdlog::level>(this->level_), message);
 }
 
-LLC_CONSTEXPR Logger::~Logger() {}
-
 template <class Ty>
 LLC_CONSTEXPR NullStream &NullStream::operator<<(Ty val) {
   return *this;
+}
+
+LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log,
+                                         const bool not_emit_message)
+    : logger_(log), not_emit_message_(not_emit_message) {}
+
+LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const char *message) {
+  if (!not_emit_message_) {
+    message_ += message;
+  }
+  return *this;
+}
+
+LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const std::string &str) {
+  if (!not_emit_message_) {
+    message_ += str;
+  }
+  return *this;
+}
+
+LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const int value) {
+  if (!not_emit_message_) {
+    message_ += std::to_string(value);
+  }
+  return *this;
+}
+
+LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const double value) {
+  if (!not_emit_message_) {
+    message_ += std::to_string(value);
+  }
+  return *this;
+}
+
+LLC_CONSTEXPR LoggerStream::~LoggerStream() {
+  if (!not_emit_message_) return;
+  logger_->info(message_.c_str());
 }
 
 }  // namespace llc::logger
