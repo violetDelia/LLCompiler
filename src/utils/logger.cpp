@@ -45,7 +45,7 @@ void register_logger(const char *module, const char *root_path,
   INFO(GLOBAL) << "LOG_ROOT_DIR: " << root_path;
   LOG(GLOBAL, strcmp(root_path, ""), LOG_LEVER::INFO) << "test" << "test2";
   LOG(GLOBAL, !strcmp(root_path, ""), LOG_LEVER::INFO) << "test" << "test2";
-  CHECK(GLOBAL, strcmp(root_path, ""), LOG_LEVER::INFO) << "ctest" << "ctest2";
+  CHECK(GLOBAL, strcmp(root_path, "")) << "ctest" << "ctest2";
   // CHECK_NE(GLOBAL, strcmp(root_path, ""), LOG_LEVER::INFO) << "test";
 }
 

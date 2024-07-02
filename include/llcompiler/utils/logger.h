@@ -101,7 +101,7 @@ class LoggerStream {
 
 #define CHECK(module, condition)                              \
   LLCOMPILER_CHECK_LOG(module, condition, llc::ERROR) \
-      << __FILE__ << __LINE__ << ##condition## <<
+      << __FILE__ << __LINE__ << #condition <<
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
 #define CHECK_NE(module, val1, val2) CHECK(module, val1 != val2)
 #define CHECK_LT(module, val1, val2) CHECK(module, val1 < val2)
