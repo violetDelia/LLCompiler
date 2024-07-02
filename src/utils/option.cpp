@@ -24,15 +24,21 @@ llvm::cl::OptionCategory commonOptions("global options", "");
 llvm::cl::opt<std::string> logRoot("log-root",
                                    llvm::cl::desc("the root to save log files"),
                                    llvm::cl::value_desc("root_path"),
-                                   llvm::cl::init(""),
+                                   llvm::cl::init("C:/LLCompiler/log"),
                                    llvm::cl::cat(commonOptions));
 
 llvm::cl::opt<LOG_LEVER> logLevel(
     "log-lever", llvm::cl::desc("log level"),
-    llvm::cl::values(clEnumValN(LOG_LEVER::DEBUG, "debug", ""),
-                     clEnumValN(LOG_LEVER::INFO, "info", ""),
-                     clEnumValN(LOG_LEVER::WARN, "warning", ""),
-                     clEnumValN(LOG_LEVER::ERROR, "error", ""),
-                     clEnumValN(LOG_LEVER::FATAL, "fatal", "")),
-    llvm::cl::init(LOG_LEVER::DEBUG), llvm::cl::cat(commonOptions));
+    llvm::cl::values(clEnumValN(DEBUG, "debug", ""),
+                     clEnumValN(INFO, "info", ""),
+                     clEnumValN(WARN, "warning", ""),
+                     clEnumValN(ERROR, "error", ""),
+                     clEnumValN(FATAL, "fatal", "")),
+    llvm::cl::init(DEBUG), llvm::cl::cat(commonOptions));
+
+llvm::cl::opt<importer::IMPORTER_TYPE> importerType(
+    "importer", llvm::cl::desc("the type of modle how to import"),
+    llvm::cl::values(clEnumValN(importer::ONNX, "onnx", "onnx model")),
+    llvm::cl::init(importer::ONNX), llvm::cl::cat(commonOptions));
+
 }  // namespace llc::option

@@ -16,4 +16,5 @@
 namespace llc {
 /**********  log module define  **********/
 const char* GLOBAL = "global";
+ const char *ONNX_IMPORTER = "onnx_importer";
 }  // namespace llc

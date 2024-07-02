@@ -43,7 +43,24 @@
     return Original_Func(std::forward<Args>(args)...);                       \
   }
 namespace llc {
+/**********  ENUM define  **********/
+enum LOG_LEVER {
+  DEBUG = 1,
+  INFO = 2,
+  WARN = 3,
+  ERROR = 4,
+  FATAL = 5,
+};
+
+namespace importer {
+enum IMPORTER_TYPE {
+  ONNX = 1,
+
+};
+
+}
 
 /**********  log module extern  **********/
 extern const char *GLOBAL;
+extern const char *ONNX_IMPORTER;
 }  // namespace llc

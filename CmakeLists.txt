@@ -84,6 +84,14 @@ set_property(TARGET LLCompiler PROPERTY VERSION ${LLCOMPILER_VERSION})
 
 add_subdirectory(${LLCOMPILER_TOOLS_DIR})
 
+##---------- main ----------##
+add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+target_include_directories(main PRIVATE 
+    $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
+    $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
+)
+
+target_link_libraries(main PRIVATE LLCompiler)
 
 
 

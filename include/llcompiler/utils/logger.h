@@ -28,16 +28,6 @@
 
 #include "llcompiler/core.h"
 
-namespace llc {
-enum LOG_LEVER {
-  DEBUG = 1,
-  INFO = 2,
-  WARN = 3,
-  ERROR = 4,
-  FATAL = 5,
-};
-}
-
 namespace llc::logger {
 class Logger;
 class LoggerStream;
@@ -50,7 +40,7 @@ class Logger {
   LLC_CONSTEXPR Logger(const char *module, LOG_LEVER level);
   LLC_CONSTEXPR virtual ~Logger();
   LLC_CONSTEXPR LoggerStream stream(const bool emit_message);
-  LLC_CONSTEXPR void info(const char *message);
+  void info(const char *message);
 
  protected:
   const char *module_;
@@ -65,7 +55,7 @@ class NullStream {
 
 class LoggerStream {
  public:
-  LLC_CONSTEXPR LoggerStream(Logger *log, const bool not_emit_message_);
+  LLC_CONSTEXPR LoggerStream(Logger *log, const bool emit_message);
   LLC_CONSTEXPR LoggerStream &operator<<(const char *message);
   LLC_CONSTEXPR LoggerStream &operator<<(const std::string &str);
   LLC_CONSTEXPR LoggerStream &operator<<(const int value);
@@ -75,7 +65,7 @@ class LoggerStream {
  protected:
   std::string message_;
   Logger *logger_;
-  const bool not_emit_message_;
+  const bool emit_message_;
 };
 
 }  // namespace llc::logger
@@ -83,7 +73,7 @@ class LoggerStream {
 #define LLCOMPILER_INIT_LOGGER(module, root, lever) \
   llc::logger::register_logger(module, root, lever);
 #define LLCOMPILER_LOG(module, lever) \
-  llc::logger::Logger(module, lever).stream(false)
+  llc::logger::Logger(module, lever).stream(true)
 #define LLCOMPILER_CHECK_LOG(module, condition, lever) \
   llc::logger::Logger(module, lever).stream(condition)
 
@@ -99,7 +89,7 @@ class LoggerStream {
 #define ERROR(module) LLCOMPILER_LOG(module, llc::ERROR)
 #define FATAL(module) LLCOMPILER_LOG(module, llc::FATAL)
 
-#define CHECK(module, condition)                              \
+#define CHECK(module, condition)                      \
   LLCOMPILER_CHECK_LOG(module, condition, llc::ERROR) \
       << __FILE__ << __LINE__ << #condition <<
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)

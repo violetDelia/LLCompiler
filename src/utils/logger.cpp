@@ -12,6 +12,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <iomanip>
+#include <memory>
+#include <sstream>
 #include <string>
 
 #include "llcompiler/utils/logger.h"
@@ -23,30 +26,28 @@ namespace llc::logger {
 void register_logger(const char *module, const char *root_path,
                      const LOG_LEVER lever) {
   using console_sink = spdlog::sinks::stdout_color_sink_mt;
-  using file_sink = spdlog::sinks::basic_file_sink_mt;
-
+  using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
-  if (strcmp(root_path, "")) {
+  std::string log_file;
+  const bool save_log = strcmp(root_path, "");
+  if (save_log) {
     auto now = std::chrono::system_clock::now();
     auto time_now = std::chrono::system_clock::to_time_t(now);
     std::stringstream time_ss;
-    time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%/d%H:%M");
-    auto time_str = time_ss.str().c_str();
-    auto log_file = fmt::format("{}-{}/{}.log", root_path, time_str, module);
-    sinks.push_back(std::make_shared<file_sink>(log_file, true));
+    time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
+    log_file =
+        fmt::format("{}/{}-{}.log", root_path, module, time_ss.str().c_str());
+    sinks.push_back(std::make_shared<file_sink>(log_file.c_str(), true));
   }
   auto log =
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
   log->set_level(static_cast<spdlog::level>(lever));
   spdlog::register_logger(log);
-  INFO(GLOBAL) << "LOG_LEVER: " << static_cast<int>(lever);
-  INFO(GLOBAL) << "LOG_ROOT_DIR: " << root_path;
-  LOG(GLOBAL, strcmp(root_path, ""), LOG_LEVER::INFO) << "test" << "test2";
-  LOG(GLOBAL, !strcmp(root_path, ""), LOG_LEVER::INFO) << "test" << "test2";
-  CHECK(GLOBAL, strcmp(root_path, "")) << "ctest" << "ctest2";
-  // CHECK_NE(GLOBAL, strcmp(root_path, ""), LOG_LEVER::INFO) << "test";
+  INFO(GLOBAL) << "regist log module: " << module
+               << "(lever:" << static_cast<int>(lever) << ")" << " -> "
+               << log_file;
 }
 
 LLC_CONSTEXPR Logger::Logger(const char *module, LOG_LEVER level)
@@ -54,11 +55,11 @@ LLC_CONSTEXPR Logger::Logger(const char *module, LOG_LEVER level)
 
 LLC_CONSTEXPR Logger::~Logger() {}
 
-LLC_CONSTEXPR LoggerStream Logger::stream(const bool not_emit_message) {
-  return LoggerStream(this, not_emit_message);
+LLC_CONSTEXPR LoggerStream Logger::stream(const bool emit_message) {
+  return LoggerStream(this, emit_message);
 }
 
-LLC_CONSTEXPR void Logger::info(const char *message) {
+void Logger::info(const char *message) {
   std::shared_ptr<spdlog::logger> spd_logger = spdlog::get(this->module_);
   spd_logger->log(static_cast<spdlog::level>(this->level_), message);
 }
@@ -68,41 +69,42 @@ LLC_CONSTEXPR NullStream &NullStream::operator<<(Ty val) {
   return *this;
 }
 
-LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log,
-                                         const bool not_emit_message)
-    : logger_(log), not_emit_message_(not_emit_message) {}
+LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log, const bool emit_message)
+    : logger_(log), emit_message_(emit_message) {}
 
 LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const char *message) {
-  if (!not_emit_message_) {
+  if (emit_message_) {
     message_ += message;
   }
   return *this;
 }
 
 LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const std::string &str) {
-  if (!not_emit_message_) {
+  if (emit_message_) {
     message_ += str;
   }
   return *this;
 }
 
 LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const int value) {
-  if (!not_emit_message_) {
+  if (emit_message_) {
     message_ += std::to_string(value);
   }
   return *this;
 }
 
 LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const double value) {
-  if (!not_emit_message_) {
+  if (emit_message_) {
     message_ += std::to_string(value);
   }
   return *this;
 }
 
 LLC_CONSTEXPR LoggerStream::~LoggerStream() {
-  if (!not_emit_message_) return;
-  logger_->info(message_.c_str());
+  if (emit_message_) {
+    logger_->info(message_.c_str());
+  }
+  return;
 }
 
 }  // namespace llc::logger

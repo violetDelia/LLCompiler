@@ -11,27 +11,42 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include <initializer_list>
+#ifndef LLCOMPILER_HAS_LOG
+#define LLCOMPILER_HAS_LOG
+#endif
+#include <iostream>
+#include <memory>
+#include <sstream>
 #include <string>
 
-#include "llcompiler/utils/option.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/InitLLVM.h"
+#include "llcompiler/llcompiler.h"
+#include "onnx/onnx-data_pb.h"
 
-namespace llc {
-
-void init_logger(std::initializer_list<std::string> modules) {
-  for (auto &module : modules) {
-    LLCOMPILER_INIT_LOGGER(module.c_str(), option::logRoot.getValue().data(),
-                           option::logLevel.getValue())
+class module {};
+template <class A>
+class Importer {
+ public:
+  module *import() {
+    init();
+    builder();
+    return module_;
   }
-}
+  virtual void init();
+  virtual void builder();
+  virtual ~importer() {}
 
-void init_compiler(int argc, char **argv) {
-  llvm::InitLLVM compiler(argc, argv);
-  llvm::cl::ParseCommandLineOptions(
-      argc, argv, "LLCompiler: A graph compiler for ONNX models");
-  init_logger({GLOBAL, ONNX_IMPORTER});
-}
+  module *module_;
+  importer_init<A> *init_imp;
+};
 
-}  // namespace llc
+template <class A>
+class importer_init {
+  static init();
+};
+
+template <class dialect>
+struct builder {
+  void mlirgen();
+};
+
+int main(int argc, char **argv) { return 0; }

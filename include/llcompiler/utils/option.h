@@ -25,7 +25,6 @@
  */
 #include <string>
 
-#include "llcompiler/core.h"
 #include "llcompiler/utils/logger.h"
 #include "llvm/Support/CommandLine.h"
 
@@ -34,6 +33,7 @@ namespace llc::option {
 extern llvm::cl::OptionCategory commonOption_Cat;
 extern llvm::cl::opt<std::string> logRoot;
 extern llvm::cl::opt<llc::LOG_LEVER> logLevel;
+extern llvm::cl::opt<importer::IMPORTER_TYPE> importerType;
 }  // namespace llc::option
 
 #endif  // INCLUDE_LLCOMPILER_UTILS_OPTION_H_
