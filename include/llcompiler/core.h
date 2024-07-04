@@ -51,16 +51,17 @@ enum LOG_LEVER {
   ERROR = 4,
   FATAL = 5,
 };
+namespace logger {
+const char *log_lever_to_str(LOG_LEVER lever);
+}
 
 namespace importer {
-enum IMPORTER_TYPE {
-  ONNX = 1,
+enum IMPORTER_TYPE { ONNX_FILE = 1 };
+const char *importer_type_to_str(IMPORTER_TYPE type);
 
-};
-
-}
+}  // namespace importer
 
 /**********  log module extern  **********/
 extern const char *GLOBAL;
-extern const char *ONNX_IMPORTER;
+extern const char *IMPORTER;
 }  // namespace llc

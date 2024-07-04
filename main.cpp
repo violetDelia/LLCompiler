@@ -11,18 +11,22 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLCOMPILER_HAS_LOG
-#define LLCOMPILER_HAS_LOG
-#endif
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 
 #include "llcompiler/llcompiler.h"
+#include "onnx/common/file_utils.h"
 #include "onnx/onnx-data_pb.h"
 
 class module {};
+
+template <class A>
+class ImporterInit {
+  static void init();
+};
+
 template <class A>
 class Importer {
  public:
@@ -33,20 +37,18 @@ class Importer {
   }
   virtual void init();
   virtual void builder();
-  virtual ~importer() {}
+  virtual ~Importer() {}
 
   module *module_;
-  importer_init<A> *init_imp;
-};
-
-template <class A>
-class importer_init {
-  static init();
+  ImporterInit<A> *init_imp;
 };
 
 template <class dialect>
-struct builder {
+struct Builder {
   void mlirgen();
 };
 
-int main(int argc, char **argv) { return 0; }
+int main(int argc, char **argv) {
+  llc::init_compiler(argc, argv);
+  return 0;
+}

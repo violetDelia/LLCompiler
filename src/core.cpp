@@ -14,7 +14,33 @@
 #include "llcompiler/core.h"
 
 namespace llc {
+/**********  ENUM convert  **********/
+namespace logger {
+const char *log_lever_to_str(LOG_LEVER lever) {
+  switch (lever) {
+    case LOG_LEVER::DEBUG:
+      return "debug";
+    case LOG_LEVER::INFO:
+      return "info";
+    case LOG_LEVER::WARN:
+      return "warn";
+    case LOG_LEVER::ERROR:
+      return "error";
+    case LOG_LEVER::FATAL:
+      return "fatal";
+  }
+}
+}  // namespace logger
+
+namespace importer {
+const char *importer_type_to_str(IMPORTER_TYPE type) {
+  switch (type) {
+    case ONNX_FILE:
+      return "onnx_file";
+  }
+}
+};  // namespace importer
 /**********  log module define  **********/
-const char* GLOBAL = "global";
- const char *ONNX_IMPORTER = "onnx_importer";
+const char *GLOBAL = "global";
+const char *IMPORTER = "importer";
 }  // namespace llc

@@ -12,6 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <direct.h>
+
 #include <iomanip>
 #include <memory>
 #include <sstream>
@@ -23,6 +25,7 @@
 #include "spdlog/spdlog.h"
 
 namespace llc::logger {
+
 void register_logger(const char *module, const char *root_path,
                      const LOG_LEVER lever) {
   using console_sink = spdlog::sinks::stdout_color_sink_mt;
@@ -30,15 +33,17 @@ void register_logger(const char *module, const char *root_path,
   auto sink_c = std::make_shared<console_sink>();
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
+  auto now = std::chrono::system_clock::now();
+  auto time_now = std::chrono::system_clock::to_time_t(now);
+  std::stringstream time_ss;
+  time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
+  std::string log_dir =
+      fmt::format("{}/log_{}", root_path, time_ss.str().c_str());
+  mkdir(log_dir.c_str());
   std::string log_file;
   const bool save_log = strcmp(root_path, "");
   if (save_log) {
-    auto now = std::chrono::system_clock::now();
-    auto time_now = std::chrono::system_clock::to_time_t(now);
-    std::stringstream time_ss;
-    time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
-    log_file =
-        fmt::format("{}/{}-{}.log", root_path, module, time_ss.str().c_str());
+    log_file = fmt::format("{}/{}.log", log_dir, module);
     sinks.push_back(std::make_shared<file_sink>(log_file.c_str(), true));
   }
   auto log =
@@ -46,16 +51,16 @@ void register_logger(const char *module, const char *root_path,
   log->set_level(static_cast<spdlog::level>(lever));
   spdlog::register_logger(log);
   INFO(GLOBAL) << "regist log module: " << module
-               << "(lever:" << static_cast<int>(lever) << ")" << " -> "
-               << log_file;
+               << "(lever:" << logger::log_lever_to_str(lever) << ")"
+               << " -> " << log_file;
 }
 
-LLC_CONSTEXPR Logger::Logger(const char *module, LOG_LEVER level)
+Logger::Logger(const char *module, LOG_LEVER level)
     : module_(module), level_(level) {}
 
-LLC_CONSTEXPR Logger::~Logger() {}
+Logger::~Logger() {}
 
-LLC_CONSTEXPR LoggerStream Logger::stream(const bool emit_message) {
+LoggerStream Logger::stream(const bool emit_message) {
   return LoggerStream(this, emit_message);
 }
 
@@ -65,42 +70,42 @@ void Logger::info(const char *message) {
 }
 
 template <class Ty>
-LLC_CONSTEXPR NullStream &NullStream::operator<<(Ty val) {
+NullStream &NullStream::operator<<(Ty val) {
   return *this;
 }
 
-LLC_CONSTEXPR LoggerStream::LoggerStream(Logger *log, const bool emit_message)
+LoggerStream::LoggerStream(Logger *log, const bool emit_message)
     : logger_(log), emit_message_(emit_message) {}
 
-LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const char *message) {
+LoggerStream &LoggerStream::operator<<(const char *message) {
   if (emit_message_) {
     message_ += message;
   }
   return *this;
 }
 
-LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const std::string &str) {
+LoggerStream &LoggerStream::operator<<(const std::string &str) {
   if (emit_message_) {
     message_ += str;
   }
   return *this;
 }
 
-LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const int value) {
+LoggerStream &LoggerStream::operator<<(const int value) {
   if (emit_message_) {
     message_ += std::to_string(value);
   }
   return *this;
 }
 
-LLC_CONSTEXPR LoggerStream &LoggerStream::operator<<(const double value) {
+LoggerStream &LoggerStream::operator<<(const double value) {
   if (emit_message_) {
     message_ += std::to_string(value);
   }
   return *this;
 }
 
-LLC_CONSTEXPR LoggerStream::~LoggerStream() {
+LoggerStream::~LoggerStream() {
   if (emit_message_) {
     logger_->info(message_.c_str());
   }

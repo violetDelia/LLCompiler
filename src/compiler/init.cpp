@@ -31,7 +31,11 @@ void init_compiler(int argc, char **argv) {
   llvm::InitLLVM compiler(argc, argv);
   llvm::cl::ParseCommandLineOptions(
       argc, argv, "LLCompiler: A graph compiler for ONNX models");
-  init_logger({GLOBAL, ONNX_IMPORTER});
+  init_logger({GLOBAL, IMPORTER});
+  INFO(GLOBAL) << "import type is: "
+               << importer::importer_type_to_str(
+                      option::importingType.getValue());
+  INFO(GLOBAL) << "import file is: " << option::importingPath.getValue();
 }
 
 }  // namespace llc

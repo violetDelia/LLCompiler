@@ -37,9 +37,9 @@ void register_logger(const char *module, const char *root_path,
 
 class Logger {
  public:
-  LLC_CONSTEXPR Logger(const char *module, LOG_LEVER level);
-  LLC_CONSTEXPR virtual ~Logger();
-  LLC_CONSTEXPR LoggerStream stream(const bool emit_message);
+  Logger(const char *module, LOG_LEVER level);
+  virtual ~Logger();
+  LoggerStream stream(const bool emit_message);
   void info(const char *message);
 
  protected:
@@ -50,17 +50,17 @@ class Logger {
 class NullStream {
  public:
   template <class Ty>
-  LLC_CONSTEXPR NullStream &operator<<(Ty val);
+  NullStream &operator<<(Ty val);
 };
 
 class LoggerStream {
  public:
-  LLC_CONSTEXPR LoggerStream(Logger *log, const bool emit_message);
-  LLC_CONSTEXPR LoggerStream &operator<<(const char *message);
-  LLC_CONSTEXPR LoggerStream &operator<<(const std::string &str);
-  LLC_CONSTEXPR LoggerStream &operator<<(const int value);
-  LLC_CONSTEXPR LoggerStream &operator<<(const double value);
-  LLC_CONSTEXPR virtual ~LoggerStream();
+  LoggerStream(Logger *log, const bool emit_message);
+  LoggerStream &operator<<(const char *message);
+  LoggerStream &operator<<(const std::string &str);
+  LoggerStream &operator<<(const int value);
+  LoggerStream &operator<<(const double value);
+  virtual ~LoggerStream();
 
  protected:
   std::string message_;

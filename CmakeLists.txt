@@ -91,7 +91,7 @@ target_include_directories(main PRIVATE
     $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
 )
 
-target_link_libraries(main PRIVATE LLCompiler)
+target_link_libraries(main PRIVATE LLCompiler spdlog LLVMOption onnx)
 
 
 
