@@ -17,9 +17,13 @@
 #include <string>
 
 #include "llcompiler/llcompiler.h"
+#include "llcompiler/utils/option.h"
 #include "onnx/common/file_utils.h"
+#include "onnx/common/ir.h"
+#include "onnx/common/ir_pb_converter.h"
 #include "onnx/onnx-data_pb.h"
-
+#include "onnx/onnx-ml.pb.h"
+#include "onnx/shape_inference/implementation.h"
 class module {};
 
 template <class A>
@@ -50,5 +54,14 @@ struct Builder {
 
 int main(int argc, char **argv) {
   llc::init_compiler(argc, argv);
+  onnx::ModelProto model;
+  ONNX_NAMESPACE::LoadProtoFromPath(llc::option::importingPath.getValue(),
+                                    model);
+  ONNX_NAMESPACE::shape_inference::InferShapes(model);
+  std::unique_ptr<ONNX_NAMESPACE::Graph> g(
+      ONNX_NAMESPACE::ImportModelProto(model));
+  auto in =  g->inputs();
+  auto out = g->outputs();
+  // std::cout<<g->name()<<std::endl;
   return 0;
 }

@@ -39,6 +39,7 @@ void register_logger(const char *module, const char *root_path,
   time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
   std::string log_dir =
       fmt::format("{}/log_{}", root_path, time_ss.str().c_str());
+  mkdir(root_path);
   mkdir(log_dir.c_str());
   std::string log_file;
   const bool save_log = strcmp(root_path, "");
@@ -51,8 +52,8 @@ void register_logger(const char *module, const char *root_path,
   log->set_level(static_cast<spdlog::level>(lever));
   spdlog::register_logger(log);
   INFO(GLOBAL) << "regist log module: " << module
-               << "(lever:" << logger::log_lever_to_str(lever) << ")"
-               << " -> " << log_file;
+               << "(lever:" << logger::log_lever_to_str(lever) << ")" << " -> "
+               << log_file;
 }
 
 Logger::Logger(const char *module, LOG_LEVER level)
