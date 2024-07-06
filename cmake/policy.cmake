@@ -1,12 +1,12 @@
-function(NEW_POLICY policy)
+function(new_policy policy)
     if(POLICY policy)
         cmake_policy(SET policy NEW)
     endif()
-endfunction(NEW_POLICY)
+endfunction(new_policy)
 
-NEW_POLICY(CMP0135)
-NEW_POLICY(CMP0148)
-NEW_POLICY(CMP0091)
+new_policy(CMP0135)
+new_policy(CMP0148)
+new_policy(CMP0091)
 set(CMAKE_POLICY_DEFAULT_CMP0126 NEW)
 
 

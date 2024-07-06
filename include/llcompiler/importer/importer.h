@@ -21,7 +21,7 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
-#include "llcompiler/core.h"
+#include "llcompiler/support/core.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
 namespace llc::importer {}  // namespace llc::importer

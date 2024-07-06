@@ -19,7 +19,8 @@
 #include <sstream>
 #include <string>
 
-#include "llcompiler/utils/logger.h"
+#include "llcompiler/support/core.h"
+#include "llcompiler/support/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"

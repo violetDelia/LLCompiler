@@ -14,9 +14,11 @@
 #include <initializer_list>
 #include <string>
 
-#include "llcompiler/utils/option.h"
+#include "llcompiler/support/logger.h"
+#include "llcompiler/support/option.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/InitLLVM.h"
+
 
 namespace llc {
 

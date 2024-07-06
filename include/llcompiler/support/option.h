@@ -25,7 +25,7 @@
  */
 #include <string>
 
-#include "llcompiler/utils/logger.h"
+#include "llcompiler/support/core.h"
 #include "llvm/Support/CommandLine.h"
 
 namespace llc::option {

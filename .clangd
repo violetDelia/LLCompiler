@@ -1,8 +1,9 @@
-IF:
-  PathMatch: .*\.h
+
 CompileFlags:
   Add: [-xc++, -Wall,
-  -ID:/CPlus/llvm-mingw-20240518-msvcrt-x86_64/include/c++/v1/,
+  -ID:/Plus/llvm-mingw-20240518-msvcrt-x86_64/include/,
+  -ID:/CPlus/mingw-9.2/x86_64-w64-mingw32/include/,
+  -ID:/VS/VC/Tools/MSVC/14.40.33807/include/,
   -IC:/LLCompiler/include/,
   -IC:/LLCompiler/src/,
   -IC:/LLCompiler/third_party/onnx/,
@@ -13,7 +14,7 @@ CompileFlags:
   -IC:/LLCompiler/build/third_party/llvm-project/mlir/include/,
   -IC:/LLCompiler/third_party/llvm-project/mlir/include/,
   -IC:/LLCompiler/build/_deps/fmt-src/include/fmt/,
-  -IC:/LLCompiler/build/_deps/protobuf-src/src/
+  -IC:/LLCompiler/build/_deps/protobuf-src/src/,
   ]
 Diagnostics:
   UnusedIncludes: None  

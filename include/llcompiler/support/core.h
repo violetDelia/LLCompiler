@@ -21,14 +21,13 @@
  * @copyright Copyright (c) 2024  时光丶人爱
  *
  */
-#ifndef INCLUDE_LLCOMPILER_CORE_H_
-#define INCLUDE_LLCOMPILER_CORE_H_
+#ifndef INCLUDE_LLCOMPILER_SUPPORT_CORE_H_
+#define INCLUDE_LLCOMPILER_SUPPORT_CORE_H_
 #if __cplusplus > 201703L
 #define LLC_CONSTEXPR constexpr
 #else
 #define LLC_CONSTEXPR
 #endif  // __cplusplus > 201703L
-#endif  // INCLUDE_LLCOMPILER_CORE_H_
 #include <utility>
 /**********  alias define  **********/
 #define ALIAS_CLASS(Alias_Class, Original_Class) \
@@ -65,3 +64,5 @@ const char *importer_type_to_str(IMPORTER_TYPE type);
 extern const char *GLOBAL;
 extern const char *IMPORTER;
 }  // namespace llc
+
+#endif  // INCLUDE_LLCOMPILER_SUPPORT_CORE_H_

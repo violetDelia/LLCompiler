@@ -22,11 +22,11 @@
  * @copyright Copyright (c) 2024  时光丶人爱
  *
  */
-#ifndef INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
-#define INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
+#ifndef INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
+#define INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
 #include <string>
 
-#include "llcompiler/core.h"
+#include "llcompiler/support/core.h"
 
 namespace llc::logger {
 class Logger;
@@ -125,4 +125,4 @@ class LoggerStream {
 
 #define TYPE(val) typeid(val).name()
 
-#endif  // INCLUDE_LLCOMPILER_UTILS_LOGGER_H_
+#endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_

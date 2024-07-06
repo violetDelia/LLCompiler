@@ -14,10 +14,9 @@
 
 #include <string>
 
-#include "llcompiler/utils/logger.h"
-#include "llcompiler/utils/option.h"
+#include "llcompiler/support/logger.h"
+#include "llcompiler/support/option.h"
 #include "llvm/Support/CommandLine.h"
-
 
 namespace llc::option {
 llvm::cl::OptionCategory commonOptions("global options", "");

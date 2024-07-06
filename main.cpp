@@ -17,13 +17,14 @@
 #include <string>
 
 #include "llcompiler/llcompiler.h"
-#include "llcompiler/utils/option.h"
+#include "llcompiler/support/option.h"
 #include "onnx/common/file_utils.h"
 #include "onnx/common/ir.h"
 #include "onnx/common/ir_pb_converter.h"
 #include "onnx/onnx-data_pb.h"
 #include "onnx/onnx-ml.pb.h"
 #include "onnx/shape_inference/implementation.h"
+#include "llcompiler/dialect/llh/IR/llh_ops.h"
 class module {};
 
 template <class A>
@@ -60,8 +61,11 @@ int main(int argc, char **argv) {
   ONNX_NAMESPACE::shape_inference::InferShapes(model);
   std::unique_ptr<ONNX_NAMESPACE::Graph> g(
       ONNX_NAMESPACE::ImportModelProto(model));
-  auto in =  g->inputs();
-  auto out = g->outputs();
+  // std::cout << g->docString() << std::endl;
+  // auto nodes = g.nodes();
+
+  // auto in =  g->inputs();
+  // auto out = g->outputs();
   // std::cout<<g->name()<<std::endl;
   return 0;
 }

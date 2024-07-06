@@ -1,0 +1,22 @@
+set(LLVM_TARGET_DEFINITIONS llh_ops.td)
+mlir_tablegen(llh_ops.h.inc -gen-op-decls)
+mlir_tablegen(llh_ops.cpp.inc -gen-op-defs)
+mlir_tablegen(llh_dialect.h.inc -gen-dialect-decls -dialect=llh)
+mlir_tablegen(llh_dialect.cpp.inc -gen-dialect-defs -dialect=llh)
+add_public_tablegen_target(MLIRLLHOpsIncGen)
+add_dependencies(mlir-headers MLIRLLHOpsIncGen)
+
+# set(LLVM_TARGET_DEFINITIONS llh_types.td)
+# mlir_tablegen(llh_types.h.inc -gen-typedef-decls)
+# mlir_tablegen(llh_types.cpp.inc -gen-typedef-defs)
+# add_public_tablegen_target(MLIRLLHTypesIncGen)
+
+# set(LLVM_TARGET_DEFINITIONS llh_enums.td)
+# mlir_tablegen(llh_enums.h.inc -gen-enum-decls)
+# mlir_tablegen(llh_enums.cpp.inc -gen-enum-defs)
+
+# set(LLVM_TARGET_DEFINITIONS llh_attributes.td)
+# mlir_tablegen(llh_attributes.h.inc -gen-attrdef-decls)
+# mlir_tablegen(llh_attributes.cpp.inc -gen-attrdef-defs)
+add_mlir_doc(llh_dialect LLHDialect LLH/ -gen-dialect-doc)
+add_mlir_doc(llh_ops LLHOps LLH/ -gen-op-doc)

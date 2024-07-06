@@ -11,21 +11,26 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-/**
- * @file llcompiler.h
- * @brief main header file
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-06-27
- *
- * @copyright Copyright (c) 2024  时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_LLCOMPILER_H_
-#define INCLUDE_LLCOMPILER_LLCOMPILER_H_
-#include "llcompiler/support/option.h"
-#include "llcompiler/compiler/init.h"
-#include "llcompiler/support/logger.h"
+#ifndef LLH_OPS
+#define LLH_OPS
 
+include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
+include "mlir/IR/EnumAttr.td"
+include "llcompiler/dialect/llh/IR/llh_dialect.td"
 
-#endif  // INCLUDE_LLCOMPILER_LLCOMPILER_H_
+def LLH_TestOp : LLH_Op<"test"> {
+    let summary = "test";
+    let description = [{
+        test
+    }];
+
+    let arguments = (ins I32:$input);
+    let results = (outs I32:$res);
+
+    let assemblyFormat = [{
+        $input attr-dict `:` type($input)
+    }];
+}
+
+#endif // LLH_OPS

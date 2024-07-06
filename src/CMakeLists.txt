@@ -1,0 +1,14 @@
+add_subdirectory(support)
+add_subdirectory(importer)
+add_subdirectory(dialect)
+add_subdirectory(compiler)
+set(LLCompilerALL_LINK_LIBS
+    LLCompilerSupport
+    LLCompilerImporter
+    LLCompiler
+    LLCLLHIR
+)
+llcompiler_add_library(LLCompilerAll
+    LLCompilerALL_LINK_LIBS
+    LLCOMPILER_CURRENT_DIR_FILES
+)
