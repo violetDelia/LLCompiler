@@ -19,7 +19,7 @@ option(BUILD_SHARED_LIBS "build shared libs" OFF)
 option(TEST "run test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 option(BUILD_LLCOMPILER_LOG "build log" ON)
-option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" OFF)
+option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(BUILD_NO_WARINGS "remover warings" ON)
 
 # #---------- cmake setting ----------##

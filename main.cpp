@@ -16,6 +16,7 @@
 #include <sstream>
 #include <string>
 
+#include "llcompiler/dialect/llh/IR/llh_ops.h"
 #include "llcompiler/llcompiler.h"
 #include "llcompiler/support/option.h"
 #include "onnx/common/file_utils.h"
@@ -24,7 +25,7 @@
 #include "onnx/onnx-data_pb.h"
 #include "onnx/onnx-ml.pb.h"
 #include "onnx/shape_inference/implementation.h"
-#include "llcompiler/dialect/llh/IR/llh_ops.h"
+
 class module {};
 
 template <class A>
@@ -55,7 +56,7 @@ struct Builder {
 
 int main(int argc, char **argv) {
   llc::init_compiler(argc, argv);
-  onnx::ModelProto model;
+  ONNX_NAMESPACE::ModelProto model;
   ONNX_NAMESPACE::LoadProtoFromPath(llc::option::importingPath.getValue(),
                                     model);
   ONNX_NAMESPACE::shape_inference::InferShapes(model);
