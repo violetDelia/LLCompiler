@@ -23,8 +23,3 @@
     path = third_party/pybind11
     url = https://github.com/pybind/pybind11.git
 	branch = v2.13.0
-
-[submodule "third_party/MegCC"]
-    path = third_party/MegCC
-    url = https://github.com/pybind/pybind11.git
-	branch = v2.13.0
