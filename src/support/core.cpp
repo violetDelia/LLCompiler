@@ -18,15 +18,15 @@ namespace llc {
 namespace logger {
 const char *log_lever_to_str(LOG_LEVER lever) {
   switch (lever) {
-    case LOG_LEVER::DEBUG:
+    case LOG_LEVER::DEBUG_:
       return "debug";
-    case LOG_LEVER::INFO:
+    case LOG_LEVER::INFO_:
       return "info";
-    case LOG_LEVER::WARN:
+    case LOG_LEVER::WARN_:
       return "warn";
-    case LOG_LEVER::ERROR:
+    case LOG_LEVER::ERROR_:
       return "error";
-    case LOG_LEVER::FATAL:
+    case LOG_LEVER::FATAL_:
       return "fatal";
   }
 }

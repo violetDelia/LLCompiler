@@ -31,17 +31,17 @@ llvm::cl::opt<std::string> logRoot("log-root",
 llvm::cl::opt<logger::LOG_LEVER> logLevel(
     "log-lever", llvm::cl::desc("log level"),
     llvm::cl::values(
-        clEnumValN(logger::LOG_LEVER::DEBUG,
-                   logger::log_lever_to_str(logger::LOG_LEVER::DEBUG), ""),
-        clEnumValN(logger::LOG_LEVER::INFO,
-                   logger::log_lever_to_str(logger::LOG_LEVER::INFO), ""),
-        clEnumValN(logger::LOG_LEVER::WARN,
-                   logger::log_lever_to_str(logger::LOG_LEVER::WARN), ""),
-        clEnumValN(logger::LOG_LEVER::ERROR,
-                   logger::log_lever_to_str(logger::LOG_LEVER::ERROR), ""),
-        clEnumValN(logger::LOG_LEVER::FATAL,
-                   logger::log_lever_to_str(logger::LOG_LEVER::FATAL), "")),
-    llvm::cl::init(logger::LOG_LEVER::DEBUG), llvm::cl::cat(commonOptions));
+        clEnumValN(logger::LOG_LEVER::DEBUG_,
+                   logger::log_lever_to_str(logger::LOG_LEVER::DEBUG_), ""),
+        clEnumValN(logger::LOG_LEVER::INFO_,
+                   logger::log_lever_to_str(logger::LOG_LEVER::INFO_), ""),
+        clEnumValN(logger::LOG_LEVER::WARN_,
+                   logger::log_lever_to_str(logger::LOG_LEVER::WARN_), ""),
+        clEnumValN(logger::LOG_LEVER::ERROR_,
+                   logger::log_lever_to_str(logger::LOG_LEVER::ERROR_), ""),
+        clEnumValN(logger::LOG_LEVER::FATAL_,
+                   logger::log_lever_to_str(logger::LOG_LEVER::FATAL_), "")),
+    llvm::cl::init(logger::LOG_LEVER::DEBUG_), llvm::cl::cat(commonOptions));
 
 llvm::cl::OptionCategory importingOptions("importer options",
                                           "config for importing models");

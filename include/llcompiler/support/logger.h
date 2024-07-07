@@ -75,7 +75,7 @@ class LoggerStream {
 #define LLCOMPILER_LOG(module, lever) \
   llc::logger::Logger(module, lever).stream(true)
 #define LLCOMPILER_CHECK_LOG(module, condition, lever) \
-  llc::logger::Logger(module, lever).stream(condition)
+  llc::logger::Logger(module, lever).stream(!condition)
 
 #else
 #define LLCOMPILER_INIT_LOGGER(module, root, lever)
@@ -83,15 +83,17 @@ class LoggerStream {
 #define LLCOMPILER_CHECK_LOG(module, condition, lever) llc::logger::NullStream()
 #endif  // LLCOMPILER_HAS_LOG
 
-#define DEBUG(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::DEBUG)
-#define INFO(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::INFO)
-#define WARN(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::WARN)
-#define ERROR(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::ERROR)
-#define FATAL(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::FATAL)
+#define DEBUG(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::DEBUG_)
+#define INFO(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::INFO_)
+#define WARN(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::WARN_)
+#define ERROR(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::ERROR_)
+#define FATAL(module)                                    \
+  LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::FATAL_) \
+      << __FILE__ << "<" << __LINE__ << ">: \n\t"
 
-#define CHECK(module, condition)                      \
-  LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::ERROR) \
-      << __FILE__ << __LINE__ << #condition <<
+#define CHECK(module, condition)                                          \
+  LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::ERROR_) \
+      << #condition << " : " << __FILE__ << "<" << __LINE__ << "> \n\t"
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
 #define CHECK_NE(module, val1, val2) CHECK(module, val1 != val2)
 #define CHECK_LT(module, val1, val2) CHECK(module, val1 < val2)
@@ -100,7 +102,7 @@ class LoggerStream {
 #define CHECK_GE(module, val1, val2) CHECK(module, val1 >= val2)
 
 #define DCHECK(module, condition) \
-  LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::DEBUG)
+  LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::DEBUG_)
 #define DCHECK_EQ(module, val1, val2) DCHECK(module, val1 == val2)
 #define DCHECK_NE(module, val1, val2) DCHECK(module, val1 != val2)
 #define DCHECK_LT(module, val1, val2) DCHECK(module, val1 < val2)

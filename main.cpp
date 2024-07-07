@@ -18,20 +18,22 @@
 #include <string>
 
 #include "llcompiler/llcompiler.h"
+#include "llcompiler/support/core.h"
+#include "llcompiler/support/logger.h"
+#include "llcompiler/support/option.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Parser/Parser.h"
-#include "llcompiler/dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/dialect/LLH/IR/LLHTypes.h"
 #include "onnx/common/file_utils.h"
 #include "onnx/common/ir.h"
 #include "onnx/common/ir_pb_converter.h"
 #include "onnx/onnx-data_pb.h"
 #include "onnx/shape_inference/implementation.h"
 
+using namespace llc;
+using namespace llc::importer;
 namespace llc::importer {
 
 class Importer {
@@ -55,20 +57,26 @@ struct Builder {
 
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_form_onnx_file(std::string file) {}
 
-// mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
-//     mlir::MLIRContext &context, llc::importer::IMPORTER_TYPE type,
-//     std::any input) {
-//   switch (type) {
-//     case llc::importer::IMPORTER_TYPE::ONNX_FILE:
-//       return ;
-//   }
-// };
+mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
+    const mlir::MLIRContext &context, llc::importer::IMPORTER_TYPE type,
+    std::any input) {
+  INFO(IMPORTER) << "---------- Begin Importing ----------";
+  CHECK(IMPORTER, input.has_value()) << "input contains no value";
+  INFO(IMPORTER) << "import tpye is: " << importer_type_to_str(type);
+  switch (type) {
+    case llc::importer::IMPORTER_TYPE::ONNX_FILE:
+      auto path = std::any_cast<std::string>(input);
+      INFO(IMPORTER) << "onnx file path is: " << path.c_str();
+      return {};
+  }
+};
 }  // namespace llc::importer
 int main(int argc, char **argv) {
   llc::init_compiler(argc, argv);
   mlir::MLIRContext context;
   context.getOrLoadDialect<llc::llh::LLHDialect>();
   auto input = llc::get_importer_input_form_option();
+  auto module = gen_mlir_from(context, option::importingType.getValue(), input);
   //  ONNX_NAMESPACE::ModelProto model;
   //  ONNX_NAMESPACE::LoadProtoFromPath(llc::option::importingPath.getValue(),
   //                                    model);

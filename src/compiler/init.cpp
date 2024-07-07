@@ -49,9 +49,12 @@ void init_compiler(int argc, char **argv) {
 std::any get_importer_input_form_option() {
   auto importer_type = llc::option::importingType.getValue();
   switch (importer_type) {
+    case importer::IMPORTER_TYPE::ONNX_FILE:
+      return {option::importingPath.getValue()};
     default:
       FATAL(GLOBAL) << "Unimplemented importer type: "
                     << importer::importer_type_to_str(importer_type);
+      return {};
   }
 }
 

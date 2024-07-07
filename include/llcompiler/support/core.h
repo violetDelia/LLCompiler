@@ -46,11 +46,11 @@ namespace llc {
 /**********  ENUM define  **********/
 namespace logger {
 enum class LOG_LEVER {
-  DEBUG = 1,
-  INFO = 2,
-  WARN = 3,
-  ERROR = 4,
-  FATAL = 5,
+  DEBUG_ = 1,
+  INFO_ = 2,
+  WARN_ = 3,
+  ERROR_ = 4,
+  FATAL_ = 5,
 };
 
 const char *log_lever_to_str(LOG_LEVER lever);
