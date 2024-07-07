@@ -12,7 +12,7 @@
 [submodule "third_party/spdlog"]
 	path = third_party/spdlog
 	url = https://github.com/gabime/spdlog.git
-	branch = v1.14.0
+	branch = v2.x-fix-2113
 
 [submodule "third_party/llvm-project"]
 	path = third_party/llvm-project
@@ -21,5 +21,10 @@
 
 [submodule "third_party/pybind11"]
     path = third_party/pybind11
+    url = https://github.com/pybind/pybind11.git
+	branch = v2.13.0
+
+[submodule "third_party/MegCC"]
+    path = third_party/MegCC
     url = https://github.com/pybind/pybind11.git
 	branch = v2.13.0

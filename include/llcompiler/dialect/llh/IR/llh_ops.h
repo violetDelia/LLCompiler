@@ -20,5 +20,12 @@
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
+
+#ifndef GET_OP_CLASSES
+#define GET_OP_CLASSES
+#endif  // GET_OP_CLASS
+#include "llcompiler/dialect/LLH/IR/llh_ops.h.inc"
+
 namespace llc::llh {}
+
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLH_OPS_H_

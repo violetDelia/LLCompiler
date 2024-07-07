@@ -23,7 +23,6 @@
 #include "onnx/common/ir.h"
 #include "onnx/common/ir_pb_converter.h"
 #include "onnx/onnx-data_pb.h"
-#include "onnx/onnx-ml.pb.h"
 #include "onnx/shape_inference/implementation.h"
 
 class module {};

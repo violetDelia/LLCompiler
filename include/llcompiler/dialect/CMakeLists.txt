@@ -1,1 +1,1 @@
-add_subdirectory(llh)
+add_subdirectory(LLH)

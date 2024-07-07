@@ -15,3 +15,4 @@
 #include "llcompiler/dialect/llh/IR/llh_ops.h"
 
 namespace llc::llh {}
+#include "llcompiler/dialect/llh/IR/llh_ops.cpp.inc"

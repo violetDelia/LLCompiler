@@ -7,3 +7,4 @@ torch_mlir
 install
 __pycache__
 .cache
+.clangd

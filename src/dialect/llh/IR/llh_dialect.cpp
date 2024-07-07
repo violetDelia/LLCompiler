@@ -11,6 +11,8 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/dialect/llh/IR/llh_dialect.h"
+#include "llcompiler/dialect/LLH/IR/llh_dialect.h"
 
 namespace llc::llh {}
+
+#include "llcompiler/dialect/LLH/IR/llh_dialect.cpp.inc"

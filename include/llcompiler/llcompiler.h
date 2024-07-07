@@ -26,6 +26,7 @@
 #include "llcompiler/support/option.h"
 #include "llcompiler/compiler/init.h"
 #include "llcompiler/support/logger.h"
+#include "llcompiler/dialect/LLH/IR/llh_ops.h"
 
 
 #endif  // INCLUDE_LLCOMPILER_LLCOMPILER_H_
