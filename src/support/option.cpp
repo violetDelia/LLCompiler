@@ -14,6 +14,7 @@
 
 #include <string>
 
+#include "llcompiler/support/core.h"
 #include "llcompiler/support/logger.h"
 #include "llcompiler/support/option.h"
 #include "llvm/Support/CommandLine.h"
@@ -27,23 +28,30 @@ llvm::cl::opt<std::string> logRoot("log-root",
                                    llvm::cl::init("C:/LLCompiler/log"),
                                    llvm::cl::cat(commonOptions));
 
-llvm::cl::opt<LOG_LEVER> logLevel(
+llvm::cl::opt<logger::LOG_LEVER> logLevel(
     "log-lever", llvm::cl::desc("log level"),
-    llvm::cl::values(clEnumValN(DEBUG, logger::log_lever_to_str(DEBUG), ""),
-                     clEnumValN(INFO, logger::log_lever_to_str(INFO), ""),
-                     clEnumValN(WARN, logger::log_lever_to_str(WARN), ""),
-                     clEnumValN(ERROR, logger::log_lever_to_str(ERROR), ""),
-                     clEnumValN(FATAL, logger::log_lever_to_str(FATAL), "")),
-    llvm::cl::init(DEBUG), llvm::cl::cat(commonOptions));
+    llvm::cl::values(
+        clEnumValN(logger::LOG_LEVER::DEBUG,
+                   logger::log_lever_to_str(logger::LOG_LEVER::DEBUG), ""),
+        clEnumValN(logger::LOG_LEVER::INFO,
+                   logger::log_lever_to_str(logger::LOG_LEVER::INFO), ""),
+        clEnumValN(logger::LOG_LEVER::WARN,
+                   logger::log_lever_to_str(logger::LOG_LEVER::WARN), ""),
+        clEnumValN(logger::LOG_LEVER::ERROR,
+                   logger::log_lever_to_str(logger::LOG_LEVER::ERROR), ""),
+        clEnumValN(logger::LOG_LEVER::FATAL,
+                   logger::log_lever_to_str(logger::LOG_LEVER::FATAL), "")),
+    llvm::cl::init(logger::LOG_LEVER::DEBUG), llvm::cl::cat(commonOptions));
 
 llvm::cl::OptionCategory importingOptions("importer options",
                                           "config for importing models");
 
 llvm::cl::opt<importer::IMPORTER_TYPE> importingType(
     "import-type", llvm::cl::desc("the type of modle how to import"),
-    llvm::cl::values(clEnumValN(importer::ONNX_FILE, "onnx_file",
+    llvm::cl::values(clEnumValN(importer::IMPORTER_TYPE::ONNX_FILE, "onnx_file",
                                 "onnx model")),
-    llvm::cl::init(importer::ONNX_FILE), llvm::cl::cat(importingOptions));
+    llvm::cl::init(importer::IMPORTER_TYPE::ONNX_FILE),
+    llvm::cl::cat(importingOptions));
 
 llvm::cl::opt<std::string> importingPath(
     "import-file", llvm::cl::desc("the path of the file to import"),

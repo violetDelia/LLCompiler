@@ -32,7 +32,7 @@ namespace llc::option {
 /**********  options extern  **********/
 extern llvm::cl::OptionCategory commonOption;
 extern llvm::cl::opt<std::string> logRoot;
-extern llvm::cl::opt<llc::LOG_LEVER> logLevel;
+extern llvm::cl::opt<llc::logger::LOG_LEVER> logLevel;
 /**********  options extern  **********/
 extern llvm::cl::OptionCategory importingOptions;
 extern llvm::cl::opt<importer::IMPORTER_TYPE> importingType;

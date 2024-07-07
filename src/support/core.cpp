@@ -35,11 +35,12 @@ const char *log_lever_to_str(LOG_LEVER lever) {
 namespace importer {
 const char *importer_type_to_str(IMPORTER_TYPE type) {
   switch (type) {
-    case ONNX_FILE:
+    case IMPORTER_TYPE::ONNX_FILE:
       return "onnx_file";
   }
 }
 };  // namespace importer
+
 /**********  log module define  **********/
 const char *GLOBAL = "global";
 const char *IMPORTER = "importer";

@@ -11,25 +11,17 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+//
 
-/**
- * @file init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#include <any>
-namespace llc {
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/PatternMatch.h"
+#include "mlir/Rewrite/FrozenRewritePatternSet.h"
+#include "mlir/Support/LogicalResult.h"
+#include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
-void init_compiler(int argc, char **argv);
+#include "llcompiler/dialect/LLH/Transforms/LLHPasses.h"
 
-std::any get_importer_input_form_option();
-
-}  // namespace llc
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+namespace llc::llh {
+#define GEN_PASS_DEF_STANDALONESWITCHBARFOO
+#include "llcompiler/dialect/LLH/Transforms/LLHPasses.h.inc"
+}

@@ -11,8 +11,16 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/dialect/llh/IR/llh_dialect.h"
-#include "llcompiler/dialect/llh/IR/llh_ops.h"
+//
 
-namespace llc::llh {}
-#include "llcompiler/dialect/llh/IR/llh_ops.cpp.inc"
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
+
+#include "mlir/Bytecode/BytecodeOpInterface.h"
+#include "mlir/IR/Dialect.h"
+
+#define LLCOMPILER_MACRO_FOR_FIX_HEAD
+#include "llcompiler/dialect/LLH/IR/LLHDialect.h.inc"
+#undef LLCOMPILER_MACRO_FOR_FIX_HEAD
+
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_

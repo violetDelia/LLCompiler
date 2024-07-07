@@ -28,6 +28,7 @@
 #else
 #define LLC_CONSTEXPR
 #endif  // __cplusplus > 201703L
+
 #include <utility>
 /**********  alias define  **********/
 #define ALIAS_CLASS(Alias_Class, Original_Class) \
@@ -43,19 +44,20 @@
   }
 namespace llc {
 /**********  ENUM define  **********/
-enum LOG_LEVER {
+namespace logger {
+enum class LOG_LEVER {
   DEBUG = 1,
   INFO = 2,
   WARN = 3,
   ERROR = 4,
   FATAL = 5,
 };
-namespace logger {
+
 const char *log_lever_to_str(LOG_LEVER lever);
-}
+}  // namespace logger
 
 namespace importer {
-enum IMPORTER_TYPE { ONNX_FILE = 1 };
+enum class IMPORTER_TYPE { ONNX_FILE = 1 };
 const char *importer_type_to_str(IMPORTER_TYPE type);
 
 }  // namespace importer

@@ -27,6 +27,10 @@ def LLH_Dialect : Dialect{
      base with onnx.
      }];
     let cppNamespace = "::llc::llh";
+    let useDefaultTypePrinterParser = 0;
+    let extraClassDeclaration = [{
+        void registerTypes();
+    }];
 }
 
 //===----------------------------------------------------------------------===//

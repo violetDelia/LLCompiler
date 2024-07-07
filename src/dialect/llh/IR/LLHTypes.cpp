@@ -12,24 +12,22 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-/**
- * @file init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#include <any>
-namespace llc {
 
-void init_compiler(int argc, char **argv);
 
-std::any get_importer_input_form_option();
+#include "llcompiler/dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/dialect/LLH/IR/LLHTypes.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/DialectImplementation.h"
+#include "llvm/ADT/TypeSwitch.h"
 
-}  // namespace llc
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+using namespace llc::llh;
+
+#define GET_TYPEDEF_CLASSES
+#include "llcompiler/dialect/LLH/IR/LLHTypes.cpp.inc"
+
+void LLHDialect::registerTypes() {
+  addTypes<
+#define GET_TYPEDEF_LIST
+#include "llcompiler/dialect/LLH/IR/LLHTypes.cpp.inc"
+      >();
+}

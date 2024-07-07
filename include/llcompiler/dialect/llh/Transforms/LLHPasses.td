@@ -11,26 +11,10 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLH_OPS
-#define LLH_OPS
+//
+#ifndef LLH_PASS
+#define LLH_PASS
 
-include "mlir/Interfaces/InferTypeOpInterface.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
-include "mlir/IR/EnumAttr.td"
-include "llcompiler/dialect/llh/IR/llh_dialect.td"
+include "mlir/Pass/PassBase.td"
 
-def LLH_TestOp : LLH_Op<"test"> {
-    let summary = "test";
-    let description = [{
-        test
-    }];
-
-    let arguments = (ins I32:$input);
-    let results = (outs I32:$res);
-
-    let assemblyFormat = [{
-        $input attr-dict `:` type($input)
-    }];
-}
-
-#endif // LLH_OPS
+#endif // LLH_PASS

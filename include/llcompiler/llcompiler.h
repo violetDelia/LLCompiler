@@ -23,10 +23,13 @@
  */
 #ifndef INCLUDE_LLCOMPILER_LLCOMPILER_H_
 #define INCLUDE_LLCOMPILER_LLCOMPILER_H_
-#include "llcompiler/support/option.h"
+
+#include "llcompiler/dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/dialect/LLH/IR/LLHTypes.h"
 #include "llcompiler/compiler/init.h"
 #include "llcompiler/support/logger.h"
-#include "llcompiler/dialect/LLH/IR/llh_ops.h"
+#include "llcompiler/support/option.h"
 
 
 #endif  // INCLUDE_LLCOMPILER_LLCOMPILER_H_

@@ -22,8 +22,14 @@
  *
  */
 #include "llcompiler/support/core.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/ir/OwningOpRef.h"
+
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
-namespace llc::importer {}  // namespace llc::importer
+namespace llc::importer {
+
+
+}  // namespace llc::importer
 #define INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_

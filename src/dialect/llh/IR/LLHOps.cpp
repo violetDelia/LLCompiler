@@ -12,24 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-/**
- * @file init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#include <any>
-namespace llc {
+#include "llcompiler/dialect/llh/IR/LLHOps.h"
+#include "llcompiler/dialect/llh/IR/LLHDialect.h"
 
-void init_compiler(int argc, char **argv);
-
-std::any get_importer_input_form_option();
-
-}  // namespace llc
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#define GET_OP_CLASSES
+#include "llcompiler/dialect/llh/IR/LLHOps.cpp.inc"

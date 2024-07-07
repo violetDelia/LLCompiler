@@ -1,14 +1,17 @@
-add_mlir_dialect_library(LLCLLHIR
-    llh_dialect.cpp
-    llh_ops.cpp
+add_mlir_dialect_library(LLCLLHDialect
+    LLHTypes.cpp
+    LLHDialect.cpp
+    LLHOps.cpp
+
+    ADDITIONAL_HEADER_DIRS
+    ${PROJECT_SOURCE_DIR}/include/llcompiler/dialect/LLH
 
     DEPENDS
     MLIRLLHOpsIncGen
+    MLIRLLHTypesIncGen
 
     LINK_LIBS PUBLIC
-    MLIRAnalysis
     MLIRIR
-    MLIRParser
-    MLIRSideEffectInterfaces
-    MLIRTransforms
+    MLIRInferTypeOpInterface
+    MLIRFuncDialect
 )

@@ -11,25 +11,24 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#ifndef LLH_OPS
+#define LLH_OPS
+include "llcompiler/dialect/LLH/IR/LLHTypes.td"
+include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 
-/**
- * @file init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#include <any>
-namespace llc {
+def LLH_TestOp : LLH_Op<"test"> {
+    let summary = "test";
+    let description = [{
+        test
+    }];
 
-void init_compiler(int argc, char **argv);
+    let arguments = (ins I32:$input);
+    let results = (outs I32:$res);
 
-std::any get_importer_input_form_option();
+    let assemblyFormat = [{
+        $input attr-dict `:` type($input)
+    }];
+}
 
-}  // namespace llc
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#endif // LLH_OPS

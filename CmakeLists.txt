@@ -18,9 +18,9 @@ unset(BUILD_NO_WARINGS CACHE)
 option(BUILD_SHARED_LIBS "build shared libs" OFF)
 option(TEST "run test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
-option(BUILD_LLCOMPILER_LOG "build log" ON)
+option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
-option(BUILD_NO_WARINGS "remover warings" ON)
+option(BUILD_NO_WARINGS "remove warings of compiler" ON)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)
@@ -38,6 +38,7 @@ if(MSVC)
     if(STATIC_WINDOWS_RUNTIME)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
     endif()
+
     if(BUILD_NO_WARINGS)
         add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Wall>)
     endif()
@@ -90,7 +91,13 @@ target_include_directories(main PRIVATE
     $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
 )
-target_link_libraries(main PRIVATE LLCompilerAll)
+target_link_libraries(main PRIVATE LLCompilerAll
+    MLIRAnalysis
+    MLIRFunctionInterfaces
+    MLIRIR
+    MLIRParser
+    MLIRSideEffectInterfaces
+    MLIRTransforms)
 
 # #---------- message ----------##
 message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})

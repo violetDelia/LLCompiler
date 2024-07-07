@@ -11,8 +11,24 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/dialect/LLH/IR/llh_dialect.h"
+//
 
-namespace llc::llh {}
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHPASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHPASSES_H_
 
-#include "llcompiler/dialect/LLH/IR/llh_dialect.cpp.inc"
+#include <memory>
+
+#include "llcompiler/dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/dialect/LLH/IR/LLHOps.h"
+#include "mlir/Pass/Pass.h"
+
+namespace llc::llh {
+
+#define GEN_PASS_DECL
+#include "llcompiler/dialect/LLH/Transforms/LLHPasses.h.inc"
+
+#define GEN_PASS_REGISTRATION
+#include "llcompiler/dialect/LLH/Transforms/LLHPasses.h.inc"
+}  // namespace llc::llh
+
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHPASSES_H_

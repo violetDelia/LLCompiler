@@ -14,15 +14,20 @@
 #include <initializer_list>
 #include <string>
 
+#include "llcompiler/compiler/init.h"
+#include "llcompiler/support/core.h"
 #include "llcompiler/support/logger.h"
 #include "llcompiler/support/option.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/InitLLVM.h"
-
+#include "mlir/IR/AsmState.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/MLIRContext.h"
+#include "mlir/Parser/Parser.h"
 
 namespace llc {
 
-void init_logger(std::initializer_list<std::string> modules) {
+void init_logger_(std::initializer_list<std::string> modules) {
   for (auto &module : modules) {
     LLCOMPILER_INIT_LOGGER(module.c_str(), option::logRoot.getValue().data(),
                            option::logLevel.getValue())
@@ -30,14 +35,24 @@ void init_logger(std::initializer_list<std::string> modules) {
 }
 
 void init_compiler(int argc, char **argv) {
-  llvm::InitLLVM compiler(argc, argv);
+  mlir::registerAsmPrinterCLOptions();
+  mlir::registerMLIRContextCLOptions();
   llvm::cl::ParseCommandLineOptions(
       argc, argv, "LLCompiler: A graph compiler for ONNX models");
-  init_logger({GLOBAL, IMPORTER});
+  init_logger_({GLOBAL, IMPORTER});
   INFO(GLOBAL) << "import type is: "
                << importer::importer_type_to_str(
                       option::importingType.getValue());
   INFO(GLOBAL) << "import file is: " << option::importingPath.getValue();
+}
+
+std::any get_importer_input_form_option() {
+  auto importer_type = llc::option::importingType.getValue();
+  switch (importer_type) {
+    default:
+      FATAL(GLOBAL) << "Unimplemented importer type: "
+                    << importer::importer_type_to_str(importer_type);
+  }
 }
 
 }  // namespace llc

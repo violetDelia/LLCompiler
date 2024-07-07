@@ -11,18 +11,21 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#include "llcompiler/dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/dialect/LLH/IR/LLHTypes.h"
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLH_DIALECT_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLH_DIALECT_H_
+using namespace mlir;
+using namespace llc::llh;
 
-#include "mlir/IR/Dialect.h"
+#include "llcompiler/dialect/LLH/IR/LLHDialect.cpp.inc"
 
-#ifndef GET_OP_CLASSES
-#define GET_OP_CLASSES
-#endif // GET_OP_CLASSES
-#include "llcompiler/dialect/LLH/IR/llh_dialect.h.inc"
-
-namespace llc::llh {}
-
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLH_DIALECT_H_
+//===----------------------------------------------------------------------===//
+// LLHDialect initialize method.
+//===----------------------------------------------------------------------===//
+void LLHDialect::initialize() {
+  addOperations<
+#define GET_OP_LIST
+#include "llcompiler/dialect/llh/IR/LLHOps.cpp.inc"
+      >();
+}

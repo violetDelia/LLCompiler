@@ -83,14 +83,14 @@ class LoggerStream {
 #define LLCOMPILER_CHECK_LOG(module, condition, lever) llc::logger::NullStream()
 #endif  // LLCOMPILER_HAS_LOG
 
-#define DEBUG(module) LLCOMPILER_LOG(module, llc::DEBUG)
-#define INFO(module) LLCOMPILER_LOG(module, llc::INFO)
-#define WARN(module) LLCOMPILER_LOG(module, llc::WARN)
-#define ERROR(module) LLCOMPILER_LOG(module, llc::ERROR)
-#define FATAL(module) LLCOMPILER_LOG(module, llc::FATAL)
+#define DEBUG(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::DEBUG)
+#define INFO(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::INFO)
+#define WARN(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::WARN)
+#define ERROR(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::ERROR)
+#define FATAL(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::FATAL)
 
 #define CHECK(module, condition)                      \
-  LLCOMPILER_CHECK_LOG(module, condition, llc::ERROR) \
+  LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::ERROR) \
       << __FILE__ << __LINE__ << #condition <<
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
 #define CHECK_NE(module, val1, val2) CHECK(module, val1 != val2)
@@ -100,7 +100,7 @@ class LoggerStream {
 #define CHECK_GE(module, val1, val2) CHECK(module, val1 >= val2)
 
 #define DCHECK(module, condition) \
-  LLCOMPILER_CHECK_LOG(module, condition, llc::DEBUG)
+  LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::DEBUG)
 #define DCHECK_EQ(module, val1, val2) DCHECK(module, val1 == val2)
 #define DCHECK_NE(module, val1, val2) DCHECK(module, val1 != val2)
 #define DCHECK_LT(module, val1, val2) DCHECK(module, val1 < val2)
@@ -122,7 +122,5 @@ class LoggerStream {
   LLCOMPILER_CHECK_LOG(module, val1 > val2, lever)
 #define LOG_GE(module, val1, val2, lever) \
   LLCOMPILER_CHECK_LOG(module, val1 >= val2, lever)
-
-#define TYPE(val) typeid(val).name()
 
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_

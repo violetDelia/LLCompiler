@@ -6,7 +6,8 @@ set(LLCompilerALL_LINK_LIBS
     LLCompilerSupport
     LLCompilerImporter
     LLCompiler
-    LLCLLHIR
+    LLCLLHDialect
+    LLCLLHPasses
 )
 llcompiler_add_library(LLCompilerAll
     LLCompilerALL_LINK_LIBS

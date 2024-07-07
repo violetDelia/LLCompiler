@@ -13,19 +13,16 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLH_OPS_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLH_OPS_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OpImplementation.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
-#ifndef GET_OP_CLASSES
 #define GET_OP_CLASSES
-#endif  // GET_OP_CLASS
-#include "llcompiler/dialect/LLH/IR/llh_ops.h.inc"
+#include "llcompiler/dialect/LLH/IR/LLHOps.h.inc"
 
-namespace llc::llh {}
-
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLH_OPS_H_
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
