@@ -59,21 +59,11 @@ llvm::cl::opt<std::string> importingPath(
     llvm::cl::init("C:/LLCompiler/models/resnet18-v1-7.onnx"),
     llvm::cl::cat(importingOptions));
 
-llvm::cl::opt<importer::IMPORTER_DIALECT> importintDialect(
+llvm::cl::opt<importer::TARGET_DIALECT> importintDialect(
     "import-to", llvm::cl::desc("the dialect to convert in importer"),
-    llvm::cl::values(clEnumValN(importer::IMPORTER_DIALECT::LLH, "llh",
+    llvm::cl::values(clEnumValN(importer::TARGET_DIALECT::LLH, "llh",
                                 "convert to llh dialect")),
-    llvm::cl::init(importer::IMPORTER_DIALECT::LLH),
+    llvm::cl::init(importer::TARGET_DIALECT::LLH),
     llvm::cl::cat(importingOptions));
 
-std::any get_importer_input_form_option() {
-  auto importer_type = llc::option::importingType.getValue();
-  switch (importer_type) {
-    case importer::IMPORTER_TYPE::ONNX_FILE:
-      return {option::importingPath.getValue()};
-  }
-  FATAL(GLOBAL) << "Unimplemented importer type: "
-                << importer::importer_type_to_str(importer_type);
-  return {};
-}
 }  // namespace llc::option

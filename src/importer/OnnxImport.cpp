@@ -19,9 +19,12 @@ namespace llc::importer {
 OnnxImporter::OnnxImporter(const mlir::MLIRContext *context,
                            const OpBuilder *builder, const std::string path)
     : Importer(context, builder) {
-  FATAL(IMPORTER) << "OnnxImporter initialized";
+  UNIMPLEMENTED(IMPORTER);
 }
 
-Importer::~Importer() {}
+mlir::ModuleOp OnnxImporter::export_mlir_module() const {
+  UNIMPLEMENTED(IMPORTER);
+  return {};
+}
 
 };  // namespace llc::importer

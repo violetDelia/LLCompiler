@@ -16,6 +16,7 @@
 
 #include "llcompiler/Importer/OnnxImporter.h"
 #include "llcompiler/Importer/Utility.h"
+#include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
@@ -38,22 +39,26 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_form_onnx_file(
   ONNX_NAMESPACE::ModelProto model;
 }
 
-mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
+mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
     const mlir::MLIRContext &context, const llc::importer::IMPORTER_TYPE type,
-    const std::any input) {
+    const std::any input, TARGET_DIALECT target) {
   INFO(IMPORTER) << "---------- Begin Importing ----------";
   CHECK(IMPORTER, input.has_value()) << "input contains no value";
   INFO(IMPORTER) << "import tpye is: " << importer_type_to_str(type);
+  OpBuilder *builder;
+  switch (target) {
+    default:
+      FATAL(IMPORTER) << "Unsupported to covert dialect: "
+                      << importer::target_dialect_to_str(target);
+  }
   switch (type) {
     case llc::importer::IMPORTER_TYPE::ONNX_FILE:
       auto path = std::any_cast<std::string>(input);
       INFO(IMPORTER) << "onnx file path is: " << path.c_str();
-
-      return {};
+      return OnnxImporter(&context, builder, path).export_mlir_module();
   }
   FATAL(IMPORTER) << "Unimplemented importer type: "
                   << importer::importer_type_to_str(type);
   return {};
 }
-}  // namespace llc::import
-
+}  // namespace llc::importer

@@ -4,7 +4,7 @@ add_mlir_dialect_library(LLCLLHDialect
     LLHOps.cpp
 
     ADDITIONAL_HEADER_DIRS
-    ${PROJECT_SOURCE_DIR}/include/llcompiler/dialect/LLH
+    ${PROJECT_SOURCE_DIR}/include/llcompiler/Dialect/LLH
 
     DEPENDS
     MLIRLLHOpsIncGen

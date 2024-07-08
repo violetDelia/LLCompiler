@@ -35,7 +35,9 @@ namespace llc::importer {
 class OnnxImporter : public Importer {
  public:
   OnnxImporter(const mlir::MLIRContext *context, const OpBuilder *builder,
-           const std::string path);
+               const std::string path);
+
+  mlir::ModuleOp export_mlir_module() const final;
 };
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_

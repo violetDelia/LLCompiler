@@ -125,4 +125,6 @@ class LoggerStream {
 #define LOG_GE(module, val1, val2, lever) \
   LLCOMPILER_CHECK_LOG(module, val1 >= val2, lever)
 
+#define UNIMPLEMENTED(module) FATAL(module) << "Unimplemented function";
+
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_

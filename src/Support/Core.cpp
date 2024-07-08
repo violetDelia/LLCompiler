@@ -42,9 +42,9 @@ const char *importer_type_to_str(const IMPORTER_TYPE type) {
   return "unimplemented";
 }
 
-const char *importer_dialect_to_str(const IMPORTER_DIALECT dialect) {
+const char *target_dialect_to_str(const TARGET_DIALECT dialect) {
   switch (dialect) {
-    case IMPORTER_DIALECT::LLH:
+    case TARGET_DIALECT::LLH:
       return "llh";
   }
   return "unimplemented";

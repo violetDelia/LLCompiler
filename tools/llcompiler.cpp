@@ -13,6 +13,7 @@
 //    limitations under the License.
 #ifndef LLCOMPILER_HAS_LOG
 #define LLCOMPILER_HAS_LOG
+#include "llcompiler/support/option.h"
 #endif
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
@@ -20,13 +21,13 @@
 #include "llcompiler/Importer/Utility.h"
 #include "llcompiler/Support/Core.h"
 
-
 int main(int argc, char **argv) {
   llc::init_compiler(argc, argv);
   mlir::MLIRContext context;
   context.getOrLoadDialect<llc::llh::LLHDialect>();
   auto input = llc::importer::get_importer_input_form_option();
-  auto module =
-      gen_mlir_from(context, llc::option::importingType.getValue(), input);
+  auto target_dialect = llc::option::importintDialect.getValue();
+  auto module = llc::importer::gen_mlir_from_to(
+      context, llc::option::importingType.getValue(), input, target_dialect);
   return 0;
 }

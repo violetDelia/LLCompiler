@@ -59,8 +59,8 @@ const char *log_lever_to_str(const LOG_LEVER lever);
 namespace importer {
 enum class IMPORTER_TYPE { ONNX_FILE = 1 };
 const char *importer_type_to_str(const IMPORTER_TYPE type);
-enum class IMPORTER_DIALECT { LLH = 1 };
-const char *importer_dialect_to_str(const IMPORTER_DIALECT dialect);
+enum class TARGET_DIALECT { LLH = 1 };
+const char *target_dialect_to_str(const TARGET_DIALECT dialect);
 
 }  // namespace importer
 

@@ -9,7 +9,8 @@ CompileFlags:
   -IC:/LLCompiler/third_party/llvm-project/llvm/include/,
   -IC:/LLCompiler/build/third_party/llvm-project/llvm/tools/mlir/include/,
   -IC:/LLCompiler/third_party/llvm-project/mlir/include/,
-  -IC:/LLCompiler/build/_deps/protobuf-src/src/
+  -IC:/LLCompiler/build/_deps/protobuf-src/src/,
+  -IC:/LLCompiler/other_party/MegCC/
   ]
 Diagnostics:
   UnusedIncludes: None  

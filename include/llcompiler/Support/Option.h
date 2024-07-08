@@ -26,6 +26,7 @@
 #include <any>
 #include <string>
 
+#include "core.h"
 #include "llcompiler/Support/Core.h"
 #include "llvm/Support/CommandLine.h"
 
@@ -37,7 +38,7 @@ extern llvm::cl::opt<llc::logger::LOG_LEVER> logLevel;
 extern llvm::cl::OptionCategory importingOptions;
 extern llvm::cl::opt<importer::IMPORTER_TYPE> importingType;
 extern llvm::cl::opt<std::string> importingPath;
-extern llvm::cl::opt<importer::IMPORTER_DIALECT> importintDialect;
+extern llvm::cl::opt<importer::TARGET_DIALECT> importintDialect;
 /**********  utilitys  **********/
 std::any get_importer_input_form_option();
 }  // namespace llc::option
