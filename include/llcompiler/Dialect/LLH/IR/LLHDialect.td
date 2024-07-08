@@ -11,29 +11,33 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#ifndef LLH_DIALECT
+#define LLH_DIALECT
 
-#ifndef LLH_TYPES
-#define LLH_TYPES
-
-include "mlir/IR/DialectBase.td"
-include "llcompiler/Dialect/LLH/IR/LLHDialect.td"
+include "mlir/IR/OpBase.td"
 
 //===----------------------------------------------------------------------===//
-// Standalone type definitions
+// Standalone dialect definition.
 //===----------------------------------------------------------------------===//
 
-class LLH_Type<string name, string typeMnemonic, list<Trait> traits = []>
-    : TypeDef<LLH_Dialect, name, traits> {
-  let mnemonic = typeMnemonic;
+def LLH_Dialect : Dialect{
+    let name = "llh";
+    let summary = "Top-level dialect for connecting LLC and other graph frameworks";
+    let description = [{
+     base with onnx.
+     }];
+    let cppNamespace = "::llc::llh";
+    let useDefaultTypePrinterParser = 0;
+    let extraClassDeclaration = [{
+        void registerTypes();
+    }];
 }
 
-// def Torch_TestType : LLH_Type<"test_type_name", "test_type_mnemonic"> {
-//   let summary = "test_type";
-//   let description = [{
-//     test_type.
-//   }];
-//   let parameters = (ins StringRefParameter<"class name">:$className);
-//   let hasCustomAssemblyFormat = 1;
-// }
+//===----------------------------------------------------------------------===//
+// Base standalone operation definition.
+//===----------------------------------------------------------------------===//
 
-#endif // LLH_TYPES
+class LLH_Op<string mnemonic, list<Trait> traits = []> :
+        Op<LLH_Dialect, mnemonic, traits>;
+
+#endif // LLH_DIALECT

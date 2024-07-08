@@ -20,7 +20,7 @@
 #include "mlir/IR/Dialect.h"
 
 #define LLCOMPILER_MACRO_FOR_FIX_HEAD
-#include "llcompiler/dialect/LLH/IR/LLHDialect.h.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h.inc"
 #undef LLCOMPILER_MACRO_FOR_FIX_HEAD
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_

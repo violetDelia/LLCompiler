@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 /**
- * @file logger.
- * @brief Logger and macros for logging
+ * @file Core.h
+ * @brief eunm define
  * @author 时光丶人爱 (1733535832@qq.com)
  * @version 1.0
  * @date 2024-06-27
@@ -53,12 +53,14 @@ enum class LOG_LEVER {
   FATAL_ = 5,
 };
 
-const char *log_lever_to_str(LOG_LEVER lever);
+const char *log_lever_to_str(const LOG_LEVER lever);
 }  // namespace logger
 
 namespace importer {
 enum class IMPORTER_TYPE { ONNX_FILE = 1 };
-const char *importer_type_to_str(IMPORTER_TYPE type);
+const char *importer_type_to_str(const IMPORTER_TYPE type);
+enum class IMPORTER_DIALECT { LLH = 1 };
+const char *importer_dialect_to_str(const IMPORTER_DIALECT dialect);
 
 }  // namespace importer
 

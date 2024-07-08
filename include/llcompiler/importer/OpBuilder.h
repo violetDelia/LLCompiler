@@ -11,18 +11,27 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+/**
+ * @file Opbuilder.h
+ * @brief interface class OpBuilder that build Ops form inputs.
+ * @author 时光丶人爱 (1733535832@qq.com)
+ * @version 1.0
+ * @date 2024-07-01
+ *
+ * @copyright Copyright (c) 2024 时光丶人爱
+ *
+ */
+#include "llcompiler/Support/Core.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/ir/OwningOpRef.h"
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
+#ifndef INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
+#define INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
 
-#include "mlir/IR/Dialect.h"
-#include "mlir/IR/OpDefinition.h"
-#include "mlir/IR/OpImplementation.h"
-#include "mlir/Interfaces/InferTypeOpInterface.h"
-#include "mlir/Interfaces/SideEffectInterfaces.h"
-
-#define GET_OP_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"
-
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
+namespace llc::importer {
+class OpBuilder {
+ public:
+  virtual ~OpBuilder();
+};
+}       // namespace llc::importer
+#endif  // INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_

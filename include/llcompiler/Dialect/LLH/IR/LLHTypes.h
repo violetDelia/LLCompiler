@@ -11,25 +11,14 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-/**
- * @file llcompiler.h
- * @brief main header file
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-06-27
- *
- * @copyright Copyright (c) 2024  时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_LLCOMPILER_H_
-#define INCLUDE_LLCOMPILER_LLCOMPILER_H_
+//
 
-#include "llcompiler/dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/dialect/LLH/IR/LLHTypes.h"
-#include "llcompiler/compiler/init.h"
-#include "llcompiler/support/logger.h"
-#include "llcompiler/support/option.h"
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_
 
+#include "mlir/IR/BuiltinTypes.h"
 
-#endif  // INCLUDE_LLCOMPILER_LLCOMPILER_H_
+#define GET_TYPEDEF_CLASSES
+#include "llcompiler/Dialect/LLH/IR/LLHTypes.h.inc"
+
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_

@@ -14,9 +14,9 @@
 
 #include <string>
 
-#include "llcompiler/support/core.h"
-#include "llcompiler/support/logger.h"
-#include "llcompiler/support/option.h"
+#include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
 
 namespace llc::option {
@@ -59,4 +59,21 @@ llvm::cl::opt<std::string> importingPath(
     llvm::cl::init("C:/LLCompiler/models/resnet18-v1-7.onnx"),
     llvm::cl::cat(importingOptions));
 
+llvm::cl::opt<importer::IMPORTER_DIALECT> importintDialect(
+    "import-to", llvm::cl::desc("the dialect to convert in importer"),
+    llvm::cl::values(clEnumValN(importer::IMPORTER_DIALECT::LLH, "llh",
+                                "convert to llh dialect")),
+    llvm::cl::init(importer::IMPORTER_DIALECT::LLH),
+    llvm::cl::cat(importingOptions));
+
+std::any get_importer_input_form_option() {
+  auto importer_type = llc::option::importingType.getValue();
+  switch (importer_type) {
+    case importer::IMPORTER_TYPE::ONNX_FILE:
+      return {option::importingPath.getValue()};
+  }
+  FATAL(GLOBAL) << "Unimplemented importer type: "
+                << importer::importer_type_to_str(importer_type);
+  return {};
+}
 }  // namespace llc::option

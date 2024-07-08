@@ -11,11 +11,9 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef INCLUDE_LLCOMPILER_UTILS_OPTION_H_
-#define INCLUDE_LLCOMPILER_UTILS_OPTION_H_
 /**
- * @file option.h
- * @brief global options define
+ * @file Opbuilder.h
+ * @brief interface class OpBuilder that build Ops form inputs.
  * @author 时光丶人爱 (1733535832@qq.com)
  * @version 1.0
  * @date 2024-07-01
@@ -23,20 +21,17 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
-#include <string>
+#include "llcompiler/Support/Core.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/ir/OwningOpRef.h"
 
-#include "llcompiler/support/core.h"
-#include "llvm/Support/CommandLine.h"
+#ifndef INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
+#define INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
 
-namespace llc::option {
-/**********  options extern  **********/
-extern llvm::cl::OptionCategory commonOption;
-extern llvm::cl::opt<std::string> logRoot;
-extern llvm::cl::opt<llc::logger::LOG_LEVER> logLevel;
-/**********  options extern  **********/
-extern llvm::cl::OptionCategory importingOptions;
-extern llvm::cl::opt<importer::IMPORTER_TYPE> importingType;
-extern llvm::cl::opt<std::string> importingPath;
-}  // namespace llc::option
-
-#endif  // INCLUDE_LLCOMPILER_UTILS_OPTION_H_
+namespace llc::importer {
+class OpBuilder {
+ public:
+  virtual ~OpBuilder();
+};
+}       // namespace llc::importer
+#endif  // INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_

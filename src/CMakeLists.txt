@@ -1,7 +1,7 @@
-add_subdirectory(support)
-add_subdirectory(importer)
-add_subdirectory(dialect)
-add_subdirectory(compiler)
+add_subdirectory(Support)
+add_subdirectory(Importer)
+add_subdirectory(Dialect)
+add_subdirectory(Compiler)
 set(LLCompilerALL_LINK_LIBS
     LLCompilerSupport
     LLCompilerImporter

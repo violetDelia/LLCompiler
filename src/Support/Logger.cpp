@@ -19,8 +19,8 @@
 #include <sstream>
 #include <string>
 
-#include "llcompiler/support/core.h"
-#include "llcompiler/support/logger.h"
+#include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
@@ -57,7 +57,7 @@ void register_logger(const char *module, const char *root_path,
                << log_file;
 }
 
-Logger::Logger(const char *module, LOG_LEVER level)
+Logger::Logger(const char *module, const LOG_LEVER level)
     : module_(module), level_(level) {}
 
 Logger::~Logger() {}

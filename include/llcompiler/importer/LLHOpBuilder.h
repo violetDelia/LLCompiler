@@ -11,22 +11,25 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLCOMPILER_HAS_LOG
-#define LLCOMPILER_HAS_LOG
-#endif
-#include "llcompiler/Compiler/Init.h"
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Importer/OnnxImporter.h"
-#include "llcompiler/Importer/Utility.h"
+/**
+ * @file LLHOpbuilder.h
+ * @brief implementation of Opbuilder that building LLHops.
+ * @author 时光丶人爱 (1733535832@qq.com)
+ * @version 1.0
+ * @date 2024-07-01
+ *
+ * @copyright Copyright (c) 2024 时光丶人爱
+ *
+ */
 #include "llcompiler/Support/Core.h"
+#include "llcompiler/Importer/OpBuilder.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/ir/OwningOpRef.h"
 
+#ifndef INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
+#define INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
 
-int main(int argc, char **argv) {
-  llc::init_compiler(argc, argv);
-  mlir::MLIRContext context;
-  context.getOrLoadDialect<llc::llh::LLHDialect>();
-  auto input = llc::importer::get_importer_input_form_option();
-  auto module =
-      gen_mlir_from(context, llc::option::importingType.getValue(), input);
-  return 0;
-}
+namespace llc::importer {
+class LLHOpBuilder : public OpBuilder {};
+}  // namespace llc::importer
+#endif  // INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_

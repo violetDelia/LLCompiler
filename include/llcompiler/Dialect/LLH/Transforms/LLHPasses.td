@@ -11,16 +11,10 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-/**
- * @file onnx_importer.h
- * @brief functions for converting onnx model to mlir::modules
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_IMPORTER_ONNX_IMPORTER_H_
-#define INCLUDE_LLCOMPILER_IMPORTER_ONNX_IMPORTER_H_
-#endif  // INCLUDE_LLCOMPILER_IMPORTER_ONNX_IMPORTER_H_
+//
+#ifndef LLH_PASS
+#define LLH_PASS
+
+include "mlir/Pass/PassBase.td"
+
+#endif // LLH_PASS

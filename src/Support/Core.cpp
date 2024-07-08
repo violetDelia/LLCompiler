@@ -11,12 +11,12 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/support/core.h"
+#include "llcompiler/Support/Core.h"
 
 namespace llc {
 /**********  ENUM convert  **********/
 namespace logger {
-const char *log_lever_to_str(LOG_LEVER lever) {
+const char *log_lever_to_str(const LOG_LEVER lever) {
   switch (lever) {
     case LOG_LEVER::DEBUG_:
       return "debug";
@@ -29,15 +29,25 @@ const char *log_lever_to_str(LOG_LEVER lever) {
     case LOG_LEVER::FATAL_:
       return "fatal";
   }
+  return "unimplemented";
 }
 }  // namespace logger
 
 namespace importer {
-const char *importer_type_to_str(IMPORTER_TYPE type) {
+const char *importer_type_to_str(const IMPORTER_TYPE type) {
   switch (type) {
     case IMPORTER_TYPE::ONNX_FILE:
       return "onnx_file";
   }
+  return "unimplemented";
+}
+
+const char *importer_dialect_to_str(const IMPORTER_DIALECT dialect) {
+  switch (dialect) {
+    case IMPORTER_DIALECT::LLH:
+      return "llh";
+  }
+  return "unimplemented";
 }
 };  // namespace importer
 

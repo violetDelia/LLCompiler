@@ -11,18 +11,25 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
+/**
+ * @file Init.h
+ * @brief initializing compiler
+ * @author 时光丶人爱 (1733535832@qq.com)
+ * @version 1.0
+ * @date 2024-07-01
+ *
+ * @copyright Copyright (c) 2024 时光丶人爱
+ *
+ */
+#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#include <any>
+namespace llc {
 
-#include "mlir/IR/Dialect.h"
-#include "mlir/IR/OpDefinition.h"
-#include "mlir/IR/OpImplementation.h"
-#include "mlir/Interfaces/InferTypeOpInterface.h"
-#include "mlir/Interfaces/SideEffectInterfaces.h"
+void init_compiler(int argc, char **argv);
 
-#define GET_OP_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"
 
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
+
+}  // namespace llc
+#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_

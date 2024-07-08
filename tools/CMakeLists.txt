@@ -5,4 +5,4 @@ target_include_directories(compiler PRIVATE
     $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIRS}>
 )
 
-target_link_libraries(compiler PRIVATE LLCompiler)
+target_link_libraries(compiler PRIVATE LLCompilerAll)

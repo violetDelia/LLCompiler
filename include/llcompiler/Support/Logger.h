@@ -13,8 +13,8 @@
 //    limitations under the License.
 
 /**
- * @file logger.h
- * @brief 日志宏以及检查宏
+ * @file Logger.h
+ * @brief Logger and macros for logging
  * @author 时光丶人爱 (1733535832@qq.com)
  * @version 1.0
  * @date 2024-06-27
@@ -26,7 +26,7 @@
 #define INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
 #include <string>
 
-#include "llcompiler/support/core.h"
+#include "llcompiler/Support/Core.h"
 
 namespace llc::logger {
 class Logger;
@@ -37,7 +37,7 @@ void register_logger(const char *module, const char *root_path,
 
 class Logger {
  public:
-  Logger(const char *module, LOG_LEVER level);
+  Logger(const char *module, const LOG_LEVER level);
   virtual ~Logger();
   LoggerStream stream(const bool emit_message);
   void info(const char *message);

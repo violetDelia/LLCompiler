@@ -1,5 +1,5 @@
 CompileFlags:
-  Add: [-xc++,
+  Add: [-xc++,-Wall
   -IC:/LLCompiler/include/,
   -IC:/LLCompiler/src/,
   -IC:/LLCompiler/third_party/onnx/,

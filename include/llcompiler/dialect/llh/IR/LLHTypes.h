@@ -19,6 +19,6 @@
 #include "mlir/IR/BuiltinTypes.h"
 
 #define GET_TYPEDEF_CLASSES
-#include "llcompiler/dialect/LLH/IR/LLHTypes.h.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHTypes.h.inc"
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_

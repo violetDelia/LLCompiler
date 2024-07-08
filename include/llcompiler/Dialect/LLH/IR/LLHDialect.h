@@ -11,25 +11,16 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+//
 
-/**
- * @file init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#include <any>
-namespace llc {
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
 
-void init_compiler(int argc, char **argv);
+#include "mlir/Bytecode/BytecodeOpInterface.h"
+#include "mlir/IR/Dialect.h"
 
-std::any get_importer_input_form_option();
+#define LLCOMPILER_MACRO_FOR_FIX_HEAD
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h.inc"
+#undef LLCOMPILER_MACRO_FOR_FIX_HEAD
 
-}  // namespace llc
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
