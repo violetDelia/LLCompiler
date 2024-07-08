@@ -11,10 +11,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLCOMPILER_HAS_LOG
-#define LLCOMPILER_HAS_LOG
-#include "llcompiler/support/option.h"
-#endif
+#include "iostream"
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Importer/OnnxImporter.h"
@@ -28,6 +25,6 @@ int main(int argc, char **argv) {
   auto input = llc::importer::get_importer_input_form_option();
   auto target_dialect = llc::option::importintDialect.getValue();
   auto module = llc::importer::gen_mlir_from_to(
-      context, llc::option::importingType.getValue(), input, target_dialect);
+      &context, llc::option::importingType.getValue(), input, target_dialect);
   return 0;
 }

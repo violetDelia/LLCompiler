@@ -22,7 +22,9 @@
  *
  */
 #include "llcompiler/Support/Core.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/MLIRContext.h"
 #include "mlir/ir/OwningOpRef.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
@@ -31,7 +33,12 @@
 namespace llc::importer {
 class OpBuilder {
  public:
+  explicit OpBuilder(mlir::MLIRContext* context);
+
   virtual ~OpBuilder();
+
+ protected:
+  const mlir::OpBuilder builder_;
 };
-}       // namespace llc::importer
+}  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_

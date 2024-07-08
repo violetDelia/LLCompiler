@@ -13,7 +13,10 @@
 //    limitations under the License.
 
 #include "llcompiler/Importer/OpBuilder.h"
+#include "mlir/IR/Builders.h"
 namespace llc::importer {
+OpBuilder::OpBuilder(mlir::MLIRContext* context) : builder_(context) {}
+
 OpBuilder::~OpBuilder() {}
 
 };  // namespace llc::importer

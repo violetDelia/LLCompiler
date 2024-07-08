@@ -21,15 +21,19 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
-#include "llcompiler/Support/Core.h"
 #include "llcompiler/Importer/OpBuilder.h"
+#include "llcompiler/Support/Core.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/ir/OwningOpRef.h"
+
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
 
 namespace llc::importer {
-class LLHOpBuilder : public OpBuilder {};
+class LLHOpBuilder : public OpBuilder {
+ public:
+  using OpBuilder::OpBuilder;
+};
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_

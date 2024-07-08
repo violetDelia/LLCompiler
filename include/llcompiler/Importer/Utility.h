@@ -39,7 +39,7 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_form_onnx_file(
     const std::string file);
 
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
-    const mlir::MLIRContext &context, const llc::importer::IMPORTER_TYPE type,
+    mlir::MLIRContext *context, const llc::importer::IMPORTER_TYPE type,
     const std::any input, TARGET_DIALECT target);
 }  // namespace llc::importer
 

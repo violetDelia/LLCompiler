@@ -4,10 +4,10 @@ add_subdirectory(Dialect)
 add_subdirectory(Compiler)
 set(LLCompilerALL_LINK_LIBS
     LLCompilerSupport
-    LLCompilerImporter
-    LLCompiler
     LLCLLHDialect
     LLCLLHPasses
+    LLCompilerImporter
+    LLCompiler
 )
 llcompiler_add_library(LLCompilerAll
     LLCompilerALL_LINK_LIBS
