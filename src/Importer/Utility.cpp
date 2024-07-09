@@ -22,7 +22,6 @@
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
-#include "onnx/onnx_pb.h"
 
 namespace llc::importer {
 std::any get_importer_input_form_option() {
@@ -37,14 +36,9 @@ std::any get_importer_input_form_option() {
   }
 }
 
-mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_form_onnx_file(
-    const std::string file) {
-  ONNX_NAMESPACE::ModelProto model;
-}
-
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
     mlir::MLIRContext *context, const llc::importer::IMPORTER_TYPE type,
-    const std::any input, TARGET_DIALECT target) {
+    const std::any input, const TARGET_DIALECT target) {
   INFO(IMPORTER) << "---------- Begin Importing ----------";
   CHECK(IMPORTER, input.has_value()) << "input contains no value";
   INFO(IMPORTER) << "import tpye is: " << importer_type_to_str(type);

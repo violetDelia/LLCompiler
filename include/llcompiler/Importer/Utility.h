@@ -35,12 +35,9 @@
 namespace llc::importer {
 std::any get_importer_input_form_option();
 
-mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_form_onnx_file(
-    const std::string file);
-
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
     mlir::MLIRContext *context, const llc::importer::IMPORTER_TYPE type,
-    const std::any input, TARGET_DIALECT target);
+    const std::any input, const TARGET_DIALECT target);
 }  // namespace llc::importer
 
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_UTILITY_H_

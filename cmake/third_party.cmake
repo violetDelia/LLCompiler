@@ -20,10 +20,9 @@ function(add_llvm lib_path)
     unset(LLVM_ENABLE_ASSERTIONS CACHE)
     unset(LLVM_ENABLE_ASSERTIONS CACHE)
     unset(LLVM_INCLUDE_TESTS CACHE)
-    set(LLVM_TARGETS_TO_BUILD "Native;NVPTX;AMDGPU;RISCV"
-        CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
-    set(LLVM_ENABLE_PROJECTS "mlir" CACHE STRING
-        "Semicolon-separated list of projects to build (${LLVM_KNOWN_PROJECTS}), or \"all\".")
+    set(LLVM_TARGETS_TO_BUILD "RISCV" CACHE STRING "AArch64;AMDGPU;ARM;AVR;BPF;Hexagon;Lanai;LoongArch;Mips;MSP430;NVPTX;PowerPC;RISCV;Sparc;SystemZ;VE;WebAssembly;X86;XCore")
+    set(LLVM_ENABLE_PROJECTS "mlir;clang" CACHE STRING "bolt;clang;clang-tools-extra;compiler-rt;cross-project-tests;libc;libclc;lld;lldb;mlir;openmp;polly;pstl")
+    set(LLVM_ENABLE_RUNTIMES "libcxx" CACHE STRING "libc;libunwind;libcxxabi;pstl;libcxx;compiler-rt;openmp;llvm-libgcc")
     option(LLVM_ENABLE_ASSERTIONS "Enable assertions" ON)
     option(BENCHMARK_ENABLE_EXCEPTIONS "Enable the use of exceptions in the benchmark library." OFF)
     option(BENCHMARK_ENABLE_TESTING "Enable testing of the benchmark library." OFF)

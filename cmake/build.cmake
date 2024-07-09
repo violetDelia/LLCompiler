@@ -18,5 +18,5 @@ function(llcompiler_add_library TargetName LinkLibs SourceFiles)
         $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
         $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
     )
-    target_link_libraries(${TargetName} PUBLIC ${${LinkLibs}})
+    target_link_libraries(${TargetName} PRIVATE ${${LinkLibs}})
 endfunction(llcompiler_add_library)
