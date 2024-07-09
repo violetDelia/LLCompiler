@@ -53,11 +53,11 @@ void OnnxImporter::init_model_form_json_(const mlir::StringRef &filename) {
       << filename.str() << " with error '" << status.ToString() + "'";
 }
 
-<<<<<<< HEAD
 void OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename) {
-  == == ==
-      = void OnnxImporter::init_form_onnx_(const mlir::StringRef &filename) {
-    std::fstream input(filename.str(), std::ios::in | std::ios::binary);
+  std::fstream input(filename.str(), std::ios::in | std::ios::binary);
+  if (!input.is_open()) {
+    ERROR(IMPORTER) << "file " << filename.str() << " is opening!";
+    return;
   }
   auto parse_success = model_.ParseFromIstream(&input);
   CHECK(IMPORTER, parse_success)
@@ -67,9 +67,20 @@ void OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename) {
 void OnnxImporter::init_model_(const mlir::StringRef filename) {
   std::string error_msg;
   if (filename.endswith(".json")) {
+<<<<<<< HEAD
     init_model_form_json_(filename);
   } else if (filename.endswith(".onnx")) {
     init_model_form_onnx_(filename);
+    == == == =
+<<<<<<< HEAD
+                 init_model_form_json_(filename);
+  } else if (filename.endswith(".onnx")) {
+    init_model_form_onnx_(filename);
+    == == == = init_form_json_(filename);
+  } else if (filename.endswith(".onnx")) {
+    init_form_onnx_(filename);
+>>>>>>> 7f36356ff60266edd7b13ab51689380a86b3cc85
+>>>>>>> 9c7c5485eff02238931746cfb3b5991ac9efcf60
   } else {
     FATAL(IMPORTER) << "unsupported file format!";
   }
