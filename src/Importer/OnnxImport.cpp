@@ -53,11 +53,11 @@ void OnnxImporter::init_model_form_json_(const mlir::StringRef &filename) {
       << filename.str() << " with error '" << status.ToString() + "'";
 }
 
+<<<<<<< HEAD
 void OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename) {
-  std::fstream input(filename.str(), std::ios::in | std::ios::binary);
-  if (!input.is_open()) {
-    ERROR(IMPORTER) << "file " << filename.str() << " is opening!";
-    return;
+  == == ==
+      = void OnnxImporter::init_form_onnx_(const mlir::StringRef &filename) {
+    std::fstream input(filename.str(), std::ios::in | std::ios::binary);
   }
   auto parse_success = model_.ParseFromIstream(&input);
   CHECK(IMPORTER, parse_success)
