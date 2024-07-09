@@ -41,6 +41,9 @@ void init_compiler(int argc, char **argv) {
                << importer::importer_type_to_str(
                       option::importingType.getValue());
   INFO(GLOBAL) << "import file is: " << option::importingPath.getValue();
+  INFO(GLOBAL) << "importer target dialect is: "
+               << importer::target_dialect_to_str(
+                      option::importintDialect.getValue());
 }
 
 }  // namespace llc

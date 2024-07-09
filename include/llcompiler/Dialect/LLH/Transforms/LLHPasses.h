@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHPASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHPASSES_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_
 
 #include <memory>
 
@@ -31,4 +31,4 @@ namespace llc::llh {
 #include "llcompiler/Dialect/LLH/Transforms/LLHPasses.h.inc"
 }  // namespace llc::llh
 
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHPASSES_H_
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_

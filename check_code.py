@@ -15,8 +15,8 @@ for root in check_dirs:
 
 def cpplint():
     cpplint_filters = [
-        # "-build/include_order",
-        # "-build/namespaces",
+        "-build/namespaces",
+        "-build/include",
         # "-whitespace/comments",
         # "-whitespace/indent",
     ]

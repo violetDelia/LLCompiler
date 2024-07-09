@@ -22,6 +22,10 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
+
+#ifndef INCLUDE_LLCOMPILER_COMPILER_UTILITY_H_
+#define INCLUDE_LLCOMPILER_COMPILER_UTILITY_H_
 #include <any>
-namespace llc::compiler {
-}
+namespace llc::compiler {}
+
+#endif  // INCLUDE_LLCOMPILER_COMPILER_UTILITY_H_

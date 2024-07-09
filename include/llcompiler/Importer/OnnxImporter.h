@@ -27,7 +27,8 @@
 #include "llcompiler/Support/Core.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/ir/OwningOpRef.h"
-#include "onnx/onnx-ml.pb.h"
+#include "onnx/common/file_utils.h"
+#include "onnx/onnx_pb.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
@@ -39,12 +40,16 @@ class OnnxImporter : public Importer {
                const std::string path);
 
   OnnxImporter(const mlir::MLIRContext *context, const OpBuilder *builder,
-               const onnx::ModelProto model);
+               const ONNX_NAMESPACE::ModelProto model);
 
   mlir::ModuleOp export_mlir_module() const final;
 
  protected:
-  const onnx::ModelProto model_;
+  void init_model_(const mlir::StringRef filename);
+  void init_model_form_json_(const mlir::StringRef &filename);
+  void init_model_form_onnx_(const mlir::StringRef &filename);
+
+  onnx::ModelProto model_;
 };
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
