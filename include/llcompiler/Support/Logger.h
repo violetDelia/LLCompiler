@@ -24,6 +24,8 @@
  */
 #ifndef INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
 #define INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
+#include <cstddef>
+#include <cstdint>
 #include <string>
 
 #include "llcompiler/Support/Core.h"
@@ -59,6 +61,7 @@ class LoggerStream {
   LoggerStream &operator<<(const char *message);
   LoggerStream &operator<<(const std::string &str);
   LoggerStream &operator<<(const int value);
+  LoggerStream &operator<<(const std::int64_t value);
   LoggerStream &operator<<(const double value);
   virtual ~LoggerStream();
 
@@ -74,8 +77,9 @@ class LoggerStream {
   llc::logger::register_logger(module, root, lever);
 #define LLCOMPILER_LOG(module, lever) \
   llc::logger::Logger(module, lever).stream(true)
-#define LLCOMPILER_CHECK_LOG(module, condition, lever) \
-  llc::logger::Logger(module, lever).stream(!condition)
+#define LLCOMPILER_CHECK_LOG(module, condition, lever)                    \
+  llc::logger::Logger(module, static_cast<llc::logger::LOG_LEVER>(lever)) \
+      .stream(!condition)
 
 #else
 #define LLCOMPILER_INIT_LOGGER(module, root, lever)
@@ -91,7 +95,7 @@ class LoggerStream {
   LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::FATAL_) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
 
-#define CHECK(module, condition)                                          \
+#define CHECK(module, condition)                                         \
   LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::ERROR_) \
       << #condition << " : " << __FILE__ << "<" << __LINE__ << "> \n\t"
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
@@ -125,6 +129,7 @@ class LoggerStream {
 #define LOG_GE(module, val1, val2, lever) \
   LLCOMPILER_CHECK_LOG(module, val1 >= val2, lever)
 
-#define UNIMPLEMENTED(module) FATAL(module) << "Unimplemented function";
+#define UNIMPLEMENTED(module) \
+  FATAL(module) << "function [" << __func__ << "] Unimplemented!";
 
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_

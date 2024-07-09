@@ -14,6 +14,7 @@
 
 #include <direct.h>
 
+#include <cstddef>
 #include <iomanip>
 #include <memory>
 #include <sstream>
@@ -94,6 +95,13 @@ LoggerStream &LoggerStream::operator<<(const std::string &str) {
 }
 
 LoggerStream &LoggerStream::operator<<(const int value) {
+  if (emit_message_) {
+    message_ += std::to_string(value);
+  }
+  return *this;
+}
+
+LoggerStream &LoggerStream::operator<<(const std::int64_t  value) {
   if (emit_message_) {
     message_ += std::to_string(value);
   }
