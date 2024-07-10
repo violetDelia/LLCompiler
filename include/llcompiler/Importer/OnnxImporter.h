@@ -21,6 +21,7 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
+#include <cstdint>
 #include <string>
 
 #include "llcompiler/Importer/Importer.h"
@@ -37,19 +38,26 @@ namespace llc::importer {
 class OnnxImporter : public Importer {
  public:
   OnnxImporter(const mlir::MLIRContext *context, const OpBuilder *builder,
-               const std::string path);
+               const std::string path, const int64_t convert_version);
 
   OnnxImporter(const mlir::MLIRContext *context, const OpBuilder *builder,
-               const ONNX_NAMESPACE::ModelProto model);
+               const ONNX_NAMESPACE::ModelProto model,
+               const int64_t convert_version);
 
   mlir::ModuleOp export_mlir_module() const final;
 
  protected:
-  void init_model_(const mlir::StringRef filename);
-  void init_model_form_json_(const mlir::StringRef &filename);
-  void init_model_form_onnx_(const mlir::StringRef &filename);
+  bool init_model_(const mlir::StringRef filename, onnx::ModelProto *model);
+  bool init_model_form_json_(const mlir::StringRef &filename,
+                             onnx::ModelProto *model);
+  bool init_model_form_onnx_(const mlir::StringRef &filename,
+                             onnx::ModelProto *model);
+  bool check_model_legal_(const onnx::ModelProto &model) const;
+  int64_t get_model_version_(const onnx::ModelProto &model) const;
+  onnx::ModelProto conver_model_version_to_(onnx::ModelProto *model, const int64_t version);
 
   onnx::ModelProto model_;
+  int64_t convert_version_ = 15;
 };
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_

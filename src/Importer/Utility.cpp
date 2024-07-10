@@ -59,7 +59,9 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
     case llc::importer::IMPORTER_TYPE::ONNX_FILE: {
       auto path = std::any_cast<std::string>(input);
       INFO(IMPORTER) << "onnx file path is: " << path.c_str();
-      return OnnxImporter(context, builder_pointer, path).export_mlir_module();
+      return OnnxImporter(context, builder_pointer, path,
+                          option::onnxConvertVersion)
+          .export_mlir_module();
     }
     default:
       FATAL(IMPORTER) << "Unimplemented importer type: "

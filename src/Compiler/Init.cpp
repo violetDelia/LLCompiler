@@ -14,9 +14,9 @@
 #include <initializer_list>
 #include <string>
 
-#include "llcompiler/compiler/Init.h"
-#include "llcompiler/support/Core.h"
-#include "llcompiler/support/Logger.h"
+#include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
 #include "llcompiler/support/Option.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/IR/AsmState.h"

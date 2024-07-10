@@ -12,8 +12,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Dialect/llh/IR/LLHOps.h"
-#include "llcompiler/Dialect/llh/IR/LLHDialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+
 
 #define GET_OP_CLASSES
 #include "llcompiler/Dialect/llh/IR/LLHOps.cpp.inc"

@@ -95,7 +95,7 @@ class LoggerStream {
   LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::FATAL_) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
 
-#define CHECK(module, condition)                                         \
+#define CHECK(module, condition)                                          \
   LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::ERROR_) \
       << #condition << " : " << __FILE__ << "<" << __LINE__ << "> \n\t"
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
@@ -132,4 +132,7 @@ class LoggerStream {
 #define UNIMPLEMENTED(module) \
   FATAL(module) << "function [" << __func__ << "] Unimplemented!";
 
+#define WARN_UNIMPLEMENTED(module)                                         \
+  WARN(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" << "function [" \
+               << __func__ << "] Unimplemented!";
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_

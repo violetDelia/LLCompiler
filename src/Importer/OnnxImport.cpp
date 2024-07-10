@@ -12,6 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <cstdint>
 #include <iostream>
 #include <string>
 
@@ -27,16 +28,19 @@
 #include "mlir/Support/LLVM.h"
 #include "onnx/common/file_utils.h"
 #include "onnx/common/ir.h"
+#include "onnx/onnx-ml.pb.h"
 #include "onnx/shape_inference/implementation.h"
+#include "onnx/version_converter/convert.h"
 
 namespace llc::importer {
-void OnnxImporter::init_model_form_json_(const mlir::StringRef &filename) {
+bool OnnxImporter::init_model_form_json_(const mlir::StringRef &filename,
+                                         onnx::ModelProto *model) {
   WARN(IMPORTER) << "never used json file initialize onnx model -> "
                  << filename.str();
   auto buf = mlir::openInputFile(filename);
   if (!buf) {
     ERROR(IMPORTER) << "open json file " << filename.str() << " failed!";
-    return;
+    return false;
   }
   std::string json;
   for (llvm::line_iterator line(*buf, false), end; line != end; ++line) {
@@ -47,43 +51,74 @@ void OnnxImporter::init_model_form_json_(const mlir::StringRef &filename) {
         << filename.str() << ":" << line.line_number() << "\n";
     json.append(*line);
   }
-  auto status = google::protobuf::util::JsonStringToMessage(json, &model_);
+  auto status = google::protobuf::util::JsonStringToMessage(json, model);
   CHECK(IMPORTER, status.ok())
       << "convert json string to onnx::modelproto file faile!" << "\n\t"
       << filename.str() << " with error '" << status.ToString() + "'";
+  return status.ok();
 }
 
-void OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename) {
+bool OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename,
+                                         onnx::ModelProto *model) {
   std::fstream input(filename.str(), std::ios::in | std::ios::binary);
   if (!input.is_open()) {
     ERROR(IMPORTER) << "file " << filename.str() << " is opening!";
-    return;
+    return false;
   }
-  auto parse_success = model_.ParseFromIstream(&input);
+  auto parse_success = model->ParseFromIstream(&input);
   CHECK(IMPORTER, parse_success)
       << "onnx model parsing failed on " + filename.str();
+  return parse_success;
 }
 
-void OnnxImporter::init_model_(const mlir::StringRef filename) {
+bool OnnxImporter::init_model_(const mlir::StringRef filename,
+                               onnx::ModelProto *model) {
   std::string error_msg;
   if (filename.endswith(".json")) {
-    init_model_form_json_(filename);
+    return init_model_form_json_(filename, model);
   } else if (filename.endswith(".onnx")) {
-    init_model_form_onnx_(filename);
+    return init_model_form_onnx_(filename, model);
   } else {
     FATAL(IMPORTER) << "unsupported file format!";
+    return false;
   }
   DEBUG(IMPORTER) << "onnx::ModelProto successfully initialized!";
 }
 
+int64_t OnnxImporter::get_model_version_(const onnx::ModelProto &model) const {
+  for (auto it = model.opset_import().begin(); it != model.opset_import().end();
+       ++it) {
+    if (it->domain() == "" || it->domain() == "ai.onnx") {
+      auto version = it->version();
+      INFO(IMPORTER) << "onnx version is: " << version;
+      return version;
+    }
+  }
+  ERROR(IMPORTER) << "can't find onnx version from onnx::ModelProto!";
+  return -1;
+}
+
+bool OnnxImporter::check_model_legal_(const onnx::ModelProto &model) const {
+  WARN_UNIMPLEMENTED(IMPORTER);
+  return true;
+}
+
+onnx::ModelProto OnnxImporter::conver_model_version_to_(onnx::ModelProto *model,
+                                                        const int64_t version) {
+  return onnx::version_conversion::ConvertVersion(*model, version);
+}
+
 OnnxImporter::OnnxImporter(const mlir::MLIRContext *context,
-                           const OpBuilder *builder, const std::string path)
-    : Importer(context, builder) {
-  init_model_(path);
-  // ONNX_NAMESPACE::LoadProtoFromPath<ONNX_NAMESPACE::ModelProto>(path,
-  // model_); ONNX_NAMESPACE::shape_inference::InferShapes(model_);
-  // std::unique_ptr<ONNX_NAMESPACE::Graph> g(
-  //     ONNX_NAMESPACE::ImportModelProto(model_));
+                           const OpBuilder *builder, const std::string path,
+                           const int64_t convert_version)
+    : Importer(context, builder), convert_version_(convert_version) {
+  init_model_(path, &model_);
+  check_model_legal_(model_);
+  auto onnx_version = get_model_version_(model_);
+  if (onnx_version != convert_version_) {
+    model_ = conver_model_version_to_(&model_, convert_version_);
+    INFO(IMPORTER) << "convert onnx modle to version " << convert_version_;
+  }
 }
 
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
