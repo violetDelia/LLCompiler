@@ -109,10 +109,15 @@ onnx::ModelProto OnnxImporter::conver_model_version_to_(onnx::ModelProto *model,
 }
 
 OnnxImporter::OnnxImporter(const mlir::MLIRContext *context,
-                           const OpBuilder *builder, const std::string path,
-                           const int64_t convert_version)
-    : Importer(context, builder), convert_version_(convert_version) {
-  init_model_(path, &model_);
+                           const OpBuilder *builder,
+                           const ImporterOption &option)
+    : Importer(context, builder, option),
+      convert_version_(option.onnx_convert_version) {
+  if (option.importer_type == IMPORTER_TYPE::ONNX_FILE) {
+    init_model_(option.filename, &model_);
+  } else {
+    UNIMPLEMENTED(IMPORTER) << " need support other importer types";
+  }
   check_model_legal_(model_);
   auto onnx_version = get_model_version_(model_);
   if (onnx_version != convert_version_) {

@@ -24,27 +24,23 @@
 #include "llvm/Support/CommandLine.h"
 
 namespace llc::importer {
-std::any get_importer_input_form_option() {
-  auto importer_type = llc::option::importingType.getValue();
-  switch (importer_type) {
-    case importer::IMPORTER_TYPE::ONNX_FILE:
-      return {option::importingPath.getValue()};
-    default:
-      FATAL(GLOBAL) << "Unimplemented importer type: "
-                    << importer::importer_type_to_str(importer_type);
-      return {};
-  }
+
+ImporterOption get_importer_option() {
+  return {.filename = option::importingPath,
+          .onnx_convert_version = option::onnxConvertVersion,
+          .importer_type = option::importingType,
+          .target_dialect = option::importintDialect};
 }
 
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
-    mlir::MLIRContext *context, const llc::importer::IMPORTER_TYPE type,
-    const std::any input, const TARGET_DIALECT target) {
+    mlir::MLIRContext *context, const ImporterOption &option) {
   INFO(IMPORTER) << "---------- Begin Importing ----------";
-  CHECK(IMPORTER, input.has_value()) << "input contains no value";
-  INFO(IMPORTER) << "import tpye is: " << importer_type_to_str(type);
-  INFO(IMPORTER) << "target dialect is: " << target_dialect_to_str(target);
+  INFO(IMPORTER) << "import tpye is: "
+                 << importer_type_to_str(option.importer_type);
+  INFO(IMPORTER) << "target dialect is: "
+                 << target_dialect_to_str(option.target_dialect);
   OpBuilder *builder_pointer{};
-  switch (target) {
+  switch (option.target_dialect) {
     case TARGET_DIALECT::LLH: {
       auto builder = LLHOpBuilder(context);
       builder_pointer = &builder;
@@ -53,19 +49,17 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
     }
     default:
       FATAL(IMPORTER) << "Unsupported to covert dialect: "
-                      << importer::target_dialect_to_str(target);
+                      << importer::target_dialect_to_str(option.target_dialect);
   }
-  switch (type) {
+  switch (option.importer_type) {
     case llc::importer::IMPORTER_TYPE::ONNX_FILE: {
-      auto path = std::any_cast<std::string>(input);
-      INFO(IMPORTER) << "onnx file path is: " << path.c_str();
-      return OnnxImporter(context, builder_pointer, path,
-                          option::onnxConvertVersion)
+      INFO(IMPORTER) << "onnx file path is: " << option.filename.c_str();
+      return OnnxImporter(context, builder_pointer, option)
           .export_mlir_module();
     }
     default:
       FATAL(IMPORTER) << "Unimplemented importer type: "
-                      << importer::importer_type_to_str(type);
+                      << importer::importer_type_to_str(option.importer_type);
       return {};
   }
 }

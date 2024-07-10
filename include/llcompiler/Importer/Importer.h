@@ -22,6 +22,8 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
+#include <string>
+
 #include "llcompiler/Importer/OpBuilder.h"
 #include "llcompiler/Support/Core.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -30,9 +32,18 @@
 #define INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
 
 namespace llc::importer {
+struct ImporterOption {
+  std::string filename;
+  uint64_t onnx_convert_version;
+  IMPORTER_TYPE importer_type;
+  TARGET_DIALECT target_dialect;
+};
+
 class Importer {
  public:
-  Importer(const mlir::MLIRContext *context, const OpBuilder *builder);
+  Importer(const mlir::MLIRContext *context, const OpBuilder *builder,
+           const ImporterOption &option);
+  ;
   virtual mlir::ModuleOp export_mlir_module() const = 0;
   virtual ~Importer();
 

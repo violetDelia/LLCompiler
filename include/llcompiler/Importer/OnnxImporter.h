@@ -38,11 +38,7 @@ namespace llc::importer {
 class OnnxImporter : public Importer {
  public:
   OnnxImporter(const mlir::MLIRContext *context, const OpBuilder *builder,
-               const std::string path, const int64_t convert_version);
-
-  OnnxImporter(const mlir::MLIRContext *context, const OpBuilder *builder,
-               const ONNX_NAMESPACE::ModelProto model,
-               const int64_t convert_version);
+               const ImporterOption &option);
 
   mlir::ModuleOp export_mlir_module() const final;
 
@@ -54,7 +50,8 @@ class OnnxImporter : public Importer {
                              onnx::ModelProto *model);
   bool check_model_legal_(const onnx::ModelProto &model) const;
   int64_t get_model_version_(const onnx::ModelProto &model) const;
-  onnx::ModelProto conver_model_version_to_(onnx::ModelProto *model, const int64_t version);
+  onnx::ModelProto conver_model_version_to_(onnx::ModelProto *model,
+                                            const int64_t version);
 
   onnx::ModelProto model_;
   int64_t convert_version_ = 15;

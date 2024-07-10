@@ -26,6 +26,7 @@
 #include <any>
 #include <string>
 
+#include "llcompiler/Importer/Importer.h"
 #include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -33,11 +34,10 @@
 #include "mlir/IR/OwningOpRef.h"
 
 namespace llc::importer {
-std::any get_importer_input_form_option();
+ImporterOption get_importer_option();
 
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
-    mlir::MLIRContext *context, const llc::importer::IMPORTER_TYPE type,
-    const std::any input, const TARGET_DIALECT target);
+    mlir::MLIRContext *context, const ImporterOption &option);
 }  // namespace llc::importer
 
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_UTILITY_H_

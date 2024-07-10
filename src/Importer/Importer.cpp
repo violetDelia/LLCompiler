@@ -12,9 +12,14 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <cstdint>
+
 #include "llcompiler/Importer/Importer.h"
+
 namespace llc::importer {
-Importer::Importer(const mlir::MLIRContext *context, const OpBuilder *builder)
+
+Importer::Importer(const mlir::MLIRContext *context, const OpBuilder *builder,
+                   const ImporterOption &options)
     : context_(context), builder_(builder) {}
 
 Importer::~Importer() {}

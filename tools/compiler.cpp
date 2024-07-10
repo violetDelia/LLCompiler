@@ -22,9 +22,7 @@ int main(int argc, char **argv) {
   llc::init_compiler(argc, argv);
   mlir::MLIRContext context;
   context.getOrLoadDialect<llc::llh::LLHDialect>();
-  auto input = llc::importer::get_importer_input_form_option();
-  auto target_dialect = llc::option::importintDialect.getValue();
-  auto module = llc::importer::gen_mlir_from_to(
-      &context, llc::option::importingType.getValue(), input, target_dialect);
+  auto import_option = llc::importer::get_importer_option();
+  auto module = llc::importer::gen_mlir_from_to(&context, import_option);
   return 0;
 }
