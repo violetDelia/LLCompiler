@@ -1,8 +1,12 @@
-set(LLCompilerSupport_LINK_LIBS
+llcompiler_add_library(LLCompilerSupport
+    SRC_FILES
+    Core.cpp
+    Logger.cpp
+    Option.cpp
+
+    DEPENDS
+
+    LINKS
     LLVMOption
     spdlog
-)
-llcompiler_add_library(LLCompilerSupport
-    LLCompilerSupport_LINK_LIBS
-    LLCOMPILER_CURRENT_DIR_FILES
 )

@@ -67,7 +67,6 @@ cmake_path(APPEND LLCOMPILER_INSTALL_CMAKE_DIR ${INSTALL_DIR} "cmake")
 # msvc编译器设置
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
 
-# set(MLIR_BINARY_DIR ${CMAKE_CURRENT_BINARY_DIR})
 include_directories(${LLVM_MAIN_INCLUDE_DIR})
 include_directories(${LLVM_GENERATE_INCLUDE_DIR})
 include_directories(${MLIR_MAIN_INCLUDE_DIR})
@@ -78,9 +77,8 @@ if(BUILD_LLCOMPILER_LOG)
     add_definitions(-DLLCOMPILER_HAS_LOG)
 endif()
 
-set(LLCOMPILER_CURRENT_DIR_FILES "llcompiler_current_dir_fils")
 include_directories(${LLCOMPILER_INCLUDE_DIR})
-include_directories(${CMAKE_CURRENT_BINARY_DIR}/include)
+include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
 add_subdirectory("${LLCOMPILER_INCLUDE_DIR}/llcompiler")
 add_subdirectory(${LLCOMPILER_SOURCE_DIR})
 add_subdirectory(${LLCOMPILER_TOOLS_DIR})
@@ -91,7 +89,8 @@ target_include_directories(main PRIVATE
     $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
 )
-target_link_libraries(main PRIVATE LLCompilerAll
+target_link_libraries(main PRIVATE
+    LLCompilerAll
     MLIRAnalysis
     MLIRFunctionInterfaces
     MLIRIR

@@ -2,14 +2,16 @@ add_subdirectory(Support)
 add_subdirectory(Importer)
 add_subdirectory(Dialect)
 add_subdirectory(Compiler)
-set(LLCompilerALL_LINK_LIBS
+
+llcompiler_add_library(LLCompilerAll
+    SRC_FILES
+
+    DEPENDS
     LLCompilerSupport
     LLCLLHDialect
     LLCLLHPasses
     LLCompilerImporter
     LLCompiler
-)
-llcompiler_add_library(LLCompilerAll
-    LLCompilerALL_LINK_LIBS
-    LLCOMPILER_CURRENT_DIR_FILES
+
+    LINKS
 )
