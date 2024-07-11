@@ -17,4 +17,4 @@
 
 
 #define GET_OP_CLASSES
-#include "llcompiler/Dialect/llh/IR/LLHOps.cpp.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"

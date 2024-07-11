@@ -25,7 +25,7 @@
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
-#include "mlir/ir/OwningOpRef.h"
+#include "mlir/IR/OwningOpRef.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_

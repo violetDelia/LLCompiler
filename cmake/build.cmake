@@ -20,3 +20,22 @@ function(llcompiler_add_library TargetName LinkLibs SourceFiles)
     )
     target_link_libraries(${TargetName} PUBLIC ${${LinkLibs}})
 endfunction(llcompiler_add_library)
+
+function(add_catch_test)
+    set(options)
+    set(oneValueArgs NAME COST)
+    set(multiValueArgs LABELS DEPENDS REFERENCE_FILES)
+    cmake_parse_arguments(add_catch_test
+        "${options}"
+        "${oneValueArgs}"
+        "${multiValueArgs}"
+        ${ARGN}
+    )
+    message(STATUS "defining a test ...")
+    message(STATUS " NAME: ${add_catch_test_NAME}")
+    message(STATUS " LABELS: ${add_catch_test_LABELS}")
+    message(STATUS " COST: ${add_catch_test_COST}")
+    message(STATUS " REFERENCE_FILES: ${add_catch_test_REFERENCE_FILES}")
+
+    
+endfunction()

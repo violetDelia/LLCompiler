@@ -26,6 +26,6 @@ using namespace llc::llh;
 void LLHDialect::initialize() {
   addOperations<
 #define GET_OP_LIST
-#include "llcompiler/Dialect/llh/IR/LLHOps.cpp.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
       >();
 }

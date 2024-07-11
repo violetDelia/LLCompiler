@@ -17,7 +17,7 @@
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
-#include "llcompiler/support/Option.h"
+#include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/MLIRContext.h"

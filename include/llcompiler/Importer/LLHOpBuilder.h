@@ -24,7 +24,7 @@
 #include "llcompiler/Importer/OpBuilder.h"
 #include "llcompiler/Support/Core.h"
 #include "mlir/IR/BuiltinOps.h"
-#include "mlir/ir/OwningOpRef.h"
+#include "mlir/IR/OwningOpRef.h"
 
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
