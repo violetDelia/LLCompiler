@@ -25,7 +25,7 @@ llvm::cl::OptionCategory commonOptions("global options", "");
 llvm::cl::opt<std::string> logRoot("log-root",
                                    llvm::cl::desc("the root to save log files"),
                                    llvm::cl::value_desc("root_path"),
-                                   llvm::cl::init("C:/LLCompiler/log"),
+                                   llvm::cl::init(""),
                                    llvm::cl::cat(commonOptions));
 
 llvm::cl::opt<logger::LOG_LEVER> logLevel(

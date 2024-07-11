@@ -12,9 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include <direct.h>
-
 #include <cstddef>
+#include <filesystem>
 #include <iomanip>
 #include <memory>
 #include <sstream>
@@ -41,8 +40,6 @@ void register_logger(const char *module, const char *root_path,
   time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
   std::string log_dir =
       fmt::format("{}/log_{}", root_path, time_ss.str().c_str());
-  mkdir(root_path);
-  mkdir(log_dir.c_str());
   std::string log_file;
   const bool save_log = strcmp(root_path, "");
   if (save_log) {
@@ -53,6 +50,10 @@ void register_logger(const char *module, const char *root_path,
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
   log->set_level(static_cast<spdlog::level>(lever));
   spdlog::register_logger(log);
+  if (std::filesystem::exists(log_dir)) {
+    CHECK(GLOBAL, std::filesystem::create_directories(log_dir))
+        << "create file " << log_dir.c_str() << " failed!";
+  }
   INFO(GLOBAL) << "regist log module: " << module
                << "(lever:" << logger::log_lever_to_str(lever) << ")" << " -> "
                << log_file;
@@ -101,7 +102,7 @@ LoggerStream &LoggerStream::operator<<(const int value) {
   return *this;
 }
 
-LoggerStream &LoggerStream::operator<<(const std::int64_t  value) {
+LoggerStream &LoggerStream::operator<<(const std::int64_t value) {
   if (emit_message_) {
     message_ += std::to_string(value);
   }
