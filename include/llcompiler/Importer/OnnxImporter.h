@@ -29,7 +29,6 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/OwningOpRef.h"
 #include "onnx/common/file_utils.h"
-#include "onnx/onnx_pb.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_

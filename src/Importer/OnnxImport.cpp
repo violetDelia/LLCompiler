@@ -46,7 +46,7 @@ bool OnnxImporter::init_model_form_json_(const mlir::StringRef &filename,
   }
   std::string json;
   for (llvm::line_iterator line(*buf, false), end; line != end; ++line) {
-    if (line->ltrim(" \t").startswith("//")) continue;
+    if (line->ltrim(" \t").starts_with("//")) continue;
     LOG(IMPORTER, line->contains("//"), 3)
         << "possible invalid end-of-line '//' comment in json input "
            "file "
@@ -76,9 +76,9 @@ bool OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename,
 bool OnnxImporter::init_model_(const mlir::StringRef filename,
                                onnx::ModelProto *model) {
   std::string error_msg;
-  if (filename.endswith(".json")) {
+  if (filename.ends_with(".json")) {
     return init_model_form_json_(filename, model);
-  } else if (filename.endswith(".onnx")) {
+  } else if (filename.ends_with(".onnx")) {
     return init_model_form_onnx_(filename, model);
   } else {
     FATAL(IMPORTER) << "unsupported file format!";

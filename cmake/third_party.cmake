@@ -4,11 +4,9 @@ endfunction(add_spdlog)
 
 function(add_onnx lib_path)
     unset(ABSL_ENABLE_INSTALL CACHE)
-
     if(STATIC_WINDOWS_RUNTIME)
         option(ONNX_USE_MSVC_STATIC_RUNTIME "static" ON)
     endif()
-
     option(ABSL_ENABLE_INSTALL "" OFF)
     add_subdirectory(${lib_path})
 endfunction(add_onnx)

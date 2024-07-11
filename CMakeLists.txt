@@ -12,6 +12,7 @@ unset(STATIC_WINDOWS_RUNTIME CACHE)
 unset(BUILD_LLCOMPILER_LOG CACHE)
 unset(CMAKE_EXPORT_COMPILE_COMMANDS CACHE)
 unset(BUILD_NO_WARINGS CACHE)
+unset(BUILD_ONNX_WITH_ONNX_ML CACHE)
 
 # #---------- options ----------##
 # cant set to OFF
@@ -21,6 +22,7 @@ option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(BUILD_NO_WARINGS "remove warings of compiler" ON)
+option(BUILD_ONNX_WITH_ONNX_ML "Enable traditional ML API." ON)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)
@@ -64,10 +66,15 @@ cmake_path(APPEND LLCOMPILER_INSTALL_RUNTIME_DIR ${INSTALL_DIR} "bin")
 cmake_path(APPEND LLCOMPILER_INSTALL_CMAKE_DIR ${INSTALL_DIR} "cmake")
 
 # #---------- external library ----------##
-# msvc编译器设置
+if(BUILD_ONNX_WITH_ONNX_ML)
+    set(ENV{ONNX_ML} ON)
+    add_definitions(-DONNX_ML)
+else()
+    set(ENV{ONNX_ML} OFF)
+endif()
+
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
 include_directories(${THIRD_PARTY_INCLUDE_DIRS})
-message(${THIRD_PARTY_INCLUDE_DIRS})
 
 # #---------- sub library ----------##
 if(BUILD_LLCOMPILER_LOG)
