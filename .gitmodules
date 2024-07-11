@@ -19,10 +19,10 @@
 	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git
 	#branch = llvmorg-18.1.0
 
-[submodule "third_party/pybind11"]
-    path = third_party/pybind11
-    url = https://github.com/pybind/pybind11.git
-	#branch = v2.13.0
+# [submodule "third_party/pybind11"]
+#     path = third_party/pybind11
+#     url = https://github.com/pybind/pybind11.git
+# 	#branch = v2.13.0
 
 # [submodule "third_party/onnx-mlir"]
 #     path = third_party/onnx-mlir
