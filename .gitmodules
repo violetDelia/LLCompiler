@@ -24,26 +24,26 @@
     url = https://github.com/pybind/pybind11.git
 	#branch = v2.13.0
 
-[submodule "third_party/onnx-mlir"]
-    path = third_party/onnx-mlir
-    url = https://github.com/onnx/onnx-mlir.git
+# [submodule "third_party/onnx-mlir"]
+#     path = third_party/onnx-mlir
+#     url = https://github.com/onnx/onnx-mlir.git
 
-[submodule "third_party/iree"]
-    path = third_party/iree
-    url = https://github.com/iree-org/iree.git
+# [submodule "third_party/iree"]
+#     path = third_party/iree
+#     url = https://github.com/iree-org/iree.git
 
-[submodule "third_party/MegCC"]
-    path = third_party/MegCC
-    url = https://github.com/megengine/megcc.git
+# [submodule "third_party/MegCC"]
+#     path = third_party/MegCC
+#     url = https://github.com/megengine/megcc.git
 
-[submodule "third_party/mlir-hlo"]
-    path = third_party/mlir-hlo
-    url = https://github.com/tensorflow/mlir-hlo.git
+# [submodule "third_party/mlir-hlo"]
+#     path = third_party/mlir-hlo
+#     url = https://github.com/tensorflow/mlir-hlo.git
 
-[submodule "third_party/buddy-mlir"]
-    path = third_party/buddy-mlir
-    url = https://github.com/buddy-compiler/buddy-mlir.git
+# [submodule "third_party/buddy-mlir"]
+#     path = third_party/buddy-mlir
+#     url = https://github.com/buddy-compiler/buddy-mlir.git
 
-[submodule "third_party/torch-mlir"]
-    path = third_party/torch-mlir
-    url =https://github.com/llvm/torch-mlir.git
+# [submodule "third_party/torch-mlir"]
+#     path = third_party/torch-mlir
+#     url =https://github.com/llvm/torch-mlir.git

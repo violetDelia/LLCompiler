@@ -130,8 +130,8 @@ OnnxImporter::OnnxImporter(mlir::MLIRContext *context, const OpBuilder *builder,
 }
 
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
-  // mlir::ModuleOp module =
-  //     mlir::ModuleOp::create(mlir::UnknownLoc::get(context_));
+  mlir::ModuleOp module =
+      mlir::ModuleOp::create(mlir::UnknownLoc::get(context_));
 
   // mlir::ModuleOp Module = mlir::ModuleOp::create(builder_->getUnknownLoc());
   //  builder_->setInsertionPointToEnd(module_ getBody());

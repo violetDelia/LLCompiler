@@ -56,7 +56,7 @@ llvm::cl::opt<importer::IMPORTER_TYPE> importingType(
 llvm::cl::opt<std::string> importingPath(
     "import-file", llvm::cl::desc("the path of the file to import"),
     llvm::cl::value_desc("model file"),
-    llvm::cl::init("C:/LLCompiler/models/bvlcalexnet-12.onnx"),
+    llvm::cl::init("C:/LLCompiler/example/models/bvlcalexnet-12.onnx"),
     llvm::cl::cat(importingOptions));
 
 llvm::cl::opt<importer::TARGET_DIALECT> importintDialect(

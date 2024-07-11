@@ -21,6 +21,7 @@
 
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "spdlog/common.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
@@ -48,7 +49,7 @@ void register_logger(const char *module, const char *root_path,
   }
   auto log =
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
-  log->set_level(static_cast<spdlog::level>(lever));
+  log->set_level(static_cast<spdlog::level::level_enum>(lever));
   spdlog::register_logger(log);
   if (std::filesystem::exists(log_dir)) {
     CHECK(GLOBAL, std::filesystem::create_directories(log_dir))
@@ -70,7 +71,7 @@ LoggerStream Logger::stream(const bool emit_message) {
 
 void Logger::info(const char *message) {
   std::shared_ptr<spdlog::logger> spd_logger = spdlog::get(this->module_);
-  spd_logger->log(static_cast<spdlog::level>(this->level_), message);
+  spd_logger->log(static_cast<spdlog::level::level_enum>(this->level_), message);
 }
 
 template <class Ty>
