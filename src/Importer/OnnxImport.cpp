@@ -12,6 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <windows.h>
+
 #include <cstdint>
 #include <iostream>
 #include <string>
@@ -108,15 +110,16 @@ onnx::ModelProto OnnxImporter::conver_model_version_to_(onnx::ModelProto *model,
   return onnx::version_conversion::ConvertVersion(*model, version);
 }
 
-OnnxImporter::OnnxImporter(const mlir::MLIRContext *context,
-                           const OpBuilder *builder,
+OnnxImporter::OnnxImporter(mlir::MLIRContext *context, const OpBuilder *builder,
                            const ImporterOption &option)
     : Importer(context, builder, option),
       convert_version_(option.onnx_convert_version) {
-  if (option.importer_type == IMPORTER_TYPE::ONNX_FILE) {
-    init_model_(option.filename, &model_);
-  } else {
-    UNIMPLEMENTED(IMPORTER) << " need support other importer types";
+  switch (option.importer_type) {
+    case IMPORTER_TYPE::ONNX_FILE:
+      init_model_(option.filename, &model_);
+      break;
+    default:
+      FATAL(IMPORTER) << " need support other importer types";
   }
   check_model_legal_(model_);
   auto onnx_version = get_model_version_(model_);
@@ -127,6 +130,9 @@ OnnxImporter::OnnxImporter(const mlir::MLIRContext *context,
 }
 
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
+  // mlir::ModuleOp module =
+  //     mlir::ModuleOp::create(mlir::UnknownLoc::get(context_));
+
   // mlir::ModuleOp Module = mlir::ModuleOp::create(builder_->getUnknownLoc());
   //  builder_->setInsertionPointToEnd(module_ getBody());
   //  auto func =

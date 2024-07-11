@@ -37,7 +37,7 @@
 namespace llc::importer {
 class OnnxImporter : public Importer {
  public:
-  OnnxImporter(const mlir::MLIRContext *context, const OpBuilder *builder,
+  OnnxImporter(mlir::MLIRContext *context, const OpBuilder *builder,
                const ImporterOption &option);
 
   mlir::ModuleOp export_mlir_module() const final;

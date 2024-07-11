@@ -18,7 +18,7 @@
 
 namespace llc::importer {
 
-Importer::Importer(const mlir::MLIRContext *context, const OpBuilder *builder,
+Importer::Importer(mlir::MLIRContext *context, const OpBuilder *builder,
                    const ImporterOption &options)
     : context_(context), builder_(builder) {}
 

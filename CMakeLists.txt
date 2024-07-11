@@ -66,15 +66,15 @@ cmake_path(APPEND LLCOMPILER_INSTALL_CMAKE_DIR ${INSTALL_DIR} "cmake")
 # #---------- external library ----------##
 # msvc编译器设置
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
-
-include_directories(${LLVM_MAIN_INCLUDE_DIR})
-include_directories(${LLVM_GENERATE_INCLUDE_DIR})
-include_directories(${MLIR_MAIN_INCLUDE_DIR})
-include_directories(${MLIR_GENERATE_INCLUDE_DIR})
+include_directories(${THIRD_PARTY_INCLUDE_DIRS})
+message(${THIRD_PARTY_INCLUDE_DIRS})
 
 # #---------- sub library ----------##
 if(BUILD_LLCOMPILER_LOG)
     add_definitions(-DLLCOMPILER_HAS_LOG)
+
+    # error for macro 'interface' in llvm-mingw-20240518-msvcrt-x86_64/include/rpc.h
+    add_definitions(-D__OBJC__)
 endif()
 
 include_directories(${LLCOMPILER_INCLUDE_DIR})
