@@ -1,5 +1,10 @@
-# LLVM && MLIR
+if(MSVC)
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Wall>)
+else()
+    add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-w>)
+endif()
 
+# LLVM && MLIR
 add_llvm("${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
 list(APPEND THIRD_PARTY_INCLUDE_DIRS
     "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include"

@@ -7,4 +7,5 @@ llcompiler_add_library(LLCompiler
 
     LINKS
     LLCompilerSupport
+    MLIRIR
 )

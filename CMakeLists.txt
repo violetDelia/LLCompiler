@@ -16,12 +16,11 @@ unset(BUILD_ONNX_WITH_ONNX_ML CACHE)
 
 # #---------- options ----------##
 # cant set to OFF
-option(BUILD_SHARED_LIBS "build shared libs" OFF)
+option(BUILD_SHARED_LIBS "build shared libs" ON)
 option(TEST "run test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
-option(BUILD_NO_WARINGS "remove warings of compiler" ON)
 option(BUILD_ONNX_WITH_ONNX_ML "Enable traditional ML API." ON)
 
 # #---------- cmake setting ----------##
@@ -39,14 +38,6 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}/install")
 if(MSVC)
     if(STATIC_WINDOWS_RUNTIME)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>")
-    endif()
-endif()
-
-if(BUILD_NO_WARINGS)
-    if(MSVC)
-        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Wall>)
-    else()
-        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-w>)
     endif()
 endif()
 
