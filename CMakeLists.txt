@@ -21,7 +21,7 @@ option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 option(BUILD_LLCOMPILER_DOCS "build examples" ON)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
-option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" OFF)
+option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)

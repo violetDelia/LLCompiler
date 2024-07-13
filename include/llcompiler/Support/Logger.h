@@ -26,7 +26,7 @@
 #define INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
 #include <cstddef>
 #include <cstdint>
-#include <string>
+#include <sstream>
 
 #include "llcompiler/Support/Core.h"
 
@@ -52,24 +52,34 @@ class Logger {
 class NullStream {
  public:
   template <class Ty>
-  NullStream &operator<<(Ty val);
+  NullStream &operator<<(const Ty val);
 };
 
 class LoggerStream {
  public:
   LoggerStream(Logger *log, const bool emit_message);
-  LoggerStream &operator<<(const char *message);
-  LoggerStream &operator<<(const std::string &str);
-  LoggerStream &operator<<(const int value);
-  LoggerStream &operator<<(const std::int64_t value);
-  LoggerStream &operator<<(const double value);
+  template <class Ty>
+  LoggerStream &operator<<(const Ty value);
   virtual ~LoggerStream();
 
  protected:
-  std::string message_;
+  std::stringstream message_;
   Logger *logger_;
   const bool emit_message_;
 };
+
+template <class Ty>
+LoggerStream &LoggerStream::operator<<(const Ty message) {
+  if (emit_message_) {
+    message_ << message;
+  }
+  return *this;
+}
+
+template <class Ty>
+NullStream &NullStream::operator<<(const Ty val) {
+  return *this;
+}
 
 }  // namespace llc::logger
 #ifdef LLCOMPILER_HAS_LOG
@@ -94,6 +104,8 @@ class LoggerStream {
 #define FATAL(module)                                    \
   LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::FATAL_) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
+
+#define PRINT LLCOMPILER_LOG("ANONYMOUS_MODULE", llc::logger::LOG_LEVER::ERROR_)
 
 #define CHECK(module, condition)                                          \
   LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::ERROR_) \

@@ -12,7 +12,7 @@ CompileFlags:
   -IC:/LLCompiler/build/_deps/protobuf-src/src/,
   -IC:/LLCompiler/third_party/MegCC/,
   -IC:/LLCompiler/other_party/onnx-mlir/include/,
-  -IC:/LLCompiler/other_party/onnx-mlir/src/,
+  -IC:/LLCompiler/other_party/onnx-mlir/,
   ]
 Diagnostics:
   UnusedIncludes: None  

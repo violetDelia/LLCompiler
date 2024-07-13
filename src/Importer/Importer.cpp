@@ -15,12 +15,13 @@
 #include <cstdint>
 
 #include "llcompiler/Importer/Importer.h"
+#include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
 
 namespace llc::importer {
 
-Importer::Importer(mlir::MLIRContext *context, const OpBuilder *builder,
-                   const ImporterOption &options)
-    : context_(context), builder_(builder) {}
+Importer::Importer(OpBuilder *builder, const ImporterOption &options)
+    : builder_(builder) {}
 
 Importer::~Importer() {}
 

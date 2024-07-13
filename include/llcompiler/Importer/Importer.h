@@ -41,15 +41,12 @@ struct ImporterOption {
 
 class Importer {
  public:
-  Importer(mlir::MLIRContext *context, const OpBuilder *builder,
-           const ImporterOption &option);
-
-  virtual mlir::ModuleOp export_mlir_module() const = 0;
+  Importer(OpBuilder *builder, const ImporterOption &option);
   virtual ~Importer();
+  virtual mlir::ModuleOp export_mlir_module() const = 0;
 
  protected:
-  const OpBuilder *builder_;
-  mlir::MLIRContext *context_;
+  OpBuilder *builder_;
 };
 }  // namespace llc::importer
 

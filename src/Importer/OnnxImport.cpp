@@ -14,8 +14,10 @@
 
 #include <windows.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <memory>
 #include <string>
 
 #include "google/protobuf/util/json_util.h"
@@ -110,10 +112,8 @@ onnx::ModelProto OnnxImporter::conver_model_version_to_(onnx::ModelProto *model,
   return onnx::version_conversion::ConvertVersion(*model, version);
 }
 
-OnnxImporter::OnnxImporter(mlir::MLIRContext *context, const OpBuilder *builder,
-                           const ImporterOption &option)
-    : Importer(context, builder, option),
-      convert_version_(option.onnx_convert_version) {
+OnnxImporter::OnnxImporter(OpBuilder *builder, const ImporterOption &option)
+    : Importer(builder, option), convert_version_(option.onnx_convert_version) {
   switch (option.importer_type) {
     case IMPORTER_TYPE::ONNX_FILE:
       init_model_(option.filename, &model_);
@@ -127,20 +127,20 @@ OnnxImporter::OnnxImporter(mlir::MLIRContext *context, const OpBuilder *builder,
     model_ = conver_model_version_to_(&model_, convert_version_);
     INFO(IMPORTER) << "convert onnx modle to version " << convert_version_;
   }
+  onnx::shape_inference::InferShapes(model_);
+  INFO(IMPORTER) << "infer shapes of onnx model success!";
 }
 
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
-  mlir::ModuleOp module =
-      mlir::ModuleOp::create(mlir::UnknownLoc::get(context_));
+  auto module = mlir::ModuleOp::create(builder_->build().getUnknownLoc());
+  builder_->mlirGen(&module, model_);
 
-  // mlir::ModuleOp Module = mlir::ModuleOp::create(builder_->getUnknownLoc());
-  //  builder_->setInsertionPointToEnd(module_ getBody());
-  //  auto func =
-  //      m_builder.create<mlir::FuncOp>(m_builder.getUnknownLoc(), g->name(),
-  //                                     get_func_type(g->inputs(),
-  //                                     g->outputs()));
-  //  mlir::Block *entryBlock = func.addEntryBlock();
-  //  m_builder.setInsertionPointToStart(entryBlock);
+  // module.push_back(mainFunc);
+  // Create and set insertion point to entry block.
+  // mainFunc.getBody().push_back(new mlir::Block);
+  // builder_->builder_.setInsertionPointToStart(&mainFunc.getBody().back());
+  // std::cout << std::addressof(*mainFunc.getOperation());
+
   UNIMPLEMENTED(IMPORTER);
   return {};
 }

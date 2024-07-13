@@ -39,11 +39,10 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
                  << importer_type_to_str(option.importer_type);
   INFO(IMPORTER) << "target dialect is: "
                  << target_dialect_to_str(option.target_dialect);
-  OpBuilder *builder_pointer{};
+  OpBuilder builder(nullptr);
   switch (option.target_dialect) {
     case TARGET_DIALECT::LLH: {
-      auto builder = LLHOpBuilder(context);
-      builder_pointer = &builder;
+      builder = LLHOpBuilder(context);
       DEBUG(IMPORTER) << "build LLHOpBuilder";
       break;
     }
@@ -51,11 +50,11 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
       FATAL(IMPORTER) << "Unsupported to covert dialect: "
                       << importer::target_dialect_to_str(option.target_dialect);
   }
+
   switch (option.importer_type) {
     case llc::importer::IMPORTER_TYPE::ONNX_FILE: {
       INFO(IMPORTER) << "onnx file path is: " << option.filename.c_str();
-      return OnnxImporter(context, builder_pointer, option)
-          .export_mlir_module();
+      return OnnxImporter(&builder, option).export_mlir_module();
     }
     default:
       FATAL(IMPORTER) << "Unimplemented importer type: "

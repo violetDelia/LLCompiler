@@ -26,6 +26,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/OwningOpRef.h"
+#include "onnx/onnx_pb.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
@@ -34,11 +35,13 @@ namespace llc::importer {
 class OpBuilder {
  public:
   explicit OpBuilder(mlir::MLIRContext* context);
-
   virtual ~OpBuilder();
+  mlir::OpBuilder& build();
+  void mlirGen(mlir::ModuleOp* module, const onnx::ModelProto& graph);
+  void mlirGen(mlir::ModuleOp* module, const onnx::GraphProto& graph);
 
  protected:
-  const mlir::OpBuilder builder_;
+  mlir::OpBuilder builder_;
 };
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_

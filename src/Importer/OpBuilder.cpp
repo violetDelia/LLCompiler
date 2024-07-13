@@ -13,10 +13,36 @@
 //    limitations under the License.
 
 #include "llcompiler/Importer/OpBuilder.h"
+#include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
+
 namespace llc::importer {
 OpBuilder::OpBuilder(mlir::MLIRContext* context) : builder_(context) {}
 
 OpBuilder::~OpBuilder() {}
 
+mlir::OpBuilder& OpBuilder::build() { return builder_; }
+
+void OpBuilder::mlirGen(mlir::ModuleOp* module, const onnx::ModelProto& model) {
+  DEBUG(IMPORTER) << "gen mlirOp form onnx::ModelProto";
+  mlirGen(module, model.graph());
+}
+void OpBuilder::mlirGen(mlir::ModuleOp* module, const onnx::GraphProto& graph) {
+  DEBUG(IMPORTER) << "gen mlirOp form onnx::GraphProto";
+  auto func = mlir::func::FuncOp::create(
+      builder_.getUnknownLoc(), "onnx_graph",
+      /*type=*/builder_.getFunctionType({}, {}), /*attrs=*/{});
+  module->push_back(func);
+  func.getBody().push_back(new mlir::Block);
+  PRINT << graph.name();
+  for (const auto& initializer : graph.initializer()) {
+    PRINT << initializer.name();
+  }
+  for (const auto& input : graph.input()) {
+    PRINT << input.name();
+  }
+  module->dump();
+}
 };  // namespace llc::importer

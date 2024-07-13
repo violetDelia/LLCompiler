@@ -18,10 +18,12 @@
 #include <memory>
 #include <sstream>
 #include <string>
+#include <type_traits>
 
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "spdlog/common.h"
+#include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
@@ -70,56 +72,21 @@ LoggerStream Logger::stream(const bool emit_message) {
 }
 
 void Logger::info(const char *message) {
-  std::shared_ptr<spdlog::logger> spd_logger = spdlog::get(this->module_);
-  spd_logger->log(static_cast<spdlog::level::level_enum>(this->level_), message);
-}
-
-template <class Ty>
-NullStream &NullStream::operator<<(Ty val) {
-  return *this;
+  std::shared_ptr<spdlog::logger> logger = spdlog::get(this->module_);
+  if (logger) {
+    logger->log(static_cast<spdlog::level::level_enum>(this->level_), message);
+  } else {
+    spdlog::set_level(spdlog::level::level_enum::debug);
+    spdlog::log(static_cast<spdlog::level::level_enum>(this->level_), message);
+  }
 }
 
 LoggerStream::LoggerStream(Logger *log, const bool emit_message)
     : logger_(log), emit_message_(emit_message) {}
 
-LoggerStream &LoggerStream::operator<<(const char *message) {
-  if (emit_message_) {
-    message_ += message;
-  }
-  return *this;
-}
-
-LoggerStream &LoggerStream::operator<<(const std::string &str) {
-  if (emit_message_) {
-    message_ += str;
-  }
-  return *this;
-}
-
-LoggerStream &LoggerStream::operator<<(const int value) {
-  if (emit_message_) {
-    message_ += std::to_string(value);
-  }
-  return *this;
-}
-
-LoggerStream &LoggerStream::operator<<(const std::int64_t value) {
-  if (emit_message_) {
-    message_ += std::to_string(value);
-  }
-  return *this;
-}
-
-LoggerStream &LoggerStream::operator<<(const double value) {
-  if (emit_message_) {
-    message_ += std::to_string(value);
-  }
-  return *this;
-}
-
 LoggerStream::~LoggerStream() {
   if (emit_message_) {
-    logger_->info(message_.c_str());
+    logger_->info(message_.str().c_str());
   }
   return;
 }
