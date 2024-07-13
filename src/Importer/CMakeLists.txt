@@ -11,5 +11,6 @@ llcompiler_add_library(LLCompilerImporter
     
     LINKS
     onnx
+    LLVMOption
     
 )

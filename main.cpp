@@ -12,17 +12,27 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 #include <any>
+#include <chrono>
 #include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
 
-#include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/Importer/Utility.h"
+#include "llcompiler/Support/Core.h"
 
 // namespace llc::importer
 int main(int argc, char **argv) {
-  llc::init_compiler(argc, argv);
-
+  llc::importer::ImporterOption options{
+      .filename = "C:/LLCompiler/tutorials/models/resnet18-v1-7.onnx",
+      .onnx_convert_version = 16,
+      .importer_type = llc::importer::IMPORTER_TYPE::ONNX_FILE,
+      .target_dialect = llc::importer::TARGET_DIALECT::LLH};
+  mlir::MLIRContext context;
+  context.getOrLoadDialect<llc::llh::LLHDialect>();
+  auto import_option = llc::importer::get_importer_option();
+  auto module = llc::importer::gen_mlir_from_to(&context, options);
   //  ONNX_NAMESPACE::ModelProto model;
   //  ONNX_NAMESPACE::LoadProtoFromPath(llc::option::importingPath.getValue(),
   //                                    model);

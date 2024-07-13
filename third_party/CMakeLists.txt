@@ -4,21 +4,20 @@ else()
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-w>)
 endif()
 
-# LLVM && MLIR
-add_llvm("${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
 list(APPEND THIRD_PARTY_INCLUDE_DIRS
+    "${CMAKE_CURRENT_SOURCE_DIR}/onnx"
+    "${CMAKE_CURRENT_BINARY_DIR}/onnx"
     "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include"
     "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/mlir/include"
     "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/tools/mlir/include")
 
-# ONNX
-add_onnx("${CMAKE_CURRENT_SOURCE_DIR}/onnx")
-list(APPEND THIRD_PARTY_INCLUDE_DIRS
-    "${CMAKE_CURRENT_SOURCE_DIR}/onnx"
-    "${CMAKE_CURRENT_BINARY_DIR}/onnx")
-
-# spdlog
-add_spdlog("${CMAKE_CURRENT_SOURCE_DIR}/spdlog")
-
 set(THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} PARENT_SCOPE)
+
+if(BUILD_LLCOMPILER_TEST)
+    build_googletest("${CMAKE_CURRENT_SOURCE_DIR}/googletest")
+endif()
+
+build_spdlog("${CMAKE_CURRENT_SOURCE_DIR}/spdlog")
+build_onnx("${CMAKE_CURRENT_SOURCE_DIR}/onnx")
+build_llvm("${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")

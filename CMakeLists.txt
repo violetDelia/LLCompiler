@@ -5,23 +5,23 @@ foreach(CMAKE_FILE ${LLCOMPILER_CMAKE_FILES})
     include(${CMAKE_FILE})
 endforeach()
 
-# #---------- options cache ----------##
+# #---------- options cache----------##
 unset(BUILD_SHARED_LIBS CACHE)
-unset(TEST CACHE)
+unset(BUILD_LLCOMPILER_TEST CACHE)
 unset(STATIC_WINDOWS_RUNTIME CACHE)
+unset(BUILD_LLCOMPILER_DOCS CACHE)
 unset(BUILD_LLCOMPILER_LOG CACHE)
 unset(CMAKE_EXPORT_COMPILE_COMMANDS CACHE)
-unset(BUILD_NO_WARINGS CACHE)
-unset(BUILD_ONNX_WITH_ONNX_ML CACHE)
+unset(LLCOMPILER_BUILD_WARNINGS CACHE)
 
 # #---------- options ----------##
-# cant set to OFF
-option(BUILD_SHARED_LIBS "build shared libs" ON)
-option(TEST "run test" ON)
+option(BUILD_SHARED_LIBS "build shared libs" OFF)
+option(BUILD_LLCOMPILER_TEST "build test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
+option(BUILD_LLCOMPILER_DOCS "build examples" ON)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
-option(BUILD_ONNX_WITH_ONNX_ML "Enable traditional ML API." ON)
+option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" OFF)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)
@@ -41,6 +41,14 @@ if(MSVC)
     endif()
 endif()
 
+if(LLCOMPILER_BUILD_WARNINGS)
+    if(MSVC)
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Wall>)
+    else()
+        add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-w>)
+    endif()
+endif()
+
 # #---------- define absolute path ----------##
 cmake_path(APPEND LLCOMPILER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} "include")
 cmake_path(APPEND LLCOMPILER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} "src")
@@ -57,44 +65,38 @@ cmake_path(APPEND LLCOMPILER_INSTALL_RUNTIME_DIR ${INSTALL_DIR} "bin")
 cmake_path(APPEND LLCOMPILER_INSTALL_CMAKE_DIR ${INSTALL_DIR} "cmake")
 
 # #---------- external library ----------##
-if(BUILD_ONNX_WITH_ONNX_ML)
-    set(ENV{ONNX_ML} ON)
-    add_definitions(-DONNX_ML)
-else()
-    set(ENV{ONNX_ML} OFF)
-endif()
-
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
 include_directories(${THIRD_PARTY_INCLUDE_DIRS})
 
 # #---------- sub library ----------##
+# error for macro 'interface' in llvm-mingw-20240518-msvcrt-x86_64/include/rpc.h
+add_definitions(-D__OBJC__)
+
 if(BUILD_LLCOMPILER_LOG)
     add_definitions(-DLLCOMPILER_HAS_LOG)
-
-    # error for macro 'interface' in llvm-mingw-20240518-msvcrt-x86_64/include/rpc.h
-    add_definitions(-D__OBJC__)
 endif()
 
 include_directories(${LLCOMPILER_INCLUDE_DIR})
 include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
+
 add_subdirectory("${LLCOMPILER_INCLUDE_DIR}/llcompiler")
 add_subdirectory(${LLCOMPILER_SOURCE_DIR})
 add_subdirectory(${LLCOMPILER_TOOLS_DIR})
 
-# #---------- main ----------##
+# # #---------- main ----------##
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 target_include_directories(main PRIVATE
     $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
     $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
 )
 target_link_libraries(main PRIVATE
-    LLCompilerAll
-    MLIRAnalysis
-    MLIRFunctionInterfaces
-    MLIRIR
-    MLIRParser
-    MLIRSideEffectInterfaces
-    MLIRTransforms)
+    PRIVATE
+    LLCompilerImporter
+    LLCompiler
+    LLCLLHDialect
+    LLCLLHPasses
+    LLCompilerSupport
+)
 
 # #---------- message ----------##
 message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})

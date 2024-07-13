@@ -55,8 +55,7 @@ llvm::cl::opt<importer::IMPORTER_TYPE> importingType(
 
 llvm::cl::opt<std::string> importingPath(
     "import-file", llvm::cl::desc("the path of the file to import"),
-    llvm::cl::value_desc("model file"),
-    llvm::cl::init("C:/LLCompiler/example/models/bvlcalexnet-12.onnx"),
+    llvm::cl::value_desc("model file"), llvm::cl::init(""),
     llvm::cl::cat(importingOptions));
 
 llvm::cl::opt<importer::TARGET_DIALECT> importintDialect(
@@ -66,11 +65,11 @@ llvm::cl::opt<importer::TARGET_DIALECT> importintDialect(
     llvm::cl::init(importer::TARGET_DIALECT::LLH),
     llvm::cl::cat(importingOptions));
 
-extern llvm::cl::opt<uint64_t> onnxConvertVersion(
+llvm::cl::opt<uint64_t> onnxConvertVersion(
     "onnx-version",
     llvm::cl::desc("the onnx model will convert to onnx-version before "
-                   "lowering to dialect,default convert to 15"),
-    llvm::cl::value_desc("version"), llvm::cl::init(15),
+                   "lowering to dialect,default convert to 16"),
+    llvm::cl::value_desc("version"), llvm::cl::init(16),
     llvm::cl::cat(importingOptions));
 
 }  // namespace llc::option
