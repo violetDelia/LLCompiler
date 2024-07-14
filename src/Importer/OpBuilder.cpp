@@ -17,9 +17,11 @@
 #include "llcompiler/Support/Logger.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
-
+#include "mlir/IR/MLIRContext.h"
 namespace llc::importer {
-OpBuilder::OpBuilder(mlir::MLIRContext* context) : builder_(context) {}
+OpBuilder::OpBuilder(mlir::MLIRContext* context) : builder_(context) {
+  context->getOrLoadDialect<mlir::func::FuncDialect>();
+}
 
 OpBuilder::~OpBuilder() {}
 

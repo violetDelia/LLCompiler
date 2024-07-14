@@ -6,6 +6,7 @@
 类:共有变量: ClassName.common_value
 类:私有方法: ClassName.private_method_
 类:共有方法: ClassName.common_method
+类:静态变量：ClassName::Value_Name
 私有类:_ClassName
 不可见方法:function_name_
 枚举: enum ENUM_NAME {

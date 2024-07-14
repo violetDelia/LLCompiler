@@ -54,4 +54,5 @@ const char *target_dialect_to_str(const TARGET_DIALECT dialect) {
 /**********  log module define  **********/
 const char *GLOBAL = "global";
 const char *IMPORTER = "importer";
+const char *LLH = "llh";
 }  // namespace llc

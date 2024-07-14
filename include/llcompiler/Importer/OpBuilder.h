@@ -21,10 +21,12 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
+#include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/OwningOpRef.h"
 #include "onnx/common/ir.h"
@@ -32,16 +34,16 @@
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
-#define DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(Ty)                     \
-  virtual void mlirGen(mlir::ModuleOp* module, const Ty& item) { \
-    UNIMPLEMENTED(IMPORTER);                                     \
+#define DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(Ty)                      \
+  virtual void gen_mlir(mlir::ModuleOp* module, const Ty& item) { \
+    UNIMPLEMENTED(IMPORTER);                                      \
   }
 
 #define LLCOMPILER_OVERRIDE_OPBULDER_MLIRGEN(Ty) \
-  void mlirGen(mlir::ModuleOp* module, const Ty& item) final;
+  void gen_mlir(mlir::ModuleOp* module, const Ty& item) final;
 
 #define LLCOMPILER_OPBULDER_MLIRGEN_IMPL(class, Ty) \
-  void class ::mlirGen(mlir::ModuleOp* module, const Ty& item)
+  void class ::gen_mlir(mlir::ModuleOp* module, const Ty& item)
 namespace llc::importer {
 
 class OpBuilder {
@@ -49,6 +51,17 @@ class OpBuilder {
   explicit OpBuilder(mlir::MLIRContext* context);
   virtual ~OpBuilder();
   mlir::OpBuilder& build();
+  llh::IntType get_int(unsigned width = 32,
+                       llh::SIGNED_TAG tag = llh::SIGNED_TAG::UNSIGNED) {
+    return builder_.getType<llh::IntType>(width, tag);
+  }
+  // mlir::FloatType get_float(unsigned width = 32) {
+  //   return builder_.getType<mlir::FloatType>(width);
+  // }
+  // mlir::ComplexType get_tensor() {
+  //   //return builder_.getType<mlir::TensorType>()
+  // };
+
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::ModelProto)
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::GraphProto)
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::Graph)
@@ -63,7 +76,7 @@ class OpBuilderTrace {
   virtual ~OpBuilderTrace();
 
   template <class Ty>
-  void mlirGen(mlir::ModuleOp* module, const Ty& item) const;
+  void gen_mlir(mlir::ModuleOp* module, const Ty& item) const;
 
   OpBuilder& build() const;
 
@@ -72,9 +85,9 @@ class OpBuilderTrace {
 };
 
 template <class Ty>
-void OpBuilderTrace::mlirGen(mlir::ModuleOp* module, const Ty& item) const {
-  DEBUG(IMPORTER) << "call " << typeid(Ty).name() << " mlirGen";
-  builder_->mlirGen(module, item);
+void OpBuilderTrace::gen_mlir(mlir::ModuleOp* module, const Ty& item) const {
+  DEBUG(IMPORTER) << "call " << typeid(Ty).name() << " gen_mlir";
+  builder_->gen_mlir(module, item);
 }
 
 }  // namespace llc::importer

@@ -27,10 +27,12 @@ def LLH_Dialect : Dialect{
      Top-level dialect for connecting LLC and other graph frameworks.
      }];
     let cppNamespace = "::llc::llh";
-    // let useDefaultTypePrinterParser = 0;
+    let useDefaultAttributePrinterParser = 0;
+    let useDefaultTypePrinterParser = 1;
     let extraClassDeclaration = [{
         void registerTypes();
     }];
+    
 }
 
 //===----------------------------------------------------------------------===//

@@ -67,6 +67,7 @@ const char *target_dialect_to_str(const TARGET_DIALECT dialect);
 /**********  log module extern  **********/
 extern const char *GLOBAL;
 extern const char *IMPORTER;
+extern const char *LLH;
 }  // namespace llc
 
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_CORE_H_

@@ -18,6 +18,14 @@
 
 #include "mlir/IR/BuiltinTypes.h"
 
+namespace llc::llh {
+enum SIGNED_TAG : uint32_t {
+  SIGNLESS,
+  SIGNED,
+  UNSIGNED,
+};
+}
+
 #define GET_TYPEDEF_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h.inc"
 

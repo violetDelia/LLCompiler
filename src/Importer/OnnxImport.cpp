@@ -129,7 +129,7 @@ mlir::ModuleOp OnnxImporter::export_mlir_module() const {
   auto module =
       mlir::ModuleOp::create(builder_trace_.build().build().getUnknownLoc());
   auto graph = onnx::ImportModelProto(model_);
-  builder_trace_.mlirGen(&module, *graph);
+  builder_trace_.gen_mlir(&module, *graph);
   // auto func = build_->build().create<mlir::FuncOp>(
   //     m_builder.getUnknownLoc(), g->name(),
   //     get_func_type(g->inputs(), g->outputs()));

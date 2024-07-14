@@ -24,6 +24,9 @@
 #include "llcompiler/Support/Logger.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Dialect.h"
 
 // namespace llc::importer
 int main(int argc, char **argv) {
@@ -33,8 +36,6 @@ int main(int argc, char **argv) {
       .importer_type = llc::importer::IMPORTER_TYPE::ONNX_FILE,
       .target_dialect = llc::importer::TARGET_DIALECT::LLH};
   mlir::MLIRContext context;
-  context.getOrLoadDialect<mlir::func::FuncDialect>();
-  context.getOrLoadDialect<llc::llh::LLHDialect>();
   auto import_option = llc::importer::get_importer_option();
   auto module = llc::importer::gen_mlir_from(&context, options);
   //  ONNX_NAMESPACE::ModelProto model;

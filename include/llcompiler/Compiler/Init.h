@@ -29,7 +29,5 @@ namespace llc {
 
 void init_compiler(int argc, char **argv);
 
-
-
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_

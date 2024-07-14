@@ -33,7 +33,7 @@
 namespace llc::importer {
 class LLHOpBuilder : public OpBuilder {
  public:
-  using OpBuilder::OpBuilder;
+  explicit LLHOpBuilder(mlir::MLIRContext* context);
 
   // void mlirGen(mlir::ModuleOp* module, const onnx::ModelProto& graph)
   // override; void mlirGen(mlir::ModuleOp* module, const onnx::GraphProto&

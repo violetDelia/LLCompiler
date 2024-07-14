@@ -15,11 +15,11 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
 
-using namespace mlir;
-using namespace llc::llh;
+// using namespace mlir;
 
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
 
+namespace llc::llh {
 //===----------------------------------------------------------------------===//
 // LLHDialect initialize method.
 //===----------------------------------------------------------------------===//
@@ -30,3 +30,9 @@ void LLHDialect::initialize() {
       >();
   registerTypes();
 }
+
+//===----------------------------------------------------------------------===//
+// LLHDialect initialize method.
+//===----------------------------------------------------------------------===//
+
+}  // namespace llc::llh

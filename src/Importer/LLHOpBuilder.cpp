@@ -12,14 +12,23 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
 #include "llcompiler/Importer/LLHOpBuilder.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/BuiltinTypes.h"
 
 namespace llc::importer {
-
+LLHOpBuilder::LLHOpBuilder(mlir::MLIRContext* context) : OpBuilder(context) {
+  context->getOrLoadDialect<llc::llh::LLHDialect>();
+}
 // void LLHOpBuilder::mlirGen(mlir::ModuleOp* module,
 //                            const onnx::ModelProto& model) {
 //   DEBUG(IMPORTER) << "gen mlirOp form onnx::ModelProto";
@@ -63,9 +72,11 @@ LLCOMPILER_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, onnx::Graph) {
   for (auto val : input) {
     print_info << val->node();
   }
-  auto func = mlir::func::FuncOp::create(
-      builder_.getUnknownLoc(), item.name(),
-      /*type=*/builder_.getFunctionType({}, {}), /*attrs=*/{});
+  auto func =
+      mlir::func::FuncOp::create(builder_.getUnknownLoc(), item.name(),
+                                 builder_.getFunctionType({get_int()}, {}),
+                                 /*attrs=*/{});
+  // auto int_type =get_int() ;
   module->push_back(func);
 }
 
