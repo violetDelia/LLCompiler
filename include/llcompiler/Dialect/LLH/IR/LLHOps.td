@@ -17,18 +17,20 @@ include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
-def LLH_TestOp : LLH_Op<"test"> {
-    let summary = "test";
+def LLH_ConstantOp : LLH_Op<"constant"> {
+    let summary = "constant op";
     let description = [{
-        test
+        the operation cantain the constant.
     }];
 
-    let arguments = (ins I32:$input);
-    let results = (outs I32:$res);
+    let arguments = (ins F64ElementsAttr:$value);
+    let results = (outs F64Tensor);
 
     let assemblyFormat = [{
-        $input attr-dict `:` type($input)
+        $input attr-dict `:` type($value)
     }];
+
+    let hasVerifier = 1;
 }
 
 #endif // LLH_OPS

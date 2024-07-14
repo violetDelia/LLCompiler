@@ -1,6 +1,7 @@
 llcompiler_add_library(LLCompilerImporter
     SRC_FILES
     Importer.cpp
+    LLHOpBuilder.cpp
     OnnxImport.cpp
     OpBuilder.cpp
     Utility.cpp
@@ -8,9 +9,8 @@ llcompiler_add_library(LLCompilerImporter
     DEPENDS
     LLCompilerSupport
     LLCLLHDialect
-    
+
     LINKS
     onnx
     LLVMOption
-    
 )

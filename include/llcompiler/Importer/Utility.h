@@ -36,8 +36,8 @@
 namespace llc::importer {
 ImporterOption get_importer_option();
 
-mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
-    mlir::MLIRContext *context, const ImporterOption &option);
+mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(mlir::MLIRContext *context,
+                                                const ImporterOption &option);
 }  // namespace llc::importer
 
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_UTILITY_H_

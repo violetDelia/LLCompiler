@@ -46,7 +46,7 @@ class Importer {
   virtual mlir::ModuleOp export_mlir_module() const = 0;
 
  protected:
-  OpBuilder *builder_;
+  OpBuilderTrace builder_trace_;
 };
 }  // namespace llc::importer
 

@@ -23,9 +23,9 @@
  */
 #include "llcompiler/Importer/OpBuilder.h"
 #include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/OwningOpRef.h"
-
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
@@ -34,6 +34,11 @@ namespace llc::importer {
 class LLHOpBuilder : public OpBuilder {
  public:
   using OpBuilder::OpBuilder;
+
+  // void mlirGen(mlir::ModuleOp* module, const onnx::ModelProto& graph)
+  // override; void mlirGen(mlir::ModuleOp* module, const onnx::GraphProto&
+  // graph) override;
+  LLCOMPILER_OVERRIDE_OPBULDER_MLIRGEN(onnx::Graph)
 };
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_

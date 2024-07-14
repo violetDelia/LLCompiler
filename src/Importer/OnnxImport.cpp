@@ -11,12 +11,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-
-#include <windows.h>
-
-#include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <memory>
 #include <string>
 
@@ -32,7 +27,6 @@
 #include "mlir/Support/LLVM.h"
 #include "onnx/common/file_utils.h"
 #include "onnx/common/ir.h"
-#include "onnx/onnx-ml.pb.h"
 #include "onnx/shape_inference/implementation.h"
 #include "onnx/version_converter/convert.h"
 
@@ -43,7 +37,7 @@ bool OnnxImporter::init_model_form_json_(const mlir::StringRef &filename,
                  << filename.str();
   auto buf = mlir::openInputFile(filename);
   if (!buf) {
-    ERROR(IMPORTER) << "open json file " << filename.str() << " failed!";
+    WRONG(IMPORTER) << "open json file " << filename.str() << " failed!";
     return false;
   }
   std::string json;
@@ -58,7 +52,7 @@ bool OnnxImporter::init_model_form_json_(const mlir::StringRef &filename,
   auto status = google::protobuf::util::JsonStringToMessage(json, model);
   CHECK(IMPORTER, status.ok())
       << "convert json string to onnx::modelproto file faile!" << "\n\t"
-      << filename.str() << " with error '" << status.ToString() + "'";
+      << filename.str() << " with WRONG '" << status.ToString() + "'";
   return status.ok();
 }
 
@@ -66,7 +60,7 @@ bool OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename,
                                          onnx::ModelProto *model) {
   std::fstream input(filename.str(), std::ios::in | std::ios::binary);
   if (!input.is_open()) {
-    ERROR(IMPORTER) << "file " << filename.str() << " is opening!";
+    WRONG(IMPORTER) << "file " << filename.str() << " is opening!";
     return false;
   }
   auto parse_success = model->ParseFromIstream(&input);
@@ -77,7 +71,7 @@ bool OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename,
 
 bool OnnxImporter::init_model_(const mlir::StringRef filename,
                                onnx::ModelProto *model) {
-  std::string error_msg;
+  std::string WRONG_msg;
   if (filename.ends_with(".json")) {
     return init_model_form_json_(filename, model);
   } else if (filename.ends_with(".onnx")) {
@@ -98,7 +92,7 @@ int64_t OnnxImporter::get_model_version_(const onnx::ModelProto &model) const {
       return version;
     }
   }
-  ERROR(IMPORTER) << "can't find onnx version from onnx::ModelProto!";
+  WRONG(IMPORTER) << "can't find onnx version from onnx::ModelProto!";
   return -1;
 }
 
@@ -132,15 +126,22 @@ OnnxImporter::OnnxImporter(OpBuilder *builder, const ImporterOption &option)
 }
 
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
-  auto module = mlir::ModuleOp::create(builder_->build().getUnknownLoc());
-  builder_->mlirGen(&module, model_);
+  auto module =
+      mlir::ModuleOp::create(builder_trace_.build().build().getUnknownLoc());
+  auto graph = onnx::ImportModelProto(model_);
+  builder_trace_.mlirGen(&module, *graph);
+  // auto func = build_->build().create<mlir::FuncOp>(
+  //     m_builder.getUnknownLoc(), g->name(),
+  //     get_func_type(g->inputs(), g->outputs()));
+
+  // builder_->mlirGen(&module, model_);
 
   // module.push_back(mainFunc);
   // Create and set insertion point to entry block.
   // mainFunc.getBody().push_back(new mlir::Block);
   // builder_->builder_.setInsertionPointToStart(&mainFunc.getBody().back());
   // std::cout << std::addressof(*mainFunc.getOperation());
-
+  module->dump();
   UNIMPLEMENTED(IMPORTER);
   return {};
 }

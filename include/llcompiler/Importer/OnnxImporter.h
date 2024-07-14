@@ -22,7 +22,6 @@
  *
  */
 #include <cstdint>
-#include <string>
 
 #include "llcompiler/Importer/Importer.h"
 #include "llcompiler/Support/Core.h"

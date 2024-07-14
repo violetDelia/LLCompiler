@@ -14,6 +14,7 @@
 
 #include <any>
 #include <cstddef>
+#include <memory>
 
 #include "llcompiler/Importer/LLHOpBuilder.h"
 #include "llcompiler/Importer/OnnxImporter.h"
@@ -32,17 +33,17 @@ ImporterOption get_importer_option() {
           .target_dialect = option::importintDialect};
 }
 
-mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
-    mlir::MLIRContext *context, const ImporterOption &option) {
+mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(mlir::MLIRContext *context,
+                                                const ImporterOption &option) {
   INFO(IMPORTER) << "---------- Begin Importing ----------";
   INFO(IMPORTER) << "import tpye is: "
                  << importer_type_to_str(option.importer_type);
   INFO(IMPORTER) << "target dialect is: "
                  << target_dialect_to_str(option.target_dialect);
-  OpBuilder builder(nullptr);
+  std::shared_ptr<OpBuilder> builder = nullptr;
   switch (option.target_dialect) {
     case TARGET_DIALECT::LLH: {
-      builder = LLHOpBuilder(context);
+      builder.reset(new LLHOpBuilder(context));
       DEBUG(IMPORTER) << "build LLHOpBuilder";
       break;
     }
@@ -54,7 +55,7 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from_to(
   switch (option.importer_type) {
     case llc::importer::IMPORTER_TYPE::ONNX_FILE: {
       INFO(IMPORTER) << "onnx file path is: " << option.filename.c_str();
-      return OnnxImporter(&builder, option).export_mlir_module();
+      return OnnxImporter(builder.get(), option).export_mlir_module();
     }
     default:
       FATAL(IMPORTER) << "Unimplemented importer type: "

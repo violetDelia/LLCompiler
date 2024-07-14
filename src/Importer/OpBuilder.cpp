@@ -25,24 +25,9 @@ OpBuilder::~OpBuilder() {}
 
 mlir::OpBuilder& OpBuilder::build() { return builder_; }
 
-void OpBuilder::mlirGen(mlir::ModuleOp* module, const onnx::ModelProto& model) {
-  DEBUG(IMPORTER) << "gen mlirOp form onnx::ModelProto";
-  mlirGen(module, model.graph());
-}
-void OpBuilder::mlirGen(mlir::ModuleOp* module, const onnx::GraphProto& graph) {
-  DEBUG(IMPORTER) << "gen mlirOp form onnx::GraphProto";
-  auto func = mlir::func::FuncOp::create(
-      builder_.getUnknownLoc(), "onnx_graph",
-      /*type=*/builder_.getFunctionType({}, {}), /*attrs=*/{});
-  module->push_back(func);
-  func.getBody().push_back(new mlir::Block);
-  PRINT << graph.name();
-  for (const auto& initializer : graph.initializer()) {
-    PRINT << initializer.name();
-  }
-  for (const auto& input : graph.input()) {
-    PRINT << input.name();
-  }
-  module->dump();
-}
+OpBuilderTrace::OpBuilderTrace(OpBuilder* builder) : builder_(builder) {}
+
+OpBuilderTrace::~OpBuilderTrace() {}
+
+OpBuilder& OpBuilderTrace::build() const { return *builder_; }
 };  // namespace llc::importer

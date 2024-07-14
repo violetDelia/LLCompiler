@@ -100,12 +100,13 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define DEBUG(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::DEBUG_)
 #define INFO(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::INFO_)
 #define WARN(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::WARN_)
-#define ERROR(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::ERROR_)
+#define WRONG(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::ERROR_)
 #define FATAL(module)                                    \
   LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::FATAL_) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
 
-#define PRINT LLCOMPILER_LOG("ANONYMOUS_MODULE", llc::logger::LOG_LEVER::ERROR_)
+#define print_info \
+  LLCOMPILER_LOG("ANONYMOUS_MODULE", llc::logger::LOG_LEVER::ERROR_)
 
 #define CHECK(module, condition)                                          \
   LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::ERROR_) \
@@ -142,7 +143,7 @@ NullStream &NullStream::operator<<(const Ty val) {
   LLCOMPILER_CHECK_LOG(module, val1 >= val2, lever)
 
 #define UNIMPLEMENTED(module) \
-  FATAL(module) << "function [" << __func__ << "] Unimplemented!"
+  WRONG(module) << "function [" << __func__ << "] Unimplemented!"
 
 #define WARN_UNIMPLEMENTED(module)                                         \
   WARN(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" << "function [" \

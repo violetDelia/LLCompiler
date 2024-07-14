@@ -19,7 +19,7 @@ include "mlir/IR/DialectBase.td"
 include "llcompiler/Dialect/LLH/IR/LLHDialect.td"
 
 //===----------------------------------------------------------------------===//
-// Standalone type definitions
+// LLH type definitions
 //===----------------------------------------------------------------------===//
 
 class LLH_Type<string name, string typeMnemonic, list<Trait> traits = []>
@@ -27,13 +27,5 @@ class LLH_Type<string name, string typeMnemonic, list<Trait> traits = []>
   let mnemonic = typeMnemonic;
 }
 
-// def Torch_TestType : LLH_Type<"test_type_name", "test_type_mnemonic"> {
-//   let summary = "test_type";
-//   let description = [{
-//     test_type.
-//   }];
-//   let parameters = (ins StringRefParameter<"class name">:$className);
-//   let hasCustomAssemblyFormat = 1;
-// }
 
 #endif // LLH_TYPES

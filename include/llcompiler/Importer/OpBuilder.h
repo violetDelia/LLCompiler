@@ -22,26 +22,61 @@
  *
  */
 #include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/OwningOpRef.h"
+#include "onnx/common/ir.h"
 #include "onnx/onnx_pb.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
+#define DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(Ty)                     \
+  virtual void mlirGen(mlir::ModuleOp* module, const Ty& item) { \
+    UNIMPLEMENTED(IMPORTER);                                     \
+  }
 
+#define LLCOMPILER_OVERRIDE_OPBULDER_MLIRGEN(Ty) \
+  void mlirGen(mlir::ModuleOp* module, const Ty& item) final;
+
+#define LLCOMPILER_OPBULDER_MLIRGEN_IMPL(class, Ty) \
+  void class ::mlirGen(mlir::ModuleOp* module, const Ty& item)
 namespace llc::importer {
+
 class OpBuilder {
  public:
   explicit OpBuilder(mlir::MLIRContext* context);
   virtual ~OpBuilder();
   mlir::OpBuilder& build();
-  void mlirGen(mlir::ModuleOp* module, const onnx::ModelProto& graph);
-  void mlirGen(mlir::ModuleOp* module, const onnx::GraphProto& graph);
+  DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::ModelProto)
+  DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::GraphProto)
+  DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::Graph)
 
  protected:
   mlir::OpBuilder builder_;
 };
+
+class OpBuilderTrace {
+ public:
+  explicit OpBuilderTrace(OpBuilder* builder);
+  virtual ~OpBuilderTrace();
+
+  template <class Ty>
+  void mlirGen(mlir::ModuleOp* module, const Ty& item) const;
+
+  OpBuilder& build() const;
+
+ protected:
+  OpBuilder* builder_;
+};
+
+template <class Ty>
+void OpBuilderTrace::mlirGen(mlir::ModuleOp* module, const Ty& item) const {
+  DEBUG(IMPORTER) << "call " << typeid(Ty).name() << " mlirGen";
+  builder_->mlirGen(module, item);
+}
+
 }  // namespace llc::importer
+#undef DEFINE_OPBUILDER_VIRTUAL_MLIRGEN
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_

@@ -21,7 +21,7 @@
 namespace llc::importer {
 
 Importer::Importer(OpBuilder *builder, const ImporterOption &options)
-    : builder_(builder) {}
+    : builder_trace_(builder) {}
 
 Importer::~Importer() {}
 

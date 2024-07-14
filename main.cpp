@@ -36,7 +36,7 @@ int main(int argc, char **argv) {
   context.getOrLoadDialect<mlir::func::FuncDialect>();
   context.getOrLoadDialect<llc::llh::LLHDialect>();
   auto import_option = llc::importer::get_importer_option();
-  auto module = llc::importer::gen_mlir_from_to(&context, options);
+  auto module = llc::importer::gen_mlir_from(&context, options);
   //  ONNX_NAMESPACE::ModelProto model;
   //  ONNX_NAMESPACE::LoadProtoFromPath(llc::option::importingPath.getValue(),
   //                                    model);

@@ -13,6 +13,8 @@ CompileFlags:
   -IC:/LLCompiler/third_party/MegCC/,
   -IC:/LLCompiler/other_party/onnx-mlir/include/,
   -IC:/LLCompiler/other_party/onnx-mlir/,
+  -IC:/LLCompiler/other_party/MegCC/compiler/include/,
+  -IC:/LLCompiler/other_party/MegCC/compiler/lib/,
   ]
 Diagnostics:
   UnusedIncludes: None  

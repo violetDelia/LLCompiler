@@ -17,27 +17,35 @@
 include "mlir/IR/OpBase.td"
 
 //===----------------------------------------------------------------------===//
-// Standalone dialect definition.
+// LLH dialect definition.
 //===----------------------------------------------------------------------===//
 
 def LLH_Dialect : Dialect{
     let name = "llh";
     let summary = "Top-level dialect for connecting LLC and other graph frameworks";
     let description = [{
-     base with onnx.
+     Top-level dialect for connecting LLC and other graph frameworks.
      }];
     let cppNamespace = "::llc::llh";
-    let useDefaultTypePrinterParser = 0;
+    // let useDefaultTypePrinterParser = 0;
     let extraClassDeclaration = [{
         void registerTypes();
     }];
 }
 
 //===----------------------------------------------------------------------===//
-// Base standalone operation definition.
+// Base LLH operation definition.
 //===----------------------------------------------------------------------===//
 
 class LLH_Op<string mnemonic, list<Trait> traits = []> :
         Op<LLH_Dialect, mnemonic, traits>;
 
+//===----------------------------------------------------------------------===//
+// Base LLH operation trait definition.
+//===----------------------------------------------------------------------===//
+
+class LLH_OpTrait<string name> : NativeOpTrait<""> {
+  let trait = name;
+  let cppNamespace = "::llc::llh::OpTrait";
+}
 #endif // LLH_DIALECT

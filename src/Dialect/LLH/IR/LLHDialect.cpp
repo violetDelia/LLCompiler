@@ -28,4 +28,5 @@ void LLHDialect::initialize() {
 #define GET_OP_LIST
 #include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
       >();
+  registerTypes();
 }
