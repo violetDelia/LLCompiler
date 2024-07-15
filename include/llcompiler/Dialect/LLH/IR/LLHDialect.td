@@ -50,4 +50,8 @@ class LLH_OpTrait<string name> : NativeOpTrait<""> {
   let trait = name;
   let cppNamespace = "::llc::llh::OpTrait";
 }
+
+//===----------------------------------------------------------------------===//
+// Base LLH operation trait definition.
+//===----------------------------------------------------------------------===//
 #endif // LLH_DIALECT

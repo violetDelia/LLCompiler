@@ -36,11 +36,7 @@ void LLHDialect::registerTypes() {
 void printSIGNED_TAG(::mlir::AsmPrinter &printer, SIGNED_TAG tag) {
   switch (tag) {
     case UNSIGNED:
-      printer << "[u]";
-      return;
-    case SIGNED:
-      printer << "[s]";
-      return;
+      printer << "u";
     default:
       return;
   }

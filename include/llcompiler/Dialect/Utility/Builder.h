@@ -11,23 +11,8 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLH_OPS
-#define LLH_OPS
-include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
-include "llcompiler/Dialect/LLH/IR/LLHTypeConstraints.td"
-include "mlir/Interfaces/InferTypeOpInterface.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
-
-def LLH_TestOp : LLH_Op<"test"> {
-    let summary = "test op";
-    let description = [{
-        for test
-    }];
-
-    let arguments = (ins LLH_Int32:$value);
-    let results = (outs LLH_Tensor);
-}
-
-
-
-#endif // LLH_OPS
+//
+#ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
+#define INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
+namespace llc::mlir {}
+#endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_

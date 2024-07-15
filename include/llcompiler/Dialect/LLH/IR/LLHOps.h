@@ -16,11 +16,13 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
+#include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
+
 
 #define GET_OP_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"

@@ -24,11 +24,13 @@
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/OwningOpRef.h"
+#include "mlir/IR/Types.h"
 #include "onnx/common/ir.h"
 #include "onnx/onnx_pb.h"
 
@@ -51,16 +53,10 @@ class OpBuilder {
   explicit OpBuilder(mlir::MLIRContext* context);
   virtual ~OpBuilder();
   mlir::OpBuilder& build();
-  llh::IntType get_int(unsigned width = 32,
-                       llh::SIGNED_TAG tag = llh::SIGNED_TAG::UNSIGNED) {
-    return builder_.getType<llh::IntType>(width, tag);
+
+  mlir::IntegerType get_int(unsigned width = 32, bool is_signed = true) {
+    return builder_.getIntegerType(width, is_signed);
   }
-  // mlir::FloatType get_float(unsigned width = 32) {
-  //   return builder_.getType<mlir::FloatType>(width);
-  // }
-  // mlir::ComplexType get_tensor() {
-  //   //return builder_.getType<mlir::TensorType>()
-  // };
 
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::ModelProto)
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::GraphProto)
