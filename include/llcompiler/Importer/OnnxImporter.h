@@ -25,9 +25,11 @@
 
 #include "llcompiler/Importer/Importer.h"
 #include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/OwningOpRef.h"
 #include "onnx/common/file_utils.h"
+#include "onnx/onnx-ml.pb.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
@@ -38,6 +40,9 @@ class OnnxImporter : public Importer {
   OnnxImporter(OpBuilder *builder, const ImporterOption &option);
 
   mlir::ModuleOp export_mlir_module() const final;
+
+  IMPORTER_GEN_TYPE(const int32_t &elem_type)
+  IMPORTER_GEN_SHAPE(onnx::Value *value)
 
  protected:
   bool init_model_(const mlir::StringRef filename, onnx::ModelProto *model);

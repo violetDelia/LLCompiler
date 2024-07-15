@@ -62,38 +62,5 @@ def LLH_IntType : LLH_Type<"Int", "int"> {
   }];
 }
 
-def LLH_FloatType : LLH_Type<"Float", "float"> {
-  let summary = "Integer type with arbitrary precision up to a fixed limit";
-  let description = [{
-    int type;
-    !llh.int<width>; 
-    !llh.int<"u"width>;
-  }];
-  let parameters = (ins "unsigned":$width, "SIGNED_TAG":$signed_tag
-  );
-  let genStorageClass = 1;
-  let skipDefaultBuilders = 0;
-  let genVerifyDecl = 1;
-  let assemblyFormat = "`<`custom<SIGNED_TAG>($signed_tag)``$width`>`";
-  let builders = [
-    TypeBuilder<(ins "unsigned":$width,
-                     CArg<"bool", "true">:$is_signed),[{
-      if(is_signed) return Base::get($_ctxt,width,SIGNED);
-      return Base::get($_ctxt,width,UNSIGNED);
-    }]>
-  ];
-  let extraClassDeclaration = [{
-    /// Return true if this is a signless integer type.
-    bool isSignless() const { return getSignedTag() == SIGNLESS; }
-    /// Return true if this is a signed integer type.
-    bool isSigned() const { return getSignedTag() == SIGNED; }
-    /// Return true if this is an unsigned integer type.
-    bool isUnsigned() const { return getSignedTag() == UNSIGNED; }
-
-    /// Integer representation maximal bitwidth.
-    /// Note: This is aligned with the maximum width of llvm::IntegerType.
-    static constexpr unsigned Max_Width = (1 << 24) - 1;
-  }];
-}
 
 #endif // LLH_TYPES

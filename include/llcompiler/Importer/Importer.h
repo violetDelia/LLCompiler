@@ -30,6 +30,11 @@
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
+#define IMPORTER_GEN_TYPE(...) \
+  static inline mlir::Type gen_type(mlir::OpBuilder *builder, __VA_ARGS__);
+#define IMPORTER_GEN_SHAPE(...)                                      \
+  static inline mlir::ShapedType gen_shape(mlir::OpBuilder *builder, \
+                                           __VA_ARGS__);
 
 namespace llc::importer {
 struct ImporterOption {
