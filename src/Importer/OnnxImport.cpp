@@ -127,6 +127,7 @@ OnnxImporter::OnnxImporter(OpBuilder *builder, const ImporterOption &option)
 
 mlir::Type OnnxImporter::gen_type(mlir::OpBuilder *builder,
                                   const int32_t &elem_type) {
+  DEBUG(IMPORTER) << "generating type: " << elem_type;
   switch (elem_type) {
     case ONNX_NAMESPACE::TensorProto_DataType_FLOAT:
       return builder->getF32Type();
@@ -142,13 +143,14 @@ mlir::Type OnnxImporter::gen_type(mlir::OpBuilder *builder,
   return mlir::Type();
 }
 
-mlir ::ShapedType OnnxImporter::gen_shape(mlir ::OpBuilder *builder,
-                                          onnx ::Value *value) {
+mlir::ShapedType OnnxImporter::gen_type(mlir::OpBuilder *builder,
+                                        onnx::Value const *value) {
+  DEBUG(IMPORTER) << "generating shape type ";
   std::vector<int64_t> dims;
   for (auto dim : value->sizes()) {
+    print_info << dim.dim;
     dims.emplace_back(dim.dim);
   }
-  mlir::ShapedType shape;
   if (dims.size() > 0) {
     return mlir::RankedTensorType::get(dims,
                                        gen_type(builder, value->elemType()));
@@ -159,11 +161,17 @@ mlir ::ShapedType OnnxImporter::gen_shape(mlir ::OpBuilder *builder,
   }
 }
 
+// mlir::ShapedType OnnxImporter::gen_type(mlir::OpBuilder *builder,
+//                                         onnx::Value *value) {
+//   UNIMPLEMENTED(IMPORTER);
+// }
+
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
   auto module =
       mlir::ModuleOp::create(builder_trace_.build().build().getUnknownLoc());
   auto graph = onnx::ImportModelProto(model_);
   builder_trace_.gen_mlir(&module, *graph);
+
   // auto func = build_->build().create<mlir::FuncOp>(
   //     m_builder.getUnknownLoc(), g->name(),
   //     get_func_type(g->inputs(), g->outputs()));

@@ -28,6 +28,45 @@ class LLH_Type<string name, string typeMnemonic, list<Trait> traits = []>
   let typeName = dialect.name # "." # typeMnemonic;
 }
 
+
+class LLH_Tensor<string name, string typeMnemonic,list<Trait> traits = []>
+    : LLH_Type<name, typeMnemonic, traits> {
+  let summary = "dynamic Tensor type";
+  let description = [{
+    
+  }];
+  let parameters = (ins
+    ArrayRefParameter<"llc::llh::DynamicDim">:$dims,
+    "::mlir::Type":$type
+  );
+  let genStorageClass = 0;
+  let skipDefaultBuilders = 0;
+  let genVerifyDecl = 1;
+  let assemblyFormat = "`<`custom<DynamicDim>($dims)``$type`>`";
+  let builders = [
+    TypeBuilder<(ins
+      "::mlir::ArrayRef<int64_t>":$dims,
+      "::mlir::Type":$type
+    ), [{
+      llvm::SmallVector<::llc::llh::DynamicDim, 4> dynamic_dims;
+      for (auto i : dims){
+        if(i < 0){
+          dynamic_dims.push_back(::llc::llh::DynamicDim(-1,true));
+        }
+        else{
+          dynamic_dims.push_back(::llc::llh::DynamicDim(i));
+        }
+      }
+      return $_get(context, dynamic_dims, type);
+    }]>
+  ];
+  string extraBaseClassDeclaration = [{
+  }];
+}
+
+
+def LLH_TensorType : LLH_Tensor<"Tensor","tensor">;
+
 def LLH_IntType : LLH_Type<"Int", "int"> {
   let summary = "Integer type with arbitrary precision up to a fixed limit";
   let description = [{
@@ -61,6 +100,7 @@ def LLH_IntType : LLH_Type<"Int", "int"> {
     static constexpr unsigned Max_Width = (1 << 24) - 1;
   }];
 }
+
 
 
 #endif // LLH_TYPES

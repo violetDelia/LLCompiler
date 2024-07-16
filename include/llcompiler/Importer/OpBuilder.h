@@ -53,10 +53,6 @@ class OpBuilder {
   virtual ~OpBuilder();
   mlir::OpBuilder& build();
 
-  mlir::IntegerType get_int(unsigned width = 32, bool is_signed = true) {
-    return builder_.getIntegerType(width, is_signed);
-  }
-
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::ModelProto)
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::GraphProto)
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::Graph)

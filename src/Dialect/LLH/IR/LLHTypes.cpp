@@ -16,6 +16,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/Builders.h"
@@ -23,6 +24,60 @@
 #include "mlir/IR/OpImplementation.h"
 
 namespace llc::llh {
+
+namespace detail {
+//===----------------------------------------------------------------------===//
+// TensorTypeStorage
+//===----------------------------------------------------------------------===//
+struct TensorTypeStorage : public ::mlir::TypeStorage {
+  using KeyTy =
+      std::tuple<::llvm::ArrayRef<llc::llh::DynamicDim>, ::mlir::Type>;
+  TensorTypeStorage(::llvm::ArrayRef<llc::llh::DynamicDim> dims,
+                    ::mlir::Type type)
+      : dims(std::move(dims)), type(std::move(type)) {}
+
+  static ::llvm::ArrayRef<llc::llh::DynamicDim *> new_dims(
+      ::llvm::ArrayRef<llc::llh::DynamicDim> dims) {
+    llvm::SmallVector<llc::llh::DynamicDim *, 4> new_dims;
+    for (auto dim : dims) {
+      new_dims.push_back(&dim);
+    }
+    return new_dims;
+  }
+
+  KeyTy getAsKey() const { return KeyTy(dims, type); }
+
+  bool operator==(const KeyTy &tblgenKey) const {
+    return (new_dims(dims) == new_dims(std::get<0>(tblgenKey))) &&
+           (type == std::get<1>(tblgenKey));
+  }
+
+  static ::llvm::hash_code hashKey(const KeyTy &tblgenKey) {
+    return ::llvm::hash_combine(new_dims(std::get<0>(tblgenKey)),
+                                std::get<1>(tblgenKey));
+  }
+
+  static TensorTypeStorage *construct(::mlir::TypeStorageAllocator &allocator,
+                                      KeyTy &&tblgenKey) {
+    auto dims = std::move(std::get<0>(tblgenKey));
+    auto type = std::move(std::get<1>(tblgenKey));
+    dims = allocator.copyInto(dims);
+
+    return new (allocator.allocate<TensorTypeStorage>())
+        TensorTypeStorage(std::move(dims), std::move(type));
+  }
+
+  ::llvm::ArrayRef<llc::llh::DynamicDim> dims;
+  ::mlir::Type type;
+};
+}  // namespace detail
+//===----------------------------------------------------------------------===//
+// TensorType
+//===----------------------------------------------------------------------===//
+::llvm::ArrayRef<llc::llh::DynamicDim> TensorType::getDims() const {
+  getImpl()->dims;
+}
+::mlir::Type TensorType::getType() const { getImpl()->type; }
 //===----------------------------------------------------------------------===//
 // LLHDialect initialize method.
 //===----------------------------------------------------------------------===//
@@ -46,6 +101,17 @@ llvm::ParseResult parseSIGNED_TAG(::mlir::AsmParser &parser, SIGNED_TAG &tag) {
   WARN_UNIMPLEMENTED(LLH);
   return mlir::success();
 }
+
+void printDynamicDim(::mlir::AsmPrinter &printer,
+                     ::llvm::ArrayRef<llc::llh::DynamicDim> dim) {
+  printer << "u";
+}
+
+llvm::ParseResult parseDynamicDim(
+    ::mlir::AsmParser &parser, llvm::SmallVector<llc::llh::DynamicDim> &dim) {
+  WARN_UNIMPLEMENTED(LLH);
+  return mlir::success();
+}
 //===----------------------------------------------------------------------===//
 // LLH type verify
 //===----------------------------------------------------------------------===//
@@ -56,6 +122,12 @@ llvm::ParseResult parseSIGNED_TAG(::mlir::AsmParser &parser, SIGNED_TAG &tag) {
     return emitError() << "IntType max bitwidth cant greater than "
                        << Max_Width;
   }
+  return llvm::success();
+}
+
+::llvm::LogicalResult TensorType::verify(
+    llvm::function_ref<mlir::InFlightDiagnostic()>,
+    llvm::ArrayRef<llc::llh::DynamicDim>, mlir::Type) {
   return llvm::success();
 }
 }  // namespace llc::llh

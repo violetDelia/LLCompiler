@@ -15,8 +15,10 @@
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
 #include "llcompiler/Importer/LLHOpBuilder.h"
+#include "llcompiler/Importer/OnnxImporter.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/SmallVector.h"
 #include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
@@ -24,6 +26,7 @@
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Types.h"
 
 namespace llc::importer {
 LLHOpBuilder::LLHOpBuilder(mlir::MLIRContext* context) : OpBuilder(context) {
@@ -69,13 +72,23 @@ LLHOpBuilder::LLHOpBuilder(mlir::MLIRContext* context) : OpBuilder(context) {
 
 LLCOMPILER_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, onnx::Graph) {
   auto input = item.inputs();
-  for (auto val : input) {
-    print_info << val->node();
-  }
-  auto func =
-      mlir::func::FuncOp::create(builder_.getUnknownLoc(), item.name(),
-                                 builder_.getFunctionType({get_int()}, {}),
-                                 /*attrs=*/{});
+  // llvm::SmallVector<mlir::Type, 4> types;
+  // for (auto val : input) {
+  //   types.push_back(OnnxImporter::gen_type(&builder_, val));
+  // }
+  llvm::SmallVector<llc::llh::DynamicDim, 4> dims;
+  dims.push_back(llc::llh::DynamicDim(2));
+  dims.push_back(llc::llh::DynamicDim(-1, false));
+
+  auto tensor =
+      llc::llh::TensorType::get(builder_.getContext(), dims,
+                                mlir::Float32Type::get(builder_.getContext()));
+  auto func = mlir::func::FuncOp::create(
+      builder_.getUnknownLoc(), item.name(),
+      builder_.getFunctionType(
+          /*gen_types<OnnxImporter>(&builder_, item.inputs())*/ {tensor}, {}),
+      /*attrs=*/{});
+
   // auto int_type =get_int() ;
   module->push_back(func);
 }

@@ -18,10 +18,15 @@
 #include <sstream>
 #include <string>
 
+#include "include/llcompiler/Dialect/LLH/IR/LLHTypes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Importer/Utility.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/Hashing.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/Support/raw_ostream.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
@@ -36,16 +41,18 @@ int main(int argc, char **argv) {
       .importer_type = llc::importer::IMPORTER_TYPE::ONNX_FILE,
       .target_dialect = llc::importer::TARGET_DIALECT::LLH};
   mlir::MLIRContext context;
+  context.getOrLoadDialect<llc::llh::LLHDialect>();
   auto import_option = llc::importer::get_importer_option();
   auto module = llc::importer::gen_mlir_from(&context, options);
-  //  ONNX_NAMESPACE::ModelProto model;
-  //  ONNX_NAMESPACE::LoadProtoFromPath(llc::option::importingPath.getValue(),
-  //                                    model);
-  //  ONNX_NAMESPACE::shape_inference::InferShapes(model);
-  //  std::unique_ptr<ONNX_NAMESPACE::Graph> g(
-  //      ONNX_NAMESPACE::ImportModelProto(model));
-  //  std::cout << g->docString() << std::endl;
-  //  auto nodes = g.nodes();
+
+  //    ONNX_NAMESPACE::ModelProto model;
+  //    ONNX_NAMESPACE::LoadProtoFromPath(llc::option::importingPath.getValue(),
+  //                                      model);
+  //    ONNX_NAMESPACE::shape_inference::InferShapes(model);
+  //    std::unique_ptr<ONNX_NAMESPACE::Graph> g(
+  //        ONNX_NAMESPACE::ImportModelProto(model));
+  //    std::cout << g->docString() << std::endl;
+  //    auto nodes = g.nodes();
 
   // auto in =  g->inputs();
   // auto out = g->outputs();
