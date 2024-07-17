@@ -53,8 +53,6 @@ class OpBuilder {
   virtual ~OpBuilder();
   mlir::OpBuilder& build();
 
-  DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::ModelProto)
-  DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::GraphProto)
   DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(onnx::Graph)
 
  protected:

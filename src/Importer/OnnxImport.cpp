@@ -19,9 +19,12 @@
 #include "llcompiler/Importer/OnnxImporter.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Support/FileUtilities.h"
 #include "mlir/Support/LLVM.h"
@@ -125,9 +128,7 @@ OnnxImporter::OnnxImporter(OpBuilder *builder, const ImporterOption &option)
   INFO(IMPORTER) << "infer shapes of onnx model success!";
 }
 
-mlir::Type OnnxImporter::gen_type(mlir::OpBuilder *builder,
-                                  const int32_t &elem_type) {
-  DEBUG(IMPORTER) << "generating type: " << elem_type;
+IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::Type, const int32_t &elem_type) {
   switch (elem_type) {
     case ONNX_NAMESPACE::TensorProto_DataType_FLOAT:
       return builder->getF32Type();
@@ -143,22 +144,18 @@ mlir::Type OnnxImporter::gen_type(mlir::OpBuilder *builder,
   return mlir::Type();
 }
 
-mlir::ShapedType OnnxImporter::gen_type(mlir::OpBuilder *builder,
-                                        onnx::Value const *value) {
-  DEBUG(IMPORTER) << "generating shape type ";
-  std::vector<int64_t> dims;
+IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::ShapedType,
+                       onnx::Value const *value) {
+  llvm::SmallVector<int64_t> dims;
   for (auto dim : value->sizes()) {
-    print_info << dim.dim;
-    dims.emplace_back(dim.dim);
+    if (dim.dim < 0) {
+      dims.emplace_back(mlir::ShapedType::kDynamic);
+    } else {
+      dims.emplace_back(dim.dim);
+    }
   }
-  if (dims.size() > 0) {
-    return mlir::RankedTensorType::get(dims,
-                                       gen_type(builder, value->elemType()));
-  } else {
-    WARN(IMPORTER) << "Shape is unknown,  make 1 dim shape";
-    return mlir::RankedTensorType::get({-1},
-                                       gen_type(builder, value->elemType()));
-  }
+  return mlir::RankedTensorType::get(dims,
+                                     gen_type(builder, value->elemType()));
 }
 
 // mlir::ShapedType OnnxImporter::gen_type(mlir::OpBuilder *builder,

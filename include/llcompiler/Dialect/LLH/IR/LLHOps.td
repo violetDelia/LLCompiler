@@ -18,16 +18,27 @@ include "llcompiler/Dialect/LLH/IR/LLHTypeConstraints.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
-def LLH_TestOp : LLH_Op<"test"> {
-    let summary = "test op";
+def LLH_UndefinedOp : LLH_Op<"undefined"> {
+    let summary = "undefined op";
     let description = [{
-        for test
+        undefined op;
     }];
 
-    let arguments = (ins LLH_Int32:$value);
-    let results = (outs LLH_Tensor);
+    let arguments = (ins LLH_String:$name);
+    let results = (outs);
 }
 
+def LLH_AddOp : LLH_Op<"add"> {
+    let summary = "add op";
+    let description = [{
+        add op;
+    }];
+
+    let arguments = (ins 
+        LLH_Tensor:$lhs,
+        LLH_Tensor:$rhs);
+    let results = (outs LLH_Tensor);
+}
 
 
 #endif // LLH_OPS
