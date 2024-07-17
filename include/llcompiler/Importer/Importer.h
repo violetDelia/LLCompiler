@@ -37,6 +37,8 @@
 #define INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
 #define IMPORTER_GEN_TYPE(Type, ...) \
   static Type gen_type(mlir::OpBuilder *builder, __VA_ARGS__);
+#define IMPORTER_GEN_TYPE_IMPL(Class, Type, ...) \
+  Type Class::gen_type(mlir::OpBuilder *builder, __VA_ARGS__)
 
 namespace llc::importer {
 struct ImporterOption {
@@ -61,13 +63,11 @@ class Importer {
 };
 
 template <class Importer, class Container>
-mlir::TypeRange gen_types(mlir::OpBuilder *builder,
-                          const Container &container) {
-  llvm::SmallVector<mlir::Type, 4> types;
-  for (auto value : container) {
-    types.push_back(Importer::gen_type(builder, value));
-  }
-  return types;
+auto gen_types(mlir::OpBuilder *builder, const Container &container) {
+  return llvm::to_vector<1>(
+      llvm::map_range(container, [builder](auto value) -> mlir::Type {
+        return Importer::gen_type(builder, value);
+      }));
 }
 }  // namespace llc::importer
 

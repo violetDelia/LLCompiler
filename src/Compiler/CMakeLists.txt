@@ -1,11 +1,12 @@
-llcompiler_add_library(LLCompiler
-    SRC_FILES
+add_mlir_library(LLCompiler
     Init.cpp
     Utility.cpp
 
     DEPENDS
-
-    LINKS
     LLCompilerSupport
+
+    LINK_COMPONENTS
+
+    LINK_LIBS PUBLIC
     MLIRIR
 )

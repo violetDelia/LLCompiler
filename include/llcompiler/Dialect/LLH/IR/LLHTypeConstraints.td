@@ -65,10 +65,12 @@ def LLH_BF16Tensor    : TensorOf<[LLH_BF16]>;
 
 def LLH_FloatTensor   : TensorOf<[LLH_Float]>;
 
-def LLH_Tensor        : TensorOf<[LLH_AnyType]>;
+def LLH_Tensor        : AnyTypeOf<[LLH_FloatTensor,LLH_IntTensor]>;
 
-def LLH_Index   : Type<CPred<"::llvm::isa<::mlir::IndexType>($_self)">, "index", "::mlir::IndexType">,
-                  BuildableType<"$_builder.getIndexType()">;
+def LLH_String : StringBasedAttr<CPred<"::llvm::isa<::mlir::StringAttr>($_self)">,
+                              "string attribute">;
+// def LLH_Index   : Type<CPred<"::llvm::isa<::mlir::IndexType>($_self)">, "index", "::mlir::IndexType">,
+//                   BuildableType<"$_builder.getIndexType()">;
 
 
 // //===----------------------------------------------------------------------===//

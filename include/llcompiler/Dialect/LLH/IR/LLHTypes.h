@@ -17,6 +17,7 @@
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_
 
 #include <cstdint>
+#include <atomic>
 
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
@@ -81,7 +82,7 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
 
 namespace mlir {
 template <>
-struct mlir::FieldParser<::llc::llh::DynamicDim> {
+struct FieldParser<::llc::llh::DynamicDim> {
   static FailureOr<::llc::llh::DynamicDim> parse(AsmParser &parser) {
     UNIMPLEMENTED(llc::IMPORTER);
     return llc::llh::DynamicDim(1);

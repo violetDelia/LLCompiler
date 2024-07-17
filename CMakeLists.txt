@@ -15,7 +15,7 @@ unset(CMAKE_EXPORT_COMPILE_COMMANDS CACHE)
 unset(LLCOMPILER_BUILD_WARNINGS CACHE)
 
 # #---------- options ----------##
-option(BUILD_SHARED_LIBS "build shared libs" OFF)
+option(BUILD_SHARED_LIBS "build shared libs" ON)
 option(BUILD_LLCOMPILER_TEST "build test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 option(BUILD_LLCOMPILER_DOCS "build examples" ON)

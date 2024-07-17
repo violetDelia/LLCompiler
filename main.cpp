@@ -36,7 +36,7 @@
 // namespace llc::importer
 int main(int argc, char **argv) {
   llc::importer::ImporterOption options{
-      .filename = "C:/LLCompiler/tutorials/models/resnet18-v1-7.onnx",
+      .filename = "C:/LLCompiler/tutorials/models/mnist-12.onnx",
       .onnx_convert_version = 16,
       .importer_type = llc::importer::IMPORTER_TYPE::ONNX_FILE,
       .target_dialect = llc::importer::TARGET_DIALECT::LLH};
@@ -44,18 +44,5 @@ int main(int argc, char **argv) {
   context.getOrLoadDialect<llc::llh::LLHDialect>();
   auto import_option = llc::importer::get_importer_option();
   auto module = llc::importer::gen_mlir_from(&context, options);
-
-  //    ONNX_NAMESPACE::ModelProto model;
-  //    ONNX_NAMESPACE::LoadProtoFromPath(llc::option::importingPath.getValue(),
-  //                                      model);
-  //    ONNX_NAMESPACE::shape_inference::InferShapes(model);
-  //    std::unique_ptr<ONNX_NAMESPACE::Graph> g(
-  //        ONNX_NAMESPACE::ImportModelProto(model));
-  //    std::cout << g->docString() << std::endl;
-  //    auto nodes = g.nodes();
-
-  // auto in =  g->inputs();
-  // auto out = g->outputs();
-  // std::cout<<g->name()<<std::endl;
   return 0;
 }
