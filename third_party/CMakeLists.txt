@@ -4,16 +4,6 @@ else()
     add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-w>)
 endif()
 
-list(APPEND THIRD_PARTY_INCLUDE_DIRS
-    "${CMAKE_CURRENT_SOURCE_DIR}/onnx"
-    "${CMAKE_CURRENT_BINARY_DIR}/onnx"
-    "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm/include"
-    "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/include"
-    "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/mlir/include"
-    "${CMAKE_CURRENT_BINARY_DIR}/llvm-project/llvm/tools/mlir/include")
-
-set(THIRD_PARTY_INCLUDE_DIRS ${THIRD_PARTY_INCLUDE_DIRS} PARENT_SCOPE)
-
 if(BUILD_LLCOMPILER_TEST)
     build_googletest("${CMAKE_CURRENT_SOURCE_DIR}/googletest")
 endif()

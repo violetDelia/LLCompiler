@@ -26,7 +26,7 @@ def LLH_Dialect : Dialect{
     let description = [{
      Top-level dialect for connecting LLC and other graph frameworks.
      }];
-    let cppNamespace = "::llc::llh";
+    let cppNamespace = "::mlir::llc::llh";
     let useDefaultAttributePrinterParser = 0;
     let useDefaultTypePrinterParser = 1;
     let extraClassDeclaration = [{
@@ -40,7 +40,12 @@ def LLH_Dialect : Dialect{
 //===----------------------------------------------------------------------===//
 
 class LLH_Op<string mnemonic, list<Trait> traits = []> :
-        Op<LLH_Dialect, mnemonic, traits>;
+        Op<LLH_Dialect, mnemonic, traits>{
+    let summary = cppNamespace#opName#" op";
+    let description = [{
+        $_name op;
+    }];
+}
 
 //===----------------------------------------------------------------------===//
 // Base LLH operation trait definition.

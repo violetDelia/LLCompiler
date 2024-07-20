@@ -35,9 +35,9 @@ class LLHOpBuilder : public OpBuilder {
  public:
   explicit LLHOpBuilder(mlir::MLIRContext* context);
 
-  // void mlirGen(mlir::ModuleOp* module, const onnx::ModelProto& graph)
-  // override; void mlirGen(mlir::ModuleOp* module, const onnx::GraphProto&
-  // graph) override;
+  // void mlirGen(mlir::ModuleOp* module, const onnx::ModelProto&
+  // graph) override; void mlirGen(mlir::ModuleOp* module, const
+  // onnx::GraphProto& graph) override;
   LLCOMPILER_OVERRIDE_OPBULDER_MLIRGEN(onnx::Graph)
 };
 }  // namespace llc::importer

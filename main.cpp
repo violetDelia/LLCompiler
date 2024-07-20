@@ -18,31 +18,33 @@
 #include <sstream>
 #include <string>
 
-#include "include/llcompiler/Dialect/LLH/IR/LLHTypes.h"
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Importer/Utility.h"
-#include "llcompiler/Support/Core.h"
-#include "llcompiler/Support/Logger.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/Hashing.h"
-#include "llvm/ADT/SmallVector.h"
-#include "llvm/Support/raw_ostream.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/IR/Builders.h"
-#include "mlir/IR/BuiltinTypeInterfaces.h"
-#include "mlir/IR/BuiltinTypes.h"
-#include "mlir/IR/Dialect.h"
+// #include "include/llcompiler/Dialect/LLH/IR/LLHTypes.h"
+// #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+// #include "llcompiler/Importer/Utility.h"
+// #include "llcompiler/Support/Core.h"
+// #include "llcompiler/Support/Logger.h"
+// #include "llvm/ADT/ArrayRef.h"
+// #include "llvm/ADT/Hashing.h"
+// #include "llvm/ADT/SmallVector.h"
+// #include "llvm/Support/raw_ostream.h"
+// #include "mlir/Dialect/Func/IR/FuncOps.h"
+// #include "mlir/IR/Builders.h"
+// #include "mlir/IR/BuiltinTypeInterfaces.h"
+// #include "mlir/IR/BuiltinTypes.h"
+// #include "mlir/IR/Dialect.h"
+#include "onnx/common/ir_pb_converter.h"
+#include "onnx/onnx_pb.h"
 
 // namespace llc::importer
 int main(int argc, char **argv) {
-  llc::importer::ImporterOption options{
-      .filename = "C:/LLCompiler/tutorials/models/mnist-12.onnx",
-      .onnx_convert_version = 16,
-      .importer_type = llc::importer::IMPORTER_TYPE::ONNX_FILE,
-      .target_dialect = llc::importer::TARGET_DIALECT::LLH};
-  mlir::MLIRContext context;
-  context.getOrLoadDialect<llc::llh::LLHDialect>();
-  auto import_option = llc::importer::get_importer_option();
-  auto module = llc::importer::gen_mlir_from(&context, options);
+  // llc::importer::ImporterOption options{
+  //     .filename = "C:/LLCompiler/tutorials/models/mnist-12.onnx",
+  //     .onnx_convert_version = 16,
+  //     .importer_type = llc::importer::IMPORTER_TYPE::ONNX_FILE,
+  //     .target_dialect = llc::importer::TARGET_DIALECT::LLH};
+  // mlir::MLIRContext context;
+  // context.getOrLoadDialect<llc::llh::LLHDialect>();
+  // auto import_option = llc::importer::get_importer_option();
+  // auto module = llc::importer::gen_mlir_from(&context, options);
   return 0;
 }

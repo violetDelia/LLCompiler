@@ -84,32 +84,33 @@ NullStream &NullStream::operator<<(const Ty val) {
 }  // namespace llc::logger
 #ifdef LLCOMPILER_HAS_LOG
 #define LLCOMPILER_INIT_LOGGER(module, root, lever) \
-  llc::logger::register_logger(module, root, lever);
+  ::llc::logger::register_logger(module, root, lever);
 #define LLCOMPILER_LOG(module, lever) \
-  llc::logger::Logger(module, lever).stream(true)
-#define LLCOMPILER_CHECK_LOG(module, condition, lever)                    \
-  llc::logger::Logger(module, static_cast<llc::logger::LOG_LEVER>(lever)) \
+  ::llc::logger::Logger(module, lever).stream(true)
+#define LLCOMPILER_CHECK_LOG(module, condition, lever)                        \
+  ::llc::logger::Logger(module, static_cast<::llc::logger::LOG_LEVER>(lever)) \
       .stream(!condition)
 
 #else
 #define LLCOMPILER_INIT_LOGGER(module, root, lever)
-#define LLCOMPILER_LOG(module, lever) llc::logger::NullStream()
-#define LLCOMPILER_CHECK_LOG(module, condition, lever) llc::logger::NullStream()
+#define LLCOMPILER_LOG(module, lever) ::llc::logger::NullStream()
+#define LLCOMPILER_CHECK_LOG(module, condition, lever) \
+  ::llc::logger::NullStream()
 #endif  // LLCOMPILER_HAS_LOG
 
-#define DEBUG(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::DEBUG_)
-#define INFO(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::INFO_)
-#define WARN(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::WARN_)
-#define WRONG(module) LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::ERROR_)
-#define FATAL(module)                                    \
-  LLCOMPILER_LOG(module, llc::logger::LOG_LEVER::FATAL_) \
+#define DEBUG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::DEBUG_)
+#define INFO(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::INFO_)
+#define WARN(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::WARN_)
+#define WRONG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::ERROR_)
+#define FATAL(module)                                      \
+  LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::FATAL_) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
 
 #define print_info \
-  LLCOMPILER_LOG("ANONYMOUS_MODULE", llc::logger::LOG_LEVER::ERROR_)
+  LLCOMPILER_LOG("ANONYMOUS_MODULE", ::llc::logger::LOG_LEVER::ERROR_)
 
-#define CHECK(module, condition)                                          \
-  LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::ERROR_) \
+#define CHECK(module, condition)                                            \
+  LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVER::ERROR_) \
       << #condition << " : " << __FILE__ << "<" << __LINE__ << "> \n\t"
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
 #define CHECK_NE(module, val1, val2) CHECK(module, val1 != val2)
@@ -119,7 +120,7 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define CHECK_GE(module, val1, val2) CHECK(module, val1 >= val2)
 
 #define DCHECK(module, condition) \
-  LLCOMPILER_CHECK_LOG(module, condition, llc::logger::LOG_LEVER::DEBUG_)
+  LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVER::DEBUG_)
 #define DCHECK_EQ(module, val1, val2) DCHECK(module, val1 == val2)
 #define DCHECK_NE(module, val1, val2) DCHECK(module, val1 != val2)
 #define DCHECK_LT(module, val1, val2) DCHECK(module, val1 < val2)

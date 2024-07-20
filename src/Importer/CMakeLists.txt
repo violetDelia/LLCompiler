@@ -1,17 +1,35 @@
-add_mlir_library(LLCompilerImporter
+llcompiler_add_library(LLCompilerImporter
+    SRC_FILES
     Importer.cpp
     LLHOpBuilder.cpp
     OnnxImport.cpp
     OpBuilder.cpp
     Utility.cpp
 
-    DEPENDS
-    LLCompilerSupport
-    LLCLLHDialect
+    ADDITIONAL_INCLUDE_DIRS
 
-    LINK_COMPONENTS
+    # ${ONNX_INCLUDE_DIR}
+    # ${ONNX_INCLUDE_GENERATE_DIR}
+    # ${PROTOBUF_INCLUDE_DIR}
+    # ${ABSL_INCLUDE_DIR}
+    DEPENDS
     LLVMOption
 
-    LINK_LIBS PUBLIC
+    LINKS PUBLIC
+    LLCompilerSupport
+    LLCLLHDialect
+    PRIVATE
     onnx
 )
+
+# add_library(LLCompilerImporter Importer.cpp
+# LLHOpBuilder.cpp
+# OnnxImport.cpp
+# OpBuilder.cpp
+# Utility.cpp)
+
+# target_link_libraries(LLCompilerImporter PUBLIC LLCompilerSupport LLCLLHDialect LLVMOption onnx)
+
+# if(LLCOMPILER_BUILD_WITH_ONNX_ML)
+# target_compile_definitions(LLCompilerImporter PRIVATE ONNX_ML)
+# endif()

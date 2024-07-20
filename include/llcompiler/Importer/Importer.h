@@ -54,10 +54,6 @@ class Importer {
   virtual ~Importer();
   virtual mlir::ModuleOp export_mlir_module() const = 0;
 
-  mlir::TypeRange gen_types(
-      mlir::OpBuilder *builder,
-      const onnx::ArrayRef<const onnx::Value *> &container);
-
  protected:
   OpBuilderTrace builder_trace_;
 };

@@ -23,8 +23,6 @@
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
-
 #define GET_OP_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"
-
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_

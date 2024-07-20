@@ -36,7 +36,7 @@ class LLH_Tensor<string name, string typeMnemonic,list<Trait> traits = []>
     
   }];
   let parameters = (ins
-    ArrayRefParameter<"llc::llh::DynamicDim">:$dims,
+    ArrayRefParameter<"DynamicDim">:$dims,
     "::mlir::Type":$type
   );
   let genStorageClass = 0;
@@ -48,13 +48,13 @@ class LLH_Tensor<string name, string typeMnemonic,list<Trait> traits = []>
       "::mlir::ArrayRef<int64_t>":$dims,
       "::mlir::Type":$type
     ), [{
-      llvm::SmallVector<::llc::llh::DynamicDim, 4> dynamic_dims;
+      llvm::SmallVector<DynamicDim, 4> dynamic_dims;
       for (auto i : dims){
         if(i < 0){
-          dynamic_dims.push_back(::llc::llh::DynamicDim(-1,true));
+          dynamic_dims.push_back(DynamicDim(-1,true));
         }
         else{
-          dynamic_dims.push_back(::llc::llh::DynamicDim(i));
+          dynamic_dims.push_back(DynamicDim(i));
         }
       }
       return $_get(context, dynamic_dims, type);
