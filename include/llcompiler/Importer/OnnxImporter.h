@@ -31,7 +31,7 @@
 #include "mlir/IR/OwningOpRef.h"
 #include "mlir/IR/Types.h"
 #include "onnx/common/file_utils.h"
-#include "onnx/onnx-ml.pb.h"
+#include "onnx/onnx_pb.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
@@ -44,12 +44,7 @@ class OnnxImporter : public Importer {
   mlir::ModuleOp export_mlir_module() const final;
 
   IMPORTER_GEN_TYPE(mlir::Type, const int32_t &elem_type)
-  IMPORTER_GEN_TYPE(mlir::ShapedType, onnx ::Value const *value)
-
-  // static inline mlir ::Type gen_type(mlir ::OpBuilder *builder,
-  //                                    onnx ::Value const *value);
-  // IMPORTER_GEN_TYPE(mlir::ShapedType, onnx::Value const *value)
-  //  IMPORTER_GEN_TYPE(mlir::ShapedType, onnx::Value const *value)
+  IMPORTER_GEN_TYPE(mlir::ShapedType, onnx::Value const *value)
 
  protected:
   bool init_model_(const mlir::StringRef filename, onnx::ModelProto *model);

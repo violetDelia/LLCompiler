@@ -7,11 +7,11 @@ add_mlir_dialect_library(LLCLLHDialect
     ${PROJECT_SOURCE_DIR}/include/llcompiler/Dialect/LLH
 
     DEPENDS
-    MLIRLLHOpsIncGen
-    MLIRLLHTypesIncGen
+    MLIRLLHDialectIncGen
 
     LINK_LIBS PUBLIC
     MLIRIR
     MLIRInferTypeOpInterface
     MLIRFuncDialect
 )
+llcompiler_install_mlir_library(LLCLLHDialect)

@@ -13,15 +13,17 @@ unset(BUILD_LLCOMPILER_DOCS CACHE)
 unset(BUILD_LLCOMPILER_LOG CACHE)
 unset(CMAKE_EXPORT_COMPILE_COMMANDS CACHE)
 unset(LLCOMPILER_BUILD_WARNINGS CACHE)
+unset(LLCOMPILER_BUILD_WITH_ONNX_ML CACHE)
 
 # #---------- options ----------##
-option(BUILD_SHARED_LIBS "build shared libs" ON)
+option(BUILD_SHARED_LIBS "build shared libs" OFF)
 option(BUILD_LLCOMPILER_TEST "build test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 option(BUILD_LLCOMPILER_DOCS "build examples" ON)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
+option(LLCOMPILER_BUILD_WITH_ONNX_ML "" OFF)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)
@@ -50,34 +52,54 @@ if(LLCOMPILER_BUILD_WARNINGS)
 endif()
 
 # #---------- define absolute path ----------##
-cmake_path(APPEND LLCOMPILER_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} "include")
-cmake_path(APPEND LLCOMPILER_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR} "src")
-cmake_path(APPEND LLCOMPILER_CMAKE_DIR ${CMAKE_CURRENT_SOURCE_DIR} "cmake")
-cmake_path(APPEND LLCOMPILER_TOOLS_DIR ${CMAKE_CURRENT_SOURCE_DIR} "tools")
-cmake_path(APPEND LLCOMPILER_THIRDPARTY_DIR ${CMAKE_CURRENT_SOURCE_DIR} "third_party")
-cmake_path(APPEND LLCOMPILER_DOC_DIR ${CMAKE_CURRENT_SOURCE_DIR} "docs")
+set(LLCOMPILER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(LLCOMPILER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
+set(LLCOMPILER_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+set(LLCOMPILER_TOOLS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools")
+set(LLCOMPILER_THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
+set(LLCOMPILER_DOC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs")
 
 # #---------- define install absolute path ----------##
-cmake_path(APPEND LLCOMPILER_INSTALL_DIRS ${CMAKE_CURRENT_SOURCE_DIR} "install")
-cmake_path(APPEND LLCOMPILER_INSTALL_INCLUDE_DIR ${INSTALL_DIR} "include")
-cmake_path(APPEND LLCOMPILER_INSTALL_LIB_DIR ${INSTALL_DIR} "lib")
-cmake_path(APPEND LLCOMPILER_INSTALL_RUNTIME_DIR ${INSTALL_DIR} "bin")
-cmake_path(APPEND LLCOMPILER_INSTALL_CMAKE_DIR ${INSTALL_DIR} "cmake")
+set(LLCOMPILER_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/install")
+set(LLCOMPILER_INSTALL_INCLUDE_DIR "${INSTALL_DIR}/include")
+set(LLCOMPILER_INSTALL_LIB_DIR "${INSTALL_DIR}/lib")
+set(LLCOMPILER_INSTALL_RUNTIME_DIR "${INSTALL_DIR}/bin")
+set(LLCOMPILER_INSTALL_CMAKE_DIR "${INSTALL_DIR}/cmake")
+
+# #---------- define include dirs ----------##
+set(LLCOMPILER_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
+set(SPDLOG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/spdlog/include")
+set(ONNX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/onnx")
+set(ONNX_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/onnx")
+set(PROTOBUF_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_deps/protobuf-src/src")
+set(ABSL_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_deps/abseil-src")
+set(LLVM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/llvm-project/llvm/include")
+set(LLVM_INCLDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/include")
+set(MLIR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/llvm-project/mlir/include")
+set(MLIR_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/tools/mlir/include")
 
 # #---------- external library ----------##
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
-include_directories(${THIRD_PARTY_INCLUDE_DIRS})
 
 # #---------- sub library ----------##
 # error for macro 'interface' in llvm-mingw-20240518-msvcrt-x86_64/include/rpc.h
 add_definitions(-D__OBJC__)
+
+if(LLCOMPILER_BUILD_WITH_ONNX_ML)
+    add_definitions(-DONNX_ML)
+endif()
 
 if(BUILD_LLCOMPILER_LOG)
     add_definitions(-DLLCOMPILER_HAS_LOG)
 endif()
 
 include_directories(${LLCOMPILER_INCLUDE_DIR})
-include_directories("${CMAKE_CURRENT_BINARY_DIR}/include")
+include_directories(${LLCOMPILER_INCLUDE_GENERATE_DIR})
+include_directories(${LLVM_INCLUDE_DIR})
+include_directories(${LLVM_INCLDE_GENERATE_DIR})
+include_directories(${MLIR_INCLUDE_DIR})
+include_directories(${MLIR_INCLUDE_GENERATE_DIR})
+include_directories(${SPDLOG_INCLUDE_DIR})
 
 add_subdirectory("${LLCOMPILER_INCLUDE_DIR}/llcompiler")
 add_subdirectory(${LLCOMPILER_SOURCE_DIR})
@@ -87,16 +109,11 @@ add_subdirectory(${LLCOMPILER_TOOLS_DIR})
 add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 target_include_directories(main PRIVATE
     $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
-    $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_DIR}>
+    $<BUILD_INTERFACE:${ONNX_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${ONNX_INCLUDE_GENERATE_DIR}>
 )
-target_link_libraries(main PRIVATE
-    PRIVATE
-    LLCompilerImporter
-    LLCompiler
-    LLCLLHDialect
-    LLCLLHPasses
-    LLCompilerSupport
-)
+get_property(llcompiler_all_targets GLOBAL PROPERTY LLCOMPILER_ALL_TARGETS)
+target_link_libraries(main PRIVATE ${llcompiler_all_targets})
 
 # #---------- message ----------##
 message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})

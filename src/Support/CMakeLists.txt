@@ -1,13 +1,12 @@
-add_mlir_library(LLCompilerSupport
+llcompiler_add_library(LLCompilerSupport
+    SRC_FILES
     Core.cpp
     Logger.cpp
     Option.cpp
 
     DEPENDS
-
-    LINK_COMPONENTS
     LLVMOption
 
-    LINK_LIBS PUBLIC
+    LINKS PRIVATE
     spdlog
 )

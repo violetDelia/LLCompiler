@@ -15,6 +15,7 @@
 #define LLH_OPS
 include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
 include "llcompiler/Dialect/LLH/IR/LLHTypeConstraints.td"
+include "llcompiler/Dialect/LLH/IR/LLHEnums.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
@@ -28,73 +29,99 @@ def LLH_UndefinedOp : LLH_Op<"undefined"> {
     let results = (outs);
 }
 
-def LLH_WeightOp : LLH_Op<"weight">{
+def LLH_ConstOp : LLH_Op<"weight">{
     let summary = "weight op";
     let description = [{
         weight op that will not a const in traning;
     }];
 
     let arguments = (ins 
-        LLH_Tensor:$shape,
-        LLH_Tensor:$value);
+        ElementsAttr:$value);
     let results = (outs LLH_Tensor);
 }
 
-def LLH_AbsOp : LLH_Op<"abs">{//shape inference
-    let summary = "abs op";
-    let description = [{
-        abs op
-    }];
+def LLH_AndOp : LLH_Op<"and"> {//shape inference
+    let arguments = (ins 
+        LLH_BoolTensor:$lhs,
+        LLH_BoolTensor:$rhs);
+    let results = (outs LLH_BoolTensor);
+}
 
+def LLH_AbsOp : LLH_Op<"abs">{//shape inference
     let arguments = (ins 
         LLH_Tensor:$input);
     let results = (outs LLH_Tensor);
 }
 
-def LLH_AcosOp : LLH_Op<"acos">{//shape inference
-    let summary = "acos op";
-    let description = [{
-        acos op
-    }];
-
-    let arguments = (ins 
-        LLH_FloatTensor:$input);
-    let results = (outs LLH_FloatTensor);
-}
-
-def LLH_AcoshOp : LLH_Op<"acosh">{//shape inference
-    let summary = "acosh op";
-    let description = [{
-        acosh op
-    }];
-
-    let arguments = (ins 
-        LLH_FloatTensor:$input);
-    let results = (outs LLH_FloatTensor);
-}
-
 def LLH_AddOp : LLH_Op<"add"> {//shape inference
-    let summary = "add op";
-    let description = [{
-        add op;
-    }];
-
     let arguments = (ins 
         LLH_Tensor:$lhs,
         LLH_Tensor:$rhs);
     let results = (outs LLH_Tensor);
 }
 
-def LLH_AndOp : LLH_Op<"and"> {//shape inference
-    let summary = "and op";
-    let description = [{
-        and op;
-    }];
-
+def LLH_ArgMax : LLH_Op<"argmax">{//shape inference
     let arguments = (ins 
-        LLH_BoolTensor:$lhs,
-        LLH_BoolTensor:$rhs);
-    let results = (outs LLH_BoolTensor);
+        LLH_Tensor:$input,
+        DefaultValuedAttr<SI64Attr, "0">:$axis,
+        DefaultValuedAttr<SI64Attr, "1">:$keepdims,
+        DefaultValuedAttr<SI64Attr, "0">:$select_last_index);
+    let results = (outs LLH_Tensor);
+}
+
+def LLH_ArgMin : LLH_Op<"argmin">{//shape inference
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        DefaultValuedAttr<SI64Attr, "0">:$axis,
+        DefaultValuedAttr<SI64Attr, "1">:$keepdims,
+        DefaultValuedAttr<SI64Attr, "0">:$select_last_index);
+    let results = (outs LLH_Tensor);
+}
+
+def LLH_CosOp : LLH_Op<"cos">{//shape inference
+    let arguments = (
+        LLH_FloatTensor:$input);
+    let results = (outs LLH_FloatTensor);
+}
+
+def LLH_CoshOp : LLH_Op<"cosh">{//shape inference
+    let arguments = (ins 
+        LLH_FloatTensor:$input);
+    let results = (outs LLH_FloatTensor);
+}
+
+def LLH_SinOp : LLH_Op<"sin">{//shape inference
+    let arguments = (ins 
+        LLH_FloatTensor:$input);
+    let results = (outs LLH_FloatTensor);
+}
+
+def LLH_SinHOp : LLH_Op<"sinh">{//shape inference
+    let arguments = (ins 
+        LLH_FloatTensor:$input);
+    let results = (outs LLH_FloatTensor);
+}
+
+def LLH_TanOp : LLH_Op<"tan">{//shape inference
+    let arguments = (ins 
+        LLH_FloatTensor:$input);
+    let results = (outs LLH_FloatTensor);
+}
+
+def LLH_tanHOp : LLH_Op<"tanh">{//shape inference
+    let arguments = (ins 
+        LLH_FloatTensor:$input);
+    let results = (outs LLH_FloatTensor);
+}
+
+def LLH_AveragePoolOp : LLH_Op<"average_pool">{//shape inference
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        //I64ElementsAttr:
+        DefaultValuedAttr<LLH_AutoPadAttr, "AutoPad::DEFAULT">:$auto_pad,
+        DefaultValuedAttr<LLH_CeilModeAttr, "CeilMode::FLOOR">:$ceil_mode
+        );
+    let results = (outs LLH_Tensor);
 }
 
 #endif // LLH_OPS

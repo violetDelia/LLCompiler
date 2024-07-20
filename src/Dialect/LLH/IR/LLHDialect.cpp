@@ -19,7 +19,7 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
 
-namespace llc::llh {
+namespace mlir::llc::llh {
 //===----------------------------------------------------------------------===//
 // LLHDialect initialize method.
 //===----------------------------------------------------------------------===//
@@ -35,4 +35,4 @@ void LLHDialect::initialize() {
 // LLHDialect initialize method.
 //===----------------------------------------------------------------------===//
 
-}  // namespace llc::llh
+}  // namespace mlir::llc::llh

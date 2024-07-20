@@ -16,8 +16,8 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_
 
-#include <cstdint>
 #include <atomic>
+#include <cstdint>
 
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
@@ -25,7 +25,7 @@
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/IR/ExtensibleDialect.h"
 
-namespace llc::llh {
+namespace mlir::llc::llh {
 namespace detail {
 struct TensorTypeStorage;
 }  // namespace detail
@@ -78,18 +78,21 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
   return os;
 }
 
-}  // namespace llc::llh
+}  // namespace mlir::llc::llh
 
 namespace mlir {
 template <>
-struct FieldParser<::llc::llh::DynamicDim> {
-  static FailureOr<::llc::llh::DynamicDim> parse(AsmParser &parser) {
-    UNIMPLEMENTED(llc::IMPORTER);
-    return llc::llh::DynamicDim(1);
+struct FieldParser<llc::llh::DynamicDim> {
+  static FailureOr<llc::llh::DynamicDim> parse(AsmParser &parser) {
+    UNIMPLEMENTED(::llc::IMPORTER);
+    return mlir::llc::llh::DynamicDim(1);
   }
 };
 }  // namespace mlir
 
+#include "llcompiler/Dialect/LLH/IR/LLHEunms.h.inc"
+#define GET_ATTRDEF_CLASSES
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h.inc"
 #define GET_TYPEDEF_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h.inc"
 

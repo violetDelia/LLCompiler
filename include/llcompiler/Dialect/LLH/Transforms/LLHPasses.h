@@ -22,13 +22,13 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "mlir/Pass/Pass.h"
 
-namespace llc::llh {
+namespace mlir::llc::llh {
 
 #define GEN_PASS_DECL
 #include "llcompiler/Dialect/LLH/Transforms/LLHPasses.h.inc"
 
 #define GEN_PASS_REGISTRATION
 #include "llcompiler/Dialect/LLH/Transforms/LLHPasses.h.inc"
-}  // namespace llc::llh
+}  // namespace mlir::llc::llh
 
 #endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_

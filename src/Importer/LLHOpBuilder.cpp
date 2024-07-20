@@ -42,7 +42,7 @@
 
 namespace llc::importer {
 LLHOpBuilder::LLHOpBuilder(mlir::MLIRContext* context) : OpBuilder(context) {
-  context->getOrLoadDialect<llc::llh::LLHDialect>();
+  context->getOrLoadDialect<mlir::llc::llh::LLHDialect>();
 }
 
 LLCOMPILER_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, onnx::Graph) {
@@ -80,7 +80,7 @@ LLCOMPILER_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, onnx::Graph) {
       // }
 
     } else {
-      block->push_back(builder_.create<llc::llh::UndefinedOp>(
+      block->push_back(builder_.create<mlir::llc::llh::UndefinedOp>(
           builder_.getUnknownLoc(), node->kind().toString()));
     }
   };

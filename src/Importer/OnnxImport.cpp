@@ -130,13 +130,13 @@ OnnxImporter::OnnxImporter(OpBuilder *builder, const ImporterOption &option)
 
 IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::Type, const int32_t &elem_type) {
   switch (elem_type) {
-    case ONNX_NAMESPACE::TensorProto_DataType_FLOAT:
+    case onnx::TensorProto_DataType_FLOAT:
       return builder->getF32Type();
-    case ONNX_NAMESPACE::TensorProto_DataType_FLOAT16:
+    case onnx::TensorProto_DataType_FLOAT16:
       return builder->getF16Type();
-    case ONNX_NAMESPACE::TensorProto_DataType_UINT8:
+    case onnx::TensorProto_DataType_UINT8:
       return builder->getIntegerType(8, mlir::IntegerType::Unsigned);
-    case ONNX_NAMESPACE::TensorProto_DataType_INT32:
+    case onnx::TensorProto_DataType_INT32:
       builder->getIntegerType(32, mlir::IntegerType::Signed);
     default:
       UNIMPLEMENTED(IMPORTER);
