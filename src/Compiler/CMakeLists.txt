@@ -3,7 +3,7 @@ llcompiler_add_library(LLCompiler
     Init.cpp
     Utility.cpp
 
-    DEPENDS
+    LINKS PUBLIC
     LLCompilerSupport
 
     LINKS PUBLIC

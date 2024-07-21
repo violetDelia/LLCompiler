@@ -21,15 +21,3 @@ llcompiler_add_library(LLCompilerImporter
     PRIVATE
     onnx
 )
-
-# add_library(LLCompilerImporter Importer.cpp
-# LLHOpBuilder.cpp
-# OnnxImport.cpp
-# OpBuilder.cpp
-# Utility.cpp)
-
-# target_link_libraries(LLCompilerImporter PUBLIC LLCompilerSupport LLCLLHDialect LLVMOption onnx)
-
-# if(LLCOMPILER_BUILD_WITH_ONNX_ML)
-# target_compile_definitions(LLCompilerImporter PRIVATE ONNX_ML)
-# endif()
