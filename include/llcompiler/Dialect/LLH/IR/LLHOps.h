@@ -17,6 +17,7 @@
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
+#include "mlir/Bytecode/BytecodeOpInterface.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"

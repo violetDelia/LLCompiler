@@ -65,7 +65,7 @@ class OpBuilderTrace {
   virtual ~OpBuilderTrace();
 
   template <class Ty>
-  void gen_mlir(mlir::ModuleOp* module, const Ty& item) const;
+  auto gen_mlir(mlir::ModuleOp* module, const Ty& item) const;
 
   OpBuilder& build() const;
 
@@ -74,9 +74,9 @@ class OpBuilderTrace {
 };
 
 template <class Ty>
-void OpBuilderTrace::gen_mlir(mlir::ModuleOp* module, const Ty& item) const {
+auto OpBuilderTrace::gen_mlir(mlir::ModuleOp* module, const Ty& item) const {
   DEBUG(IMPORTER) << "call " << typeid(Ty).name() << " gen_mlir";
-  builder_->gen_mlir(module, item);
+  return builder_->gen_mlir(module, item);
 }
 
 }  // namespace llc::importer

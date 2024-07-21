@@ -3,9 +3,9 @@ llcompiler_add_library(LLCompiler
     Init.cpp
     Utility.cpp
 
-    LINKS PUBLIC
+    LINKS
+    PUBLIC
     LLCompilerSupport
-
-    LINKS PUBLIC
+    PRIVATE
     MLIRIR
 )

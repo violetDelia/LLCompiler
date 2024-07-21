@@ -67,7 +67,6 @@ class DynamicDim {
 };
 inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
                                      const DynamicDim &dim) {
-  print_info << "in";
   if (dim.is_dynamic()) {
     os << dim.value();
   } else {

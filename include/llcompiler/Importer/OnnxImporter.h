@@ -35,7 +35,6 @@
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_
-
 namespace llc::importer {
 class OnnxImporter : public Importer {
  public:
@@ -44,21 +43,21 @@ class OnnxImporter : public Importer {
   mlir::ModuleOp export_mlir_module() const final;
 
   IMPORTER_GEN_TYPE(mlir::Type, const int32_t &elem_type)
-  IMPORTER_GEN_TYPE(mlir::ShapedType, onnx::Value const *value)
-
+  IMPORTER_GEN_TYPE(mlir::ShapedType, const ONNX_NAMESPACE::Value *value)
  protected:
-  bool init_model_(const mlir::StringRef filename, onnx::ModelProto *model);
+  bool init_model_(const mlir::StringRef filename,
+                   ONNX_NAMESPACE::ModelProto *model);
   bool init_model_form_json_(const mlir::StringRef &filename,
-                             onnx::ModelProto *model);
+                             ONNX_NAMESPACE::ModelProto *model);
   bool init_model_form_onnx_(const mlir::StringRef &filename,
-                             onnx::ModelProto *model);
-  bool check_model_legal_(const onnx::ModelProto &model) const;
-  int64_t get_model_version_(const onnx::ModelProto &model) const;
-  onnx::ModelProto conver_model_version_to_(onnx::ModelProto *model,
-                                            const int64_t version);
+                             ONNX_NAMESPACE::ModelProto *model);
+  bool check_model_legal_(const ONNX_NAMESPACE::ModelProto &model) const;
+  int64_t get_model_version_(const ONNX_NAMESPACE::ModelProto &model) const;
+  ONNX_NAMESPACE::ModelProto conver_model_version_to_(
+      ONNX_NAMESPACE::ModelProto *model, const int64_t version);
 
-  onnx::ModelProto model_;
-  int64_t convert_version_ = 15;
+  ONNX_NAMESPACE::ModelProto model_;
+  int64_t convert_version_ = 22;
 };
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_ONNXIMPORTER_H_

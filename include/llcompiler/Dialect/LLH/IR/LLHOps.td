@@ -29,15 +29,35 @@ def LLH_UndefinedOp : LLH_Op<"undefined"> {
     let results = (outs);
 }
 
-def LLH_ConstOp : LLH_Op<"weight">{
-    let summary = "weight op";
-    let description = [{
-        weight op that will not a const in traning;
-    }];
-
+class LLH_ConstOp <string mnemonic, list<Trait> traits = []>:
+        LLH_Op<mnemonic,traits>{
     let arguments = (ins 
-        ElementsAttr:$value);
+       DenseElementsAttr:$value);
     let results = (outs LLH_Tensor);
+    let builders = [
+        OpBuilder<(ins "DenseElementsAttr":$value),
+        [{
+            $_state.getOrAddProperties<Properties>().value = value;
+            $_state.addTypes(value.getType());
+        }]>
+    ];
+//     let extraClassDeclaration = [{
+//     void WeightOp::build(::mlir::OpBuilder &odsBuilder, ::mlir::OperationState &odsState,::mlir::DenseElementsAttr value) {
+//         $_self::build(odsBuilder,odsState,value.getType(),value);
+//     }
+//   }];
+}
+
+def LLH_ConstantOp : LLH_ConstOp<"constant">{
+    let description = [{
+        ConstantOp is a const that will never changed;
+    }];
+}
+
+def LLH_WeightOp : LLH_ConstOp<"weight">{
+    let description = [{
+        WeightOp is the weight of model and it will change when traning;
+    }];
 }
 
 def LLH_AndOp : LLH_Op<"and"> {//shape inference

@@ -43,6 +43,7 @@
 namespace llc::importer {
 struct ImporterOption {
   std::string filename;
+  bool onnx_convert;
   uint64_t onnx_convert_version;
   IMPORTER_TYPE importer_type;
   TARGET_DIALECT target_dialect;

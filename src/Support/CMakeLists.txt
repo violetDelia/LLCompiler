@@ -4,9 +4,9 @@ llcompiler_add_library(LLCompilerSupport
     Logger.cpp
     Option.cpp
 
-    DEPENDS
+    LINKS
+    PUBLIC
     LLVMOption
-
-    LINKS PRIVATE
+    PRIVATE
     spdlog
 )

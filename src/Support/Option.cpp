@@ -65,11 +65,19 @@ llvm::cl::opt<importer::TARGET_DIALECT> importintDialect(
     llvm::cl::init(importer::TARGET_DIALECT::LLH),
     llvm::cl::cat(importingOptions));
 
+llvm::cl::opt<bool> onnxConvert(
+    "whether convert onnx verison",
+    llvm::cl::desc("onnx version convert will make some error in "
+                   "ONNX_NAMESPACE::ConvertVersion,it "
+                   "best to input onnx file verison of 22"),
+    llvm::cl::value_desc("version"), llvm::cl::init(false),
+    llvm::cl::cat(importingOptions));
+
 llvm::cl::opt<uint64_t> onnxConvertVersion(
     "onnx-version",
     llvm::cl::desc("the onnx model will convert to onnx-version before "
                    "lowering to dialect,default convert to 16"),
-    llvm::cl::value_desc("version"), llvm::cl::init(16),
+    llvm::cl::value_desc("version"), llvm::cl::init(22),
     llvm::cl::cat(importingOptions));
 
 }  // namespace llc::option

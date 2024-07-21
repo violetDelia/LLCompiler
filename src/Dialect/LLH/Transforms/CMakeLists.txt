@@ -10,3 +10,4 @@ add_mlir_library(LLCLLHPasses
   LINK_LIBS PUBLIC
   LLCLLHDialect
 )
+llcompiler_install_mlir_library(LLCLLHPasses)

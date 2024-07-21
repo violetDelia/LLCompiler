@@ -11,6 +11,8 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include <cstdint>
+
 #include "llcompiler/Support/Core.h"
 
 namespace llc {
@@ -55,4 +57,6 @@ const char *target_dialect_to_str(const TARGET_DIALECT dialect) {
 const char *GLOBAL = "global";
 const char *IMPORTER = "importer";
 const char *LLH = "llh";
+// recommended onnx version
+const int64_t ONNX_ADAPTED_VERSION = 22;
 }  // namespace llc

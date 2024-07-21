@@ -28,6 +28,7 @@ namespace llc::importer {
 
 ImporterOption get_importer_option() {
   return {.filename = option::importingPath,
+          .onnx_convert = option::onnxConvert,
           .onnx_convert_version = option::onnxConvertVersion,
           .importer_type = option::importingType,
           .target_dialect = option::importintDialect};

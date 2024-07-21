@@ -12,7 +12,22 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
-#define INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
-namespace llc::helper {}
-#endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
+#include <any>
+#include <cstdint>
+#include <numeric>
+#include <vector>
+
+#include "llcompiler/Dialect/Utility/Type.h"
+
+namespace llc::helper {
+
+int64_t get_element_size_form(const mlir::ShapedType& shape_type) {
+  auto rank = shape_type.getRank();
+  if (rank == 0) return 0;
+  int64_t element_size = 1;
+  for (size_t i = 0; i < rank; ++i) {
+    element_size *= shape_type.getDimSize(i);
+  }
+  return element_size;
+}
+}  // namespace llc::helper

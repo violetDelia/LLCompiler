@@ -12,12 +12,16 @@ llcompiler_add_library(LLCompilerImporter
     ${PROTOBUF_INCLUDE_DIR}
     ${ABSL_INCLUDE_DIR}
 
-    DEPENDS
-    LLVMOption
+    LINKS
+    PUBLIC
     LLCompilerSupport
     LLCLLHDialect
-
-    LINKS
     PRIVATE
     onnx
+    LLVMOption
+    LLCMLIRUtility
 )
+
+if(LLCOMPILER_BUILD_WITH_ONNX_ML)
+    target_compile_definitions(LLCompilerImporter PRIVATE ONNX_ML)
+endif()

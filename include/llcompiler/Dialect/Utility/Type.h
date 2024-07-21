@@ -12,7 +12,15 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
-#define INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
-namespace llc::helper {}
-#endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_
+#define INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_
+#include <cstdint>
+
+#include "llvm/ADT/SmallVector.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
+namespace llc::helper {
+
+llvm::SmallVector<uint64_t> get_shape_form(const mlir::ShapedType& shape_type);
+int64_t get_element_size_form(const mlir::ShapedType& shape_type);
+}  // namespace llc::helper
+#endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_

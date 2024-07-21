@@ -68,6 +68,9 @@ const char *target_dialect_to_str(const TARGET_DIALECT dialect);
 extern const char *GLOBAL;
 extern const char *IMPORTER;
 extern const char *LLH;
+// recommended onnx version
+extern const int64_t ONNX_ADAPTED_VERSION;
+
 }  // namespace llc
 
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_CORE_H_

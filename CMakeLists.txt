@@ -17,14 +17,13 @@ unset(LLCOMPILER_BUILD_WITH_ONNX_ML CACHE)
 
 # #---------- options ----------##
 option(BUILD_SHARED_LIBS "build shared libs" OFF)
-option(BUILD_SHARED_LIBS "build shared libs" OFF)
 option(BUILD_LLCOMPILER_TEST "build test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 option(BUILD_LLCOMPILER_DOCS "build examples" ON)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
-option(LLCOMPILER_BUILD_WITH_ONNX_ML "" OFF)
+option(LLCOMPILER_BUILD_WITH_ONNX_ML "if disable,will throw error when convert onnx model" ON)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)
@@ -92,10 +91,6 @@ add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
 # error for macro 'interface' in llvm-mingw-20240518-msvcrt-x86_64/include/rpc.h
 add_definitions(-D__OBJC__)
 
-if(LLCOMPILER_BUILD_WITH_ONNX_ML)
-    add_definitions(-DONNX_ML)
-endif()
-
 if(BUILD_LLCOMPILER_LOG)
     add_definitions(-DLLCOMPILER_HAS_LOG)
 endif()
@@ -113,14 +108,16 @@ add_subdirectory(${LLCOMPILER_SOURCE_DIR})
 add_subdirectory(${LLCOMPILER_TOOLS_DIR})
 
 # # #---------- main ----------##
-add_executable(main "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
+add_executable(main EXCLUDE_FROM_ALL "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
 target_include_directories(main PRIVATE
     $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${ONNX_INCLUDE_DIR}>
     $<BUILD_INTERFACE:${ONNX_INCLUDE_GENERATE_DIR}>
+    $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIR}>
+    $<BUILD_INTERFACE:${ABSL_INCLUDE_DIR}>
 )
 get_property(llcompiler_all_targets GLOBAL PROPERTY LLCOMPILER_ALL_TARGETS)
-target_link_libraries(main PRIVATE ${llcompiler_all_targets})
+target_link_libraries(main PRIVATE ${llcompiler_all_targets} onnx)
 
 # #---------- message ----------##
 message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})

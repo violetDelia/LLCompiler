@@ -21,10 +21,16 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
+#include <map>
+#include <string>
+
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Importer/OpBuilder.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/Operation.h"
 #include "mlir/IR/OwningOpRef.h"
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
@@ -35,10 +41,14 @@ class LLHOpBuilder : public OpBuilder {
  public:
   explicit LLHOpBuilder(mlir::MLIRContext* context);
 
-  // void mlirGen(mlir::ModuleOp* module, const onnx::ModelProto&
+  // void mlirGen(mlir::ModuleOp* module, const ONNX_NAMESPACE::ModelProto&
   // graph) override; void mlirGen(mlir::ModuleOp* module, const
-  // onnx::GraphProto& graph) override;
-  LLCOMPILER_OVERRIDE_OPBULDER_MLIRGEN(onnx::Graph)
+  // ONNX_NAMESPACE::GraphProto& graph) override;
+  LLCOMPILER_OVERRIDE_OPBULDER_MLIRGEN(ONNX_NAMESPACE::Graph)
+ private:
+  mlir::llc::llh::WeightOp gen_mlir_(
+      const ONNX_NAMESPACE::Tensor& tensor,
+      std::map<std::string, mlir::ShapedType>& weight_shape_map);
 };
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_

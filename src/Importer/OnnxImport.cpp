@@ -35,7 +35,7 @@
 
 namespace llc::importer {
 bool OnnxImporter::init_model_form_json_(const mlir::StringRef &filename,
-                                         onnx::ModelProto *model) {
+                                         ONNX_NAMESPACE::ModelProto *model) {
   WARN(IMPORTER) << "never used json file initialize onnx model -> "
                  << filename.str();
   auto buf = mlir::openInputFile(filename);
@@ -54,13 +54,13 @@ bool OnnxImporter::init_model_form_json_(const mlir::StringRef &filename,
   }
   auto status = google::protobuf::util::JsonStringToMessage(json, model);
   CHECK(IMPORTER, status.ok())
-      << "convert json string to onnx::modelproto file faile!" << "\n\t"
-      << filename.str() << " with WRONG '" << status.ToString() + "'";
+      << "convert json string to ONNX_NAMESPACE::modelproto file faile!"
+      << "\n\t" << filename.str() << " with WRONG '" << status.ToString() + "'";
   return status.ok();
 }
 
 bool OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename,
-                                         onnx::ModelProto *model) {
+                                         ONNX_NAMESPACE::ModelProto *model) {
   std::fstream input(filename.str(), std::ios::in | std::ios::binary);
   if (!input.is_open()) {
     WRONG(IMPORTER) << "file " << filename.str() << " is opening!";
@@ -73,7 +73,7 @@ bool OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename,
 }
 
 bool OnnxImporter::init_model_(const mlir::StringRef filename,
-                               onnx::ModelProto *model) {
+                               ONNX_NAMESPACE::ModelProto *model) {
   std::string WRONG_msg;
   if (filename.ends_with(".json")) {
     return init_model_form_json_(filename, model);
@@ -83,30 +83,37 @@ bool OnnxImporter::init_model_(const mlir::StringRef filename,
     FATAL(IMPORTER) << "unsupported file format!";
     return false;
   }
-  DEBUG(IMPORTER) << "onnx::ModelProto successfully initialized!";
+  DEBUG(IMPORTER) << "ONNX_NAMESPACE::ModelProto successfully initialized!";
 }
 
-int64_t OnnxImporter::get_model_version_(const onnx::ModelProto &model) const {
+int64_t OnnxImporter::get_model_version_(
+    const ONNX_NAMESPACE::ModelProto &model) const {
   for (auto it = model.opset_import().begin(); it != model.opset_import().end();
        ++it) {
     if (it->domain() == "" || it->domain() == "ai.onnx") {
       auto version = it->version();
       INFO(IMPORTER) << "onnx version is: " << version;
+      if (version != ONNX_ADAPTED_VERSION) {
+        WARN(IMPORTER)
+            << "onnx version is not 22, if an exception occurs during cannot "
+               "import, please use onnx file of version 22.";
+      }
       return version;
     }
   }
-  WRONG(IMPORTER) << "can't find onnx version from onnx::ModelProto!";
+  WRONG(IMPORTER) << "can't find onnx version from ONNX_NAMESPACE::ModelProto!";
   return -1;
 }
 
-bool OnnxImporter::check_model_legal_(const onnx::ModelProto &model) const {
+bool OnnxImporter::check_model_legal_(
+    const ONNX_NAMESPACE::ModelProto &model) const {
   WARN_UNIMPLEMENTED(IMPORTER);
   return true;
 }
 
-onnx::ModelProto OnnxImporter::conver_model_version_to_(onnx::ModelProto *model,
-                                                        const int64_t version) {
-  return onnx::version_conversion::ConvertVersion(*model, version);
+ONNX_NAMESPACE::ModelProto OnnxImporter::conver_model_version_to_(
+    ONNX_NAMESPACE::ModelProto *model, const int64_t version) {
+  return ONNX_NAMESPACE::version_conversion::ConvertVersion(*model, version);
 }
 
 OnnxImporter::OnnxImporter(OpBuilder *builder, const ImporterOption &option)
@@ -120,32 +127,38 @@ OnnxImporter::OnnxImporter(OpBuilder *builder, const ImporterOption &option)
   }
   check_model_legal_(model_);
   auto onnx_version = get_model_version_(model_);
-  if (onnx_version != convert_version_) {
+  if (option.onnx_convert && onnx_version != convert_version_) {
+    WARN(IMPORTER)
+        << "convert onnx modle to version " << convert_version_
+        << ", convert onnx modle may raise unexpected error at "
+           "ONNX_NAMESPACE::ConvertVersion, it is recommended use onnx file "
+           "of version 22.";
     model_ = conver_model_version_to_(&model_, convert_version_);
-    INFO(IMPORTER) << "convert onnx modle to version " << convert_version_;
   }
-  onnx::shape_inference::InferShapes(model_);
+  ONNX_NAMESPACE::shape_inference::InferShapes(model_);
   INFO(IMPORTER) << "infer shapes of onnx model success!";
 }
 
 IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::Type, const int32_t &elem_type) {
   switch (elem_type) {
-    case onnx::TensorProto_DataType_FLOAT:
+    case ONNX_NAMESPACE::TensorProto_DataType_FLOAT:
       return builder->getF32Type();
-    case onnx::TensorProto_DataType_FLOAT16:
+    case ONNX_NAMESPACE::TensorProto_DataType_FLOAT16:
       return builder->getF16Type();
-    case onnx::TensorProto_DataType_UINT8:
+    case ONNX_NAMESPACE::TensorProto_DataType_UINT8:
       return builder->getIntegerType(8, mlir::IntegerType::Unsigned);
-    case onnx::TensorProto_DataType_INT32:
-      builder->getIntegerType(32, mlir::IntegerType::Signed);
+    case ONNX_NAMESPACE::TensorProto_DataType_INT32:
+      return builder->getIntegerType(32, mlir::IntegerType::Signed);
+    case ONNX_NAMESPACE::TensorProto_DataType_INT64:
+      return builder->getIntegerType(64, mlir::IntegerType::Signed);
     default:
-      UNIMPLEMENTED(IMPORTER);
+      UNIMPLEMENTED(IMPORTER) << "  onnx element type is " << elem_type << "!";
   }
   return mlir::Type();
 }
 
 IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::ShapedType,
-                       onnx::Value const *value) {
+                       const ONNX_NAMESPACE::Value *value) {
   llvm::SmallVector<int64_t> dims;
   for (auto dim : value->sizes()) {
     if (dim.dim < 0) {
@@ -158,15 +171,10 @@ IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::ShapedType,
                                      gen_type(builder, value->elemType()));
 }
 
-// mlir::ShapedType OnnxImporter::gen_type(mlir::OpBuilder *builder,
-//                                         onnx::Value *value) {
-//   UNIMPLEMENTED(IMPORTER);
-// }
-
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
   auto module =
       mlir::ModuleOp::create(builder_trace_.build().build().getUnknownLoc());
-  auto graph = onnx::ImportModelProto(model_);
+  auto graph = ONNX_NAMESPACE::ImportModelProto(model_);
   builder_trace_.gen_mlir(&module, *graph);
 
   // auto func = build_->build().create<mlir::FuncOp>(
