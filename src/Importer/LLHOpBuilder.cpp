@@ -19,6 +19,8 @@
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Importer/LLHOpBuilder.h"
 #include "llcompiler/Importer/OnnxImporter.h"
@@ -32,6 +34,7 @@
 #include "mlir/Dialect/Arith/Utils/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
+#include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/Block.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributeInterfaces.h"
@@ -95,59 +98,21 @@ LLCOMPILER_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, ONNX_NAMESPACE::Graph) {
     }
   }
   for (auto weight : item.initializers()) {
-    auto weight_op = gen_mlir_(weight, weight_shape_map);
+    auto weight_op = gen_mlir_(weight, &weight_shape_map);
+    helper::add_attr(weight_op, LLCOperationNmaeAttr, weight.name());
     block->push_back(weight_op);
     value_map[weight.name()] = weight_op.getResult();
   }
 
-  auto gen_mlir = [this, &item, &block,
-                   &value_map](const ONNX_NAMESPACE::Node* node) {
-    if (strcmp(node->kind().toString(), "Conv") == 0) {
-    } else {
-      block->push_back(builder_.create<mlir::llc::llh::UndefinedOp>(
-          builder_.getUnknownLoc(), node->kind().toString()));
-    }
-  };
-
   for (auto node : item.nodes()) {
-    gen_mlir(node);
-    //
+    mlir::Operation* op = gen_mlir_(*node, &weight_shape_map);
+    if (!op) continue;
+    helper::add_attr(op, LLCOperationNmaeAttr, node->name());
+    block->push_back(op);
   }
-  // for (auto tensor : item.initializer_names()) {
-  //   print_info << tensor;
-  // }
-
-  // func.addEntryBlock();
-  // for (int i = 0; i < item.inputs().size(); ++i) {
-  //   std::string name = item.inputs()[i]->uniqueName();
-  //   // m_value2value[g->inputs()[i]] = entryBlock->getArgument(i);
-  //   func.setArgAttr(i, "name", builder_.getStringAttr(name));
-  // }
-  // std::unordered_map<std::string, ONNX_NAMESPACE::Value*> init_map;
-  // for (auto node : item.nodes()) {
-  //   auto inputs = node->inputs();
-  //   auto outputs = node->outputs();
-  //   for (auto input : inputs) init_map.emplace(input->uniqueName(), input);
-  //   for (auto output : outputs) init_map.emplace(output->uniqueName(),
-  //   output);
-  // }
-
-  // std::unordered_map<ONNX_NAMESPACE::Value*, ONNX_NAMESPACE::Tensor>
-  // tensor_map; save initializers as ParamStorage and load by ParamProvider
-  // int size = item.initializers().size(); for (int i = 0; i < size; ++i) {
-  //   std::string initializer_name = item.initializer_names()[i];
-  //   ONNX_NAMESPACE::Tensor initializer = item.initializers()[i];
-  //   ONNX_NAMESPACE::Value* init_value = init_map.at(initializer_name);
-  //   tensor_map.emplace(init_value, initializer);
-  //   auto storage = create_param_storage(initializer, init_value);
-  //   mlir::Value value = m_builder.create<mlir::MGB::ParamProvider>(
-  //       m_builder.getUnknownLoc(), storage);
-  //   m_value2value[init_value] = value;
-  // }
-
-  // func.setFunctionType(func_type);
   module->push_back(func);
 }
+
 #define CREATE_WEIGHT_OP_FROME_ONNX(Onnx_Type, Type, weight, shape, builder) \
   if (weight.elem_type() == Onnx_Type) {                                     \
     auto element_size = helper::get_element_size_form(shape);                \
@@ -161,9 +126,9 @@ LLCOMPILER_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, ONNX_NAMESPACE::Graph) {
 
 mlir::llc::llh::WeightOp LLHOpBuilder::gen_mlir_(
     const ONNX_NAMESPACE::Tensor& weight,
-    std::map<std::string, mlir::ShapedType>& weight_shape_map) {
+    std::map<std::string, mlir::ShapedType>* weight_shape_map) {
   auto name = weight.name();
-  auto shape = weight_shape_map[name];
+  auto shape = weight_shape_map->at(name);
   CHECK(IMPORTER, shape.hasStaticShape()) << "it not static shape for weight";
   auto elem_type = shape.getElementType();
   auto data = weight.data<int>();
@@ -183,6 +148,18 @@ mlir::llc::llh::WeightOp LLHOpBuilder::gen_mlir_(
   UNIMPLEMENTED(IMPORTER) << "unimplemented weight data type: "
                           << weight.elem_type();
 }
-
 #undef CREATE_WEIGHT_OP_FROME_ONNX
+
+mlir::Operation* LLHOpBuilder::gen_mlir_(
+    const ONNX_NAMESPACE::Node& node,
+    std::map<std::string, mlir::ShapedType>* weight_shape_map) {
+  if (!strcmp(node.kind().toString(), "Undefined")) {
+    return nullptr;
+  }
+  UNIMPLEMENTED(IMPORTER) << "unimplemented op generate: "
+                          << node.kind().toString();
+  return builder_.create<mlir::llc::llh::UndefinedOp>(builder_.getUnknownLoc(),
+                                                      node.kind().toString());
+}
+
 };  // namespace llc::importer

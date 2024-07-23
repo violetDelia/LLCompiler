@@ -48,7 +48,11 @@ class LLHOpBuilder : public OpBuilder {
  private:
   mlir::llc::llh::WeightOp gen_mlir_(
       const ONNX_NAMESPACE::Tensor& tensor,
-      std::map<std::string, mlir::ShapedType>& weight_shape_map);
+      std::map<std::string, mlir::ShapedType>* weight_shape_map);
+
+  mlir::Operation* gen_mlir_(
+      const ONNX_NAMESPACE::Node& node,
+      std::map<std::string, mlir::ShapedType>* weight_shape_map);
 };
 }  // namespace llc::importer
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_LLHOPBUILDER_H_
