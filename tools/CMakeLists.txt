@@ -13,4 +13,5 @@ target_link_libraries(compiler
     LLCompilerImporter
     LLCompiler
     LLCLLHDialect
+    onnx
 )

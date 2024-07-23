@@ -38,5 +38,13 @@ def LLH_CeilMode : I32EnumAttr<"CeilMode",
 }
 def LLH_CeilModeAttr : EnumAttr<LLH_Dialect, LLH_CeilMode, "CeilMode">;
 
-
+def LLH_Shift_Right         : I32EnumAttrCase<"Right", 0>;
+def LLH_Shift_Left          : I32EnumAttrCase<"Left", 1>;
+def LLH_ShiftDirection : I32EnumAttr<"ShiftDirection",
+    "Direction of moving bits. It can be either “RIGHT” (for right shift) or “LEFT” (for left shift)..",
+    [LLH_Shift_Right, LLH_Shift_Left]> {
+  let genSpecializedAttr = 0;
+  let cppNamespace = "::mlir::llc::llh";
+}
+def LLH_ShiftDirectionAttr : EnumAttr<LLH_Dialect, LLH_ShiftDirection, "ShiftDirection">;
 #endif //

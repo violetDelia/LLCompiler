@@ -67,6 +67,12 @@ def LLH_FloatTensor   : TensorOf<[LLH_Float]>;
 
 def LLH_Tensor        : AnyTypeOf<[LLH_FloatTensor,LLH_IntTensor]>;
 
+def LLH_ScalarTensor  : Type<And<[IsTensorTypePred,
+                                  CPred<"::llvm::cast<::mlir::TensorType>($_self).getRank() == 0">]>>;
+
+def LLH_Rank1BoolTensor : TensorOf<[LLH_Bool], [CPred<"::llvm::cast<::mlir::TensorType>($_self).getRank() == 1">]>;
+
+
 def LLH_String : StringBasedAttr<CPred<"::llvm::isa<::mlir::StringAttr>($_self)">,
                               "string attribute">;
 
