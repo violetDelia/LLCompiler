@@ -38,12 +38,10 @@ void init_compiler(int argc, char **argv) {
       argc, argv, "LLCompiler: A graph compiler for ONNX models");
   init_logger_({GLOBAL, IMPORTER});
   INFO(GLOBAL) << "import type is: "
-               << importer::importer_type_to_str(
-                      option::importingType.getValue());
+               << importer::importer_type_to_str(option::importingType);
   INFO(GLOBAL) << "import file is: " << option::importingPath.getValue();
   INFO(GLOBAL) << "importer target dialect is: "
-               << importer::target_dialect_to_str(
-                      option::importintDialect.getValue());
+               << importer::target_dialect_to_str(option::importintDialect);
 }
 
 }  // namespace llc

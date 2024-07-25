@@ -21,4 +21,4 @@
   builder.create<::mlir::llc::llh::Op>(builder.getUnknownLoc(), __VA_ARGS__)
 
 #define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<Op>(builder.getUnknownLoc(), __VA_ARGS__)
+  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)

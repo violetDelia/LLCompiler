@@ -52,7 +52,7 @@ class OpBuilder {
  public:
   explicit OpBuilder(mlir::MLIRContext* context);
   virtual ~OpBuilder();
-  mlir::OpBuilder& build();
+  mlir::OpBuilder& builder();
 
   LLC_OPBUILDER_VIRTUAL_MLIRGEN(ONNX_NAMESPACE::Graph)
 
@@ -68,7 +68,7 @@ class OpBuilderTrace {
   template <class Ty>
   auto gen_mlir(mlir::ModuleOp* module, const Ty& item) const;
 
-  OpBuilder& build() const;
+  mlir::OpBuilder& builder() const;
 
  protected:
   OpBuilder* builder_;

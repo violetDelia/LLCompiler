@@ -63,12 +63,11 @@ LLC_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, ONNX_NAMESPACE::Graph) {
   auto func_inputs = gen_types<OnnxImporter>(&builder_, item.inputs());
   auto func_outputs = gen_types<OnnxImporter>(&builder_, item.outputs());
   auto func_type = builder_.getFunctionType(func_inputs, func_outputs);
-  auto func = builder_.create<mlir::func::FuncOp>(builder_.getUnknownLoc(),
-                                                  item.name(), func_type);
+  auto func = LLC_BUILD_OP(builder_, func::FuncOp, item.name(), func_type);
   auto block = func.addEntryBlock();
   auto inputs_size = inputs.size();
   for (int i = 0; i < inputs_size; ++i) {
-    std::string name = inputs[i]->uniqueName();
+    auto name = inputs[i]->uniqueName();
     value_map[name] = block->getArgument(i);
   }
   // make weight op
@@ -80,9 +79,8 @@ LLC_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, ONNX_NAMESPACE::Graph) {
   for (auto node : item.nodes()) {
     for (auto input : node->inputs()) {
       auto name = input->uniqueName();
-      if (weight_set.find(name) != weight_set.end()) {
-        weight_shape_map[name] = OnnxImporter::gen_type(&builder_, input);
-      }
+      if (weight_set.find(name) == weight_set.end()) continue;
+      weight_shape_map[name] = OnnxImporter::gen_type(&builder_, input);
     }
   }
   for (auto weight : item.initializers()) {
@@ -93,7 +91,7 @@ LLC_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, ONNX_NAMESPACE::Graph) {
   }
 
   for (auto node : item.nodes()) {
-    mlir::Operation* op = gen_mlir_(*node, &value_map);
+    auto op = gen_mlir_(*node, &value_map);
     if (!op) continue;
     helper::add_attr(op, LLCOperationNmaeAttr, node->name());
     block->push_back(op);

@@ -41,8 +41,7 @@ void register_logger(const char *module, const char *root_path,
   auto time_now = std::chrono::system_clock::to_time_t(now);
   std::stringstream time_ss;
   time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
-  std::string log_dir =
-      fmt::format("{}/log_{}", root_path, time_ss.str().c_str());
+  auto log_dir = fmt::format("{}/log_{}", root_path, time_ss.str().c_str());
   std::string log_file;
   const bool save_log = strcmp(root_path, "");
   if (save_log) {

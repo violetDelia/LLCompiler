@@ -90,8 +90,8 @@ bool OnnxImporter::init_model_(const mlir::StringRef filename,
 
 int64_t OnnxImporter::get_model_version_(
     const ONNX_NAMESPACE::ModelProto &model) const {
-  for (auto it = model.opset_import().begin(); it != model.opset_import().end();
-       ++it) {
+  auto op_set = model.opset_import();
+  for (auto it = op_set.begin(); it != op_set.end(); ++it) {
     if (it->domain() == "" || it->domain() == "ai.onnx") {
       auto version = it->version();
       INFO(IMPORTER) << "onnx version is: " << version;
@@ -169,17 +169,17 @@ LLC_IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::ShapedType,
       dims.emplace_back(dim.dim);
     }
   }
-  return mlir::RankedTensorType::get(dims,
-                                     gen_type(builder, value->elemType()));
+  auto type = gen_type(builder, value->elemType());
+  return mlir::RankedTensorType::get(dims, type);
 }
 
-#define CASE(builder, attr)                                          \
+#define CASE(builder, node, attr)                                    \
   case ONNX_NAMESPACE::BuiltinSymbol::k##attr: {                     \
     if (node.hasAttribute(ONNX_NAMESPACE::BuiltinSymbol::k##attr)) { \
       auto INTS = node.is(ONNX_NAMESPACE::BuiltinSymbol::k##attr);   \
       return builder->getI64ArrayAttr(INTS);                         \
     }                                                                \
-    INFO(IMPORTER) << "onnx::node not has attr " #attr " !";         \
+    INFO(IMPORTER) << "onnx::node not has attr " #attr "!";          \
     break;                                                           \
   }  // namespace llc::importer
 
@@ -187,20 +187,20 @@ mlir::ArrayAttr OnnxImporter::get_array_attr_from(
     mlir::Builder *builder, const ONNX_NAMESPACE::Node &node,
     const ONNX_NAMESPACE::BuiltinSymbol &kind) {
   switch (kind) {
-    CASE(builder, kernel_shape)
-    CASE(builder, dilations)
-    CASE(builder, pads)
-    CASE(builder, strides)
+    CASE(builder, node, kernel_shape)
+    CASE(builder, node, dilations)
+    CASE(builder, node, pads)
+    CASE(builder, node, strides)
   }
 
-  UNIMPLEMENTED(IMPORTER) << " error kind";
+  UNIMPLEMENTED(IMPORTER) << " error kind or attr is none.";
 }
 
 #undef CASE
 
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
-  auto module =
-      mlir::ModuleOp::create(builder_trace_.build().build().getUnknownLoc());
+  auto builder = builder_trace_.builder();
+  auto module = mlir::ModuleOp::create(builder.getUnknownLoc());
   auto graph = ONNX_NAMESPACE::ImportModelProto(model_);
   builder_trace_.gen_mlir(&module, *graph);
 

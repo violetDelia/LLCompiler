@@ -25,11 +25,11 @@ OpBuilder::OpBuilder(mlir::MLIRContext* context) : builder_(context) {
 
 OpBuilder::~OpBuilder() {}
 
-mlir::OpBuilder& OpBuilder::build() { return builder_; }
+mlir::OpBuilder& OpBuilder::builder() { return builder_; }
 
 OpBuilderTrace::OpBuilderTrace(OpBuilder* builder) : builder_(builder) {}
 
 OpBuilderTrace::~OpBuilderTrace() {}
 
-OpBuilder& OpBuilderTrace::build() const { return *builder_; }
+mlir::OpBuilder& OpBuilderTrace::builder() const { return builder_->builder(); }
 };  // namespace llc::importer
