@@ -19,9 +19,11 @@
 #include "llcompiler/Importer/OnnxImporter.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -139,7 +141,7 @@ OnnxImporter::OnnxImporter(OpBuilder *builder, const ImporterOption &option)
   INFO(IMPORTER) << "infer shapes of onnx model success!";
 }
 
-IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::Type, const int32_t &elem_type) {
+LLC_IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::Type, const int32_t &elem_type) {
   switch (elem_type) {
     case ONNX_NAMESPACE::TensorProto_DataType_FLOAT:
       return builder->getF32Type();
@@ -157,8 +159,8 @@ IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::Type, const int32_t &elem_type) {
   return mlir::Type();
 }
 
-IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::ShapedType,
-                       const ONNX_NAMESPACE::Value *value) {
+LLC_IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::ShapedType,
+                           const ONNX_NAMESPACE::Value *value) {
   llvm::SmallVector<int64_t> dims;
   for (auto dim : value->sizes()) {
     if (dim.dim < 0) {
@@ -170,6 +172,31 @@ IMPORTER_GEN_TYPE_IMPL(OnnxImporter, mlir::ShapedType,
   return mlir::RankedTensorType::get(dims,
                                      gen_type(builder, value->elemType()));
 }
+
+#define CASE(builder, attr)                                          \
+  case ONNX_NAMESPACE::BuiltinSymbol::k##attr: {                     \
+    if (node.hasAttribute(ONNX_NAMESPACE::BuiltinSymbol::k##attr)) { \
+      auto INTS = node.is(ONNX_NAMESPACE::BuiltinSymbol::k##attr);   \
+      return builder->getI64ArrayAttr(INTS);                         \
+    }                                                                \
+    INFO(IMPORTER) << "onnx::node not has attr " #attr " !";         \
+    break;                                                           \
+  }  // namespace llc::importer
+
+mlir::ArrayAttr OnnxImporter::get_array_attr_from(
+    mlir::Builder *builder, const ONNX_NAMESPACE::Node &node,
+    const ONNX_NAMESPACE::BuiltinSymbol &kind) {
+  switch (kind) {
+    CASE(builder, kernel_shape)
+    CASE(builder, dilations)
+    CASE(builder, pads)
+    CASE(builder, strides)
+  }
+
+  UNIMPLEMENTED(IMPORTER) << " error kind";
+}
+
+#undef CASE
 
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
   auto module =

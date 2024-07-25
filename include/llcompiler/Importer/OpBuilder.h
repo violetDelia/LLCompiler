@@ -35,16 +35,17 @@
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_
-#define DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(Ty)                      \
+#define LLC_OPBUILDER_VIRTUAL_MLIRGEN(Ty)                         \
   virtual void gen_mlir(mlir::ModuleOp* module, const Ty& item) { \
     UNIMPLEMENTED(IMPORTER);                                      \
   }
 
-#define LLCOMPILER_OVERRIDE_OPBULDER_MLIRGEN(Ty) \
+#define LLC_OVERRIDE_OPBULDER_MLIRGEN(Ty) \
   void gen_mlir(mlir::ModuleOp* module, const Ty& item) final;
 
-#define LLCOMPILER_OPBULDER_MLIRGEN_IMPL(class, Ty) \
+#define LLC_OPBULDER_MLIRGEN_IMPL(class, Ty) \
   void class ::gen_mlir(mlir::ModuleOp* module, const Ty& item)
+
 namespace llc::importer {
 
 class OpBuilder {
@@ -53,7 +54,7 @@ class OpBuilder {
   virtual ~OpBuilder();
   mlir::OpBuilder& build();
 
-  DEFINE_OPBUILDER_VIRTUAL_MLIRGEN(ONNX_NAMESPACE::Graph)
+  LLC_OPBUILDER_VIRTUAL_MLIRGEN(ONNX_NAMESPACE::Graph)
 
  protected:
   mlir::OpBuilder builder_;
@@ -80,5 +81,5 @@ auto OpBuilderTrace::gen_mlir(mlir::ModuleOp* module, const Ty& item) const {
 }
 
 }  // namespace llc::importer
-#undef DEFINE_OPBUILDER_VIRTUAL_MLIRGEN
+#undef LLC_OPBUILDER_VIRTUAL_MLIRGEN
 #endif  // INCLUDE_LLCOMPILER_IMPORTER_OPBUILDER_H_

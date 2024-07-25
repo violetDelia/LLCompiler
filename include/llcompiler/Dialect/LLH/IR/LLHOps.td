@@ -31,7 +31,7 @@ def LLH_UndefinedOp : LLH_Op<"undefined"> {
 }
 
 class LLH_ConstOp <string mnemonic, list<Trait> traits = []>:
-        LLH_Op<mnemonic, traits>{
+        LLH_Op<mnemonic, traits# [ConstantLike]>{
     let arguments = (ins 
        DenseElementsAttr:$value);
     let results = (outs LLH_Tensor);
@@ -86,14 +86,14 @@ class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type 
 }
 
 class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_UnaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank], OperandType, ResultType, attributes>;
+        LLH_UnaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank, Elementwise], OperandType, ResultType, attributes>;
 
 class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_BinaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank], OperandType, ResultType, attributes>;
+        LLH_BinaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank, Elementwise], OperandType, ResultType, attributes>;
 
-def LLH_CastOp          : LLH_UnaryOp<"cast", [], LLH_Tensor, LLH_Tensor, (ins DefaultValuedAttr<SI64Attr, "1">:$saturate, SI64Attr:$to)>;
+def LLH_CastOp          : LLH_UnaryOp<"cast", [Elementwise], LLH_Tensor, LLH_Tensor, (ins DefaultValuedAttr<SI64Attr, "1">:$saturate, SI64Attr:$to)>;
 
-def LLH_CeluOper        : LLH_UnaryOp<"cast", [], LLH_FloatTensor, LLH_FloatTensor, (ins DefaultValuedAttr<F64Attr, "1">:$alpha)>;
+def LLH_CeluOp        : LLH_UnaryElementwiseOp<"celu", [], LLH_FloatTensor, LLH_FloatTensor, (ins DefaultValuedAttr<F64Attr, "1">:$alpha)>;
 
 def LLH_AbsOp           : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>;
 
@@ -111,19 +111,19 @@ def LLH_AtanhOp         : LLH_UnaryElementwiseOp<"atanh", [], LLH_FloatTensor>;
 
 def LLH_CeilOp          : LLH_UnaryElementwiseOp<"ceil", [], LLH_FloatTensor>;
 
-def LLH_BitwiseNot      : LLH_BinaryElementwiseOp<"bitwise_not", [], LLH_Tensor, LLH_Tensor>;
+def LLH_BitwiseNotOp    : LLH_BinaryElementwiseOp<"bitwise_not", [], LLH_Tensor, LLH_Tensor>;
 
 def LLH_AndOp           : LLH_BinaryElementwiseOp<"and", [], LLH_BoolTensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [], LLH_Tensor>;
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [Commutative], LLH_Tensor>;
 
-def LLH_BitShift        : LLH_BinaryElementwiseOp<"bit_shift", [], LLH_IntTensor, LLH_IntTensor, (ins LLH_ShiftDirectionAttr:$direction)>;
+def LLH_BitShiftOp      : LLH_BinaryElementwiseOp<"bit_shift", [], LLH_IntTensor, LLH_IntTensor, (ins LLH_ShiftDirectionAttr:$direction)>;
 
-def LLH_BitwiseAnd      : LLH_BinaryElementwiseOp<"bitwise_and", [], LLH_Tensor, LLH_Tensor>;
+def LLH_BitwiseAndOp    : LLH_BinaryElementwiseOp<"bitwise_and", [], LLH_Tensor, LLH_Tensor>;
 
-def LLH_BitwiseOr       : LLH_BinaryElementwiseOp<"bitwise_or", [], LLH_Tensor, LLH_Tensor>;
+def LLH_BitwiseOrOp     : LLH_BinaryElementwiseOp<"bitwise_or", [], LLH_Tensor, LLH_Tensor>;
 
-def LLH_BitwiseXor      : LLH_BinaryElementwiseOp<"bitwise_xor", [], LLH_Tensor, LLH_Tensor>;
+def LLH_BitwiseXorOp    : LLH_BinaryElementwiseOp<"bitwise_xor", [], LLH_Tensor, LLH_Tensor>;
 
 def LLH_CastLikeOp      : LLH_Op<"cast_like">{
     let arguments = (ins 
@@ -154,11 +154,11 @@ def LLH_ArgMinOp        : LLH_Op<"argmin", [InferShapedTypeOpInterface, SameOper
 def LLH_AveragePoolOp   : LLH_Op<"average_pool", [InferShapedTypeOpInterface, SameOperandsAndResultType, SameOperandsAndResultRank]>{
     let arguments = (ins 
         LLH_FloatTensor:$X,
-        I64ElementsAttr:$dilations,
-        I64ElementsAttr:$kernel_shape,
-        I64ElementsAttr:$pads,
-        I64ElementsAttr:$strides,
-        DefaultValuedAttr<I64Attr, "0">:$count_include_pad,
+        ArrayAttr:$dilations,
+        ArrayAttr:$kernel_shape,
+        ArrayAttr:$pads,
+        ArrayAttr:$strides,
+        DefaultValuedAttr<SI64Attr, "0">:$count_include_pad,
         DefaultValuedAttr<LLH_AutoPadAttr, "AutoPad::DEFAULT">:$auto_pad,
         DefaultValuedAttr<LLH_CeilModeAttr, "CeilMode::FLOOR">:$ceil_mode
         );
@@ -167,9 +167,9 @@ def LLH_AveragePoolOp   : LLH_Op<"average_pool", [InferShapedTypeOpInterface, Sa
 
 def LLH_BatchNormalizationOp : LLH_Op<"batch_normal", [InferShapedTypeOpInterface]>{
     let arguments = (ins 
-        LLH_FloatTensor:$X,
+        LLH_FloatTensor:$x,
         LLH_FloatTensor:$scale,
-        LLH_FloatTensor:$B,
+        LLH_FloatTensor:$bals,
         LLH_FloatTensor:$mean,
         LLH_FloatTensor:$var,
         DefaultValuedAttr<F64Attr, "1e-05">:$epsilon,
@@ -179,7 +179,7 @@ def LLH_BatchNormalizationOp : LLH_Op<"batch_normal", [InferShapedTypeOpInterfac
     let results = (outs LLH_FloatTensor);
 }
 
-def LLH_ClipOp : LLH_Op<"clip", [InferShapedTypeOpInterface, SameOperandsAndResultType, SameOperandsAndResultRank]>{
+def LLH_ClipOp : LLH_Op<"clip", [InferShapedTypeOpInterface, SameOperandsAndResultRank]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         LLH_ScalarTensor:$min,
@@ -187,11 +187,23 @@ def LLH_ClipOp : LLH_Op<"clip", [InferShapedTypeOpInterface, SameOperandsAndResu
     let results = (outs LLH_FloatTensor);
 }
 
-def LLH_CompressOp : LLH_Op<"compress", [InferShapedTypeOpInterface, SameOperandsAndResultType, SameOperandsAndResultRank]>{
+def LLH_CompressOp : LLH_Op<"compress", [InferShapedTypeOpInterface, SameOperandsAndResultRank]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         LLH_Rank1BoolTensor:$condition,
         OptionalAttr<SI64Attr>:$axis);
+    let results = (outs LLH_FloatTensor);
+}
+
+def LLH_ConvOp : LLH_Op<"conv", [InferShapedTypeOpInterface]>{
+    let arguments = (ins 
+        Variadic<LLH_FloatTensor>:$operands,
+        ArrayAttr:$dilations,
+        ArrayAttr:$kernel_shape,
+        ArrayAttr:$pads,
+        ArrayAttr:$strides,
+        DefaultValuedAttr<LLH_AutoPadAttr, "AutoPad::DEFAULT">:$auto_pad,
+        DefaultValuedAttr<SI64Attr, "1">:$group);
     let results = (outs LLH_FloatTensor);
 }
 //Concat

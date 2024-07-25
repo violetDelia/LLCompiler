@@ -35,9 +35,9 @@
 
 #ifndef INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
 #define INCLUDE_LLCOMPILER_IMPORTER_IMPORTER_H_
-#define IMPORTER_GEN_TYPE(Type, ...) \
+#define LLC_IMPORTER_GEN_TYPE(Type, ...) \
   static Type gen_type(mlir::OpBuilder *builder, __VA_ARGS__);
-#define IMPORTER_GEN_TYPE_IMPL(Class, Type, ...) \
+#define LLC_IMPORTER_GEN_TYPE_IMPL(Class, Type, ...) \
   Type Class::gen_type(mlir::OpBuilder *builder, __VA_ARGS__)
 
 namespace llc::importer {

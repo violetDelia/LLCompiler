@@ -26,10 +26,13 @@
 #include "llcompiler/Importer/Importer.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/OwningOpRef.h"
 #include "mlir/IR/Types.h"
+#include "mlir/Support/LLVM.h"
 #include "onnx/common/file_utils.h"
 #include "onnx/onnx_pb.h"
 
@@ -42,8 +45,12 @@ class OnnxImporter : public Importer {
 
   mlir::ModuleOp export_mlir_module() const final;
 
-  IMPORTER_GEN_TYPE(mlir::Type, const int32_t &elem_type)
-  IMPORTER_GEN_TYPE(mlir::ShapedType, const ONNX_NAMESPACE::Value *value)
+  LLC_IMPORTER_GEN_TYPE(mlir::Type, const int32_t &elem_type)
+  LLC_IMPORTER_GEN_TYPE(mlir::ShapedType, const ONNX_NAMESPACE::Value *value)
+  static mlir::ArrayAttr get_array_attr_from(
+      mlir::Builder *builder, const ONNX_NAMESPACE::Node &node,
+      const ONNX_NAMESPACE::BuiltinSymbol &kind);
+
  protected:
   bool init_model_(const mlir::StringRef filename,
                    ONNX_NAMESPACE::ModelProto *model);
