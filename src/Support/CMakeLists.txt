@@ -1,12 +1,11 @@
-llcompiler_add_library(LLCompilerSupport
+llcompiler_add_library(LLCSupport
     SRC_FILES
-    Core.cpp
     Logger.cpp
     Option.cpp
 
-    LINKS
-    PUBLIC
+    LINKS PUBLIC
     LLVMOption
+
     PRIVATE
     spdlog
 )

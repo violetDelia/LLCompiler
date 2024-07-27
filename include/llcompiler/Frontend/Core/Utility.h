@@ -11,3 +11,25 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#ifndef INCLUDE_LLCOMPILER_FRONTEND_CORE_UTILITY_H_
+#define INCLUDE_LLCOMPILER_FRONTEND_CORE_UTILITY_H_
+/**
+ * @file Utility.h
+ * @brief utility function about import
+ * @author 时光丶人爱 (1733535832@qq.com)
+ * @version 1.0
+ * @date 2024-07-01
+ *
+ * @copyright Copyright (c) 2024 时光丶人爱
+ *
+ */
+
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Core/Importer.h"
+
+namespace llc::front {
+ImporterOption get_importer_option();
+
+}  // namespace llc::front
+
+#endif  // INCLUDE_LLCOMPILER_FRONTEND_CORE_UTILITY_H_

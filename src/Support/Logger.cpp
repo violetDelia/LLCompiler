@@ -12,23 +12,50 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <chrono>
 #include <cstddef>
+#include <cstring>
+#include <ctime>
 #include <filesystem>
 #include <iomanip>
 #include <memory>
 #include <sstream>
 #include <string>
-#include <type_traits>
+#include <vector>
 
-#include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "spdlog/common.h"
+#include "spdlog/fmt/bundled/core.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "spdlog/spdlog.h"
 
+namespace llc {
+
+/**********  log module define  **********/
+const char *GLOBAL = "global";
+const char *IMPORTER = "importer";
+const char *LLH = "llh";
+}  // namespace llc
+
 namespace llc::logger {
+
+const char *log_lever_to_str(const LOG_LEVER lever) {
+  switch (lever) {
+    case LOG_LEVER::DEBUG_:
+      return "debug";
+    case LOG_LEVER::INFO_:
+      return "info";
+    case LOG_LEVER::WARN_:
+      return "warn";
+    case LOG_LEVER::ERROR_:
+      return "error";
+    case LOG_LEVER::FATAL_:
+      return "fatal";
+  }
+  return "unimplemented";
+}
 
 void register_logger(const char *module, const char *root_path,
                      const LOG_LEVER lever) {

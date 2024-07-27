@@ -14,7 +14,6 @@
 
 #include <string>
 
-#include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
@@ -42,42 +41,5 @@ llvm::cl::opt<logger::LOG_LEVER> logLevel(
         clEnumValN(logger::LOG_LEVER::FATAL_,
                    logger::log_lever_to_str(logger::LOG_LEVER::FATAL_), "")),
     llvm::cl::init(logger::LOG_LEVER::DEBUG_), llvm::cl::cat(commonOptions));
-
-llvm::cl::OptionCategory importingOptions("importer options",
-                                          "config for importing models");
-
-llvm::cl::opt<importer::IMPORTER_TYPE> importingType(
-    "import-type", llvm::cl::desc("the type of modle how to import"),
-    llvm::cl::values(clEnumValN(importer::IMPORTER_TYPE::ONNX_FILE, "onnx_file",
-                                "onnx model")),
-    llvm::cl::init(importer::IMPORTER_TYPE::ONNX_FILE),
-    llvm::cl::cat(importingOptions));
-
-llvm::cl::opt<std::string> importingPath(
-    "import-file", llvm::cl::desc("the path of the file to import"),
-    llvm::cl::value_desc("model file"), llvm::cl::init(""),
-    llvm::cl::cat(importingOptions));
-
-llvm::cl::opt<importer::TARGET_DIALECT> importintDialect(
-    "import-to", llvm::cl::desc("the dialect to convert in importer"),
-    llvm::cl::values(clEnumValN(importer::TARGET_DIALECT::LLH, "llh",
-                                "convert to llh dialect")),
-    llvm::cl::init(importer::TARGET_DIALECT::LLH),
-    llvm::cl::cat(importingOptions));
-
-llvm::cl::opt<bool> onnxConvert(
-    "whether convert onnx verison",
-    llvm::cl::desc("onnx version convert will make some error in "
-                   "ONNX_NAMESPACE::ConvertVersion,it "
-                   "best to input onnx file verison of 22"),
-    llvm::cl::value_desc("version"), llvm::cl::init(false),
-    llvm::cl::cat(importingOptions));
-
-llvm::cl::opt<uint64_t> onnxConvertVersion(
-    "onnx-version",
-    llvm::cl::desc("the onnx model will convert to onnx-version before "
-                   "lowering to dialect,default convert to 16"),
-    llvm::cl::value_desc("version"), llvm::cl::init(22),
-    llvm::cl::cat(importingOptions));
 
 }  // namespace llc::option

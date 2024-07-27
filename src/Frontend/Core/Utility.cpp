@@ -11,3 +11,23 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+
+#include <any>
+#include <cstddef>
+#include <memory>
+
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Core/Importer.h"
+#include "llcompiler/Frontend/Core/Option.h"
+#include "llcompiler/Frontend/Core/Utility.h"
+
+namespace llc::front {
+
+ImporterOption get_importer_option() {
+  return {.filename = option::importingPath,
+          .onnx_convert = option::onnxConvert,
+          .onnx_convert_version = option::onnxConvertVersion,
+          .frontend_type = option::frontendType};
+}
+
+}  // namespace llc::front

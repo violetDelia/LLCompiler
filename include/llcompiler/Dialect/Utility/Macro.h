@@ -13,6 +13,9 @@
 //    limitations under the License.
 //
 
+#ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_
+#define INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_
+
 #include "mlir/IR/Builders.h"
 
 #define LLC_LOG_BUILDED_OP(OP) \
@@ -20,3 +23,4 @@
 
 #define LLC_BUILD_OP(builder, Op, ...) \
   builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+#endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_

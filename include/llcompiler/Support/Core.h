@@ -28,7 +28,6 @@
 #else
 #define LLC_CONSTEXPR
 #endif  // __cplusplus > 201703L
-
 #include <utility>
 /**********  alias define  **********/
 #define ALIAS_CLASS(Alias_Class, Original_Class) \
@@ -42,35 +41,4 @@
                                              std::forward<Args>(args)...)) { \
     return Original_Func(std::forward<Args>(args)...);                       \
   }
-namespace llc {
-/**********  ENUM define  **********/
-namespace logger {
-enum class LOG_LEVER {
-  DEBUG_ = 1,
-  INFO_ = 2,
-  WARN_ = 3,
-  ERROR_ = 4,
-  FATAL_ = 5,
-};
-
-const char *log_lever_to_str(const LOG_LEVER lever);
-}  // namespace logger
-
-namespace importer {
-enum class IMPORTER_TYPE { ONNX_FILE = 1 };
-const char *importer_type_to_str(const IMPORTER_TYPE type);
-enum class TARGET_DIALECT { LLH = 1 };
-const char *target_dialect_to_str(const TARGET_DIALECT dialect);
-
-}  // namespace importer
-
-/**********  log module extern  **********/
-extern const char *GLOBAL;
-extern const char *IMPORTER;
-extern const char *LLH;
-// recommended onnx version
-extern const int64_t ONNX_ADAPTED_VERSION;
-
-}  // namespace llc
-
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_CORE_H_

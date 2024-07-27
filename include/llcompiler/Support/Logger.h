@@ -25,12 +25,27 @@
 #ifndef INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
 #define INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
 #include <cstddef>
-#include <cstdint>
 #include <sstream>
 
-#include "llcompiler/Support/Core.h"
+namespace llc {
+/**********  log module extern  **********/
+extern const char *GLOBAL;
+extern const char *IMPORTER;
+extern const char *LLH;
+};  // namespace llc
 
 namespace llc::logger {
+
+enum class LOG_LEVER {
+  DEBUG_ = 1,
+  INFO_ = 2,
+  WARN_ = 3,
+  ERROR_ = 4,
+  FATAL_ = 5,
+};
+
+const char *log_lever_to_str(const LOG_LEVER lever);
+
 class Logger;
 class LoggerStream;
 
@@ -82,6 +97,7 @@ NullStream &NullStream::operator<<(const Ty val) {
 }
 
 }  // namespace llc::logger
+
 #ifdef LLCOMPILER_HAS_LOG
 #define LLCOMPILER_INIT_LOGGER(module, root, lever) \
   ::llc::logger::register_logger(module, root, lever);

@@ -15,9 +15,32 @@
 #include <any>
 
 #include "llcompiler/Compiler/Utility.h"
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Onnx/OnnxImporter.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
+#include "mlir/IR/MLIRContext.h"
+#include "mlir/IR/OwningOpRef.h"
+#include "mlir/ir/BuiltinOps.h"
 
+namespace llc::compiler {
 
-namespace llc::compiler {}  // namespace llc::compiler
+mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
+    mlir::MLIRContext *context, const front::ImporterOption &option) {
+  INFO(IMPORTER) << "---------- Begin Importing ----------";
+  INFO(IMPORTER) << "import tpye is: "
+                 << frontend_type_to_str(option.frontend_type);
+
+  switch (option.frontend_type) {
+    case llc::front::FRONTEND_TYPE::ONNX_FILE: {
+      INFO(IMPORTER) << "onnx file path is: " << option.filename.c_str();
+      return front::OnnxImporter(context, option).export_mlir_module();
+    }
+    default:
+      FATAL(IMPORTER) << "Unimplemented importer type: "
+                      << frontend_type_to_str(option.frontend_type);
+      return {};
+  }
+}
+}  // namespace llc::compiler

@@ -24,7 +24,6 @@
  */
 #ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 #define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#include <any>
 namespace llc {
 
 void init_compiler(int argc, char **argv);

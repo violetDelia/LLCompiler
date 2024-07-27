@@ -11,3 +11,19 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include <cstdint>
+
+#include "llcompiler/Frontend/Core/Base.h"
+
+namespace llc::front {
+const int64_t ONNX_ADAPTED_VERSION = 22;
+
+const char *frontend_type_to_str(const FRONTEND_TYPE type) {
+  switch (type) {
+    case FRONTEND_TYPE::ONNX_FILE:
+      return "onnx_file";
+  }
+  return "unimplemented";
+}
+
+}  // namespace llc::front

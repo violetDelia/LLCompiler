@@ -11,3 +11,18 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include <utility>
+
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Core/Importer.h"
+#include "mlir/IR/MLIRContext.h"
+
+
+namespace llc::front {
+
+Importer::Importer(mlir::MLIRContext *context, const ImporterOption &options)
+    : builder_(context), option_(std::move(options)) {}
+
+Importer::~Importer() {}
+
+};  // namespace llc::front

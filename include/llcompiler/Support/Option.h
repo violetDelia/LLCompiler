@@ -23,11 +23,10 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
-#include <any>
-#include <cstdint>
+
 #include <string>
 
-#include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/Support/CommandLine.h"
 
 namespace llc::option {
@@ -35,12 +34,7 @@ namespace llc::option {
 extern llvm::cl::OptionCategory commonOption;
 extern llvm::cl::opt<std::string> logRoot;
 extern llvm::cl::opt<llc::logger::LOG_LEVER> logLevel;
-extern llvm::cl::OptionCategory importingOptions;
-extern llvm::cl::opt<importer::IMPORTER_TYPE> importingType;
-extern llvm::cl::opt<std::string> importingPath;
-extern llvm::cl::opt<importer::TARGET_DIALECT> importintDialect;
-extern llvm::cl::opt<uint64_t> onnxConvertVersion;
-extern llvm::cl::opt<bool> onnxConvert;
+
 }  // namespace llc::option
 
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_OPTION_H_

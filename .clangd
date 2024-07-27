@@ -17,10 +17,11 @@ CompileFlags:
   -IC:/LLCompiler/other_party/MegCC/compiler/lib/,
   ]
 Diagnostics:
-  UnusedIncludes: None  
+  UnusedIncludes: Strict
+  MissingIncludes: Strict
 
 InlayHints:
-  BlockEnd: No
+  BlockEnd: Yes
   Designators: Yes
   Enabled: Yes
   ParameterNames: Yes

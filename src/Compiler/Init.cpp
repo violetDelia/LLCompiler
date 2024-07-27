@@ -15,7 +15,8 @@
 #include <string>
 
 #include "llcompiler/Compiler/Init.h"
-#include "llcompiler/Support/Core.h"
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Core/Option.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
@@ -37,11 +38,9 @@ void init_compiler(int argc, char **argv) {
   llvm::cl::ParseCommandLineOptions(
       argc, argv, "LLCompiler: A graph compiler for ONNX models");
   init_logger_({GLOBAL, IMPORTER});
-  INFO(GLOBAL) << "import type is: "
-               << importer::importer_type_to_str(option::importingType);
+  INFO(GLOBAL) << "frontend type is: "
+               << front::frontend_type_to_str(option::frontendType);
   INFO(GLOBAL) << "import file is: " << option::importingPath.getValue();
-  INFO(GLOBAL) << "importer target dialect is: "
-               << importer::target_dialect_to_str(option::importintDialect);
 }
 
 }  // namespace llc
