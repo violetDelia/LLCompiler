@@ -1,13 +1,15 @@
-add_mlir_library(LLCLLHPasses
-  LLHPasses.cpp
+add_mlir_library(MLIRLLHTransforms
+  Passes.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include/llcompiler/Dialect/LLH/Transforms
 
   DEPENDS
-  MLIRLLHPassesIncGen
+  MLIRLLHDialectIncGen
+  MLIRLLHPassIncGen
 
   LINK_LIBS PUBLIC
-  LLCLLHDialect
+  MLIRLLHDialect
+  MLIRPass
 )
-llcompiler_install_mlir_library(LLCLLHPasses)
+llcompiler_install_mlir_library(MLIRLLHTransforms TRANSFORM)

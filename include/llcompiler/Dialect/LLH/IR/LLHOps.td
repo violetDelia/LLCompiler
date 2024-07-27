@@ -14,7 +14,7 @@
 #ifndef LLH_OPS
 #define LLH_OPS
 include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
-include "llcompiler/Dialect/LLH/IR/LLHTypeConstraints.td"
+include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
 include "llcompiler/Dialect/LLH/IR/LLHEnums.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"

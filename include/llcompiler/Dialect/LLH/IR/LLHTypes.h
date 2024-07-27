@@ -25,7 +25,7 @@
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/IR/ExtensibleDialect.h"
 
-namespace mlir::llc::llh {
+namespace mlir::llh {
 namespace detail {
 struct TensorTypeStorage;
 }  // namespace detail
@@ -77,14 +77,14 @@ inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
   return os;
 }
 
-}  // namespace mlir::llc::llh
+}  // namespace mlir::llh
 
 namespace mlir {
 template <>
-struct FieldParser<llc::llh::DynamicDim> {
-  static FailureOr<llc::llh::DynamicDim> parse(AsmParser &parser) {
+struct FieldParser<llh::DynamicDim> {
+  static FailureOr<llh::DynamicDim> parse(AsmParser &parser) {
     UNIMPLEMENTED(::llc::IMPORTER);
-    return mlir::llc::llh::DynamicDim(1);
+    return mlir::llh::DynamicDim(1);
   }
 };
 }  // namespace mlir

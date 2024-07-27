@@ -21,8 +21,8 @@
 int main(int argc, char **argv) {
   llc::init_compiler(argc, argv);
   mlir::MLIRContext context;
-  context.getOrLoadDialect<llc::llh::LLHDialect>();
+  context.getOrLoadDialect<mlir::llh::LLHDialect>();
   auto import_option = llc::importer::get_importer_option();
-  auto module = llc::importer::gen_mlir_from_to(&context, import_option);
+  auto module = llc::importer::gen_mlir_from(&context, import_option);
   return 0;
 }

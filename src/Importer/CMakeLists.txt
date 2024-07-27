@@ -15,11 +15,11 @@ llcompiler_add_library(LLCompilerImporter
     LINKS
     PUBLIC
     LLCompilerSupport
-    LLCLLHDialect
     PRIVATE
     onnx
     LLVMOption
     LLCMLIRUtility
+    MLIRLLHDialect
 )
 
 if(LLCOMPILER_BUILD_WITH_ONNX_ML)

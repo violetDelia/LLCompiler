@@ -11,8 +11,8 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLH_TYPE_CONSTRAINTS
-#define LLH_TYPE_CONSTRAINTS
+#ifndef LLH_CONSTRAINTS
+#define LLH_CONSTRAINTS
 include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
 
 def LLH_AnyType   : Type<CPred<"true">, "any type">;
@@ -86,4 +86,4 @@ class DenseElementsAttrBase<Pred condition, string summary> :
 def DenseElementsAttr : DenseElementsAttrBase<CPred<"::llvm::isa<::mlir::DenseElementsAttr>($_self)">,
                                     "constant vector/tensor attribute">;
 
-#endif // LLH_TYPE_CONSTRAINTS
+#endif // LLH_CONSTRAINTS

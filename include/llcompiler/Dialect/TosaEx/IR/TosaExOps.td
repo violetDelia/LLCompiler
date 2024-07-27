@@ -11,12 +11,16 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#ifndef LLH_TOSAEX_OPS
+#define LLH_TOSAEX_OPS
+include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.td"
+include "llcompiler/Dialect/TosaEx/IR/TosaExConstraints.td"
+include "llcompiler/Dialect/TosaEx/IR/TosaExEnums.td"
+include "llcompiler/Dialect/TosaEx/IR/TosaExInterfaces.td"
+include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 
-#include "mlir/IR/Builders.h"
 
-#define LLC_LOG_BUILDED_OP(OP) \
-  DEBUG(IMPORTER) << "create a " << OP::getOperationName().str() << "op.";
 
-#define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+
+#endif // LLH_TOSAEX_OPS

@@ -23,7 +23,7 @@
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/IR/OpImplementation.h"
 
-namespace mlir::llc::llh {
+namespace mlir::llh {
 
 namespace detail {
 //===----------------------------------------------------------------------===//
@@ -31,16 +31,16 @@ namespace detail {
 //===----------------------------------------------------------------------===//
 struct TensorTypeStorage : public ::mlir::TypeStorage {
   using KeyTy =
-      std::tuple<::llvm::ArrayRef<::mlir::llc::llh::DynamicDim>, ::mlir::Type>;
-  TensorTypeStorage(::llvm::ArrayRef<::mlir::llc::llh::DynamicDim> dims,
+      std::tuple<::llvm::ArrayRef<::mlir::llh::DynamicDim>, ::mlir::Type>;
+  TensorTypeStorage(::llvm::ArrayRef<::mlir::llh::DynamicDim> dims,
                     ::mlir::Type type)
       : dims(std::move(dims)), type(std::move(type)) {
     print_info << __func__;
   }
 
-  static ::llvm::ArrayRef<::mlir::llc::llh::DynamicDim *> new_dims(
-      ::llvm::ArrayRef<::mlir::llc::llh::DynamicDim> dims) {
-    llvm::SmallVector<::mlir::llc::llh::DynamicDim *, 4> new_dims;
+  static ::llvm::ArrayRef<::mlir::llh::DynamicDim *> new_dims(
+      ::llvm::ArrayRef<::mlir::llh::DynamicDim> dims) {
+    llvm::SmallVector<::mlir::llh::DynamicDim *, 4> new_dims;
     for (auto dim : dims) {
       new_dims.push_back(&dim);
     }
@@ -75,14 +75,14 @@ struct TensorTypeStorage : public ::mlir::TypeStorage {
         TensorTypeStorage(std::move(dims), std::move(type));
   }
 
-  ::llvm::ArrayRef<::mlir::llc::llh::DynamicDim> dims;
+  ::llvm::ArrayRef<::mlir::llh::DynamicDim> dims;
   ::mlir::Type type;
 };
 }  // namespace detail
 //===----------------------------------------------------------------------===//
 // TensorType
 //===----------------------------------------------------------------------===//
-::llvm::ArrayRef<::mlir::llc::llh::DynamicDim> TensorType::getDims() const {
+::llvm::ArrayRef<::mlir::llh::DynamicDim> TensorType::getDims() const {
   getImpl()->dims;
 }
 ::mlir::Type TensorType::getType() const { getImpl()->type; }
@@ -106,19 +106,19 @@ void printSIGNED_TAG(::mlir::AsmPrinter &printer, SIGNED_TAG tag) {
 }
 
 llvm::ParseResult parseSIGNED_TAG(::mlir::AsmParser &parser, SIGNED_TAG &tag) {
-  WARN_UNIMPLEMENTED(::llc::LLH);
+  WARN_UNIMPLEMENTED(llc::LLH);
   return mlir::success();
 }
 
 void printDynamicDim(::mlir::AsmPrinter &printer,
-                     ::llvm::ArrayRef<::mlir::llc::llh::DynamicDim> dim) {
+                     ::llvm::ArrayRef<::mlir::llh::DynamicDim> dim) {
   printer << "u";
 }
 
 llvm::ParseResult parseDynamicDim(
     ::mlir::AsmParser &parser,
-    llvm::SmallVector<::mlir::llc::llh::DynamicDim> &dim) {
-  WARN_UNIMPLEMENTED(::llc::LLH);
+    llvm::SmallVector<::mlir::llh::DynamicDim> &dim) {
+  WARN_UNIMPLEMENTED(llc::LLH);
   return mlir::success();
 }
 //===----------------------------------------------------------------------===//
@@ -136,10 +136,10 @@ llvm::ParseResult parseDynamicDim(
 
 ::llvm::LogicalResult TensorType::verify(
     llvm::function_ref<mlir::InFlightDiagnostic()>,
-    llvm::ArrayRef<::mlir::llc::llh::DynamicDim>, mlir::Type) {
+    llvm::ArrayRef<::mlir::llh::DynamicDim>, mlir::Type) {
   return llvm::success();
 }
-}  // namespace mlir::llc::llh
+}  // namespace mlir::llh
 
 #include "llcompiler/Dialect/LLH/IR/LLHEunms.cpp.inc"
 #define GET_ATTRDEF_CLASSES

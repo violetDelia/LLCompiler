@@ -11,12 +11,22 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
 
+#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.h"
+#include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/DialectImplementation.h"
+#include "mlir/IR/OpImplementation.h"
 
-#define LLC_LOG_BUILDED_OP(OP) \
-  DEBUG(IMPORTER) << "create a " << OP::getOperationName().str() << "op.";
-
-#define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+#define FIX_HEADER
+#include "llcompiler/Dialect/TosaEx/IR/TosaExEunms.cpp.inc"
+#undef FIX_HEADER
+#define GET_ATTRDEF_CLASSES
+#include "llcompiler/Dialect/TosaEx/IR/TosaExAttrs.cpp.inc"
+#define GET_TYPEDEF_CLASSES
+#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.cpp.inc"

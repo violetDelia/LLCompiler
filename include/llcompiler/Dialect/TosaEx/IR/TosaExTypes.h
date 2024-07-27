@@ -13,10 +13,19 @@
 //    limitations under the License.
 //
 
-#include "mlir/IR/Builders.h"
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_
+#include <atomic>
+#include <cstdint>
 
-#define LLC_LOG_BUILDED_OP(OP) \
-  DEBUG(IMPORTER) << "create a " << OP::getOperationName().str() << "op.";
+#include "llcompiler/Dialect/TosaEx/IR/TosaExEunms.h.inc"
+#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/DialectImplementation.h"
+#include "mlir/IR/ExtensibleDialect.h"
 
-#define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+#define GET_ATTRDEF_CLASSES
+#include "llcompiler/Dialect/TosaEx/IR/TosaExAttrs.h.inc"
+#define GET_TYPEDEF_CLASSES
+#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.h.inc"
+
+#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_

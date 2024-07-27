@@ -67,9 +67,24 @@ function(llcompiler_install_library name)
 endfunction()
 
 function(llcompiler_install_mlir_library name)
+    cmake_parse_arguments(ARG
+        "DIALECT, TRANSFORM"
+        ""
+        ""
+        ${ARGN}
+    )
     set_target_properties(${name} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_ALL_TARGETS ${name})
     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TARGETS ${name})
+
+    if(ARG_DIALECT)
+        set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_DIALECT ${name})
+    endif()
+
+    if(ARG_TRANSFORM)
+        set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TRANSFORM ${name})
+    endif()
+
     message("add MLIR lib: ${name}.")
     llcompiler_install_library(${name})
 endfunction()

@@ -11,24 +11,8 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#ifndef LLH_TOSAEX_CONSTRAINTS
+#define LLH_TOSAEX_CONSTRAINTS
+include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.td"
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_
-
-#include <memory>
-
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "mlir/Pass/Pass.h"
-
-namespace mlir::llc::llh {
-
-#define GEN_PASS_DECL
-#include "llcompiler/Dialect/LLH/Transforms/LLHPasses.h.inc"
-
-#define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/LLH/Transforms/LLHPasses.h.inc"
-}  // namespace mlir::llc::llh
-
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_
+#endif // LLH_TOSAEX_CONSTRAINTS

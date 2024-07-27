@@ -13,10 +13,17 @@
 //    limitations under the License.
 //
 
-#include "mlir/IR/Builders.h"
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
 
-#define LLC_LOG_BUILDED_OP(OP) \
-  DEBUG(IMPORTER) << "create a " << OP::getOperationName().str() << "op.";
+#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.h"
+#include "mlir/Bytecode/BytecodeOpInterface.h"
+#include "mlir/IR/Dialect.h"
+#include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OpImplementation.h"
+#include "mlir/Interfaces/InferTypeOpInterface.h"
+#include "mlir/Interfaces/SideEffectInterfaces.h"
 
-#define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+#define GET_OP_CLASSES
+#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.h.inc"
+#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_

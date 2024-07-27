@@ -47,7 +47,7 @@ class LLHOpBuilder : public OpBuilder {
   // ONNX_NAMESPACE::GraphProto& graph) override;
   LLC_OVERRIDE_OPBULDER_MLIRGEN(ONNX_NAMESPACE::Graph)
  private:
-  mlir::llc::llh::WeightOp gen_mlir_(
+  mlir::llh::WeightOp gen_mlir_(
       const ONNX_NAMESPACE::Tensor& tensor,
       std::map<std::string, mlir::ShapedType>* weight_shape_map);
 

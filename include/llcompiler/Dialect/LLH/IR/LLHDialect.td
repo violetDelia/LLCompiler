@@ -26,7 +26,7 @@ def LLH_Dialect : Dialect{
     let description = [{
      Top-level dialect for connecting LLC and other graph frameworks.
      }];
-    let cppNamespace = "::mlir::llc::llh";
+    let cppNamespace = "::mlir::llh";
     let useDefaultAttributePrinterParser = 1;
     let useDefaultTypePrinterParser = 1;
     let extraClassDeclaration = [{

@@ -13,10 +13,14 @@
 //    limitations under the License.
 //
 
-#include "mlir/IR/Builders.h"
+#include "llcompiler/Dialect/TosaEx/Transforms/Passes.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/PatternMatch.h"
+#include "mlir/Rewrite/FrozenRewritePatternSet.h"
+#include "mlir/Support/LogicalResult.h"
+#include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
-#define LLC_LOG_BUILDED_OP(OP) \
-  DEBUG(IMPORTER) << "create a " << OP::getOperationName().str() << "op.";
-
-#define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+namespace llc::tosa_ex {
+#define GEN_PASS_DEF_STANDALONESWITCHBARFOO
+#include "llcompiler/Dialect/TosaEx/Transforms/Passes.h.inc"
+}  // namespace llc::tosa_ex

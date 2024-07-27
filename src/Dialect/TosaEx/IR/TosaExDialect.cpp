@@ -11,28 +11,32 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
 
-// using namespace mlir;
+#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.h"
+#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.h"
+#include "mlir/Dialect/Quant/QuantOps.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
 
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
+#define FIX_HEADER
+#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.cpp.inc"
+#undef FIX_HEADER
 
-namespace mlir::llh {
+namespace mlir::tosa_ex {
 //===----------------------------------------------------------------------===//
-// LLHDialect initialize method.
+// TosaExDialect initialize method.
 //===----------------------------------------------------------------------===//
-void LLHDialect::initialize() {
+void TosaExDialect::initialize() {
   addOperations<
 #define GET_OP_LIST
-#include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
+#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.cpp.inc"
       >();
   registerTypes();
 }
 
 //===----------------------------------------------------------------------===//
-// LLHDialect initialize method.
+// TosaExDialect initialize method.
 //===----------------------------------------------------------------------===//
 
-}  // namespace mlir::llh
+}  // namespace mlir::tosa_ex

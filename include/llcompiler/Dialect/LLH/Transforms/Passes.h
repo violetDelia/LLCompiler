@@ -13,10 +13,22 @@
 //    limitations under the License.
 //
 
-#include "mlir/IR/Builders.h"
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_
 
-#define LLC_LOG_BUILDED_OP(OP) \
-  DEBUG(IMPORTER) << "create a " << OP::getOperationName().str() << "op.";
+#include <memory>
 
-#define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "mlir/Pass/Pass.h"
+
+namespace mlir::llh {
+
+#define GEN_PASS_DECL
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
+
+#define GEN_PASS_REGISTRATION
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
+}  // namespace mlir::llh
+
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_LLHPASSES_H_

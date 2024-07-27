@@ -12,16 +12,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
+#ifndef LLH_PASS
+#define LLH_PASS
 
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/IR/PatternMatch.h"
-#include "mlir/Rewrite/FrozenRewritePatternSet.h"
-#include "mlir/Support/LogicalResult.h"
-#include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+include "mlir/Pass/PassBase.td"
 
-#include "llcompiler/Dialect/LLH/Transforms/LLHPasses.h"
-
-namespace llc::llh {
-#define GEN_PASS_DEF_STANDALONESWITCHBARFOO
-#include "llcompiler/Dialect/LLH/Transforms/LLHPasses.h.inc"
-}
+#endif // LLH_PASS

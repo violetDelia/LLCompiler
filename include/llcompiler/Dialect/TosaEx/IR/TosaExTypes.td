@@ -11,12 +11,12 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
 
-#include "mlir/IR/Builders.h"
+#ifndef LLH_TOSAEX_TYPES
+#define LLH_TOSAEX_TYPES
 
-#define LLC_LOG_BUILDED_OP(OP) \
-  DEBUG(IMPORTER) << "create a " << OP::getOperationName().str() << "op.";
+include "mlir/IR/OpBase.td"
+include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.td"
+include "mlir/Dialect/Tosa/IR/TosaTypesBase.td"
 
-#define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+#endif // LLH_TOSAEX_TYPES

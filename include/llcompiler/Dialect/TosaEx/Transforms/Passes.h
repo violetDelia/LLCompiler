@@ -13,10 +13,22 @@
 //    limitations under the License.
 //
 
-#include "mlir/IR/Builders.h"
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
 
-#define LLC_LOG_BUILDED_OP(OP) \
-  DEBUG(IMPORTER) << "create a " << OP::getOperationName().str() << "op.";
+#include <memory>
 
-#define LLC_BUILD_OP(builder, Op, ...) \
-  builder.create<::mlir::Op>(builder.getUnknownLoc(), __VA_ARGS__)
+#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.h"
+#include "mlir/Pass/Pass.h"
+
+namespace mlir::tosa_ext {
+
+#define GEN_PASS_DECL
+#include "llcompiler/Dialect/TosaEx/Transforms/Passes.h.inc"
+
+#define GEN_PASS_REGISTRATION
+#include "llcompiler/Dialect/TosaEx/Transforms/Passes.h.inc"
+}  // namespace mlir::tosa_ext
+
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_

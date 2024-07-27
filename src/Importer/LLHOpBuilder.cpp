@@ -53,7 +53,7 @@
 
 namespace llc::importer {
 LLHOpBuilder::LLHOpBuilder(mlir::MLIRContext* context) : OpBuilder(context) {
-  context->getOrLoadDialect<mlir::llc::llh::LLHDialect>();
+  context->getOrLoadDialect<mlir::llh::LLHDialect>();
 }
 
 LLC_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, ONNX_NAMESPACE::Graph) {
@@ -106,13 +106,13 @@ LLC_OPBULDER_MLIRGEN_IMPL(LLHOpBuilder, ONNX_NAMESPACE::Graph) {
     auto data_begin = weight.data<Type>();                                   \
     auto value = mlir::DenseElementsAttr::get(                               \
         shape, llvm::ArrayRef<Type>(data_begin, data_begin + element_size)); \
-    return LLC_BUILD_LLC_OP(builder, WeightOp, value);                       \
+    return LLC_BUILD_OP(builder, llh::WeightOp, value);                      \
   }
 
-mlir::llc::llh::WeightOp LLHOpBuilder::gen_mlir_(
+mlir::llh::WeightOp LLHOpBuilder::gen_mlir_(
     const ONNX_NAMESPACE::Tensor& weight,
     std::map<std::string, mlir::ShapedType>* weight_shape_map) {
-  LLC_LOG_BUILDED_OP(mlir::llc::llh::WeightOp)
+  LLC_LOG_BUILDED_OP(mlir::llh::WeightOp)
   auto name = weight.name();
   auto shape = weight_shape_map->at(name);
   CHECK(IMPORTER, shape.hasStaticShape()) << "it not static shape for weight";
@@ -150,15 +150,12 @@ mlir::Operation* LLHOpBuilder::gen_mlir_(
       auto kernel_shape = GET_ATTR_FROM(builder_, node, kernel_shape);
       auto pads = GET_ATTR_FROM(builder_, node, pads);
       auto strides = GET_ATTR_FROM(builder_, node, strides);
-      return LLC_BUILD_LLC_OP(builder_, ConvOp, result,
-                              ::mlir::ValueRange{x, w}, dilations, kernel_shape,
-                              pads, strides);
     }
   }
   UNIMPLEMENTED(IMPORTER) << "unimplemented op generate: "
                           << node.kind().toString();
-  LLC_LOG_BUILDED_OP(mlir::llc::llh::UndefinedOp)
-  return LLC_BUILD_LLC_OP(builder_, UndefinedOp, node.kind().toString());
+  LLC_LOG_BUILDED_OP(mlir::llh::UndefinedOp)
+  return LLC_BUILD_OP(builder_, llh::UndefinedOp, node.kind().toString());
 }
 #undef GET_ATTR_FROM
 #undef IF_NODE_NAME_IS

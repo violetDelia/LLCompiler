@@ -1,5 +1,8 @@
-set(LLVM_TARGET_DEFINITIONS LLHPasses.td)
-mlir_tablegen(LLHPasses.h.inc --gen-pass-decls)
-add_public_tablegen_target(MLIRLLHPassesIncGen)
+set(LLVM_TARGET_DEFINITIONS Passes.td)
+mlir_tablegen(Passes.h.inc -gen-pass-decls -name LLHOpt)
+mlir_tablegen(PassesEnums.h.inc -gen-enum-decls)
+mlir_tablegen(PassesEnums.cpp.inc -gen-enum-defs)
+add_public_tablegen_target(MLIRLLHPassIncGen)
+add_dependencies(mlir-headers MLIRLLHPassIncGen)
 
 add_mlir_doc(LLHPasses LLHPasses LLH/ -gen-pass-doc)

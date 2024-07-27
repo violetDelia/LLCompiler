@@ -1,4 +1,4 @@
-add_mlir_dialect_library(LLCLLHDialect
+add_mlir_dialect_library(MLIRLLHDialect
     LLHTypes.cpp
     LLHDialect.cpp
     LLHOps.cpp
@@ -14,4 +14,4 @@ add_mlir_dialect_library(LLCLLHDialect
     MLIRInferTypeOpInterface
     MLIRFuncDialect
 )
-llcompiler_install_mlir_library(LLCLLHDialect)
+llcompiler_install_mlir_library(MLIRLLHDialect DIALECT)

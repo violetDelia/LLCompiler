@@ -43,7 +43,6 @@ int main(int argc, char **argv) {
       .importer_type = llc::importer::IMPORTER_TYPE::ONNX_FILE,
       .target_dialect = llc::importer::TARGET_DIALECT::LLH};
   mlir::MLIRContext context;
-  context.getOrLoadDialect<mlir::llc::llh::LLHDialect>();
   auto import_option = llc::importer::get_importer_option();
   auto module = llc::importer::gen_mlir_from(&context, options);
   return 0;
