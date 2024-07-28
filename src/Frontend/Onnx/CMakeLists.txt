@@ -10,8 +10,11 @@ llcompiler_add_library(LLCFrontendOnnx
     ${ABSL_INCLUDE_DIR}
 
     LINKS PUBLIC
+    MLIRSupport
     LLCSupport
     LLCFrontendCore
+    MLIRTosaDialect
+    MLIRLLHDialect
 
     PRIVATE
     onnx

@@ -15,19 +15,8 @@
 #ifndef INCLUDE_LLCOMPILER_FRONTEND_CORE_MACRO_H_
 #define INCLUDE_LLCOMPILER_FRONTEND_CORE_MACRO_H_
 
-#define LLC_INIT_MLIR_MODULE(Ty)                                          \
-  virtual void init_mlir_module(mlir::ModuleOp* module, const Ty& item) { \
-    UNIMPLEMENTED(IMPORTER);                                              \
-  }
-
-#define LLC_INIT_MLIR_MODULE_OVERRIDE(Ty) \
-  void init_mlir_module(mlir::ModuleOp* module, const Ty& item) final;
-
-#define LLC_INIT_MLIR_MODULE_IMPL(class, Ty) \
-  void class ::init_mlir_module(mlir::ModuleOp* module, const Ty& item)
-
 // Constraint function formatting
 #define LLC_MLIR_GEN(Return, ...) \
-  Return mlir_gen(mlir::Builder* builder, __VA_ARGS__) const;
+  Return mlir_gen(mlir::OpBuilder* builder, __VA_ARGS__) const;
 
 #endif  // INCLUDE_LLCOMPILER_FRONTEND_CORE_MACRO_H_

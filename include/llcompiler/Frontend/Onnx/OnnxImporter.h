@@ -24,21 +24,19 @@
 #ifndef INCLUDE_LLCOMPILER_FRONTEND_ONNX_ONNXIMPORTER_H_
 #define INCLUDE_LLCOMPILER_FRONTEND_ONNX_ONNXIMPORTER_H_
 #include <cstdint>
+#include <map>
+#include <string>
 
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Frontend/Core/Importer.h"
 #include "llcompiler/Frontend/Core/Macro.h"
-#include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/Builders.h"
-#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
-#include "mlir/IR/BuiltinTypeInterfaces.h"
-#include "mlir/IR/MLIRContext.h"
-#include "mlir/IR/OwningOpRef.h"
 #include "mlir/IR/Types.h"
 #include "mlir/Support/LLVM.h"
 #include "onnx/common/ir.h"
-#include "onnx/onnx-ml.pb.h"
 #include "onnx/onnx_pb.h"
 
 namespace llc::front {
@@ -50,6 +48,15 @@ class OnnxImporter : public Importer {
 
   LLC_MLIR_GEN(mlir::ModuleOp, const ONNX_NAMESPACE::ModelProto &model)
   LLC_MLIR_GEN(mlir::func::FuncOp, const ONNX_NAMESPACE::Graph &graph)
+  LLC_MLIR_GEN(mlir::ShapedType, const ONNX_NAMESPACE::Value &value)
+  LLC_MLIR_GEN(mlir::Type, const int32_t &elem_type)
+  LLC_MLIR_GEN(
+      llvm::SmallVector<mlir::Type>,
+      const ONNX_NAMESPACE::ArrayRef<const ONNX_NAMESPACE::Value *> &values)
+  LLC_MLIR_GEN(mlir::tosa::ConstOp, const ONNX_NAMESPACE::Tensor &weight,
+               std::map<std::string, mlir::ShapedType> *weight_shape_map)
+  LLC_MLIR_GEN(mlir::Operation *, const ONNX_NAMESPACE::Node &node,
+               std::map<std::string, mlir::Value *> *value_map)
 
  protected:
   bool init_model_(const mlir::StringRef filename,
@@ -65,7 +72,6 @@ class OnnxImporter : public Importer {
 
  protected:
   ONNX_NAMESPACE::ModelProto model_;
-  int64_t onnx_version_ = 22;
 };
 }  // namespace llc::front
 #endif  // INCLUDE_LLCOMPILER_FRONTEND_ONNX_ONNXIMPORTER_H_

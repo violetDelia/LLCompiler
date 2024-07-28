@@ -13,15 +13,4 @@
 //    limitations under the License.
 
 #include "llcompiler/Dialect/Utility/Builder.h"
-namespace llc::helper {
-void add_op_name_attr(mlir::Operation* op, llvm::StringRef name) {
-  op->setAttr(LLCOperationNmaeAttr,
-              mlir::StringAttr::get(op->getContext(), name));
-}
-
-void add_op_name_attr(mlir::Operation* op, std::string name) {
-  op->setAttr(LLCOperationNmaeAttr,
-              mlir::StringAttr::get(op->getContext(), name.c_str()));
-}
-
-}  // namespace llc::helper
+namespace llc {}  // namespace llc

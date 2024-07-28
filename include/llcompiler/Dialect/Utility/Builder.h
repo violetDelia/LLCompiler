@@ -22,20 +22,16 @@
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/IR/Attributes.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/Operation.h"
 
-namespace llc::helper {
+namespace llc {
 
-void add_op_name_attr(mlir::Operation* op, llvm::StringRef name);
-// void add_op_name_attr(mlir::Operation* op, std::string name);
-
-template <class... Args>
-void add_attr(mlir::Operation* op, const char* attr_name, Args... args) {
-  if (attr_name == LLCOperationNmaeAttr) {
-    return add_op_name_attr(op, std::forward<Args>(args)...);
-  }
-  UNIMPLEMENTED(LLH);
+template <class Op, class... Args>
+Op build_op(mlir::OpBuilder *builder, Args... args) {
+  return builder->create<Op>(builder->getUnknownLoc(),
+                             std::forward<Args>(args)...);
 }
 
-}  // namespace llc::helper
+}  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_

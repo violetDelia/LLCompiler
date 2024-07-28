@@ -23,6 +23,6 @@ Builder::Builder(mlir::MLIRContext* context) : builder_(context) {}
 
 Builder::~Builder() {}
 
-mlir::Builder& Builder::builder() { return builder_; }
+mlir::OpBuilder& Builder::builder() { return builder_; }
 
 };  // namespace llc::front

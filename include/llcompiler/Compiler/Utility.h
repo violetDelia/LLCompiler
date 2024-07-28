@@ -31,7 +31,6 @@
 #include "mlir/IR/OwningOpRef.h"
 #include "mlir/ir/BuiltinOps.h"
 
-
 namespace llc::compiler {
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
     mlir::MLIRContext *context, const front::ImporterOption &option);

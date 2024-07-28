@@ -20,7 +20,7 @@
 namespace llc::front {
 
 Importer::Importer(Builder *builder, const ImporterOption &option)
-    : builder_(builder), option_(std::move(option)) {}
+    : builder_(builder), option_(option) {}
 
 Importer::~Importer() {}
 

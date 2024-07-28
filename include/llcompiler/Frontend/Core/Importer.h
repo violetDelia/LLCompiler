@@ -42,21 +42,8 @@ class Importer {
   virtual mlir::ModuleOp export_mlir_module() const = 0;
 
  protected:
-  template <class Importer, class Container>
-  auto gen_types(mlir::Builder *builder, const Container &container);
-
- protected:
   Builder *builder_;
   const ImporterOption option_;
 };
-
-template <class Importer, class Container>
-auto gen_types(mlir::Builder *builder, const Container &container) {
-  return llvm::to_vector<1>(
-      llvm::map_range(container, [builder](auto value) -> mlir::Type {
-        return gen_type(builder, value);
-      }));
-}
 }  // namespace llc::front
-
 #endif  // INCLUDE_LLCOMPILER_FRONTEND_CORE_IMPORTER_H_

@@ -11,7 +11,8 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-
+#ifndef INCLUDE_LLCOMPILER_FRONTEND_ONNX_ONNXBUILDER_H_
+#define INCLUDE_LLCOMPILER_FRONTEND_ONNX_ONNXBUILDER_H_
 #include "llcompiler/Frontend/Core/Builder.h"
 #include "mlir/IR/MLIRContext.h"
 
@@ -21,3 +22,4 @@ class OnnxBuilder : public Builder {
   explicit OnnxBuilder(mlir::MLIRContext* context);
 };
 }  // namespace llc::front
+#endif  // INCLUDE_LLCOMPILER_FRONTEND_ONNX_ONNXBUILDER_H_

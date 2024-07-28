@@ -27,6 +27,5 @@ int main(int argc, char **argv) {
   mlir::MLIRContext context;
   auto import_option = llc::front::get_importer_option();
   auto module = llc::compiler::gen_mlir_from(&context, options);
-  llc::log(llc::GLOBAL, llc::logger::LOG_LEVER::DEBUG_) << "ccc";
   return 0;
 }

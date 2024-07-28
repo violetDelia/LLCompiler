@@ -14,8 +14,31 @@
 //
 #ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_
-namespace llc {
-extern const char *LLCOperationNmaeAttr;
+#include <utility>
 
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/StringRef.h"
+#include "mlir/IR/Attributes.h"
+#include "mlir/IR/Operation.h"
+
+namespace llc {
+extern const char* LLCOperationNmaeAttr;
 }
+
+namespace llc {
+
+void add_op_name_attr(mlir::Operation* op, llvm::StringRef name);
+// void add_op_name_attr(mlir::Operation* op, std::string name);
+
+template <class... Args>
+void add_attr(mlir::Operation* op, const char* attr_name, Args... args) {
+  if (attr_name == LLCOperationNmaeAttr) {
+    return add_op_name_attr(op, std::forward<Args>(args)...);
+  }
+  UNIMPLEMENTED(LLH);
+}
+
+}  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_
