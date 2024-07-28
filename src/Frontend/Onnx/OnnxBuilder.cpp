@@ -11,13 +11,16 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Frontend/Onnx/OnnxBuilder.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/MLIRContext.h"
 
 namespace llc::front {
 OnnxBuilder::OnnxBuilder(mlir::MLIRContext* context) : Builder(context) {
   context->getOrLoadDialect<mlir::func::FuncDialect>();
+  context->getOrLoadDialect<mlir::tosa::TosaDialect>();
+  context->getOrLoadDialect<mlir::llh::LLHDialect>();
 }
-
 };  // namespace llc::front

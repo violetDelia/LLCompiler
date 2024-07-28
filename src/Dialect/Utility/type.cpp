@@ -13,13 +13,14 @@
 //    limitations under the License.
 //
 #include <any>
+#include <cstddef>
 #include <cstdint>
 #include <numeric>
 #include <vector>
 
 #include "llcompiler/Dialect/Utility/Type.h"
 
-namespace llc::helper {
+namespace llc {
 
 int64_t get_element_size_form(const mlir::ShapedType& shape_type) {
   auto rank = shape_type.getRank();
@@ -30,4 +31,4 @@ int64_t get_element_size_form(const mlir::ShapedType& shape_type) {
   }
   return element_size;
 }
-}  // namespace llc::helper
+}  // namespace llc

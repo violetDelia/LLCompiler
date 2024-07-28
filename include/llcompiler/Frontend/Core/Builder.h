@@ -42,10 +42,10 @@ class Builder {
  public:
   explicit Builder(mlir::MLIRContext* context);
   virtual ~Builder();
-  mlir::Builder& builder();
+  mlir::OpBuilder& builder();
 
  protected:
-  mlir::Builder builder_;
+  mlir::OpBuilder builder_;
 };
 
 }  // namespace llc::front

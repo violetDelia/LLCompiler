@@ -12,34 +12,46 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 #include <cstdint>
+#include <cstring>
 #include <fstream>
 #include <ios>
+#include <map>
 #include <memory>
 #include <string>
 
 #include "google/protobuf/util/json_util.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Frontend/Core/Macro.h"
-#include "llcompiler/Frontend/Core/Option.h"
+#include "llcompiler/Frontend/Core/Builder.h"
+#include "llcompiler/Frontend/Core/Importer.h"
 #include "llcompiler/Frontend/Onnx/OnnxImporter.h"
-#include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
-#include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinAttributeInterfaces.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
-#include "mlir/IR/MLIRContext.h"
+#include "mlir/IR/Operation.h"
+#include "mlir/IR/TypeRange.h"
+#include "mlir/IR/Types.h"
+#include "mlir/IR/Value.h"
 #include "mlir/Support/FileUtilities.h"
 #include "mlir/Support/LLVM.h"
-#include "onnx/common/file_utils.h"
+#include "onnx/common/array_ref.h"
 #include "onnx/common/ir.h"
 #include "onnx/common/ir_pb_converter.h"
+#include "onnx/common/tensor.h"
 #include "onnx/shape_inference/implementation.h"
 #include "onnx/version_converter/convert.h"
 
@@ -48,7 +60,7 @@ bool OnnxImporter::init_model_form_json_(const mlir::StringRef &filename,
                                          ONNX_NAMESPACE::ModelProto *model) {
   WARN(IMPORTER) << "never used json file initialize onnx model -> "
                  << filename.str();
-  auto buf = mlir::openInputFile(filename);
+  std::unique_ptr<llvm::MemoryBuffer> buf = mlir::openInputFile(filename);
   if (!buf) {
     WRONG(IMPORTER) << "open json file " << filename.str() << " failed!";
     return false;
@@ -84,9 +96,9 @@ bool OnnxImporter::init_model_form_onnx_(const mlir::StringRef &filename,
 
 bool OnnxImporter::init_model_(const mlir::StringRef filename,
                                ONNX_NAMESPACE::ModelProto *model) {
-  std::string WRONG_msg;
   if (filename.ends_with(".json")) {
-    return init_model_form_json_(filename, model);
+    WARN(IMPORTER) << "json";
+    // return init_model_form_json_(filename, model);
   } else if (filename.ends_with(".onnx")) {
     return init_model_form_onnx_(filename, model);
   } else {
@@ -149,30 +161,147 @@ OnnxImporter::OnnxImporter(Builder *builder, const ImporterOption &option)
   INFO(IMPORTER) << "infer shapes of onnx model success!";
 }
 
-// mlir::TypeRange mlir_gen(
-//     mlir::Builder *builder,
-//     const ONNX_NAMESPACE::ArrayRef<const ONNX_NAMESPACE::Value *> values) {
-//   return llvm::to_vector<1>(
-//       llvm::map_range(values, [builder](auto value) -> mlir::Type {
-//         return mlir_gen(builder, value);
-//       }));
-// }
+mlir::Type OnnxImporter::mlir_gen(mlir::OpBuilder *builder,
+                                  const int32_t &elem_type) const {
+  switch (elem_type) {
+    case ONNX_NAMESPACE::TensorProto_DataType_FLOAT:
+      return builder->getF32Type();
+    case ONNX_NAMESPACE::TensorProto_DataType_FLOAT16:
+      return builder->getF16Type();
+    case ONNX_NAMESPACE::TensorProto_DataType_UINT8:
+      return builder->getIntegerType(8, mlir::IntegerType::Unsigned);
+    case ONNX_NAMESPACE::TensorProto_DataType_INT32:
+      return builder->getIntegerType(32, mlir::IntegerType::Signed);
+    case ONNX_NAMESPACE::TensorProto_DataType_INT64:
+      return builder->getIntegerType(64, mlir::IntegerType::Signed);
+    default:
+      UNIMPLEMENTED(IMPORTER) << "  onnx element type is " << elem_type << "!";
+  }
+  return mlir::Type();
+}
 
-// mlir::func::FuncOp OnnxImporter::mlir_gen(
-//     mlir::Builder *builder, const ONNX_NAMESPACE::Graph &graph) const {
-//   // std::map<std::string, mlir::Value> value_map;
-//   auto inputs = graph.inputs();
-//   auto func_inputs = mlir_gen(builder, graph.inputs());
-//   auto func_outputs = mlir_gen(builder, graph.outputs());
-//   auto func_type = builder->getFunctionType(func_inputs, func_outputs);
-//   auto func = LLC_BUILD_OP(builder_, func::FuncOp, item.name(), func_type);
-// }
+mlir::ShapedType OnnxImporter::mlir_gen(
+    mlir::OpBuilder *builder, const ONNX_NAMESPACE::Value &value) const {
+  llvm::SmallVector<int64_t> dims;
+  for (auto dim : value.sizes()) {
+    if (dim.dim < 0) {
+      dims.emplace_back(mlir::ShapedType::kDynamic);
+    } else {
+      dims.emplace_back(dim.dim);
+    }
+  }
+  auto type = mlir_gen(builder, value.elemType());
+  return mlir::RankedTensorType::get(dims, type);
+}
+
+llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
+    mlir::OpBuilder *builder,
+    const ONNX_NAMESPACE::ArrayRef<const ONNX_NAMESPACE::Value *> &values)
+    const {
+  llvm::SmallVector<mlir::Type> types;
+  for (auto &value : values) {
+    types.push_back(mlir_gen(builder, *value));
+  }
+  return types;
+}
+
+#define CREATE_WEIGHT_OP_FROM_ONNX(Onnx_Type, Type, weight, shape, builder)  \
+  if (weight.elem_type() ==                                                  \
+      ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                    \
+    auto element_size = get_element_size_form(shape);                        \
+    auto data_begin = weight.data<Type>();                                   \
+    auto value = mlir::DenseElementsAttr::get(                               \
+        shape, llvm::ArrayRef<Type>(data_begin, data_begin + element_size)); \
+    return build_op<mlir::tosa::ConstOp>(builder, shape, value);             \
+  }
+
+mlir::tosa::ConstOp OnnxImporter::mlir_gen(
+    mlir::OpBuilder *builder, const ONNX_NAMESPACE::Tensor &weight,
+    std::map<std::string, mlir::ShapedType> *weight_shape_map) const {
+  auto name = weight.name();
+  auto shape = weight_shape_map->at(name);
+  CHECK(IMPORTER, shape.hasStaticShape()) << "it not static shape for weight ";
+  auto elem_type = shape.getElementType();
+  auto data = weight.data<int>();
+  if (elem_type != mlir_gen(builder, weight.elem_type())) {
+    WARN(IMPORTER) << "element_type of initializer is conflict!";
+  }
+  CREATE_WEIGHT_OP_FROM_ONNX(FLOAT, float, weight, shape, builder)
+  CREATE_WEIGHT_OP_FROM_ONNX(DOUBLE, double, weight, shape, builder)
+  CREATE_WEIGHT_OP_FROM_ONNX(INT32, int32_t, weight, shape, builder)
+  CREATE_WEIGHT_OP_FROM_ONNX(INT64, int64_t, weight, shape, builder)
+  CREATE_WEIGHT_OP_FROM_ONNX(UINT64, uint64_t, weight, shape, builder)
+  UNIMPLEMENTED(IMPORTER) << "unimplemented weight data type: "
+                          << weight.elem_type();
+}
+
+#undef CREATE_WEIGHT_OP_FROM_ONNX
+#define IF_NODE_NAME_IS(name) if (!strcmp(node.kind().toString(), name))
+
+mlir::Operation *OnnxImporter::mlir_gen(
+    mlir::OpBuilder *builder, const ONNX_NAMESPACE::Node &node,
+    std::map<std::string, mlir::Value *> *value_map) const {
+  IF_NODE_NAME_IS("Undefined") { return nullptr; }
+  UNIMPLEMENTED(IMPORTER) << "unimplemented op generate: "
+                          << node.kind().toString();
+  return build_op<mlir::llh::UndefinedOp>(builder, node.kind().toString());
+}
+
+// #undef IF_NODE_NAME_IS
+mlir::func::FuncOp OnnxImporter::mlir_gen(
+    mlir::OpBuilder *builder, const ONNX_NAMESPACE::Graph &graph) const {
+  INFO(IMPORTER) << "----- building func op-----";
+  auto inputs = graph.inputs();
+  auto func_inputs = mlir_gen(builder, graph.inputs());
+  auto func_outputs = mlir_gen(builder, graph.outputs());
+  auto func_type = builder->getFunctionType(func_inputs, func_outputs);
+  auto func = build_op<mlir::func::FuncOp>(builder, graph.name(), func_type);
+  std::map<std::string, mlir::Value *> value_map;
+  auto block = func.addEntryBlock();
+  auto inputs_size = inputs.size();
+  for (int i = 0; i < inputs_size; ++i) {
+    auto name = inputs[i]->uniqueName();
+    auto value = block->getArgument(i);
+    value_map[name] = &value;
+  }
+  std::set<std::string> weight_set;
+  for (auto weight_name : graph.initializer_names()) {
+    weight_set.insert(weight_name);
+  }
+  std::map<std::string, mlir::ShapedType> weight_shape_map;
+  for (auto node : graph.nodes()) {
+    for (auto &input : node->inputs()) {
+      auto name = input->uniqueName();
+      if (weight_set.find(name) == weight_set.end()) continue;
+      weight_shape_map[name] = mlir_gen(builder, *input);
+    }
+  }
+  INFO(IMPORTER) << "----- building weight ops -----";
+  for (auto &weight : graph.initializers()) {
+    auto weight_op = mlir_gen(builder, weight, &weight_shape_map);
+    add_attr(weight_op, LLCOperationNmaeAttr, weight.name());
+    block->push_back(weight_op);
+    auto value = weight_op.getResult();
+    value_map[weight.name()] = &value;
+  }
+  INFO(IMPORTER) << "----- building node ops -----";
+  for (auto node : graph.nodes()) {
+    auto op = mlir_gen(builder, *node, &value_map);
+    if (!op) continue;
+    add_attr(op, LLCOperationNmaeAttr, node->name());
+    block->push_back(op);
+  }
+
+  return func;
+}
 
 mlir::ModuleOp OnnxImporter::mlir_gen(
-    mlir::Builder *builder, const ONNX_NAMESPACE::ModelProto &model) const {
-  auto module = mlir::ModuleOp::create(builder->getUnknownLoc());
+    mlir::OpBuilder *builder, const ONNX_NAMESPACE::ModelProto &model) const {
+  INFO(IMPORTER) << "----- building module op -----";
+  auto module = build_op<mlir::ModuleOp>(builder);
   auto graph = ONNX_NAMESPACE::ImportModelProto(model);
-
+  auto func = mlir_gen(builder, *graph);
+  module.push_back(func);
   return module;
 }
 

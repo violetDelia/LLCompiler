@@ -15,6 +15,18 @@
 
 #include "llcompiler/Dialect/Utility/Attribute.h"
 namespace llc {
-const char *LLCOperationNmaeAttr = "op_name";
+const char* LLCOperationNmaeAttr = "op_name";
 
+}  // namespace llc
+
+namespace llc {
+void add_op_name_attr(mlir::Operation* op, llvm::StringRef name) {
+  op->setAttr(LLCOperationNmaeAttr,
+              mlir::StringAttr::get(op->getContext(), name));
 }
+
+void add_op_name_attr(mlir::Operation* op, std::string name) {
+  op->setAttr(LLCOperationNmaeAttr,
+              mlir::StringAttr::get(op->getContext(), name.c_str()));
+}
+}  // namespace llc
