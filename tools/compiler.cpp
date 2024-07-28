@@ -13,16 +13,16 @@
 //    limitations under the License.
 #include "iostream"
 #include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Compiler/Utility.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Importer/OnnxImporter.h"
-#include "llcompiler/Importer/Utility.h"
+#include "llcompiler/Frontend/Core/Option.h"
+#include "llcompiler/Frontend/Core/Utility.h"
 #include "llcompiler/Support/Core.h"
 
 int main(int argc, char **argv) {
-  llc::init_compiler(argc, argv);
+  llc::compiler::init_compiler(argc, argv);
   mlir::MLIRContext context;
-  context.getOrLoadDialect<mlir::llh::LLHDialect>();
-  auto import_option = llc::importer::get_importer_option();
-  auto module = llc::importer::gen_mlir_from(&context, import_option);
+  auto import_option = llc::front::get_importer_option();
+  auto module = llc::compiler::gen_mlir_from(&context, import_option);
   return 0;
 }

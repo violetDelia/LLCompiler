@@ -27,6 +27,8 @@
 
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Frontend/Core/Importer.h"
+#include "llcompiler/Frontend/Core/Macro.h"
+#include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -36,15 +38,18 @@
 #include "mlir/IR/Types.h"
 #include "mlir/Support/LLVM.h"
 #include "onnx/common/ir.h"
+#include "onnx/onnx-ml.pb.h"
 #include "onnx/onnx_pb.h"
-
 
 namespace llc::front {
 class OnnxImporter : public Importer {
  public:
-  OnnxImporter(mlir::MLIRContext *context, const ImporterOption &option);
+  OnnxImporter(Builder *builder, const ImporterOption &option);
 
   mlir::ModuleOp export_mlir_module() const final;
+
+  LLC_MLIR_GEN(mlir::ModuleOp, const ONNX_NAMESPACE::ModelProto &model)
+  LLC_MLIR_GEN(mlir::func::FuncOp, const ONNX_NAMESPACE::Graph &graph)
 
  protected:
   bool init_model_(const mlir::StringRef filename,
@@ -58,6 +63,7 @@ class OnnxImporter : public Importer {
   ONNX_NAMESPACE::ModelProto conver_model_version_to_(
       ONNX_NAMESPACE::ModelProto *model, const int64_t version);
 
+ protected:
   ONNX_NAMESPACE::ModelProto model_;
   int64_t onnx_version_ = 22;
 };

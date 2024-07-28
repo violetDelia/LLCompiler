@@ -1,5 +1,4 @@
 //    Copyright 2024 时光丶人爱
-
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
@@ -12,21 +11,13 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-/**
- * @file Init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-namespace llc::compiler {
+#include "llcompiler/Frontend/Onnx/OnnxBuilder.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/MLIRContext.h"
 
-void init_compiler(int argc, char **argv);
+namespace llc::front {
+OnnxBuilder::OnnxBuilder(mlir::MLIRContext* context) : Builder(context) {
+  context->getOrLoadDialect<mlir::func::FuncDialect>();
+}
 
-}  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+};  // namespace llc::front

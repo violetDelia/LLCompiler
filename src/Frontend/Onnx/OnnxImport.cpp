@@ -19,6 +19,7 @@
 
 #include "google/protobuf/util/json_util.h"
 #include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Core/Macro.h"
 #include "llcompiler/Frontend/Core/Option.h"
 #include "llcompiler/Frontend/Onnx/OnnxImporter.h"
 #include "llcompiler/Support/Core.h"
@@ -27,6 +28,8 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
@@ -36,6 +39,7 @@
 #include "mlir/Support/LLVM.h"
 #include "onnx/common/file_utils.h"
 #include "onnx/common/ir.h"
+#include "onnx/common/ir_pb_converter.h"
 #include "onnx/shape_inference/implementation.h"
 #include "onnx/version_converter/convert.h"
 
@@ -122,9 +126,8 @@ ONNX_NAMESPACE::ModelProto OnnxImporter::conver_model_version_to_(
   return ONNX_NAMESPACE::version_conversion::ConvertVersion(*model, version);
 }
 
-OnnxImporter::OnnxImporter(mlir::MLIRContext *context,
-                           const ImporterOption &option)
-    : Importer(context, option) {
+OnnxImporter::OnnxImporter(Builder *builder, const ImporterOption &option)
+    : Importer(builder, option) {
   switch (option.frontend_type) {
     case FRONTEND_TYPE::ONNX_FILE:
       init_model_(option.filename, &model_);
@@ -146,7 +149,36 @@ OnnxImporter::OnnxImporter(mlir::MLIRContext *context,
   INFO(IMPORTER) << "infer shapes of onnx model success!";
 }
 
+// mlir::TypeRange mlir_gen(
+//     mlir::Builder *builder,
+//     const ONNX_NAMESPACE::ArrayRef<const ONNX_NAMESPACE::Value *> values) {
+//   return llvm::to_vector<1>(
+//       llvm::map_range(values, [builder](auto value) -> mlir::Type {
+//         return mlir_gen(builder, value);
+//       }));
+// }
+
+// mlir::func::FuncOp OnnxImporter::mlir_gen(
+//     mlir::Builder *builder, const ONNX_NAMESPACE::Graph &graph) const {
+//   // std::map<std::string, mlir::Value> value_map;
+//   auto inputs = graph.inputs();
+//   auto func_inputs = mlir_gen(builder, graph.inputs());
+//   auto func_outputs = mlir_gen(builder, graph.outputs());
+//   auto func_type = builder->getFunctionType(func_inputs, func_outputs);
+//   auto func = LLC_BUILD_OP(builder_, func::FuncOp, item.name(), func_type);
+// }
+
+mlir::ModuleOp OnnxImporter::mlir_gen(
+    mlir::Builder *builder, const ONNX_NAMESPACE::ModelProto &model) const {
+  auto module = mlir::ModuleOp::create(builder->getUnknownLoc());
+  auto graph = ONNX_NAMESPACE::ImportModelProto(model);
+
+  return module;
+}
+
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
+  auto builder = builder_->builder();
+  auto module = mlir_gen(&builder, model_);
   // auto func = build_->build().create<mlir::FuncOp>(
   //     m_builder.getUnknownLoc(), g->name(),
   //     get_func_type(g->inputs(), g->outputs()));
@@ -158,7 +190,7 @@ mlir::ModuleOp OnnxImporter::export_mlir_module() const {
   // mainFunc.getBody().push_back(new mlir::Block);
   // builder_->builder_.setInsertionPointToStart(&mainFunc.getBody().back());
   // std::cout << std::addressof(*mainFunc.getOperation());
-  // module->dump();
+  module->dump();
   UNIMPLEMENTED(IMPORTER);
   return {};
 }

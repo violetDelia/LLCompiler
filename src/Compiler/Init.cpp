@@ -23,7 +23,7 @@
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/MLIRContext.h"
 
-namespace llc {
+namespace llc::compiler {
 
 void init_logger_(std::initializer_list<std::string> modules) {
   for (auto &module : modules) {
@@ -43,4 +43,4 @@ void init_compiler(int argc, char **argv) {
   INFO(GLOBAL) << "import file is: " << option::importingPath.getValue();
 }
 
-}  // namespace llc
+}  // namespace llc::compiler

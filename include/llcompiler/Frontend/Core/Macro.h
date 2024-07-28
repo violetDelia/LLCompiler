@@ -26,10 +26,8 @@
 #define LLC_INIT_MLIR_MODULE_IMPL(class, Ty) \
   void class ::init_mlir_module(mlir::ModuleOp* module, const Ty& item)
 
-#define LLC_MLIR_GEN(Return, class, ...) \
-  Return mlir_gen(mlir::OpBuilder* builder, __VA_ARGS__);
-
-#define LLC_MLIR_GEN_IMPL(Return, class, ...) \
-  Return class ::mlir_gen(mlir::OpBuilder* builder, __VA_ARGS__)
+// Constraint function formatting
+#define LLC_MLIR_GEN(Return, ...) \
+  Return mlir_gen(mlir::Builder* builder, __VA_ARGS__) const;
 
 #endif  // INCLUDE_LLCOMPILER_FRONTEND_CORE_MACRO_H_

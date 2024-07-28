@@ -118,3 +118,12 @@ LoggerStream::~LoggerStream() {
 }
 
 }  // namespace llc::logger
+
+// unused
+namespace llc {
+
+logger::LoggerStream log(const char *module, const logger::LOG_LEVER lever) {
+  logger::Logger(module, lever).stream(true) << "in";
+  return logger::Logger(module, lever).stream(true);
+}
+}  // namespace llc

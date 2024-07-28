@@ -17,11 +17,10 @@
 #include "llcompiler/Frontend/Core/Importer.h"
 #include "mlir/IR/MLIRContext.h"
 
-
 namespace llc::front {
 
-Importer::Importer(mlir::MLIRContext *context, const ImporterOption &options)
-    : builder_(context), option_(std::move(options)) {}
+Importer::Importer(Builder *builder, const ImporterOption &option)
+    : builder_(builder), option_(std::move(option)) {}
 
 Importer::~Importer() {}
 

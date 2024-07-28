@@ -9,7 +9,6 @@ target_include_directories(compiler PRIVATE
 
 target_link_libraries(compiler
     PRIVATE
-    LLCompilerImporter
     LLCompiler
     MLIRLLHDialect
     onnx

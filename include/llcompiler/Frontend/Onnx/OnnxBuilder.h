@@ -12,21 +12,12 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-/**
- * @file Init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-namespace llc::compiler {
+#include "llcompiler/Frontend/Core/Builder.h"
+#include "mlir/IR/MLIRContext.h"
 
-void init_compiler(int argc, char **argv);
-
-}  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+namespace llc::front {
+class OnnxBuilder : public Builder {
+ public:
+  explicit OnnxBuilder(mlir::MLIRContext* context);
+};
+}  // namespace llc::front

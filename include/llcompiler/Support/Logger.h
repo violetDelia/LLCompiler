@@ -28,6 +28,7 @@
 #include <sstream>
 
 namespace llc {
+
 /**********  log module extern  **********/
 extern const char *GLOBAL;
 extern const char *IMPORTER;
@@ -43,14 +44,13 @@ enum class LOG_LEVER {
   ERROR_ = 4,
   FATAL_ = 5,
 };
+void register_logger(const char *module, const char *root_path,
+                     const LOG_LEVER lever);
 
 const char *log_lever_to_str(const LOG_LEVER lever);
 
 class Logger;
 class LoggerStream;
-
-void register_logger(const char *module, const char *root_path,
-                     const LOG_LEVER lever);
 
 class Logger {
  public:
@@ -95,8 +95,45 @@ template <class Ty>
 NullStream &NullStream::operator<<(const Ty val) {
   return *this;
 }
-
 }  // namespace llc::logger
+
+// unused
+namespace llc {
+#ifdef LLCOMPILER_HAS_LOG
+using Stream = logger::LoggerStream;
+#else
+using Stream = logger::NullStream;
+#endif
+
+void init_logger(const char *module, const char *root_path,
+                 const logger::LOG_LEVER lever);
+
+Stream log(const char *module, const logger::LOG_LEVER lever);
+
+Stream check_log(const char *module, bool condition,
+                 const logger::LOG_LEVER lever);
+
+Stream debug(const char *module);
+
+Stream info(const char *module);
+
+Stream warning(const char *module);
+
+Stream error(const char *module);
+
+Stream fatal(const char *module);
+
+Stream print();
+
+Stream check(const char *module, bool condition);
+
+Stream check_debug(const char *module, bool condition);
+
+Stream unimplement(const char *module, bool condition);
+
+Stream warning_unimplement(const char *module, bool condition);
+
+}  // namespace llc
 
 #ifdef LLCOMPILER_HAS_LOG
 #define LLCOMPILER_INIT_LOGGER(module, root, lever) \

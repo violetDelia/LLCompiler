@@ -16,6 +16,7 @@
 
 #include "llcompiler/Compiler/Utility.h"
 #include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Onnx/OnnxBuilder.h"
 #include "llcompiler/Frontend/Onnx/OnnxImporter.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
@@ -35,7 +36,8 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
   switch (option.frontend_type) {
     case llc::front::FRONTEND_TYPE::ONNX_FILE: {
       INFO(IMPORTER) << "onnx file path is: " << option.filename.c_str();
-      return front::OnnxImporter(context, option).export_mlir_module();
+      auto builder = front::OnnxBuilder(context);
+      return front::OnnxImporter(&builder, option).export_mlir_module();
     }
     default:
       FATAL(IMPORTER) << "Unimplemented importer type: "
