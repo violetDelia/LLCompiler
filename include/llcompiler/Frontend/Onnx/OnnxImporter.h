@@ -32,6 +32,7 @@
 #include "llcompiler/Frontend/Core/Macro.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Types.h"
@@ -56,7 +57,9 @@ class OnnxImporter : public Importer {
   LLC_MLIR_GEN(mlir::tosa::ConstOp, const ONNX_NAMESPACE::Tensor &weight,
                std::map<std::string, mlir::ShapedType> *weight_shape_map)
   LLC_MLIR_GEN(mlir::Operation *, const ONNX_NAMESPACE::Node &node,
-               std::map<std::string, mlir::Value *> *value_map)
+               std::map<std::string, mlir::Value> *value_map)
+  LLC_MLIR_GEN(mlir::Attribute, const ONNX_NAMESPACE::Node &node,
+               const ONNX_NAMESPACE::BuiltinSymbol &attr_kind)
 
  protected:
   bool init_model_(const mlir::StringRef filename,

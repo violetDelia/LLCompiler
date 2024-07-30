@@ -16,9 +16,7 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_
 
-#include "mlir/IR/Builders.h"
-
-#define DEBUG_BUILDED_OP(module, OP) \
-  DEBUG(module) << "create a " << OPgetOperationName().str() << "op.";
+#define DEBUG_BUILDED_OP(module, op) \
+  DEBUG(module) << "create a " << op.getOperationName().str() << "op.";
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_

@@ -27,9 +27,10 @@
 #define INCLUDE_LLCOMPILER_COMPILER_UTILITY_H_
 
 #include "llcompiler/Frontend/Core/Base.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/OwningOpRef.h"
-#include "mlir/ir/BuiltinOps.h"
+
 
 namespace llc::compiler {
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(

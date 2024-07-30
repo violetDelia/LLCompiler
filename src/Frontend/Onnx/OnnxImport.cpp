@@ -1,5 +1,4 @@
 //    Copyright 2024 时光丶人爱
-
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
@@ -11,6 +10,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+
 #include <cstdint>
 #include <cstring>
 #include <fstream>
@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/Macro.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Frontend/Core/Builder.h"
@@ -36,6 +37,7 @@
 #include "llvm/Support/MemoryBuffer.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributeInterfaces.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -49,6 +51,7 @@
 #include "mlir/Support/FileUtilities.h"
 #include "mlir/Support/LLVM.h"
 #include "onnx/common/array_ref.h"
+#include "onnx/common/interned_strings.h"
 #include "onnx/common/ir.h"
 #include "onnx/common/ir_pb_converter.h"
 #include "onnx/common/tensor.h"
@@ -56,6 +59,31 @@
 #include "onnx/version_converter/convert.h"
 
 namespace llc::front {
+namespace helper {
+
+// enum class AttributeKind : uint8_t {
+//   f,
+//   fs,
+//   i,
+//   is,
+//   s,
+//   ss,
+//   t,
+//   ts,
+//   g,
+//   gs,
+//   tp,
+//   tps
+// };
+
+void info_node_attrs(const ONNX_NAMESPACE::Node &node) {
+  for (auto s : node.attributeNames()) {
+    INFO(IMPORTER) << s.toString();
+    INFO(IMPORTER) << static_cast<int>(node.kindOf(s));
+  }
+}
+}  // namespace helper
+
 bool OnnxImporter::init_model_form_json_(const mlir::StringRef &filename,
                                          ONNX_NAMESPACE::ModelProto *model) {
   WARN(IMPORTER) << "never used json file initialize onnx model -> "
@@ -212,7 +240,9 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
     auto data_begin = weight.data<Type>();                                   \
     auto value = mlir::DenseElementsAttr::get(                               \
         shape, llvm::ArrayRef<Type>(data_begin, data_begin + element_size)); \
-    return build_op<mlir::tosa::ConstOp>(builder, shape, value);             \
+    auto op = build_op<mlir::tosa::ConstOp>(builder, shape, value);          \
+    DEBUG_BUILDED_OP(IMPORTER, op)                                           \
+    return op;                                                               \
   }
 
 mlir::tosa::ConstOp OnnxImporter::mlir_gen(
@@ -236,35 +266,119 @@ mlir::tosa::ConstOp OnnxImporter::mlir_gen(
 }
 
 #undef CREATE_WEIGHT_OP_FROM_ONNX
+
+#define INTS_ATTR(key, builder, node)     \
+  case ONNX_NAMESPACE::AttributeKind::is: \
+    return builder->getDenseI64ArrayAttr(node.is(key));
+
+#define INT_ATTR(key, builder, node)     \
+  case ONNX_NAMESPACE::AttributeKind::i: \
+    return builder->getI64IntegerAttr(node.i(key));
+
+#define STRING_ATTR(key, builder, node)  \
+  case ONNX_NAMESPACE::AttributeKind::s: \
+    return builder->getStringAttr(node.s(key));
+
+mlir::Attribute OnnxImporter::mlir_gen(
+    mlir::OpBuilder *builder, const ONNX_NAMESPACE::Node &node,
+    const ONNX_NAMESPACE::BuiltinSymbol &attr_key) const {
+  auto attr_kind = node.kindOf(attr_key);
+  switch (attr_kind) {
+    INT_ATTR(attr_key, builder, node)
+    INTS_ATTR(attr_key, builder, node)
+    STRING_ATTR(attr_key, builder, node)
+  }
+
+  UNIMPLEMENTED(IMPORTER) << "unknown attribute: "
+                          << ONNX_NAMESPACE::Symbol(attr_key).toString()
+                          << ". kind of attribute is ["
+                          << static_cast<int>(node.kindOf(attr_key)) << "].";
+}
+
+#undef INTS_ATTR
+#undef INT_ATTR
+#undef STRING_ATTR
+
 #define IF_NODE_NAME_IS(name) if (!strcmp(node.kind().toString(), name))
+
+#define GET_ATTR(mlir_attr_name, key_name, builder, node) \
+  auto mlir_attr_name = builder->getNamedAttr(            \
+      #mlir_attr_name,                                    \
+      mlir_gen(builder, node, ONNX_NAMESPACE::BuiltinSymbol::k##key_name));
+
+#define BUILD_UNARY_OP(op_name, OP)                     \
+  auto inputs = node.inputs();                          \
+  auto outputs = node.outputs();                        \
+  auto output = mlir_gen(builder, *outputs[0]);         \
+  auto input1 = value_map->at(inputs[0]->uniqueName()); \
+  auto op_name = build_op<OP>(builder, output, input1); \
+  DEBUG_BUILDED_OP(IMPORTER, op_name)
+
+#define COMMON_UNARY_OP(name, OP) \
+  IF_NODE_NAME_IS(name) {         \
+    BUILD_UNARY_OP(op_name, OP)   \
+    return op_name;               \
+  }
+
+#define BUILD_BINARY_OP(op_name, OP)                            \
+  auto inputs = node.inputs();                                  \
+  auto outputs = node.outputs();                                \
+  auto input_size = inputs.size();                              \
+  auto output = mlir_gen(builder, *outputs[0]);                 \
+  auto input1 = value_map->at(inputs[0]->uniqueName());         \
+  auto input2 = value_map->at(inputs[1]->uniqueName());         \
+  auto op_name = build_op<OP>(builder, output, input1, input2); \
+  DEBUG_BUILDED_OP(IMPORTER, op_name)
+
+#define COMMON_BINARY_OP(name, OP) \
+  IF_NODE_NAME_IS(name) {          \
+    BUILD_BINARY_OP(op_name, OP)   \
+    return op_name;                \
+  }
 
 mlir::Operation *OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::Node &node,
-    std::map<std::string, mlir::Value *> *value_map) const {
+    std::map<std::string, mlir::Value> *value_map) const {
   IF_NODE_NAME_IS("Undefined") { return nullptr; }
+  COMMON_BINARY_OP("Add", mlir::tosa::AddOp)
   IF_NODE_NAME_IS("Conv") {
     auto inputs = node.inputs();
     auto outputs = node.outputs();
     auto input_size = inputs.size();
-    auto output = mlir_gen(builder, outputs[0]);
+    auto output = mlir_gen(builder, *outputs[0]);
     auto input = value_map->at(inputs[0]->uniqueName());
     auto weight = value_map->at(inputs[1]->uniqueName());
-    auto pad = node.is(ONNX_NAMESPACE::BuiltinSymbol::kpad);
-    auto padattr = builder->getDenseI64ArrayAttr(pad);
-    padattr.dump();
-    auto stride = node.is(ONNX_NAMESPACE::BuiltinSymbol::kstride);
-    auto strideattr = builder->getDenseI64ArrayAttr(stride);
-    strideattr.dump();
-    auto dilation = node.is(ONNX_NAMESPACE::BuiltinSymbol::kdilation);
-    auto dilationattr = builder->getDenseI64ArrayAttr(dilation);
-    dilationattr.dump();
+    mlir::Value blas;
+    if (input_size == 3) {
+      blas = value_map->at(inputs[2]->uniqueName());
+    } else if (input_size == 2) {
+      blas = create_broadcast_const_to<int64_t>(builder, output, {1}, {0})
+                 ->getResult(0);
+    } else {
+      FATAL(IMPORTER) << "ERROR ONNX IR!";
+    }
+    GET_ATTR(stride, strides, builder, node)
+    GET_ATTR(dilation, dilations, builder, node)
+    GET_ATTR(pad, dilations, builder, node)
+    auto op =
+        build_op<mlir::tosa::Conv2DOp>(builder, ::mlir::TypeRange{output},
+                                       ::mlir::ValueRange{input, weight, blas},
+                                       ::llvm::ArrayRef{pad, stride, dilation});
+    DEBUG_BUILDED_OP(IMPORTER, op)
+    return op;
   }
   UNIMPLEMENTED(IMPORTER) << "unimplemented op generate: "
                           << node.kind().toString();
   return build_op<mlir::llh::UndefinedOp>(builder, node.kind().toString());
 }
 
-// #undef IF_NODE_NAME_IS
+#undef IF_NODE_NAME_IS
+#undef GET_ATTR
+#undef BUILD_UNARY_OP
+#undef COMMON_UNARY_OP
+#undef BUILD_BINARY_OP
+#undef COMMON_BINARY_OP
+
 mlir::func::FuncOp OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::Graph &graph) const {
   INFO(IMPORTER) << "----- building func op-----";
@@ -273,13 +387,12 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   auto func_outputs = mlir_gen(builder, graph.outputs());
   auto func_type = builder->getFunctionType(func_inputs, func_outputs);
   auto func = build_op<mlir::func::FuncOp>(builder, graph.name(), func_type);
-  std::map<std::string, mlir::Value *> value_map;
+  std::map<std::string, mlir::Value> value_map;
   auto block = func.addEntryBlock();
   auto inputs_size = inputs.size();
   for (int i = 0; i < inputs_size; ++i) {
     auto name = inputs[i]->uniqueName();
-    auto value = block->getArgument(i);
-    value_map[name] = &value;
+    value_map[name] = block->getArgument(i);
   }
   std::set<std::string> weight_set;
   for (auto weight_name : graph.initializer_names()) {
@@ -297,16 +410,21 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   for (auto &weight : graph.initializers()) {
     auto weight_op = mlir_gen(builder, weight, &weight_shape_map);
     add_attr(weight_op, LLCOperationNmaeAttr, weight.name());
+    value_map[weight.name()] = weight_op.getResult();
     block->push_back(weight_op);
-    auto value = weight_op.getResult();
-    value_map[weight.name()] = &value;
   }
   INFO(IMPORTER) << "----- building node ops -----";
   for (auto node : graph.nodes()) {
     auto op = mlir_gen(builder, *node, &value_map);
     if (!op) continue;
     add_attr(op, LLCOperationNmaeAttr, node->name());
+    auto outputs = node->outputs();
+    auto result_num = op->getNumResults();
+    for (int i{0}; i < result_num; i++) {
+      value_map[outputs[i]->uniqueName()] = op->getResult(i);
+    }
     block->push_back(op);
+    op->dump();
   }
 
   return func;

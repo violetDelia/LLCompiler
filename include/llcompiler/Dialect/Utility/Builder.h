@@ -21,9 +21,16 @@
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/raw_ostream.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
+#include "mlir/Support/LLVM.h"
 
 namespace llc {
 
@@ -33,5 +40,22 @@ Op build_op(mlir::OpBuilder *builder, Args... args) {
                              std::forward<Args>(args)...);
 }
 
+template <class Vlaue_Type>
+mlir::Operation *create_broadcast_const_to(mlir::OpBuilder *builder,
+                                           const mlir::Type &type,
+                                           mlir::ArrayRef<Vlaue_Type> shape,
+                                           mlir::ArrayRef<Vlaue_Type> value) {
+  if (!mlir::isa<mlir::ShapedType>(type)) return nullptr;
+  auto target_shape = mlir::cast<mlir::ShapedType>(type);
+  target_shape.dump();
+  auto shape_type =
+      mlir::RankedTensorType::get(shape, target_shape.getElementType());
+  shape_type.dump();
+  auto value_attr = mlir::DenseElementsAttr::get(shape_type, value);
+  value_attr.dump();
+  auto const_op =
+      build_op<mlir::tosa::ConstOp>(builder, shape_type, value_attr);
+  return const_op;
+}
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
