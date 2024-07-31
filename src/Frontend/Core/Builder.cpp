@@ -12,14 +12,21 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Frontend/Core/Builder.h"
-#include "llcompiler/Support/Core.h"
-#include "llcompiler/Support/Logger.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/MLIRContext.h"
+
 namespace llc::front {
-Builder::Builder(mlir::MLIRContext* context) : builder_(context) {}
+Builder::Builder(mlir::MLIRContext* context) : builder_(context) {
+  context->getOrLoadDialect<mlir::BuiltinDialect>();
+  context->getOrLoadDialect<mlir::func::FuncDialect>();
+  context->getOrLoadDialect<mlir::tosa::TosaDialect>();
+  context->getOrLoadDialect<mlir::llh::LLHDialect>();
+}
 
 Builder::~Builder() {}
 

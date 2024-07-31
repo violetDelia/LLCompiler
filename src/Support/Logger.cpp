@@ -36,7 +36,7 @@ namespace llc {
 /**********  log module define  **********/
 const char *GLOBAL = "global";
 const char *IMPORTER = "importer";
-const char *LLH = "llh";
+const char *UTILITY = "utility";
 }  // namespace llc
 
 namespace llc::logger {

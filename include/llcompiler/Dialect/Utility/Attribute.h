@@ -25,20 +25,31 @@
 
 namespace llc {
 extern const char* LLCOperationNmaeAttr;
-}
+extern const char* LLCLayoutAttr;
+;
+}  // namespace llc
 
 namespace llc {
 
-void add_op_name_attr(mlir::Operation* op, llvm::StringRef name);
+void add_string_attr(mlir::Operation* op, llvm::StringRef attr_name,
+                     llvm::StringRef value);
+
+void add_op_name_attr(mlir::Operation* op, llvm::StringRef value);
+
+void add_lay_out_attr(mlir::Operation* op, llvm::StringRef value);
 // void add_op_name_attr(mlir::Operation* op, std::string name);
 
-template <class... Args>
-void add_attr(mlir::Operation* op, const char* attr_name, Args... args) {
-  if (attr_name == LLCOperationNmaeAttr) {
-    return add_op_name_attr(op, std::forward<Args>(args)...);
+#define ADD_ATTR(key, call)                       \
+  if (key_attr == key) {                          \
+    return call(op, std::forward<Args>(args)...); \
   }
-  UNIMPLEMENTED(LLH);
-}
 
+template <class... Args>
+void add_attr(mlir::Operation* op, const char* key_attr, Args... args) {
+  ADD_ATTR(LLCOperationNmaeAttr, add_op_name_attr)
+  ADD_ATTR(LLCLayoutAttr, add_lay_out_attr)
+  UNIMPLEMENTED(UTILITY);
+}
+#undef ADD_ATTR
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_

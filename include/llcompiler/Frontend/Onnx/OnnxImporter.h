@@ -38,7 +38,6 @@
 #include "mlir/IR/Types.h"
 #include "mlir/Support/LLVM.h"
 #include "onnx/common/ir.h"
-#include "onnx/onnx_pb.h"
 
 namespace llc::front {
 class OnnxImporter : public Importer {

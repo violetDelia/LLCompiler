@@ -25,10 +25,7 @@
 
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Frontend/Core/Builder.h"
-#include "llcompiler/Frontend/Onnx/OnnxImporter.h"
-#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinOps.h"
-#include "mlir/IR/MLIRContext.h"
 
 #ifndef INCLUDE_LLCOMPILER_FRONTEND_CORE_IMPORTER_H_
 #define INCLUDE_LLCOMPILER_FRONTEND_CORE_IMPORTER_H_

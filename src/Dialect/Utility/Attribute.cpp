@@ -14,19 +14,26 @@
 //**
 
 #include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Support/Logger.h"
 namespace llc {
 const char* LLCOperationNmaeAttr = "op_name";
-
+const char* LLCLayoutAttr = "layout";
 }  // namespace llc
 
 namespace llc {
-void add_op_name_attr(mlir::Operation* op, llvm::StringRef name) {
-  op->setAttr(LLCOperationNmaeAttr,
-              mlir::StringAttr::get(op->getContext(), name));
+
+void add_string_attr(mlir::Operation* op, llvm::StringRef attr_name,
+                     llvm::StringRef value) {
+  op->setAttr(attr_name, mlir::StringAttr::get(op->getContext(), value));
 }
 
-void add_op_name_attr(mlir::Operation* op, std::string name) {
-  op->setAttr(LLCOperationNmaeAttr,
-              mlir::StringAttr::get(op->getContext(), name.c_str()));
+void add_op_name_attr(mlir::Operation* op, llvm::StringRef value) {
+  add_string_attr(op, LLCOperationNmaeAttr, value);
+}
+
+void add_lay_out_attr(mlir::Operation* op, llvm::StringRef value) {
+  CHECK(UTILITY, (value == "NCHW" || value == "NHWC"))
+      << "Invalid layout attribute!";
+  add_string_attr(op, LLCLayoutAttr, value);
 }
 }  // namespace llc

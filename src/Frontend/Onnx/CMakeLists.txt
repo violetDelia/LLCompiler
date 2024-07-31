@@ -13,8 +13,7 @@ llcompiler_add_library(LLCFrontendOnnx
     MLIRSupport
     LLCSupport
     LLCFrontendCore
-    MLIRTosaDialect
-    MLIRLLHDialect
+    LLCMLIRUtility
 
     PRIVATE
     onnx

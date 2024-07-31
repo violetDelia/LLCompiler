@@ -14,22 +14,18 @@
 //
 #ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
-#include <string>
+#include <cstdint>
 #include <utility>
 
-#include "llcompiler/Dialect/Utility/Attribute.h"
-#include "llcompiler/Support/Core.h"
-#include "llcompiler/Support/Logger.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/Support/Casting.h"
-#include "llvm/Support/raw_ostream.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
-#include "mlir/IR/Attributes.h"
+#include "mlir/Dialect/Utils/ReshapeOpsUtils.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
-#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
+#include "mlir/IR/Types.h"
 #include "mlir/Support/LLVM.h"
 
 namespace llc {
@@ -39,23 +35,17 @@ Op build_op(mlir::OpBuilder *builder, Args... args) {
   return builder->create<Op>(builder->getUnknownLoc(),
                              std::forward<Args>(args)...);
 }
+mlir::tosa::ConstOp create_tosa_const(mlir::OpBuilder *builder,
+                                      llvm::ArrayRef<int64_t> shape,
+                                      llvm::ArrayRef<double> value,
+                                      mlir::Type element_type);
 
-template <class Vlaue_Type>
-mlir::Operation *create_broadcast_const_to(mlir::OpBuilder *builder,
-                                           const mlir::Type &type,
-                                           mlir::ArrayRef<Vlaue_Type> shape,
-                                           mlir::ArrayRef<Vlaue_Type> value) {
-  if (!mlir::isa<mlir::ShapedType>(type)) return nullptr;
-  auto target_shape = mlir::cast<mlir::ShapedType>(type);
-  target_shape.dump();
-  auto shape_type =
-      mlir::RankedTensorType::get(shape, target_shape.getElementType());
-  shape_type.dump();
-  auto value_attr = mlir::DenseElementsAttr::get(shape_type, value);
-  value_attr.dump();
-  auto const_op =
-      build_op<mlir::tosa::ConstOp>(builder, shape_type, value_attr);
-  return const_op;
-}
+mlir::tensor::ExpandShapeOp expand_to(
+    mlir::OpBuilder *builder, mlir::Operation *from, mlir::ShapedType expand_to,
+    mlir::ArrayRef<mlir::ReassociationIndices> reassociation);
+
+mlir::tensor::ExpandShapeOp expand_const_to(
+    mlir::OpBuilder *builder, double value, mlir::Type element_type,
+    mlir::RankedTensorType target_shape);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_

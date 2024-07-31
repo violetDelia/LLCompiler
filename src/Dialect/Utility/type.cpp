@@ -19,8 +19,16 @@
 #include <vector>
 
 #include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Support/Logger.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/Support/LLVM.h"
 
 namespace llc {
+
+llvm::ArrayRef<int64_t> get_shape_form(const mlir::Type& shape_type) {
+  CHECK(UTILITY, mlir::isa<mlir::ShapedType>(shape_type));
+  return mlir::cast<mlir::ShapedType>(shape_type).getShape();
+}
 
 int64_t get_element_size_form(const mlir::ShapedType& shape_type) {
   auto rank = shape_type.getRank();

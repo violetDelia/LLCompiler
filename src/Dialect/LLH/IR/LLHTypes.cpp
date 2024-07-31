@@ -11,6 +11,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include <utility>
 
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
@@ -106,7 +107,7 @@ void printSIGNED_TAG(::mlir::AsmPrinter &printer, SIGNED_TAG tag) {
 }
 
 llvm::ParseResult parseSIGNED_TAG(::mlir::AsmParser &parser, SIGNED_TAG &tag) {
-  WARN_UNIMPLEMENTED(llc::LLH);
+  WARN_UNIMPLEMENTED(llc::UTILITY);
   return mlir::success();
 }
 
@@ -118,7 +119,7 @@ void printDynamicDim(::mlir::AsmPrinter &printer,
 llvm::ParseResult parseDynamicDim(
     ::mlir::AsmParser &parser,
     llvm::SmallVector<::mlir::llh::DynamicDim> &dim) {
-  WARN_UNIMPLEMENTED(llc::LLH);
+  WARN_UNIMPLEMENTED(llc::UTILITY);
   return mlir::success();
 }
 //===----------------------------------------------------------------------===//

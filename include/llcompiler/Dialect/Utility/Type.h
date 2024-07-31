@@ -20,7 +20,7 @@
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 namespace llc {
 
-llvm::SmallVector<uint64_t> get_shape_form(const mlir::ShapedType& shape_type);
+llvm::ArrayRef<int64_t> get_shape_form(const mlir::Type& shape_type);
 int64_t get_element_size_form(const mlir::ShapedType& shape_type);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_

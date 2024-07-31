@@ -25,7 +25,6 @@
  */
 
 #include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Frontend/Core/Importer.h"
 
 namespace llc::front {
 ImporterOption get_importer_option();

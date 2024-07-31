@@ -9,6 +9,9 @@ llcompiler_add_library(LLCFrontendCore
     LINKS PUBLIC
     LLVMOption
     LLCSupport
+    MLIRTosaDialect
+    MLIRLLHDialect
+    
 
     PRIVATE
     onnx

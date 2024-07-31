@@ -32,7 +32,7 @@ namespace llc {
 /**********  log module extern  **********/
 extern const char *GLOBAL;
 extern const char *IMPORTER;
-extern const char *LLH;
+extern const char *UTILITY;
 };  // namespace llc
 
 namespace llc::logger {
