@@ -26,7 +26,8 @@
 namespace llc {
 extern const char* LLCOperationNmaeAttr;
 extern const char* LLCLayoutAttr;
-;
+extern const char* LLCGroupAttr;
+extern const char* LLCKernelShapeAttr;
 }  // namespace llc
 
 namespace llc {

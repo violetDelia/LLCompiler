@@ -58,7 +58,6 @@
 #include "onnx/shape_inference/implementation.h"
 #include "onnx/version_converter/convert.h"
 
-
 namespace llc::front {
 namespace helper {
 
@@ -304,48 +303,57 @@ mlir::Attribute OnnxImporter::mlir_gen(
   auto mlir_attr_name = builder->getNamedAttr(            \
       #mlir_attr_name,                                    \
       mlir_gen(builder, node, ONNX_NAMESPACE::BuiltinSymbol::k##key_name));
+#define ADD_ATTR(op, mlir_attr_name, key_name, builder, node)              \
+  auto key_name##_atrr =                                                   \
+      mlir_gen(builder, node, ONNX_NAMESPACE::BuiltinSymbol::k##key_name); \
+  op.getOperation()->setAttr(mlir_attr_name, key_name##_atrr);
 
-#define BUILD_UNARY_OP(op_name, OP)                               \
+#define BUILD_UNARY_OP(op_name, OP, input_index, output_index)    \
   auto inputs = node.inputs();                                    \
   auto outputs = node.outputs();                                  \
-  auto output = mlir_gen(builder, *outputs[0]);                   \
-  auto input1 = value_map->at(inputs[0]->uniqueName());           \
+  auto output = mlir_gen(builder, *outputs[output_index]);        \
+  auto input1 = value_map->at(inputs[input_index]->uniqueName()); \
   auto op_name = build_op<OP>(builder, ::mlir::TypeRange{output}, \
                               ::mlir::ValueRange{input1});        \
   DEBUG_BUILDED_OP(IMPORTER, op_name)
 
-#define COMMON_UNARY_OP(name, OP) \
-  IF_NODE_NAME_IS(name) {         \
-    BUILD_UNARY_OP(op_name, OP)   \
-    return op_name;               \
+#define COMMON_UNARY_OP(name, OP, input_index, output_index) \
+  IF_NODE_NAME_IS(name) {                                    \
+    BUILD_UNARY_OP(op_name, OP, input_index, output_index)   \
+    return op_name;                                          \
   }
 
-#define BUILD_BINARY_OP(op_name, OP)                               \
-  auto inputs = node.inputs();                                     \
-  auto outputs = node.outputs();                                   \
-  auto input_size = inputs.size();                                 \
-  auto output = mlir_gen(builder, *outputs[0]);                    \
-  auto input1 = value_map->at(inputs[0]->uniqueName());            \
-  auto input2 = value_map->at(inputs[1]->uniqueName());            \
-  auto op_name = build_op<OP>(builder, ::mlir::TypeRange{output},  \
-                              ::mlir::ValueRange{input1, input2}); \
+#define BUILD_BINARY_OP(op_name, OP, input1_index, input2_index, output_index) \
+  auto inputs = node.inputs();                                                 \
+  auto outputs = node.outputs();                                               \
+  auto input_size = inputs.size();                                             \
+  auto output = mlir_gen(builder, *outputs[output_index]);                     \
+  auto input1 = value_map->at(inputs[input1_index]->uniqueName());             \
+  auto input2 = value_map->at(inputs[input2_index]->uniqueName());             \
+  auto op_name = build_op<OP>(builder, ::mlir::TypeRange{output},              \
+                              ::mlir::ValueRange{input1, input2});             \
   DEBUG_BUILDED_OP(IMPORTER, op_name)
 
-#define COMMON_BINARY_OP(name, OP) \
-  IF_NODE_NAME_IS(name) {          \
-    BUILD_BINARY_OP(op_name, OP)   \
-    return op_name;                \
+#define COMMON_BINARY_OP(name, OP, input1_index, input2_index, output_index) \
+  IF_NODE_NAME_IS(name) {                                                    \
+    BUILD_BINARY_OP(op_name, OP, input1_index, input2_index, output_index)   \
+    return op_name;                                                          \
   }
 
 mlir::Operation *OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::Node &node,
     std::map<std::string, mlir::Value> *value_map) const {
   IF_NODE_NAME_IS("Undefined") { return nullptr; }
-  COMMON_UNARY_OP("Relu", mlir::llh::ReluOp)
-  COMMON_BINARY_OP("Add", mlir::tosa::AddOp)
+  COMMON_UNARY_OP("Relu", mlir::llh::ReluOp, 0, 0)
+  COMMON_UNARY_OP("Reshape", mlir::llh::ReshapeOp, 0, 0)
+  COMMON_BINARY_OP("Add", mlir::tosa::AddOp, 0, 1, 0)
+  COMMON_BINARY_OP("MatMul", mlir::tosa::MatMulOp, 0, 1, 0)
   IF_NODE_NAME_IS("MaxPool") {
-    BUILD_UNARY_OP(max_pool, mlir::tosa::MaxPool2dOp)
-    return max_pool;
+    BUILD_UNARY_OP(op, mlir::tosa::MaxPool2dOp, 0, 0)
+    ADD_ATTR(op, "kernel", kernel_shape, builder, node)
+    ADD_ATTR(op, "stride", strides, builder, node)
+    ADD_ATTR(op, "pad", pads, builder, node)
+    return op;
   }
   IF_NODE_NAME_IS("Conv") {
     auto inputs = node.inputs();
@@ -366,25 +374,29 @@ mlir::Operation *OnnxImporter::mlir_gen(
     } else {
       FATAL(IMPORTER) << "ERROR ONNX IR!";
     }
-    GET_ATTR(stride, strides, builder, node)
-    GET_ATTR(dilation, dilations, builder, node)
     // GET_ATTR(pad, dilations, builder, node)
     if (output.getRank() == 4) {
       auto op = build_op<mlir::tosa::Conv2DOp>(
           builder, ::mlir::TypeRange{output},
-          ::mlir::ValueRange{input, weight, blas},
-          ::llvm::ArrayRef{stride, dilation});
+          ::mlir::ValueRange{input, weight, blas});
+      ADD_ATTR(op, "stride", strides, builder, node)
+      ADD_ATTR(op, "dilation", dilations, builder, node)
+      ADD_ATTR(op, LLCGroupAttr, group, builder, node)
+      ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
       DEBUG_BUILDED_OP(IMPORTER, op)
       return op;
     } else if (output.getRank() == 5) {
       auto op = build_op<mlir::tosa::Conv3DOp>(
           builder, ::mlir::TypeRange{output},
-          ::mlir::ValueRange{input, weight, blas},
-          ::llvm::ArrayRef{stride, dilation});
+          ::mlir::ValueRange{input, weight, blas});
+      ADD_ATTR(op, "stride", strides, builder, node)
+      ADD_ATTR(op, "dilation", dilations, builder, node)
+      ADD_ATTR(op, LLCGroupAttr, group, builder, node)
+      ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
       DEBUG_BUILDED_OP(IMPORTER, op)
       return op;
     } else {
-      UNIMPLEMENTED(IMPORTER) << "tosa not supported!";
+      UNIMPLEMENTED(IMPORTER) << " tosa not supported!";
     }
   }
   UNIMPLEMENTED(IMPORTER) << "unimplemented op generate: "
@@ -397,6 +409,7 @@ mlir::Operation *OnnxImporter::mlir_gen(
 #undef COMMON_UNARY_OP
 #undef BUILD_BINARY_OP
 #undef COMMON_BINARY_OP
+#undef ADD_ATTR
 
 mlir::func::FuncOp OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::Graph &graph) const {
@@ -443,7 +456,6 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
       value_map[outputs[i]->uniqueName()] = op->getResult(i);
     }
     block->push_back(op);
-    op->dump();
   }
 
   return func;
