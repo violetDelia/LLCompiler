@@ -18,6 +18,9 @@
 namespace llc {
 const char* LLCOperationNmaeAttr = "op_name";
 const char* LLCLayoutAttr = "layout";
+const char* LLCGroupAttr = "group";
+const char* LLCKernelShapeAttr = "kernel_shape";
+const char* LLCIsWeightAttr = "is_weight";
 }  // namespace llc
 
 namespace llc {
