@@ -438,6 +438,7 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   auto func_outputs = mlir_gen(builder, graph.outputs());
   auto func_type = builder->getFunctionType(func_inputs, func_outputs);
   auto func = build_op<mlir::func::FuncOp>(builder, graph.name(), func_type);
+  DEBUG_BUILDED_OP(IMPORTER, func);
   auto block = func.addEntryBlock();
   std::map<std::string, mlir::Value> value_map;
   auto inputs_size = inputs.size();
@@ -483,6 +484,7 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
     results.push_back(value_map[out->uniqueName()]);
   }
   auto return_op = build_op<mlir::func::ReturnOp>(builder, results);
+  DEBUG_BUILDED_OP(IMPORTER, return_op);
   block->push_back(return_op);
   return func;
 }
@@ -491,6 +493,7 @@ mlir::ModuleOp OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::ModelProto &model) const {
   INFO(IMPORTER) << "----- building module op -----";
   auto module = build_op<mlir::ModuleOp>(builder);
+  DEBUG_BUILDED_OP(IMPORTER, module);
   auto graph = ONNX_NAMESPACE::ImportModelProto(model);
   auto func = mlir_gen(builder, *graph);
   module.push_back(func);

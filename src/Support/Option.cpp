@@ -40,8 +40,8 @@ llvm::cl::opt<logger::LOG_LEVEL> logLevel{
                    logger::log_level_to_str(logger::LOG_LEVEL::FATAL_), "")),
     llvm::cl::init(logger::LOG_LEVEL::DEBUG_), llvm::cl::cat(commonOptions)};
 
-::llc::logger::LoggerOption get_logger_option() {
-  return ::llc::logger::LoggerOption{.path = logRoot, .level = logLevel};
+logger::LoggerOption get_logger_option() {
+  return logger::LoggerOption{.path = logRoot, .level = logLevel};
 }
 
 }  // namespace llc::option
