@@ -15,7 +15,7 @@
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_FILE_H_
 #include "mlir/IR/BuiltinOps.h"
 namespace llc::file {
-void mlir_to_file(mlir::ModuleOp* module, const char* file);
+void mlir_to_file(mlir::OwningOpRef<mlir::ModuleOp>* module, const char* file);
 }
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_FILE_H_

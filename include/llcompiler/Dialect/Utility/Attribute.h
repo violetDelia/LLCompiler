@@ -28,11 +28,7 @@
 
 namespace llc {
 
-enum LAYOUT : int64_t {
-  NCHW = 0,
-  NHWC = 1
-
-};
+enum LAYOUT : int64_t { NCHW = 0, NHWC = 1 };
 
 extern const char* LLCOperationNmaeAttr;
 extern const char* LLCLayoutAttr;

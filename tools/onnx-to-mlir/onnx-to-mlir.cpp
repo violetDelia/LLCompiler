@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
   llc::compiler::init_compiler(argc, argv);
   mlir::MLIRContext context;
   auto front_option = llc::option::get_front_end_option();
-  auto module = llc::compiler::gen_mlir_from(&context, front_option).get();
+  auto module = llc::compiler::gen_mlir_from(&context, front_option);
   llc::file::mlir_to_file(&module, front_option.output_file.c_str());
   return 0;
 }

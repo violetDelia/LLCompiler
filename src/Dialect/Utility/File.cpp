@@ -17,7 +17,7 @@
 #include "llcompiler/Support/Logger.h"
 
 namespace llc::file {
-void mlir_to_file(mlir::ModuleOp* module, const char* file) {
+void mlir_to_file(mlir::OwningOpRef<mlir::ModuleOp>* module, const char* file) {
   std::error_code error_code;
   auto file_dir = std::filesystem::path(file).parent_path();
   if (!std::filesystem::exists(file_dir)) {
@@ -25,7 +25,7 @@ void mlir_to_file(mlir::ModuleOp* module, const char* file) {
     INFO(GLOBAL) << "create directory " << file_dir;
   }
   llvm::raw_fd_stream file_stream(file, error_code);
-  module->print(file_stream);
+  (*module)->print(file_stream);
   INFO(GLOBAL) << "module convert to file: " << file;
 }
 
