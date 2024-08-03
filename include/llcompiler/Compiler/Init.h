@@ -22,11 +22,15 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Support/Logger.h"
+
 #ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 #define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 namespace llc::compiler {
-
-void init_compiler(int argc, char **argv);
+void init_global(const logger::LoggerOption& logger_option);
+void init_frontend(const front::FrontEndOption& front_option,
+                   const logger::LoggerOption& logger_option);
 
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_

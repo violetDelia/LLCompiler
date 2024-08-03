@@ -53,8 +53,6 @@ struct LoggerOption {
 
 void register_logger(const char *module, const LoggerOption &option);
 
-void register_all_loggers();
-
 class LoggerStream;
 
 class Logger {

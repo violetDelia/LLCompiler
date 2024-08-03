@@ -21,7 +21,7 @@
 
 namespace llc::option {
 
-::llc::front::FrontEndOption get_front_end_option() {
+front::FrontEndOption get_front_end_option() {
   return {.input_file = option::inputFile,
           .output_file = option::outputFile,
           .onnx_convert = option::onnxConvert,

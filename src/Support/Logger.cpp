@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "llcompiler/Support/Logger.h"
-#include "llcompiler/Support/Option.h"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -88,13 +87,6 @@ void register_logger(const char *module, const LoggerOption &option) {
   INFO(GLOBAL) << "regist log module: " << module
                << "(lever:" << logger::log_level_to_str(option.level) << ")"
                << " -> " << log_file;
-}
-
-void register_all_loggers() {
-  auto option = option::get_logger_option();
-  register_logger(GLOBAL, option);
-  register_logger(IMPORTER, option);
-  register_logger(UTILITY, option);
 }
 
 Logger::Logger(const char *module, const LOG_LEVEL level)

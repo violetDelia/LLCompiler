@@ -17,7 +17,6 @@
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Support/ManagedStatic.h"
 namespace llc::option {
 llvm::cl::OptionCategory commonOptions{"global options", ""};
 

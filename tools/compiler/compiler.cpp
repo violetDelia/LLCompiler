@@ -26,7 +26,7 @@
 #include "mlir/IR/MLIRContext.h"
 
 int main(int argc, char **argv) {
-  llc::compiler::init_compiler(argc, argv);
+  // llc::compiler::init_compiler(argc, argv);
   mlir::MLIRContext context;
   auto fornt_option = llc::option::get_front_end_option();
   auto module = llc::compiler::gen_mlir_from(&context, fornt_option);
