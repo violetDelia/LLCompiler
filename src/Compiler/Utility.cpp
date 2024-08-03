@@ -24,7 +24,7 @@
 namespace llc::compiler {
 
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
-    mlir::MLIRContext *context, const front::ImporterOption &option) {
+    mlir::MLIRContext *context, const front::FrontEndOption &option) {
   INFO(IMPORTER) << "---------- Begin Importing ----------";
   INFO(IMPORTER) << "import tpye is: "
                  << frontend_type_to_str(option.frontend_type);

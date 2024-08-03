@@ -37,12 +37,11 @@
 int main(int argc, char **argv) {
   llc::compiler::init_compiler(argc, argv);
   mlir::MLIRContext context;
-  auto import_option = llc::front::get_importer_option();
-  auto module = llc::compiler::gen_mlir_from(&context, import_option);
-  std::error_code EC;
-  llvm::raw_fd_stream FileStream(OutputFile.getValue(), EC);
-  llvm::outs() << "Export mgb dialect to " << OutputFile.getValue() << "\n";
-  mod->print(FileStream);
+  auto front_option = llc::option::get_front_end_option();
+  auto module = llc::compiler::gen_mlir_from(&context, front_option);
+  std::error_code error_code;
+  llvm::raw_fd_stream file_stream(front_option.output_file, error_code);
+  module->print(file_stream);
   llvm::outs() << "onnx convert to mgb dialect done.\n";
   return 0;
 }

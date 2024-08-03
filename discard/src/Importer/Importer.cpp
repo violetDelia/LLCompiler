@@ -20,7 +20,7 @@
 
 namespace llc::importer {
 
-Importer::Importer(OpBuilder *builder, const ImporterOption &options)
+Importer::Importer(OpBuilder *builder, const FrontEndOption &options)
     : builder_trace_(builder) {}
 
 Importer::~Importer() {}

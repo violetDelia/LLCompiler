@@ -42,7 +42,7 @@
 namespace llc::front {
 class OnnxImporter : public Importer {
  public:
-  OnnxImporter(Builder *builder, const ImporterOption &option);
+  OnnxImporter(Builder *builder, const FrontEndOption &option);
 
   mlir::ModuleOp export_mlir_module() const final;
 

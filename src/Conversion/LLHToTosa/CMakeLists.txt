@@ -12,3 +12,5 @@ add_mlir_conversion_library(MLIRLLHToTosa
   MLIRLLHDialect
   MLIRPass
 )
+
+llcompiler_install_mlir_library(MLIRLLHToTosa CONVERSION)

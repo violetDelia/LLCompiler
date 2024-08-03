@@ -20,7 +20,7 @@
 #include "llvm/Support/CommandLine.h"
 
 namespace llc::option {
-::llc::front::ImporterOption get_importer_option();
+::llc::front::FrontEndOption get_front_end_option();
 
 extern llvm::cl::OptionCategory importingOptions;
 extern llvm::cl::opt<front::FRONTEND_TYPE> frontendType;

@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Option.h"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -56,8 +57,7 @@ const char *log_level_to_str(const LOG_LEVEL lever) {
   return "unimplemented";
 }
 
-void register_logger(const char *module, const char *root_path,
-                     const LOG_LEVEL level) {
+void register_logger(const char *module, LoggerOption &option) {
   using console_sink = spdlog::sinks::stdout_color_sink_mt;
   using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
@@ -67,24 +67,32 @@ void register_logger(const char *module, const char *root_path,
   auto time_now = std::chrono::system_clock::to_time_t(now);
   std::stringstream time_ss;
   time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
-  auto log_dir = fmt::format("{}/log_{}", root_path, time_ss.str().c_str());
+  auto log_dir =
+      fmt::format("{}/log_{}", option.path.c_str(), time_ss.str().c_str());
   std::string log_file;
-  const bool save_log = strcmp(root_path, "");
+  if (!std::filesystem::exists(log_dir)) {
+    std::filesystem::create_directory(log_dir);
+  }
+  const bool save_log = strcmp(option.path.c_str(), "");
   if (save_log) {
     log_file = fmt::format("{}/{}.log", log_dir, module);
     sinks.push_back(std::make_shared<file_sink>(log_file.c_str(), true));
   }
   auto log =
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
-  log->set_level(static_cast<spdlog::level>(level));
+  log->set_level(static_cast<spdlog::level>(option.level));
+  log->set_pattern("[%T] [%^%l%$] %v");
   spdlog::register_logger(log);
-  if (std::filesystem::exists(log_dir)) {
-    CHECK(GLOBAL, std::filesystem::create_directories(log_dir))
-        << "create file " << log_dir.c_str() << " failed!";
-  }
   INFO(GLOBAL) << "regist log module: " << module
-               << "(lever:" << logger::log_level_to_str(level) << ")" << " -> "
-               << log_file;
+               << "(lever:" << logger::log_level_to_str(option.level) << ")"
+               << " -> " << log_file;
+}
+
+void register_all_loggers() {
+  auto option = option::get_logger_option();
+  register_logger(GLOBAL, option);
+  register_logger(IMPORTER, option);
+  register_logger(UTILITY, option);
 }
 
 Logger::Logger(const char *module, const LOG_LEVEL level)

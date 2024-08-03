@@ -22,6 +22,8 @@ const char *frontend_type_to_str(const FRONTEND_TYPE type) {
   switch (type) {
     case FRONTEND_TYPE::ONNX_FILE:
       return "onnx_file";
+    case FRONTEND_TYPE::MLIR_FILE:
+      return "mlir_file";
   }
   return "unimplemented";
 }

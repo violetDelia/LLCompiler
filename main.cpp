@@ -12,6 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include "include/llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Compiler/Utility.h"
 #include "llcompiler/Frontend/Core/Option.h"
 #include "llcompiler/Frontend/Core/Utility.h"
@@ -20,12 +21,11 @@
 #define LLCOMPILER_HAS_LOG
 // namespace llc::importer
 int main(int argc, char **argv) {
-  llc::front::ImporterOption options{
+  llc::front::FrontEndOption options{
       .input_file = "C:/LLCompiler/example/models/mnist-12.onnx",
       .onnx_convert_version = 16,
       .frontend_type = llc::front::FRONTEND_TYPE::ONNX_FILE};
   mlir::MLIRContext context;
-  auto import_option = llc::option::get_importer_option();
   auto module = llc::compiler::gen_mlir_from(&context, options);
   module->dump();
   return 0;

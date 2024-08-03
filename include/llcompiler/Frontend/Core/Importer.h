@@ -34,13 +34,13 @@ namespace llc::front {
 
 class Importer {
  public:
-  Importer(Builder *builder, const ImporterOption &option);
+  Importer(Builder *builder, const FrontEndOption &option);
   virtual ~Importer();
   virtual mlir::ModuleOp export_mlir_module() const = 0;
 
  protected:
   Builder *builder_;
-  const ImporterOption option_;
+  const FrontEndOption option_;
 };
 }  // namespace llc::front
 #endif  // INCLUDE_LLCOMPILER_FRONTEND_CORE_IMPORTER_H_

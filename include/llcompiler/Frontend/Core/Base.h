@@ -16,11 +16,11 @@
 #include <cstdint>
 #include <string>
 namespace llc::front {
-enum class FRONTEND_TYPE { ONNX_FILE = 1 };
+enum class FRONTEND_TYPE : int64_t { ONNX_FILE = 1, MLIR_FILE = 2 };
 const char *frontend_type_to_str(const FRONTEND_TYPE type);
 extern const int64_t ONNX_ADAPTED_VERSION;
 
-struct ImporterOption {
+struct FrontEndOption {
   std::string input_file;
   std::string output_file;
   bool onnx_convert;

@@ -15,14 +15,20 @@
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Compiler/Utility.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Frontend/Core/Option.h"
 #include "llcompiler/Frontend/Core/Utility.h"
 #include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Option.h"
+#include "llvm/Support/CommandLine.h"
+#include "mlir/IR/AsmState.h"
+#include "mlir/IR/MLIRContext.h"
 
 int main(int argc, char **argv) {
   llc::compiler::init_compiler(argc, argv);
   mlir::MLIRContext context;
-  auto import_option = llc::front::get_importer_option();
-  auto module = llc::compiler::gen_mlir_from(&context, import_option);
+  auto fornt_option = llc::option::get_front_end_option();
+  auto module = llc::compiler::gen_mlir_from(&context, fornt_option);
   return 0;
 }

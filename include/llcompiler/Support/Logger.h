@@ -51,8 +51,9 @@ struct LoggerOption {
   LOG_LEVEL level;
 };
 
-void register_logger(const char *module, const char *root_path,
-                     const LOG_LEVEL lever);
+void register_logger(const char *module, const LoggerOption &option);
+
+void register_all_loggers();
 
 class LoggerStream;
 

@@ -30,8 +30,12 @@
 #include "llvm/Support/CommandLine.h"
 
 namespace llc::option {
-void register_log_options();
+
 ::llc::logger::LoggerOption get_logger_option();
+
+extern llvm::cl::OptionCategory commonOption;
+extern llvm::cl::opt<std::string> logRoot;
+extern llvm::cl::opt<llc::logger::LOG_LEVEL> logLevel;
 }  // namespace llc::option
 
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_OPTION_H_

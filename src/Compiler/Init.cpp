@@ -25,24 +25,24 @@
 
 namespace llc::compiler {
 
-void init_logger_(std::initializer_list<std::string> modules) {
-  option::register_log_options();
-  auto options = option::get_logger_option();
-  for (auto &module : modules) {
-    ::llc::logger::register_logger(module.c_str(), options.path.c_str(),
-                                   options.level);
-  }
-}
-
 void init_compiler(int argc, char **argv) {
   mlir::registerAsmPrinterCLOptions();
   mlir::registerMLIRContextCLOptions();
-  llvm::cl::ParseCommandLineOptions(
-      argc, argv, "LLCompiler: A graph compiler for ONNX models");
-  init_logger_({GLOBAL, IMPORTER});
+  llvm::cl::ParseCommandLineOptions(argc, argv, "LLCompiler");
+  logger::register_all_loggers();
+  auto logger_option = ::llc::option::get_logger_option();
+  INFO(GLOBAL) << "log root is: " << logger_option.path;
+  INFO(GLOBAL) << "log level is: "
+               << logger::log_level_to_str(logger_option.level);
+  auto front_option = ::llc::option::get_front_end_option();
   INFO(GLOBAL) << "frontend type is: "
-               << front::frontend_type_to_str(option::frontendType);
-  INFO(GLOBAL) << "import file is: " << option::inputFile.getValue();
+               << front::frontend_type_to_str(front_option.frontend_type);
+  INFO(GLOBAL) << "input file is: " << front_option.input_file;
+  INFO(GLOBAL) << "output file is: " << front_option.output_file;
+  INFO(GLOBAL) << "convert onnx: " << front_option.onnx_convert;
+  if (front_option.onnx_convert) {
+    INFO(GLOBAL) << "convert onnx to: " << front_option.onnx_convert_version;
+  }
 }
 
 }  // namespace llc::compiler

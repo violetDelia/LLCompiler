@@ -1,4 +1,40 @@
-# build and install lib
+function(llcompiler_add_executable name src)
+    cmake_parse_arguments(ARG
+        "DISABLE_INSTALL"
+        ""
+        "ADDITIONAL_INCLUDE_DIRS;DEPENDS;LINKS;DEFINITIONS;"
+        ${ARGN}
+    )
+
+    add_executable(${name} ${src})
+
+    if(ARG_ADDITIONAL_INCLUDE_DIRS)
+        target_include_directories(${name} PRIVATE $<BUILD_INTERFACE:${ARG_ADDITIONAL_INCLUDE_DIRS}>)
+    endif()
+
+    if(ARG_DEPENDS)
+        add_dependencies(${name} ${ARG_DEPENDS})
+    endif()
+
+    if(ARG_LINKS)
+        target_link_libraries(${name} PRIVATE ${ARG_LINKS})
+    endif()
+
+    if(ARG_DEFINITIONS)
+        target_compile_definitions(${name} PRIVATE ${ARG_DEFINITIONS})
+    endif()
+
+    if(NOT DISABLE_INSTALL)
+        install(TARGETS ${name}
+            EXPORT ${name}Targets
+            RUNTIME DESTINATION ${LLCOMPILER_INSTALL_RUNTIME_DIR}
+            LIBRARY DESTINATION ${LLCOMPILER_INSTALL_LIB_DIR}
+            ARCHIVE DESTINATION ${LLCOMPILER_INSTALL_LIB_DIR})
+    endif()
+
+    message("add executable: ${name}.")
+endfunction()
+
 function(llcompiler_add_library name)
     cmake_parse_arguments(ARG
         "SHARED;DISABLE_INSTALL"
@@ -8,9 +44,7 @@ function(llcompiler_add_library name)
     )
 
     if(ARG_ADDITIONAL_INCLUDE_DIRS)
-        foreach(include_dir ${ARG_ADDITIONAL_INCLUDE_DIRS})
-            include_directories(${include_dir})
-        endforeach()
+        include_directories(${ARG_ADDITIONAL_INCLUDE_DIRS})
     endif()
 
     if(NOT ARG_SRC_FILES)
@@ -68,7 +102,7 @@ endfunction()
 
 function(llcompiler_install_mlir_library name)
     cmake_parse_arguments(ARG
-        "DIALECT, TRANSFORM"
+        "DIALECT, TRANSFORM, CONVERSION"
         ""
         ""
         ${ARGN}

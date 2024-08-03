@@ -31,11 +31,10 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/OwningOpRef.h"
 
-
 namespace llc::compiler {
 
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
-    mlir::MLIRContext *context, const front::ImporterOption &option);
+    mlir::MLIRContext *context, const front::FrontEndOption &option);
 }  // namespace llc::compiler
 
 #endif  // INCLUDE_LLCOMPILER_COMPILER_UTILITY_H_

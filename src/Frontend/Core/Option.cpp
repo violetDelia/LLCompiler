@@ -21,7 +21,7 @@
 
 namespace llc::option {
 
-::llc::front::ImporterOption get_importer_option() {
+::llc::front::FrontEndOption get_front_end_option() {
   return {.input_file = option::inputFile,
           .output_file = option::outputFile,
           .onnx_convert = option::onnxConvert,
@@ -50,7 +50,7 @@ llvm::cl::opt<std::string> outputFile(
     llvm::cl::cat(importingOptions));
 
 llvm::cl::opt<bool> onnxConvert(
-    "whether convert onnx verison",
+    "onnx-convert",
     llvm::cl::desc("onnx version convert will make some error in "
                    "ONNX_NAMESPACE::ConvertVersion,it "
                    "best to input onnx file verison of 22"),
@@ -58,7 +58,7 @@ llvm::cl::opt<bool> onnxConvert(
     llvm::cl::cat(importingOptions));
 
 llvm::cl::opt<uint64_t> onnxConvertVersion(
-    "onnx-version",
+    "onnx-version-to",
     llvm::cl::desc("the onnx model will convert to onnx-version before "
                    "lowering to dialect,default convert to 16"),
     llvm::cl::value_desc("version"), llvm::cl::init(22),

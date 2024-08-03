@@ -26,7 +26,7 @@
 
 namespace llc::importer {
 
-ImporterOption get_importer_option() {
+FrontEndOption get_importer_option() {
   return {.filename = option::importingPath,
           .onnx_convert = option::onnxConvert,
           .onnx_convert_version = option::onnxConvertVersion,
@@ -35,7 +35,7 @@ ImporterOption get_importer_option() {
 }
 
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(mlir::MLIRContext *context,
-                                                const ImporterOption &option) {
+                                                const FrontEndOption &option) {
   INFO(IMPORTER) << "---------- Begin Importing ----------";
   INFO(IMPORTER) << "import tpye is: "
                  << importer_type_to_str(option.importer_type);

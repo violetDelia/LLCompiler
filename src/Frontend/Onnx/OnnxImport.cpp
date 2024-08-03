@@ -168,7 +168,7 @@ ONNX_NAMESPACE::ModelProto OnnxImporter::conver_model_version_to_(
   return ONNX_NAMESPACE::version_conversion::ConvertVersion(*model, version);
 }
 
-OnnxImporter::OnnxImporter(Builder *builder, const ImporterOption &option)
+OnnxImporter::OnnxImporter(Builder *builder, const FrontEndOption &option)
     : Importer(builder, option) {
   switch (option.frontend_type) {
     case FRONTEND_TYPE::ONNX_FILE:
