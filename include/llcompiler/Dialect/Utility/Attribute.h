@@ -14,6 +14,8 @@
 //
 #ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_
+#include <cstdint>
+#include <initializer_list>
 #include <utility>
 
 #include "llcompiler/Dialect/Utility/Attribute.h"
@@ -22,35 +24,27 @@
 #include "llvm/ADT/StringRef.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Operation.h"
+#include "mlir/Support/LLVM.h"
 
 namespace llc {
+
+enum LAYOUT : int64_t {
+  NCHW = 0,
+  NHWC = 1
+
+};
+
 extern const char* LLCOperationNmaeAttr;
 extern const char* LLCLayoutAttr;
 extern const char* LLCGroupAttr;
 extern const char* LLCKernelShapeAttr;
-}  // namespace llc
-
-namespace llc {
-
-void add_string_attr(mlir::Operation* op, llvm::StringRef attr_name,
-                     llvm::StringRef value);
+extern const char* LLCIsWeightAttr;
 
 void add_op_name_attr(mlir::Operation* op, llvm::StringRef value);
+void add_layout_attr(mlir::Operation* op, mlir::ArrayRef<LAYOUT> value);
+void add_group_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
+void add_kernal_shape_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
+void add_is_weight_attr(mlir::Operation* op, bool value);
 
-void add_lay_out_attr(mlir::Operation* op, llvm::StringRef value);
-// void add_op_name_attr(mlir::Operation* op, std::string name);
-
-#define ADD_ATTR(key, call)                       \
-  if (key_attr == key) {                          \
-    return call(op, std::forward<Args>(args)...); \
-  }
-
-template <class... Args>
-void add_attr(mlir::Operation* op, const char* key_attr, Args... args) {
-  ADD_ATTR(LLCOperationNmaeAttr, add_op_name_attr)
-  ADD_ATTR(LLCLayoutAttr, add_lay_out_attr)
-  UNIMPLEMENTED(UTILITY);
-}
-#undef ADD_ATTR
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_

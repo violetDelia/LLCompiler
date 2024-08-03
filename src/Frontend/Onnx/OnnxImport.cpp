@@ -35,6 +35,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LineIterator.h"
 #include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/WithColor.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/Attributes.h"
@@ -55,6 +56,7 @@
 #include "onnx/common/ir.h"
 #include "onnx/common/ir_pb_converter.h"
 #include "onnx/common/tensor.h"
+#include "onnx/defs/shape_inference.h"
 #include "onnx/shape_inference/implementation.h"
 #include "onnx/version_converter/convert.h"
 
@@ -126,7 +128,7 @@ bool OnnxImporter::init_model_(const mlir::StringRef filename,
                                ONNX_NAMESPACE::ModelProto *model) {
   if (filename.ends_with(".json")) {
     WARN(IMPORTER) << "json";
-    // return init_model_form_json_(filename, model);
+    return init_model_form_json_(filename, model);
   } else if (filename.ends_with(".onnx")) {
     return init_model_form_onnx_(filename, model);
   } else {
@@ -185,13 +187,18 @@ OnnxImporter::OnnxImporter(Builder *builder, const ImporterOption &option)
            "of version 22.";
     model_ = conver_model_version_to_(&model_, option.onnx_convert_version);
   }
-  ONNX_NAMESPACE::shape_inference::InferShapes(model_);
+  ONNX_NAMESPACE::shape_inference::InferShapes(
+      model_, ONNX_NAMESPACE::OpSchemaRegistry::Instance(),
+      ONNX_NAMESPACE::ShapeInferenceOptions(true, 0, true));
   INFO(IMPORTER) << "infer shapes of onnx model success!";
 }
 
 mlir::Type OnnxImporter::mlir_gen(mlir::OpBuilder *builder,
                                   const int32_t &elem_type) const {
   switch (elem_type) {
+    case ONNX_NAMESPACE::TensorProto_DataType_UNDEFINED:
+      WARN(IMPORTER) << "undefine data type,default use f32.";
+      return builder->getF32Type();
     case ONNX_NAMESPACE::TensorProto_DataType_FLOAT:
       return builder->getF32Type();
     case ONNX_NAMESPACE::TensorProto_DataType_FLOAT16:
@@ -315,6 +322,7 @@ mlir::Attribute OnnxImporter::mlir_gen(
   auto input1 = value_map->at(inputs[input_index]->uniqueName()); \
   auto op_name = build_op<OP>(builder, ::mlir::TypeRange{output}, \
                               ::mlir::ValueRange{input1});        \
+  add_layout_attr(op_name, {NCHW});                               \
   DEBUG_BUILDED_OP(IMPORTER, op_name)
 
 #define COMMON_UNARY_OP(name, OP, input_index, output_index) \
@@ -332,6 +340,7 @@ mlir::Attribute OnnxImporter::mlir_gen(
   auto input2 = value_map->at(inputs[input2_index]->uniqueName());             \
   auto op_name = build_op<OP>(builder, ::mlir::TypeRange{output},              \
                               ::mlir::ValueRange{input1, input2});             \
+  add_layout_attr(op_name, {NCHW, NCHW});                                      \
   DEBUG_BUILDED_OP(IMPORTER, op_name)
 
 #define COMMON_BINARY_OP(name, OP, input1_index, input2_index, output_index) \
@@ -345,7 +354,7 @@ mlir::Operation *OnnxImporter::mlir_gen(
     std::map<std::string, mlir::Value> *value_map) const {
   IF_NODE_NAME_IS("Undefined") { return nullptr; }
   COMMON_UNARY_OP("Relu", mlir::llh::ReluOp, 0, 0)
-  COMMON_UNARY_OP("Reshape", mlir::llh::ReshapeOp, 0, 0)
+  COMMON_UNARY_OP("Reshape", mlir::tosa::ReshapeOp, 0, 0)
   COMMON_BINARY_OP("Add", mlir::tosa::AddOp, 0, 1, 0)
   COMMON_BINARY_OP("MatMul", mlir::tosa::MatMulOp, 0, 1, 0)
   IF_NODE_NAME_IS("MaxPool") {
@@ -353,6 +362,7 @@ mlir::Operation *OnnxImporter::mlir_gen(
     ADD_ATTR(op, "kernel", kernel_shape, builder, node)
     ADD_ATTR(op, "stride", strides, builder, node)
     ADD_ATTR(op, "pad", pads, builder, node)
+    add_layout_attr(op, {NCHW});
     return op;
   }
   IF_NODE_NAME_IS("Conv") {
@@ -369,8 +379,13 @@ mlir::Operation *OnnxImporter::mlir_gen(
       auto m = get_shape_form(weight.getType())[0];
       auto target_shape =
           mlir::RankedTensorType::get({m}, output.getElementType());
-      blas = expand_const_to(builder, 0, output.getElementType(), target_shape);
-      input.getParentBlock()->push_back(blas.getDefiningOp());
+      // builder->setInsertionPointAfterValue(weight);
+      auto ops =
+          expand_const_to(builder, 0, output.getElementType(), target_shape);
+      for (auto op : ops) {
+        input.getParentBlock()->push_back(op);
+      }
+      blas = ops[1]->getResult(0);
     } else {
       FATAL(IMPORTER) << "ERROR ONNX IR!";
     }
@@ -383,6 +398,7 @@ mlir::Operation *OnnxImporter::mlir_gen(
       ADD_ATTR(op, "dilation", dilations, builder, node)
       ADD_ATTR(op, LLCGroupAttr, group, builder, node)
       ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
+      add_layout_attr(op, {NCHW, NCHW});
       DEBUG_BUILDED_OP(IMPORTER, op)
       return op;
     } else if (output.getRank() == 5) {
@@ -393,6 +409,7 @@ mlir::Operation *OnnxImporter::mlir_gen(
       ADD_ATTR(op, "dilation", dilations, builder, node)
       ADD_ATTR(op, LLCGroupAttr, group, builder, node)
       ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
+      add_layout_attr(op, {NCHW, NCHW});
       DEBUG_BUILDED_OP(IMPORTER, op)
       return op;
     } else {
@@ -415,12 +432,13 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::Graph &graph) const {
   INFO(IMPORTER) << "----- building func op-----";
   auto inputs = graph.inputs();
+  auto outputs = graph.outputs();
   auto func_inputs = mlir_gen(builder, graph.inputs());
   auto func_outputs = mlir_gen(builder, graph.outputs());
   auto func_type = builder->getFunctionType(func_inputs, func_outputs);
   auto func = build_op<mlir::func::FuncOp>(builder, graph.name(), func_type);
-  std::map<std::string, mlir::Value> value_map;
   auto block = func.addEntryBlock();
+  std::map<std::string, mlir::Value> value_map;
   auto inputs_size = inputs.size();
   for (int i = 0; i < inputs_size; ++i) {
     auto name = inputs[i]->uniqueName();
@@ -441,7 +459,8 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   INFO(IMPORTER) << "----- building weight ops -----";
   for (auto &weight : graph.initializers()) {
     auto weight_op = mlir_gen(builder, weight, &weight_shape_map);
-    add_attr(weight_op, LLCOperationNmaeAttr, weight.name());
+    add_op_name_attr(weight_op, weight.name());
+    add_is_weight_attr(weight_op, true);
     value_map[weight.name()] = weight_op.getResult();
     block->push_back(weight_op);
   }
@@ -449,7 +468,7 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   for (auto node : graph.nodes()) {
     auto op = mlir_gen(builder, *node, &value_map);
     if (!op) continue;
-    add_attr(op, LLCOperationNmaeAttr, node->name());
+    add_op_name_attr(op, node->name());
     auto outputs = node->outputs();
     auto result_num = op->getNumResults();
     for (int i{0}; i < result_num; i++) {
@@ -457,7 +476,13 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
     }
     block->push_back(op);
   }
-
+  INFO(IMPORTER) << "----- building return op -----";
+  llvm::SmallVector<mlir::Value> results;
+  for (auto out : outputs) {
+    results.push_back(value_map[out->uniqueName()]);
+  }
+  auto return_op = build_op<mlir::func::ReturnOp>(builder, results);
+  block->push_back(return_op);
   return func;
 }
 
@@ -474,19 +499,7 @@ mlir::ModuleOp OnnxImporter::mlir_gen(
 mlir::ModuleOp OnnxImporter::export_mlir_module() const {
   auto builder = builder_->builder();
   auto module = mlir_gen(&builder, model_);
-  // auto func = build_->build().create<mlir::FuncOp>(
-  //     m_builder.getUnknownLoc(), g->name(),
-  //     get_func_type(g->inputs(), g->outputs()));
-
-  // builder_->mlirGen(&module, model_);
-
-  // module.push_back(mainFunc);
-  // Create and set insertion point to entry block.
-  // mainFunc.getBody().push_back(new mlir::Block);
-  // builder_->builder_.setInsertionPointToStart(&mainFunc.getBody().back());
-  // std::cout << std::addressof(*mainFunc.getOperation());
-  module->dump();
-  UNIMPLEMENTED(IMPORTER);
-  return {};
+  INFO(IMPORTER) << "build module successfully!";
+  return module;
 }
 };  // namespace llc::front
