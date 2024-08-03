@@ -20,6 +20,15 @@
 #include "llvm/Support/CommandLine.h"
 
 namespace llc::option {
+
+::llc::front::ImporterOption get_importer_option() {
+  return {.input_file = option::inputFile,
+          .output_file = option::outputFile,
+          .onnx_convert = option::onnxConvert,
+          .onnx_convert_version = option::onnxConvertVersion,
+          .frontend_type = option::frontendType};
+}
+
 llvm::cl::OptionCategory importingOptions("importer options",
                                           "config for importing models");
 
@@ -30,8 +39,13 @@ llvm::cl::opt<front::FRONTEND_TYPE> frontendType(
     llvm::cl::init(front::FRONTEND_TYPE::ONNX_FILE),
     llvm::cl::cat(importingOptions));
 
-llvm::cl::opt<std::string> importingPath(
-    "import-file", llvm::cl::desc("the path of the file to import"),
+llvm::cl::opt<std::string> inputFile(
+    "input-file", llvm::cl::desc("the path of the file to import"),
+    llvm::cl::value_desc("model file"), llvm::cl::init(""),
+    llvm::cl::cat(importingOptions));
+
+llvm::cl::opt<std::string> outputFile(
+    "output-file", llvm::cl::desc("the path of the file to import"),
     llvm::cl::value_desc("model file"), llvm::cl::init(""),
     llvm::cl::cat(importingOptions));
 

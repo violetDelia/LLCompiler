@@ -44,7 +44,7 @@ mlir::tensor::ExpandShapeOp expand_to(
     mlir::OpBuilder *builder, mlir::Operation *from, mlir::ShapedType expand_to,
     mlir::ArrayRef<mlir::ReassociationIndices> reassociation);
 
-mlir::tensor::ExpandShapeOp expand_const_to(
+llvm::SmallVector<mlir::Operation *> expand_const_to(
     mlir::OpBuilder *builder, double value, mlir::Type element_type,
     mlir::RankedTensorType target_shape);
 }  // namespace llc

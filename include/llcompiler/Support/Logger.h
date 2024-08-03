@@ -37,31 +37,35 @@ extern const char *UTILITY;
 
 namespace llc::logger {
 
-enum class LOG_LEVER {
+enum class LOG_LEVEL {
   DEBUG_ = 1,
   INFO_ = 2,
   WARN_ = 3,
   ERROR_ = 4,
   FATAL_ = 5,
 };
+const char *log_level_to_str(const LOG_LEVEL level);
+
+struct LoggerOption {
+  std::string path;
+  LOG_LEVEL level;
+};
+
 void register_logger(const char *module, const char *root_path,
-                     const LOG_LEVER lever);
+                     const LOG_LEVEL lever);
 
-const char *log_lever_to_str(const LOG_LEVER lever);
-
-class Logger;
 class LoggerStream;
 
 class Logger {
  public:
-  Logger(const char *module, const LOG_LEVER level);
+  Logger(const char *module, const LOG_LEVEL level);
   virtual ~Logger();
   LoggerStream stream(const bool emit_message);
   void info(const char *message);
 
  protected:
   const char *module_;
-  const LOG_LEVER level_;
+  const LOG_LEVEL level_;
 };
 
 class NullStream {
@@ -106,12 +110,12 @@ using Stream = logger::NullStream;
 #endif
 
 void init_logger(const char *module, const char *root_path,
-                 const logger::LOG_LEVER lever);
+                 const logger::LOG_LEVEL lever);
 
-Stream log(const char *module, const logger::LOG_LEVER lever);
+Stream log(const char *module, const logger::LOG_LEVEL lever);
 
 Stream check_log(const char *module, bool condition,
-                 const logger::LOG_LEVER lever);
+                 const logger::LOG_LEVEL lever);
 
 Stream debug(const char *module);
 
@@ -141,7 +145,7 @@ Stream warning_unimplement(const char *module, bool condition);
 #define LLCOMPILER_LOG(module, lever) \
   ::llc::logger::Logger(module, lever).stream(true)
 #define LLCOMPILER_CHECK_LOG(module, condition, lever)                        \
-  ::llc::logger::Logger(module, static_cast<::llc::logger::LOG_LEVER>(lever)) \
+  ::llc::logger::Logger(module, static_cast<::llc::logger::LOG_LEVEL>(lever)) \
       .stream(!condition)
 
 #else
@@ -151,19 +155,19 @@ Stream warning_unimplement(const char *module, bool condition);
   ::llc::logger::NullStream()
 #endif  // LLCOMPILER_HAS_LOG
 
-#define DEBUG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::DEBUG_)
-#define INFO(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::INFO_)
-#define WARN(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::WARN_)
-#define WRONG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::ERROR_)
+#define DEBUG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::DEBUG_)
+#define INFO(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::INFO_)
+#define WARN(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::WARN_)
+#define WRONG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::ERROR_)
 #define FATAL(module)                                      \
-  LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVER::FATAL_) \
+  LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::FATAL_) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
 
 #define print_info \
-  LLCOMPILER_LOG("ANONYMOUS_MODULE", ::llc::logger::LOG_LEVER::ERROR_)
+  LLCOMPILER_LOG("ANONYMOUS_MODULE", ::llc::logger::LOG_LEVEL::ERROR_)
 
 #define CHECK(module, condition)                                            \
-  LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVER::ERROR_) \
+  LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVEL::ERROR_) \
       << #condition << " : " << __FILE__ << "<" << __LINE__ << "> \n\t"
 #define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
 #define CHECK_NE(module, val1, val2) CHECK(module, val1 != val2)
@@ -173,7 +177,7 @@ Stream warning_unimplement(const char *module, bool condition);
 #define CHECK_GE(module, val1, val2) CHECK(module, val1 >= val2)
 
 #define DCHECK(module, condition) \
-  LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVER::DEBUG_)
+  LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVEL::DEBUG_)
 #define DCHECK_EQ(module, val1, val2) DCHECK(module, val1 == val2)
 #define DCHECK_NE(module, val1, val2) DCHECK(module, val1 != val2)
 #define DCHECK_LT(module, val1, val2) DCHECK(module, val1 < val2)

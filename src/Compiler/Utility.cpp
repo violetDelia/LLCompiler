@@ -31,7 +31,7 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
 
   switch (option.frontend_type) {
     case llc::front::FRONTEND_TYPE::ONNX_FILE: {
-      INFO(IMPORTER) << "onnx file path is: " << option.filename.c_str();
+      INFO(IMPORTER) << "onnx file path is: " << option.input_file.c_str();
       auto builder = front::OnnxBuilder(context);
       return front::OnnxImporter(&builder, option).export_mlir_module();
     }

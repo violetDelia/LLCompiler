@@ -8,6 +8,7 @@
 [submodule "third_party/spdlog"]
 	path = third_party/spdlog
 	url = https://github.com/gabime/spdlog.git
+	branch = v2.x
 [submodule "third_party/llvm-project"]
 	path = third_party/llvm-project
 	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git

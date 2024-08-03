@@ -21,7 +21,8 @@ const char *frontend_type_to_str(const FRONTEND_TYPE type);
 extern const int64_t ONNX_ADAPTED_VERSION;
 
 struct ImporterOption {
-  std::string filename;
+  std::string input_file;
+  std::string output_file;
   bool onnx_convert;
   uint64_t onnx_convert_version;
   FRONTEND_TYPE frontend_type;

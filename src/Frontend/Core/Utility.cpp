@@ -21,13 +21,4 @@
 #include "llcompiler/Frontend/Core/Option.h"
 #include "llcompiler/Frontend/Core/Utility.h"
 
-namespace llc::front {
-
-ImporterOption get_importer_option() {
-  return {.filename = option::importingPath,
-          .onnx_convert = option::onnxConvert,
-          .onnx_convert_version = option::onnxConvertVersion,
-          .frontend_type = option::frontendType};
-}
-
-}  // namespace llc::front
+namespace llc::front {}  // namespace llc::front

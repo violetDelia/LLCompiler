@@ -172,7 +172,7 @@ OnnxImporter::OnnxImporter(Builder *builder, const ImporterOption &option)
     : Importer(builder, option) {
   switch (option.frontend_type) {
     case FRONTEND_TYPE::ONNX_FILE:
-      init_model_(option.filename, &model_);
+      init_model_(option.input_file, &model_);
       break;
     default:
       FATAL(IMPORTER) << " need support other importer types";

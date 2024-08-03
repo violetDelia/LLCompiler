@@ -25,7 +25,6 @@
 
 #include "llcompiler/Support/Logger.h"
 #include "spdlog/common.h"
-#include "spdlog/fmt/bundled/core.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
@@ -41,24 +40,24 @@ const char *UTILITY = "utility";
 
 namespace llc::logger {
 
-const char *log_lever_to_str(const LOG_LEVER lever) {
+const char *log_level_to_str(const LOG_LEVEL lever) {
   switch (lever) {
-    case LOG_LEVER::DEBUG_:
+    case LOG_LEVEL::DEBUG_:
       return "debug";
-    case LOG_LEVER::INFO_:
+    case LOG_LEVEL::INFO_:
       return "info";
-    case LOG_LEVER::WARN_:
+    case LOG_LEVEL::WARN_:
       return "warn";
-    case LOG_LEVER::ERROR_:
+    case LOG_LEVEL::ERROR_:
       return "error";
-    case LOG_LEVER::FATAL_:
+    case LOG_LEVEL::FATAL_:
       return "fatal";
   }
   return "unimplemented";
 }
 
 void register_logger(const char *module, const char *root_path,
-                     const LOG_LEVER lever) {
+                     const LOG_LEVEL level) {
   using console_sink = spdlog::sinks::stdout_color_sink_mt;
   using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
@@ -77,18 +76,18 @@ void register_logger(const char *module, const char *root_path,
   }
   auto log =
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
-  log->set_level(static_cast<spdlog::level::level_enum>(lever));
+  log->set_level(static_cast<spdlog::level>(level));
   spdlog::register_logger(log);
   if (std::filesystem::exists(log_dir)) {
     CHECK(GLOBAL, std::filesystem::create_directories(log_dir))
         << "create file " << log_dir.c_str() << " failed!";
   }
   INFO(GLOBAL) << "regist log module: " << module
-               << "(lever:" << logger::log_lever_to_str(lever) << ")" << " -> "
+               << "(lever:" << logger::log_level_to_str(level) << ")" << " -> "
                << log_file;
 }
 
-Logger::Logger(const char *module, const LOG_LEVER level)
+Logger::Logger(const char *module, const LOG_LEVEL level)
     : module_(module), level_(level) {}
 
 Logger::~Logger() {}
@@ -100,10 +99,10 @@ LoggerStream Logger::stream(const bool emit_message) {
 void Logger::info(const char *message) {
   std::shared_ptr<spdlog::logger> logger = spdlog::get(this->module_);
   if (logger) {
-    logger->log(static_cast<spdlog::level::level_enum>(this->level_), message);
+    logger->log(static_cast<spdlog::level>(this->level_), message);
   } else {
-    spdlog::set_level(spdlog::level::level_enum::debug);
-    spdlog::log(static_cast<spdlog::level::level_enum>(this->level_), message);
+    spdlog::set_level(spdlog::level::debug);
+    spdlog::log(static_cast<spdlog::level>(this->level_), message);
   }
 }
 
@@ -118,12 +117,3 @@ LoggerStream::~LoggerStream() {
 }
 
 }  // namespace llc::logger
-
-// unused
-namespace llc {
-
-logger::LoggerStream log(const char *module, const logger::LOG_LEVER lever) {
-  logger::Logger(module, lever).stream(true) << "in";
-  return logger::Logger(module, lever).stream(true);
-}
-}  // namespace llc

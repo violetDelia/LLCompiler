@@ -26,9 +26,11 @@
 namespace llc::compiler {
 
 void init_logger_(std::initializer_list<std::string> modules) {
+  option::register_log_options();
+  auto options = option::get_logger_option();
   for (auto &module : modules) {
-    LLCOMPILER_INIT_LOGGER(module.c_str(), option::logRoot.getValue().data(),
-                           option::logLevel.getValue())
+    ::llc::logger::register_logger(module.c_str(), options.path.c_str(),
+                                   options.level);
   }
 }
 
@@ -40,7 +42,7 @@ void init_compiler(int argc, char **argv) {
   init_logger_({GLOBAL, IMPORTER});
   INFO(GLOBAL) << "frontend type is: "
                << front::frontend_type_to_str(option::frontendType);
-  INFO(GLOBAL) << "import file is: " << option::importingPath.getValue();
+  INFO(GLOBAL) << "import file is: " << option::inputFile.getValue();
 }
 
 }  // namespace llc::compiler

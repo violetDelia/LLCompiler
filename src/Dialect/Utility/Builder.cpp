@@ -21,6 +21,7 @@
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/Operation.h"
 #include "mlir/IR/Types.h"
 
 namespace llc {
@@ -30,7 +31,8 @@ namespace llc {
     llvm::SmallVector<Ty> vec(value);                                      \
     llvm::ArrayRef<Ty> new_value(vec);                                     \
     auto value_attr = mlir::DenseElementsAttr::get(shape_type, new_value); \
-    return build_op<Op>(builder, shape_type, value_attr);                  \
+    auto const_op = build_op<Op>(builder, shape_type, value_attr);         \
+    return const_op;                                                       \
   }
 
 mlir::tosa::ConstOp create_tosa_const(mlir::OpBuilder *builder,
@@ -63,9 +65,11 @@ mlir::tensor::ExpandShapeOp expand_to(
   return expand_op;
 }
 
-mlir::tensor::ExpandShapeOp expand_const_to(
+// return: [tosa::const(value), shape.expand_shape([1]->[target_shape])]
+llvm::SmallVector<mlir::Operation *> expand_const_to(
     mlir::OpBuilder *builder, double value, mlir::Type element_type,
     mlir::RankedTensorType target_shape) {
+  llvm::SmallVector<mlir::Operation *> outs;
   auto const_op = create_tosa_const(builder, {1}, {value}, element_type);
   mlir::ReassociationIndices reassociations;
   auto rank = target_shape.getRank();
@@ -73,6 +77,8 @@ mlir::tensor::ExpandShapeOp expand_const_to(
     reassociations.push_back(i);
   }
   auto expand_op = expand_to(builder, const_op, target_shape, {reassociations});
-  return expand_op;
+  outs.push_back(const_op);
+  outs.push_back(expand_op);
+  return outs;
 }
 }  // namespace llc

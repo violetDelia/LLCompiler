@@ -19,11 +19,13 @@
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llvm/Support/CommandLine.h"
 
-
 namespace llc::option {
+::llc::front::ImporterOption get_importer_option();
+
 extern llvm::cl::OptionCategory importingOptions;
 extern llvm::cl::opt<front::FRONTEND_TYPE> frontendType;
-extern llvm::cl::opt<std::string> importingPath;
+extern llvm::cl::opt<std::string> inputFile;
+extern llvm::cl::opt<std::string> outputFile;
 extern llvm::cl::opt<uint64_t> onnxConvertVersion;
 extern llvm::cl::opt<bool> onnxConvert;
 }  // namespace llc::option

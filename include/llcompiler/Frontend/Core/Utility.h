@@ -26,9 +26,6 @@
 
 #include "llcompiler/Frontend/Core/Base.h"
 
-namespace llc::front {
-ImporterOption get_importer_option();
-
-}  // namespace llc::front
+namespace llc::front {}  // namespace llc::front
 
 #endif  // INCLUDE_LLCOMPILER_FRONTEND_CORE_UTILITY_H_
