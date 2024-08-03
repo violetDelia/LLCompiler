@@ -248,6 +248,7 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
     auto value = mlir::DenseElementsAttr::get(                               \
         shape, llvm::ArrayRef<Type>(data_begin, data_begin + element_size)); \
     auto op = build_op<mlir::tosa::ConstOp>(builder, shape, value);          \
+    add_layout_attr(op, {NCHW});                                             \
     DEBUG_BUILDED_OP(IMPORTER, op)                                           \
     return op;                                                               \
   }

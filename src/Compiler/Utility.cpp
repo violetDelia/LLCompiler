@@ -12,6 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include <filesystem>
+
 #include "llcompiler/Compiler/Utility.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Frontend/Onnx/OnnxBuilder.h"
@@ -41,4 +43,5 @@ mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
       return {};
   }
 }
+
 }  // namespace llc::compiler

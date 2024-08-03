@@ -3,6 +3,7 @@ llcompiler_add_library(LLCMLIRUtility
     Type.cpp
     Builder.cpp
     Attribute.cpp
+    File.cpp
 
     DEPENDS
     MLIRIR

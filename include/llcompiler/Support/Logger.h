@@ -26,7 +26,7 @@
 #define INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
 #include <cstddef>
 #include <sstream>
-
+#include <string>
 namespace llc {
 
 /**********  log module extern  **********/

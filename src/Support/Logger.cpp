@@ -57,10 +57,11 @@ const char *log_level_to_str(const LOG_LEVEL lever) {
   return "unimplemented";
 }
 
-void register_logger(const char *module, LoggerOption &option) {
+void register_logger(const char *module, const LoggerOption &option) {
   using console_sink = spdlog::sinks::stdout_color_sink_mt;
   using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
+  sink_c->set_pattern("[%T] [%^%n%$] [%^%l%$] %v");
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
   auto now = std::chrono::system_clock::now();
@@ -76,12 +77,13 @@ void register_logger(const char *module, LoggerOption &option) {
   const bool save_log = strcmp(option.path.c_str(), "");
   if (save_log) {
     log_file = fmt::format("{}/{}.log", log_dir, module);
-    sinks.push_back(std::make_shared<file_sink>(log_file.c_str(), true));
+    auto sink_f = std::make_shared<file_sink>(log_file.c_str(), true);
+    sink_f->set_pattern("[%T] [%^%l%$] %v");
+    sinks.push_back(sink_f);
   }
   auto log =
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
   log->set_level(static_cast<spdlog::level>(option.level));
-  log->set_pattern("[%T] [%^%l%$] %v");
   spdlog::register_logger(log);
   INFO(GLOBAL) << "regist log module: " << module
                << "(lever:" << logger::log_level_to_str(option.level) << ")"

@@ -35,6 +35,8 @@ namespace llc::compiler {
 
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
     mlir::MLIRContext *context, const front::FrontEndOption &option);
+
+void mlir_to_file(mlir::ModuleOp *module, const char *file);
 }  // namespace llc::compiler
 
 #endif  // INCLUDE_LLCOMPILER_COMPILER_UTILITY_H_
