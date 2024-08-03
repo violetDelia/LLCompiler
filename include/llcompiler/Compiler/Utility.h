@@ -27,14 +27,15 @@
 #define INCLUDE_LLCOMPILER_COMPILER_UTILITY_H_
 
 #include "llcompiler/Frontend/Core/Base.h"
-#include "mlir/IR/BuiltinOps.h"
-#include "mlir/IR/MLIRContext.h"
-#include "mlir/IR/OwningOpRef.h"
-
 
 namespace llc::compiler {
+// Forward declarations.
+class ::mlir::OwningOpRef;
+class ::mlir::ModuleOp;
+class ::mlir::MLIRContext;
+
 mlir::OwningOpRef<mlir::ModuleOp> gen_mlir_from(
     mlir::MLIRContext *context, const front::ImporterOption &option);
-}
+}  // namespace llc::compiler
 
 #endif  // INCLUDE_LLCOMPILER_COMPILER_UTILITY_H_

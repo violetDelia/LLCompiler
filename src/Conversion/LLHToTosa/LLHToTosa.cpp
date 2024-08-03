@@ -12,7 +12,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
-
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTAFFINETOSTANDARD
 #include "llcompiler/Conversion/Passes.h.inc"
@@ -29,7 +28,15 @@ using namespace mlir::llh;
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//**
-namespace {}
+namespace {
+struct ReluOpLowering : public OpConversionPattern<ReluOp> {
+  using OpConversionPattern<ReluOp>::OpConversionPattern;
+  LogicalResult match(ReluOp op) const final { return success(); }
+  void rewrite(ReluOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {}
+}
+
+}  // namespace
 
 //===----------------------------------------------------------------------===//
 // Pattern population
@@ -58,17 +65,16 @@ struct LLHToTosaConversion final
   using impl::LLHToTosaConversionPassBase<
       LLHToTosaConversion>::LLHToTosaConversionPassBase;
 
-  void runOnOperation() override final;
+  void runOnOperation() override final {
+    ConversionTarget target(getContext());
+    configLLHToTosaConversionTarget(target);
+    TypeConverter converter;
+    initLLHtoTosaConversionTypeConverter(converter);
+    RewritePatternSet patterns(&getContext());
+    populateLLHToTosaConversionPatterns(converter, patterns);
+    if (failed(applyPartialConversion(getOperation(), target,
+                                      std::move(patterns))))
+      signalPassFailure();
+  };
 };
 }  // namespace
-void LLHToTosaConversion::runOnOperation() {
-  ConversionTarget target(getContext());
-  configLLHToTosaConversionTarget(target);
-  TypeConverter converter;
-  initLLHtoTosaConversionTypeConverter(converter);
-  RewritePatternSet patterns(&getContext());
-  populateLLHToTosaConversionPatterns(converter, patterns);
-  if (failed(
-          applyPartialConversion(getOperation(), target, std::move(patterns))))
-    signalPassFailure();
-}
