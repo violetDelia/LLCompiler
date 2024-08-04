@@ -2,8 +2,8 @@
 get_property(dialect_libs GLOBAL PROPERTY MLIR_DIALECT_LIBS)
 get_property(conversion_libs GLOBAL PROPERTY MLIR_CONVERSION_LIBS)
 get_property(extension_libs GLOBAL PROPERTY MLIR_EXTENSION_LIBS)
-llcompiler_add_executable(llcompiler
-    "${CMAKE_CURRENT_SOURCE_DIR}/llcompiler.cpp"
+llcompiler_add_executable(llc-opt
+    "${CMAKE_CURRENT_SOURCE_DIR}/llc-opt.cpp"
 
     ADDITIONAL_INCLUDE_DIRS
     ${ONNX_INCLUDE_DIR}
@@ -12,9 +12,10 @@ llcompiler_add_executable(llcompiler
     ${ABSL_INCLUDE_DIR}
 
     LINKS
-    llVMSupport
-    LLCompiler
+    LLCSupport
+    LLCMLIRUtility
     MLIRPass
     MLIRLLHToTosa
+    MLIRFuncDialect
     MLIROptLib
 )

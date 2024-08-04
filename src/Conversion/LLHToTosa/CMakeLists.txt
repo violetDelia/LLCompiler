@@ -5,12 +5,13 @@ add_mlir_conversion_library(MLIRLLHToTosa
   ${LLCOMPILER_INCLUDE_DIR}/llcompiler/Conversion/LLHToTosa
 
   DEPENDS
-  MLIRConversionPassIncGen
+  LLCConversionPassIncGen
 
   LINK_LIBS PUBLIC
   MLIRTosaDialect
   MLIRLLHDialect
   MLIRPass
+  MLIRTransformUtils
 )
 
 llcompiler_install_mlir_library(MLIRLLHToTosa CONVERSION)

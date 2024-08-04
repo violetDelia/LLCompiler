@@ -14,6 +14,8 @@
 
 #ifndef INCLUDE_LLCOMPILER_CONVERSION_PASSRS_H_
 #define INCLUDE_LLCOMPILER_CONVERSION_PASSRS_H_
+#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
+#include "mlir/Pass/PassRegistry.h"
 namespace mlir {
 
 #define GEN_PASS_REGISTRATION

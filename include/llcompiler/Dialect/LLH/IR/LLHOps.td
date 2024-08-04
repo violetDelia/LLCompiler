@@ -17,7 +17,6 @@ include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
 include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
 include "llcompiler/Dialect/LLH/IR/LLHEnums.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
 
 class LLH_ConstOp <string mnemonic, list<Trait> traits = []>:
         LLH_Op<mnemonic, traits# [ConstantLike]>{
@@ -70,18 +69,40 @@ def LLH_UndefinedOp     : LLH_Op<"undefined"> {
     let results = (outs);
 }
 
+def LLH_MatMulOp          : LLH_Op<"matmal",[SameOperandsAndResultRank]>{
+        let arguments = (ins
+            LLH_Tensor:$lhs,
+            LLH_Tensor:$rhs);
+        let results = (outs 
+            LLH_Tensor:$result);
+}
+
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
 def LLH_ReshapeOp          : LLH_UnaryOp<"reshape", [], LLH_Tensor>;
-// def LLH_ConstantOp : LLH_ConstOp<"constant">{
-//     let description = [{
-//         ConstantOp is a const that will never changed;
-//         Example:
-//         ```mlir
-//         %output = llh.constant dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
-//         ```
-//     }];
-// }
+
+def LLH_ConstantOp : LLH_ConstOp<"constant">{
+    let description = [{
+        ConstantOp is a const that will never changed;
+        Example:
+        ```mlir
+        %output = llh.constant dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
+        ```
+    }];
+}
+
+def LLH_ConvOp : LLH_Op<"conv">{
+    let arguments = (ins 
+        LLH_FloatTensor:$X,
+        LLH_FloatTensor:$W,
+        LLH_FloatTensor:$B,
+        DenseI64ArrayAttr:$dilation,
+        DenseI64ArrayAttr:$kernel_shape,
+        DenseI64ArrayAttr:$pad,
+        DenseI64ArrayAttr:$stride,
+        DefaultValuedAttr<I64Attr, "1">:$group);
+    let results = (outs LLH_FloatTensor);
+}
 
 // def LLH_WeightOp : LLH_ConstOp<"weight">{
 //     let description = [{
@@ -197,17 +218,7 @@ def LLH_ReshapeOp          : LLH_UnaryOp<"reshape", [], LLH_Tensor>;
 //     let results = (outs LLH_FloatTensor);
 // }
 
-// def LLH_ConvOp : LLH_Op<"conv", [InferShapedTypeOpInterface]>{
-//     let arguments = (ins 
-//         Variadic<LLH_FloatTensor>:$operands,
-//         ArrayAttr:$dilations,
-//         ArrayAttr:$kernel_shape,
-//         ArrayAttr:$pads,
-//         ArrayAttr:$strides,
-//         DefaultValuedAttr<LLH_AutoPadAttr, "AutoPad::DEFAULT">:$auto_pad,
-//         DefaultValuedAttr<SI64Attr, "1">:$group);
-//     let results = (outs LLH_FloatTensor);
-// }
+
 //Concat
 //ConcatFromSequence
 //ConstantOfShape

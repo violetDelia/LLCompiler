@@ -11,7 +11,5 @@ add_mlir_dialect_library(MLIRLLHDialect
 
     LINK_LIBS PUBLIC
     MLIRIR
-    MLIRInferTypeOpInterface
-    MLIRFuncDialect
 )
 llcompiler_install_mlir_library(MLIRLLHDialect DIALECT)

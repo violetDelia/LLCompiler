@@ -12,8 +12,16 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/IR/PatternMatch.h"
+#include "mlir/Pass/Pass.h"
+#include "mlir/Transforms/DialectConversion.h"
+
 namespace mlir {
-#define GEN_PASS_DEF_CONVERTAFFINETOSTANDARD
+#define GEN_PASS_DEF_CONVERTLLHTOTOSA
 #include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
@@ -33,8 +41,23 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
   using OpConversionPattern<ReluOp>::OpConversionPattern;
   LogicalResult match(ReluOp op) const final { return success(); }
   void rewrite(ReluOp op, OpAdaptor adaptor,
-               ConversionPatternRewriter& rewriter) const final {}
-}
+               ConversionPatternRewriter& rewriter) const final {
+    auto loc = op.getLoc();
+    auto input = adaptor.getInput();
+    auto out = op.getResult().getType();
+    rewriter.setInsertionPointAfter(op);
+    auto ops =
+        llc::expand_const_to(&rewriter, 0, out, cast<RankedTensorType>(out));
+    for (auto op : ops) {
+      rewriter.insert(op);
+    }
+    auto new_op = rewriter.create<mlir::tosa::MaximumOp>(
+        loc, ::mlir::TypeRange{op.getResult().getType()},
+        ::mlir::ValueRange{input, ops[1]->getResult(0)},
+        adaptor.getAttributes().getValue());
+    rewriter.replaceOp(op, new_op);
+  }
+};
 
 }  // namespace
 
@@ -43,12 +66,17 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
 //===----------------------------------------------------------------------===//
 
 void mlir::llh::populateLLHToTosaConversionPatterns(
-    TypeConverter& converter, RewritePatternSet& patterns) {}
+    TypeConverter& converter, RewritePatternSet& patterns) {
+  auto context = patterns.getContext();
+  patterns.add<ReluOpLowering>(converter, context);
+}
 
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
-void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {}
+void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {
+  target.addIllegalDialect<mlir::llh::LLHDialect>();
+}
 
 //===----------------------------------------------------------------------===//
 // init typeconvert
@@ -61,9 +89,8 @@ void mlir::llh::initLLHtoTosaConversionTypeConverter(TypeConverter& converter) {
 //===----------------------------------------------------------------------===//
 namespace {
 struct LLHToTosaConversion final
-    : impl::LLHToTosaConversionPassBase<LLHToTosaConversion> {
-  using impl::LLHToTosaConversionPassBase<
-      LLHToTosaConversion>::LLHToTosaConversionPassBase;
+    : impl::ConvertLLHToTosaBase<LLHToTosaConversion> {
+  using impl::ConvertLLHToTosaBase<LLHToTosaConversion>::ConvertLLHToTosaBase;
 
   void runOnOperation() override final {
     ConversionTarget target(getContext());
@@ -72,8 +99,8 @@ struct LLHToTosaConversion final
     initLLHtoTosaConversionTypeConverter(converter);
     RewritePatternSet patterns(&getContext());
     populateLLHToTosaConversionPatterns(converter, patterns);
-    if (failed(applyPartialConversion(getOperation(), target,
-                                      std::move(patterns))))
+    if (failed(
+            applyFullConversion(getOperation(), target, std::move(patterns))))
       signalPassFailure();
   };
 };

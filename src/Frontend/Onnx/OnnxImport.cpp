@@ -240,39 +240,38 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
   return types;
 }
 
-#define CREATE_WEIGHT_OP_FROM_ONNX(Onnx_Type, Type, weight, shape, builder)  \
+#define MLIR_GEN_TENSOR_CONST_OP(Onnx_Type, Type, weight, shape, builder)    \
   if (weight.elem_type() ==                                                  \
       ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                    \
     auto element_size = get_element_size_form(shape);                        \
     auto data_begin = weight.data<Type>();                                   \
     auto value = mlir::DenseElementsAttr::get(                               \
         shape, llvm::ArrayRef<Type>(data_begin, data_begin + element_size)); \
-    auto op = build_op<mlir::tosa::ConstOp>(builder, shape, value);          \
+    auto op = build_op<mlir::llh::ConstantOp>(builder, shape, value);        \
     add_layout_attr(op, {NCHW});                                             \
     DEBUG_BUILDED_OP(IMPORTER, op)                                           \
     return op;                                                               \
   }
 
-mlir::tosa::ConstOp OnnxImporter::mlir_gen(
+mlir::Operation *OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::Tensor &weight,
     std::map<std::string, mlir::ShapedType> *weight_shape_map) const {
   auto name = weight.name();
   auto shape = weight_shape_map->at(name);
   CHECK(IMPORTER, shape.hasStaticShape()) << "it not static shape for weight ";
   auto elem_type = shape.getElementType();
-  auto data = weight.data<int>();
   if (elem_type != mlir_gen(builder, weight.elem_type())) {
     WARN(IMPORTER) << "element_type of initializer is conflict!";
   }
-  CREATE_WEIGHT_OP_FROM_ONNX(FLOAT, float, weight, shape, builder)
-  CREATE_WEIGHT_OP_FROM_ONNX(DOUBLE, double, weight, shape, builder)
-  CREATE_WEIGHT_OP_FROM_ONNX(INT32, int32_t, weight, shape, builder)
-  CREATE_WEIGHT_OP_FROM_ONNX(INT64, int64_t, weight, shape, builder)
-  CREATE_WEIGHT_OP_FROM_ONNX(UINT64, uint64_t, weight, shape, builder)
+  MLIR_GEN_TENSOR_CONST_OP(FLOAT, float, weight, shape, builder)
+  MLIR_GEN_TENSOR_CONST_OP(DOUBLE, double, weight, shape, builder)
+  MLIR_GEN_TENSOR_CONST_OP(INT32, int32_t, weight, shape, builder)
+  MLIR_GEN_TENSOR_CONST_OP(INT64, int64_t, weight, shape, builder)
+  MLIR_GEN_TENSOR_CONST_OP(UINT64, uint64_t, weight, shape, builder)
   UNIMPLEMENTED(IMPORTER) << "unimplemented weight data type: "
                           << weight.elem_type();
 }
-#undef CREATE_WEIGHT_OP_FROM_ONNX
+#undef MLIR_GEN_TENSOR_CONST_OP
 
 #define INTS_ATTR(key, builder, node)     \
   case ONNX_NAMESPACE::AttributeKind::is: \
@@ -323,7 +322,6 @@ mlir::Attribute OnnxImporter::mlir_gen(
   auto input1 = value_map->at(inputs[input_index]->uniqueName()); \
   auto op_name = build_op<OP>(builder, ::mlir::TypeRange{output}, \
                               ::mlir::ValueRange{input1});        \
-  add_layout_attr(op_name, {NCHW});                               \
   DEBUG_BUILDED_OP(IMPORTER, op_name)
 
 #define COMMON_UNARY_OP(name, OP, input_index, output_index) \
@@ -355,9 +353,13 @@ mlir::Operation *OnnxImporter::mlir_gen(
     std::map<std::string, mlir::Value> *value_map) const {
   IF_NODE_NAME_IS("Undefined") { return nullptr; }
   COMMON_UNARY_OP("Relu", mlir::llh::ReluOp, 0, 0)
-  COMMON_UNARY_OP("Reshape", mlir::tosa::ReshapeOp, 0, 0)
   COMMON_BINARY_OP("Add", mlir::tosa::AddOp, 0, 1, 0)
-  COMMON_BINARY_OP("MatMul", mlir::tosa::MatMulOp, 0, 1, 0)
+  COMMON_BINARY_OP("MatMul", mlir::llh::MatMulOp, 0, 1, 0)
+  IF_NODE_NAME_IS("Reshape") {
+    BUILD_UNARY_OP(op, mlir::tosa::ReshapeOp, 0, 0)
+    op.setNewShape(output.getShape());
+    return op;
+  }
   IF_NODE_NAME_IS("MaxPool") {
     BUILD_UNARY_OP(op, mlir::tosa::MaxPool2dOp, 0, 0)
     ADD_ATTR(op, "kernel", kernel_shape, builder, node)
@@ -378,44 +380,38 @@ mlir::Operation *OnnxImporter::mlir_gen(
       blas = value_map->at(inputs[2]->uniqueName());
     } else if (input_size == 2) {
       auto m = get_shape_form(weight.getType())[0];
-      auto target_shape =
-          mlir::RankedTensorType::get({m}, output.getElementType());
-      // builder->setInsertionPointAfterValue(weight);
-      auto ops =
-          expand_const_to(builder, 0, output.getElementType(), target_shape);
-      for (auto op : ops) {
-        input.getParentBlock()->push_back(op);
-      }
-      blas = ops[1]->getResult(0);
+      mlir::SmallVector<double> values(m, 0);
+      auto const_op =
+          create_tosa_const(builder, {m}, values, output.getElementType());
+      input.getParentBlock()->push_back(const_op);
+      blas = const_op;
     } else {
       FATAL(IMPORTER) << "ERROR ONNX IR!";
     }
-    // GET_ATTR(pad, dilations, builder, node)
-    if (output.getRank() == 4) {
-      auto op = build_op<mlir::tosa::Conv2DOp>(
-          builder, ::mlir::TypeRange{output},
-          ::mlir::ValueRange{input, weight, blas});
-      ADD_ATTR(op, "stride", strides, builder, node)
-      ADD_ATTR(op, "dilation", dilations, builder, node)
-      ADD_ATTR(op, LLCGroupAttr, group, builder, node)
-      ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
-      add_layout_attr(op, {NCHW, NCHW});
-      DEBUG_BUILDED_OP(IMPORTER, op)
-      return op;
-    } else if (output.getRank() == 5) {
-      auto op = build_op<mlir::tosa::Conv3DOp>(
-          builder, ::mlir::TypeRange{output},
-          ::mlir::ValueRange{input, weight, blas});
-      ADD_ATTR(op, "stride", strides, builder, node)
-      ADD_ATTR(op, "dilation", dilations, builder, node)
-      ADD_ATTR(op, LLCGroupAttr, group, builder, node)
-      ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
-      add_layout_attr(op, {NCHW, NCHW});
-      DEBUG_BUILDED_OP(IMPORTER, op)
-      return op;
-    } else {
-      UNIMPLEMENTED(IMPORTER) << " tosa not supported!";
+    auto op =
+        build_op<mlir::llh::ConvOp>(builder, mlir::TypeRange{output},
+                                    mlir::ValueRange{input, weight, blas});
+    ADD_ATTR(op, "stride", strides, builder, node)
+    ADD_ATTR(op, "dilation", dilations, builder, node)
+    ADD_ATTR(op, LLCGroupAttr, group, builder, node)
+    ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
+    add_layout_attr(op, {NCHW, NCHW});
+    auto in_shape = mlir::cast<mlir::ShapedType>(input.getType()).getShape();
+    auto stride = op.getStride();
+    auto out_shape = output.getShape();
+    auto dilation = op.getDilation();
+    auto kernel_shape =
+        mlir::cast<mlir::DenseI64ArrayAttr>(kernel_shape_atrr).asArrayRef();
+    auto pads = mlir::SmallVector<int64_t>(in_shape.size() - 2, 0);
+    for (int i = 0; i < in_shape.size() - 2; i++) {
+      auto pad = ((out_shape[i + 2] - 1) * stride[i] + 1 - in_shape[i + 2] +
+                  dilation[i] * (kernel_shape[i] - 1)) /
+                 2;
+      pads.push_back(pad);
     }
+    op.setPad(pads);
+    DEBUG_BUILDED_OP(IMPORTER, op)
+    return op;
   }
   UNIMPLEMENTED(IMPORTER) << "unimplemented op generate: "
                           << node.kind().toString();
@@ -459,12 +455,13 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
     }
   }
   INFO(IMPORTER) << "----- building weight ops -----";
-  for (auto &weight : graph.initializers()) {
-    auto weight_op = mlir_gen(builder, weight, &weight_shape_map);
-    add_op_name_attr(weight_op, weight.name());
-    add_is_weight_attr(weight_op, true);
-    value_map[weight.name()] = weight_op.getResult();
-    block->push_back(weight_op);
+  for (auto &tensor : graph.initializers()) {
+    auto tensor_op = mlir_gen(builder, tensor, &weight_shape_map);
+    add_op_name_attr(tensor_op, tensor.name());
+    add_is_weight_attr(tensor_op, true);
+    add_layout_attr(tensor_op, {NCHW});
+    value_map[tensor.name()] = tensor_op->getResult(0);
+    block->push_back(tensor_op);
   }
   INFO(IMPORTER) << "----- building node ops -----";
   for (auto node : graph.nodes()) {

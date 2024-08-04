@@ -13,16 +13,22 @@
 //    limitations under the License.
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Compiler/Utility.h"
+#include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/Utility/File.h"
 #include "llcompiler/Frontend/Core/Option.h"
 #include "llcompiler/Support/Option.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/Dialect/Func/Extensions/AllExtensions.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/Pass/PassManager.h"
+#include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
+#include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
+#include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
 
 int main(int argc, char **argv) {
@@ -38,11 +44,10 @@ int main(int argc, char **argv) {
   mlir::MLIRContext context(registry);
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
   auto module = llc::compiler::gen_mlir_from(&context, front_option);
-  mlir::PassManager pm(module.get()->getName());
-  mlir::applyPassManagerCLOptions(pm);
-  mlir::func::registerAllExtensions(registry);
-  pm.addPass(mlir::createInlinerPass());
-  pm.run(*module);
+  mlir::registerConvertLLHToTosa();
   llc::file::mlir_to_file(&module, front_option.output_file.c_str());
+  mlir::asMainReturnCode(mlir::MlirOptMain(
+      argc, argv, "Minimal Standalone optimizer driver\n", registry));
+
   return 0;
 }

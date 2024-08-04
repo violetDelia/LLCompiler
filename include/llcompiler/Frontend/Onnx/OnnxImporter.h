@@ -53,7 +53,7 @@ class OnnxImporter : public Importer {
   LLC_MLIR_GEN(
       llvm::SmallVector<mlir::Type>,
       const ONNX_NAMESPACE::ArrayRef<const ONNX_NAMESPACE::Value *> &values)
-  LLC_MLIR_GEN(mlir::tosa::ConstOp, const ONNX_NAMESPACE::Tensor &weight,
+  LLC_MLIR_GEN(mlir::Operation *, const ONNX_NAMESPACE::Tensor &weight,
                std::map<std::string, mlir::ShapedType> *weight_shape_map)
   LLC_MLIR_GEN(mlir::Operation *, const ONNX_NAMESPACE::Node &node,
                std::map<std::string, mlir::Value> *value_map)
