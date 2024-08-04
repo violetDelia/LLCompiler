@@ -19,7 +19,7 @@ include "llcompiler/Dialect/LLH/IR/LLHEnums.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 
 class LLH_ConstOp <string mnemonic, list<Trait> traits = []>:
-        LLH_Op<mnemonic, traits# [ConstantLike]>{
+        LLH_Op<mnemonic, traits# []>{
     let arguments = (ins 
        DenseElementsAttr:$value);
     let results = (outs LLH_Tensor);

@@ -15,7 +15,9 @@ llcompiler_add_executable(llc-opt
     LLCSupport
     LLCMLIRUtility
     MLIRPass
+    MLIRTransforms
     MLIRLLHToTosa
     MLIRFuncDialect
+    MLIRFuncInlinerExtension
     MLIROptLib
 )

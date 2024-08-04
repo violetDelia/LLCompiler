@@ -20,12 +20,13 @@ include "mlir/Pass/PassBase.td"
 //===----------------------------------------------------------------------===//
 // LLH --> Tosa
 //===----------------------------------------------------------------------===//
-def ConvertLLHToTosa : Pass<"convert-llh-to-tosa","ModuleOp"> {
+def ConvertLLHToTosa : Pass<"convert-llh-to-tosa"> {
   let summary = "convert LLH IR to Tosa IR";
   let description = [{
 
   }];
 
-  let dependentDialects = ["tosa::TosaDialect"];
+  let dependentDialects = [ "::mlir::tosa::TosaDialect",
+                            "::mlir::func::FuncDialect"];
 }
 #endif // LLC_CONVERSION_PASSES
