@@ -9,3 +9,4 @@ __pycache__
 .cache
 .clangd
 out
+python_venv

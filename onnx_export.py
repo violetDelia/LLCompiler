@@ -29,7 +29,7 @@ onnx_program = torch.onnx.dynamo_export(
     torch_model,
     torch_input,
     export_params=True,  # store the trained parameter weights inside the model file
-    opset_version=16,  # the ONNX version to export the model to
+    opset_version=22,  # the ONNX version to export the model to
     do_constant_folding=False,  # whether to execute constant folding for optimization
     input_names=["input"],  # the model's input names
     output_names=["output"],  # the model's output names

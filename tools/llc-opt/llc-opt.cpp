@@ -17,12 +17,12 @@
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
-#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/Interfaces/CastInterfaces.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
+
 //--dump-pass-pipeline --inline --convert-llh-to-tosa
 int main(int argc, char **argv) {
   mlir::DialectRegistry registry;

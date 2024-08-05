@@ -72,14 +72,14 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
 void mlir::llh::populateLLHToTosaConversionPatterns(
     TypeConverter& converter, RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<ReluOpLowering>(converter, context);
+  // patterns.add<ReluOpLowering>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
 void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {
-  target.addIllegalDialect<mlir::llh::LLHDialect>();
+  target.addLegalDialect<mlir::llh::LLHDialect>();
 }
 
 //===----------------------------------------------------------------------===//
@@ -92,8 +92,7 @@ void mlir::llh::initLLHtoTosaConversionTypeConverter(TypeConverter& converter) {
 // Pass definition
 //===----------------------------------------------------------------------===//
 namespace {
-struct LLHToTosaConversion final
-    : impl::ConvertLLHToTosaBase<LLHToTosaConversion> {
+struct LLHToTosaConversion : impl::ConvertLLHToTosaBase<LLHToTosaConversion> {
   using impl::ConvertLLHToTosaBase<LLHToTosaConversion>::ConvertLLHToTosaBase;
 
   void runOnOperation() override final {
@@ -103,8 +102,8 @@ struct LLHToTosaConversion final
     initLLHtoTosaConversionTypeConverter(converter);
     RewritePatternSet patterns(&getContext());
     populateLLHToTosaConversionPatterns(converter, patterns);
-    if (failed(
-            applyFullConversion(getOperation(), target, std::move(patterns))))
+    if (failed(applyPartialConversion(getOperation(), target,
+                                      std::move(patterns))))
       signalPassFailure();
   };
 };
