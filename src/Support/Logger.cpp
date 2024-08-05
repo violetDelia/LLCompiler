@@ -36,6 +36,7 @@ namespace llc {
 const char *GLOBAL = "global";
 const char *IMPORTER = "importer";
 const char *UTILITY = "utility";
+const char *LLHTOTOSA = "llh-to-tosa";
 }  // namespace llc
 
 namespace llc::logger {
@@ -63,18 +64,18 @@ void register_logger(const char *module, const LoggerOption &option) {
   sink_c->set_pattern("[%T] [%^%n%$] [%^%l%$] %v");
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
-  auto now = std::chrono::system_clock::now();
-  auto time_now = std::chrono::system_clock::to_time_t(now);
-  std::stringstream time_ss;
-  time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
-  auto log_dir =
-      fmt::format("{}/log_{}", option.path.c_str(), time_ss.str().c_str());
   std::string log_file;
-  if (!std::filesystem::exists(log_dir)) {
-    std::filesystem::create_directory(log_dir);
-  }
-  const bool save_log = strcmp(option.path.c_str(), "");
+  auto path = option.path.c_str();
+  const bool save_log = strcmp(path, "");
   if (save_log) {
+    auto now = std::chrono::system_clock::now();
+    auto time_now = std::chrono::system_clock::to_time_t(now);
+    std::stringstream time_ss;
+    time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
+    auto log_dir = fmt::format("{}/log_{}", path, time_ss.str().c_str());
+    if (!std::filesystem::exists(log_dir)) {
+      std::filesystem::create_directories(log_dir);
+    }
     log_file = fmt::format("{}/{}.log", log_dir, module);
     auto sink_f = std::make_shared<file_sink>(log_file.c_str(), true);
     sink_f->set_pattern("[%T] [%^%l%$] %v");

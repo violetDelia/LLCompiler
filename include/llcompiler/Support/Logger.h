@@ -33,6 +33,7 @@ namespace llc {
 extern const char *GLOBAL;
 extern const char *IMPORTER;
 extern const char *UTILITY;
+extern const char *LLHTOTOSA;
 };  // namespace llc
 
 namespace llc::logger {

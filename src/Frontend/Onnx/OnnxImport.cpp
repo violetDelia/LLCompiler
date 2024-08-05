@@ -240,17 +240,22 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
   return types;
 }
 
-#define MLIR_GEN_TENSOR_CONST_OP(Onnx_Type, Type, weight, shape, builder)    \
-  if (weight.elem_type() ==                                                  \
-      ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                    \
-    auto element_size = get_element_size_form(shape);                        \
-    auto data_begin = weight.data<Type>();                                   \
-    auto value = mlir::DenseElementsAttr::get(                               \
-        shape, llvm::ArrayRef<Type>(data_begin, data_begin + element_size)); \
-    auto op = build_op<mlir::llh::ConstantOp>(builder, shape, value);        \
-    add_layout_attr(op, {NCHW});                                             \
-    DEBUG_BUILDED_OP(IMPORTER, op)                                           \
-    return op;                                                               \
+#define MLIR_GEN_TENSOR_CONST_OP(Onnx_Type, Type, weight, shape, builder, \
+                                 is_weight)                               \
+  if (weight.elem_type() ==                                               \
+      ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                 \
+    auto element_size = get_element_size_form(shape);                     \
+    auto data_begin = weight.data<Type>();                                \
+    auto value_date =                                                     \
+        llvm::ArrayRef<Type>(data_begin, data_begin + element_size);      \
+    auto value = mlir::DenseElementsAttr::get(shape, value_date);         \
+    auto op = build_op<mlir::llh::ConstantOp>(builder, shape, value);     \
+    add_layout_attr(op, {NCHW});                                          \
+    if (is_weight) {                                                      \
+      add_is_weight_attr(op, true);                                       \
+    }                                                                     \
+    DEBUG_BUILDED_OP(IMPORTER, op)                                        \
+    return op;                                                            \
   }
 
 mlir::Operation *OnnxImporter::mlir_gen(
@@ -263,11 +268,11 @@ mlir::Operation *OnnxImporter::mlir_gen(
   if (elem_type != mlir_gen(builder, weight.elem_type())) {
     WARN(IMPORTER) << "element_type of initializer is conflict!";
   }
-  MLIR_GEN_TENSOR_CONST_OP(FLOAT, float, weight, shape, builder)
-  MLIR_GEN_TENSOR_CONST_OP(DOUBLE, double, weight, shape, builder)
-  MLIR_GEN_TENSOR_CONST_OP(INT32, int32_t, weight, shape, builder)
-  MLIR_GEN_TENSOR_CONST_OP(INT64, int64_t, weight, shape, builder)
-  MLIR_GEN_TENSOR_CONST_OP(UINT64, uint64_t, weight, shape, builder)
+  MLIR_GEN_TENSOR_CONST_OP(FLOAT, float, weight, shape, builder, 1)
+  MLIR_GEN_TENSOR_CONST_OP(DOUBLE, double, weight, shape, builder, 1)
+  MLIR_GEN_TENSOR_CONST_OP(INT32, int32_t, weight, shape, builder, 1)
+  MLIR_GEN_TENSOR_CONST_OP(INT64, int64_t, weight, shape, builder, 0)
+  MLIR_GEN_TENSOR_CONST_OP(UINT64, uint64_t, weight, shape, builder, 0)
   UNIMPLEMENTED(IMPORTER) << "unimplemented weight data type: "
                           << weight.elem_type();
 }
@@ -294,7 +299,6 @@ mlir::Attribute OnnxImporter::mlir_gen(
     INTS_ATTR(attr_key, builder, node)
     STRING_ATTR(attr_key, builder, node)
   }
-
   UNIMPLEMENTED(IMPORTER) << "unknown attribute: "
                           << ONNX_NAMESPACE::Symbol(attr_key).toString()
                           << ". kind of attribute is ["
@@ -306,22 +310,24 @@ mlir::Attribute OnnxImporter::mlir_gen(
 #undef STRING_ATTR
 
 #define IF_NODE_NAME_IS(name) if (!strcmp(node.kind().toString(), name))
-#define GET_ATTR(mlir_attr_name, key_name, builder, node) \
-  auto mlir_attr_name = builder->getNamedAttr(            \
-      #mlir_attr_name,                                    \
-      mlir_gen(builder, node, ONNX_NAMESPACE::BuiltinSymbol::k##key_name));
-#define ADD_ATTR(op, mlir_attr_name, key_name, builder, node)              \
-  auto key_name##_atrr =                                                   \
-      mlir_gen(builder, node, ONNX_NAMESPACE::BuiltinSymbol::k##key_name); \
-  op.getOperation()->setAttr(mlir_attr_name, key_name##_atrr);
+#define GET_ATTR(mlir_attr_name, key_name, builder, node)           \
+  auto key_name##_key = ONNX_NAMESPACE::BuiltinSymbol::k##key_name; \
+  auto key_name##_attr = mlir_gen(builder, node, key_name##_key);   \
+  auto mlir_attr_name = builder->getNamedAttr(#mlir_attr_name, key_name##_attr);
+#define ADD_ATTR(op, mlir_attr_name, key_name, builder, node)       \
+  auto key_name##_key = ONNX_NAMESPACE::BuiltinSymbol::k##key_name; \
+  auto key_name##_attr = mlir_gen(builder, node, key_name##_key);   \
+  op.getOperation()->setAttr(mlir_attr_name, key_name##_attr);
 
 #define BUILD_UNARY_OP(op_name, OP, input_index, output_index)    \
   auto inputs = node.inputs();                                    \
   auto outputs = node.outputs();                                  \
   auto output = mlir_gen(builder, *outputs[output_index]);        \
   auto input1 = value_map->at(inputs[input_index]->uniqueName()); \
-  auto op_name = build_op<OP>(builder, ::mlir::TypeRange{output}, \
-                              ::mlir::ValueRange{input1});        \
+  auto loc = builder->getUnknownLoc();                            \
+  auto out_types = ::mlir::TypeRange{output};                     \
+  auto operands = ::mlir::ValueRange{input1};                     \
+  auto op_name = build_op<OP>(builder, out_types, operands);      \
   DEBUG_BUILDED_OP(IMPORTER, op_name)
 
 #define COMMON_UNARY_OP(name, OP, input_index, output_index) \
@@ -337,8 +343,10 @@ mlir::Attribute OnnxImporter::mlir_gen(
   auto output = mlir_gen(builder, *outputs[output_index]);                     \
   auto input1 = value_map->at(inputs[input1_index]->uniqueName());             \
   auto input2 = value_map->at(inputs[input2_index]->uniqueName());             \
-  auto op_name = build_op<OP>(builder, ::mlir::TypeRange{output},              \
-                              ::mlir::ValueRange{input1, input2});             \
+  auto loc = builder->getUnknownLoc();                                         \
+  auto out_types = ::mlir::TypeRange{output};                                  \
+  auto operands = ::mlir::ValueRange{input1, input2};                          \
+  auto op_name = build_op<OP>(builder, out_types, operands);                   \
   add_layout_attr(op_name, {NCHW, NCHW});                                      \
   DEBUG_BUILDED_OP(IMPORTER, op_name)
 
@@ -381,16 +389,17 @@ mlir::Operation *OnnxImporter::mlir_gen(
     } else if (input_size == 2) {
       auto m = get_shape_form(weight.getType())[0];
       mlir::SmallVector<double> values(m, 0);
-      auto const_op =
-          create_tosa_const(builder, {m}, values, output.getElementType());
+      auto ele_type = output.getElementType();
+      auto const_op = create_tosa_const(builder, {m}, values, ele_type,
+                                        builder->getUnknownLoc());
       input.getParentBlock()->push_back(const_op);
       blas = const_op;
     } else {
       FATAL(IMPORTER) << "ERROR ONNX IR!";
     }
-    auto op =
-        build_op<mlir::llh::ConvOp>(builder, mlir::TypeRange{output},
-                                    mlir::ValueRange{input, weight, blas});
+    auto out_types = mlir::TypeRange{output};
+    auto operands = mlir::ValueRange{input, weight, blas};
+    auto op = build_op<mlir::llh::ConvOp>(builder, out_types, operands);
     ADD_ATTR(op, "stride", strides, builder, node)
     ADD_ATTR(op, "dilation", dilations, builder, node)
     ADD_ATTR(op, LLCGroupAttr, group, builder, node)
@@ -401,7 +410,7 @@ mlir::Operation *OnnxImporter::mlir_gen(
     auto out_shape = output.getShape();
     auto dilation = op.getDilation();
     auto kernel_shape =
-        mlir::cast<mlir::DenseI64ArrayAttr>(kernel_shape_atrr).asArrayRef();
+        mlir::cast<mlir::DenseI64ArrayAttr>(kernel_shape_attr).asArrayRef();
     auto pads = mlir::SmallVector<int64_t>(in_shape.size() - 2, 0);
     for (int i = 0; i < in_shape.size() - 2; i++) {
       auto pad = ((out_shape[i + 2] - 1) * stride[i] + 1 - in_shape[i + 2] +

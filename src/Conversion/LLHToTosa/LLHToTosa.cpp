@@ -15,11 +15,14 @@
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Support/Logger.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -49,15 +52,13 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
     auto loc = op.getLoc();
     auto input = adaptor.getInput();
     auto out = op.getResult().getType();
-    rewriter.setInsertionPointAfter(op);
-    auto ops =
-        llc::expand_const_to(&rewriter, 0, out, cast<RankedTensorType>(out));
-    for (auto op : ops) {
-      rewriter.insert(op);
-    }
+    CHECK(llc::LLHTOTOSA, isa<ShapedType>(out)) << "Unexpected result type";
+    auto const_op =
+        llc::create_tosa_const(&rewriter, cast<ShapedType>(out).getShape(), {0},
+                               cast<ShapedType>(out).getElementType(), loc);
     auto new_op = rewriter.create<mlir::tosa::MaximumOp>(
         loc, ::mlir::TypeRange{op.getResult().getType()},
-        ::mlir::ValueRange{input, ops[1]->getResult(0)},
+        ::mlir::ValueRange{input, const_op->getResult(0)},
         adaptor.getAttributes().getValue());
     rewriter.replaceOp(op, new_op);
   }
@@ -72,20 +73,25 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
 void mlir::llh::populateLLHToTosaConversionPatterns(
     TypeConverter& converter, RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  // patterns.add<ReluOpLowering>(converter, context);
+  patterns.add<ReluOpLowering>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
 void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {
-  target.addLegalDialect<mlir::llh::LLHDialect>();
+  // target.addLegalDialect<mlir::llh::LLHDialect>();
+  target.addLegalDialect<mlir::tosa::TosaDialect>();
 }
 
 //===----------------------------------------------------------------------===//
 // init typeconvert
 //===----------------------------------------------------------------------===//
 void mlir::llh::initLLHtoTosaConversionTypeConverter(TypeConverter& converter) {
+  auto shaped_repalce = [](ShapedType type) { return type; };
+  // auto rank_tensor_replace = [](RankedTensorType type) { return type; };
+  //  converter.addConversion(shape_repalce);
+  converter.addConversion(shaped_repalce);
 }
 
 //===----------------------------------------------------------------------===//
@@ -95,7 +101,7 @@ namespace {
 struct LLHToTosaConversion : impl::ConvertLLHToTosaBase<LLHToTosaConversion> {
   using impl::ConvertLLHToTosaBase<LLHToTosaConversion>::ConvertLLHToTosaBase;
 
-  void runOnOperation() override final {
+  void runOnOperation() override {
     ConversionTarget target(getContext());
     configLLHToTosaConversionTarget(target);
     TypeConverter converter;

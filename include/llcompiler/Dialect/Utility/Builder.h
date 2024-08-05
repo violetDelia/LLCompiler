@@ -38,14 +38,13 @@ Op build_op(mlir::OpBuilder *builder, Args... args) {
 mlir::tosa::ConstOp create_tosa_const(mlir::OpBuilder *builder,
                                       llvm::ArrayRef<int64_t> shape,
                                       llvm::ArrayRef<double> value,
-                                      mlir::Type element_type);
+                                      mlir::Type element_type,
+                                      const mlir::Location &loc);
 
 mlir::tensor::ExpandShapeOp expand_to(
     mlir::OpBuilder *builder, mlir::Operation *from, mlir::ShapedType expand_to,
-    mlir::ArrayRef<mlir::ReassociationIndices> reassociation);
+    mlir::ArrayRef<mlir::ReassociationIndices> reassociation,
+    const mlir::Location &loc);
 
-llvm::SmallVector<mlir::Operation *> expand_const_to(
-    mlir::OpBuilder *builder, double value, mlir::Type element_type,
-    mlir::RankedTensorType target_shape);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
