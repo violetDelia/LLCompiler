@@ -104,16 +104,16 @@ def LLH_ConvOp : LLH_Op<"conv">{
     let results = (outs LLH_FloatTensor);
 }
 
-// def LLH_WeightOp : LLH_ConstOp<"weight">{
-//     let description = [{
-//         WeightOp is the weight of model and it will change when traning;
-//         Example:
-//         ```mlir
-//         %output = llh.weight dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
-//         ```
-//     }];
-// }
-//
+def LLH_WeightOp : LLH_ConstOp<"weight">{
+    let description = [{
+        WeightOp is the weight of model and it will change when traning;
+        Example:
+        ```mlir
+        %output = llh.weight dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
+        ```
+    }];
+}
+
 // def LLH_CastOp          : LLH_UnaryOp<"cast", [Elementwise], LLH_Tensor, LLH_Tensor, (ins DefaultValuedAttr<SI64Attr, "1">:$saturate, SI64Attr:$to)>;
 
 // def LLH_CeluOp        : LLH_UnaryElementwiseOp<"celu", [], LLH_FloatTensor, LLH_FloatTensor, (ins DefaultValuedAttr<F64Attr, "1">:$alpha)>;

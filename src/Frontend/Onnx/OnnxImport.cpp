@@ -206,9 +206,9 @@ mlir::Type OnnxImporter::mlir_gen(mlir::OpBuilder *builder,
     case ONNX_NAMESPACE::TensorProto_DataType_UINT8:
       return builder->getIntegerType(8, mlir::IntegerType::Unsigned);
     case ONNX_NAMESPACE::TensorProto_DataType_INT32:
-      return builder->getIntegerType(32, mlir::IntegerType::Signed);
+      return builder->getI32Type();
     case ONNX_NAMESPACE::TensorProto_DataType_INT64:
-      return builder->getIntegerType(64, mlir::IntegerType::Signed);
+      return builder->getI64Type();
     default:
       UNIMPLEMENTED(IMPORTER) << "  onnx element type is " << elem_type << "!";
   }
@@ -240,22 +240,21 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
   return types;
 }
 
-#define MLIR_GEN_TENSOR_CONST_OP(Onnx_Type, Type, weight, shape, builder, \
-                                 is_weight)                               \
-  if (weight.elem_type() ==                                               \
-      ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                 \
-    auto element_size = get_element_size_form(shape);                     \
-    auto data_begin = weight.data<Type>();                                \
-    auto value_date =                                                     \
-        llvm::ArrayRef<Type>(data_begin, data_begin + element_size);      \
-    auto value = mlir::DenseElementsAttr::get(shape, value_date);         \
-    auto op = build_op<mlir::llh::ConstantOp>(builder, shape, value);     \
-    add_layout_attr(op, {NCHW});                                          \
-    if (is_weight) {                                                      \
-      add_is_weight_attr(op, true);                                       \
-    }                                                                     \
-    DEBUG_BUILDED_OP(IMPORTER, op)                                        \
-    return op;                                                            \
+#define MLIR_GEN_TENSOR_CONST_OP(Onnx_Type, Type, weight, shape, builder, Op, \
+                                 add_layout)                                  \
+  if (weight.elem_type() ==                                                   \
+      ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                     \
+    auto element_size = get_element_size_form(shape);                         \
+    auto data_begin = weight.data<Type>();                                    \
+    auto value_date =                                                         \
+        llvm::ArrayRef<Type>(data_begin, data_begin + element_size);          \
+    auto value = mlir::DenseElementsAttr::get(shape, value_date);             \
+    auto op = build_op<Op>(builder, shape, value);                            \
+    if (add_layout) {                                                         \
+      add_layout_attr(op, {NCHW});                                            \
+    }                                                                         \
+    DEBUG_BUILDED_OP(IMPORTER, op);                                           \
+    return op;                                                                \
   }
 
 mlir::Operation *OnnxImporter::mlir_gen(
@@ -268,11 +267,16 @@ mlir::Operation *OnnxImporter::mlir_gen(
   if (elem_type != mlir_gen(builder, weight.elem_type())) {
     WARN(IMPORTER) << "element_type of initializer is conflict!";
   }
-  MLIR_GEN_TENSOR_CONST_OP(FLOAT, float, weight, shape, builder, 1)
-  MLIR_GEN_TENSOR_CONST_OP(DOUBLE, double, weight, shape, builder, 1)
-  MLIR_GEN_TENSOR_CONST_OP(INT32, int32_t, weight, shape, builder, 1)
-  MLIR_GEN_TENSOR_CONST_OP(INT64, int64_t, weight, shape, builder, 0)
-  MLIR_GEN_TENSOR_CONST_OP(UINT64, uint64_t, weight, shape, builder, 0)
+  MLIR_GEN_TENSOR_CONST_OP(FLOAT, float, weight, shape, builder,
+                           mlir::llh::WeightOp, 1)
+  MLIR_GEN_TENSOR_CONST_OP(DOUBLE, double, weight, shape, builder,
+                           mlir::llh::WeightOp, 1)
+  MLIR_GEN_TENSOR_CONST_OP(INT32, int32_t, weight, shape, builder,
+                           mlir::llh::WeightOp, 1)
+  MLIR_GEN_TENSOR_CONST_OP(INT64, int64_t, weight, shape, builder,
+                           mlir::llh::ConstantOp, 0)
+  MLIR_GEN_TENSOR_CONST_OP(UINT64, uint64_t, weight, shape, builder,
+                           mlir::llh::ConstantOp, 1)
   UNIMPLEMENTED(IMPORTER) << "unimplemented weight data type: "
                           << weight.elem_type();
 }
@@ -467,8 +471,6 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   for (auto &tensor : graph.initializers()) {
     auto tensor_op = mlir_gen(builder, tensor, &weight_shape_map);
     add_op_name_attr(tensor_op, tensor.name());
-    add_is_weight_attr(tensor_op, true);
-    add_layout_attr(tensor_op, {NCHW});
     value_map[tensor.name()] = tensor_op->getResult(0);
     block->push_back(tensor_op);
   }
