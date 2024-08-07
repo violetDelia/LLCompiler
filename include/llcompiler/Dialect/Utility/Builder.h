@@ -41,10 +41,5 @@ mlir::tosa::ConstOp create_tosa_const(mlir::OpBuilder *builder,
                                       mlir::Type element_type,
                                       const mlir::Location &loc);
 
-mlir::tensor::ExpandShapeOp expand_to(
-    mlir::OpBuilder *builder, mlir::Operation *from, mlir::ShapedType expand_to,
-    mlir::ArrayRef<mlir::ReassociationIndices> reassociation,
-    const mlir::Location &loc);
-
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_

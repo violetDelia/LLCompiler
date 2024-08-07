@@ -19,4 +19,8 @@
 #define DEBUG_BUILDED_OP(module, op) \
   DEBUG(module) << "create a " << op.getOperationName().str() << "op.";
 
+#define CONVERT_TO_NEW_OP(module, op, new_op)                          \
+  rewriter.replaceOp(op, new_op);                                      \
+  DEBUG(module) << "convert " << op.getOperationName().str() << " to " \
+                << new_op.getOperationName().str() << "."
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_

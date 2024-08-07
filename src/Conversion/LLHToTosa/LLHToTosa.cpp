@@ -11,12 +11,20 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include <cstdint>
+#include <cstdio>
+
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/Macro.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -24,7 +32,10 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Location.h"
+#include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/ValueRange.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -41,6 +52,19 @@ using namespace mlir::llh;
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+bool check_matmal_illegal(Operation* op) {
+  auto matmal = cast_or_null<MatMulOp>(op);
+  if (!matmal) return false;
+  auto left_type = cast_or_null<ShapedType>(matmal.getLhs().getType());
+  auto right_type = cast_or_null<ShapedType>(matmal.getRhs().getType());
+  auto result_type = cast_or_null<ShapedType>(matmal.getResult().getType());
+  if (!left_type || !right_type || !result_type) return false;
+  if (left_type.getRank() != left_type.getRank()) return false;
+  if (left_type.getRank() != result_type.getRank()) return false;
+  if (left_type.getRank() != 2 || left_type.getRank() != 3) return false;
+  return true;
+}
+
 namespace {};
 //===----------------------------------------------------------------------===//
 // operation lowing
@@ -100,6 +124,49 @@ struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
   }
 };
 
+struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
+  using OpConversionPattern<MatMulOp>::OpConversionPattern;
+  LogicalResult match(MatMulOp op) const final { return success(); }
+  void rewrite(MatMulOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    auto loc = op.getLoc();
+    auto out = op.getResult();
+    auto out_type = cast<ShapedType>(out.getType());
+    auto attrs = adaptor.getAttributes().getValue();
+    if (out_type.getRank() == 3) {
+      auto new_op = rewriter.create<tosa::MatMulOp>(
+          loc, ::mlir::TypeRange{out_type}, adaptor.getOperands(), attrs);
+      rewriter.replaceOp(op, new_op);
+    }
+    if (out_type.getRank() == 2) {
+      auto left = adaptor.getLhs();
+      auto left_shape = llc::get_shape_form(left.getType());
+      left_shape.insert(left_shape.begin(), 1);
+      auto left_reshape_op =
+          rewriter.create<mlir::tosa::ReshapeOp>(loc, left, left_shape);
+      left_reshape_op.dump();
+      auto right = adaptor.getRhs();
+      auto right_shape = llc::get_shape_form(right.getType());
+      right_shape.insert(right_shape.begin(), 1);
+      auto right_reshape_op =
+          rewriter.create<mlir::tosa::ReshapeOp>(loc, right, right_shape);
+      right_reshape_op.dump();
+      auto new_out_shape = llc::get_shape_form(out_type);
+      new_out_shape.insert(new_out_shape.begin(), 1);
+      auto new_out_type =
+          RankedTensorType::get(new_out_shape, out_type.getElementType());
+      auto matmul_op = rewriter.create<tosa::MatMulOp>(
+          loc, ::mlir::TypeRange{new_out_type},
+          ::mlir::ValueRange{left_reshape_op.getResult(),
+                             right_reshape_op.getResult()},
+          attrs);
+      auto reshape_op = rewriter.create<mlir::tosa::ReshapeOp>(
+          loc, matmul_op.getResult(), out_type.getShape());
+      rewriter.replaceOp(op, reshape_op);
+    }
+  }
+};
+
 }  // namespace
 
 //===----------------------------------------------------------------------===//
@@ -112,6 +179,7 @@ void mlir::llh::populateLLHToTosaConversionPatterns(
   patterns.add<ReluOpLowering>(converter, context);
   patterns.add<WeightOpLowering>(converter, context);
   patterns.add<ConstantOpLowering>(converter, context);
+  patterns.add<MatMulOpLowering>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -121,7 +189,9 @@ void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {
   target.addIllegalOp<ConstantOp>();
   target.addIllegalOp<WeightOp>();
   target.addIllegalOp<ReluOp>();
+  target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
   target.addLegalDialect<mlir::tosa::TosaDialect>();
+  target.addLegalDialect<mlir::func::FuncDialect>();
 }
 
 //===----------------------------------------------------------------------===//
