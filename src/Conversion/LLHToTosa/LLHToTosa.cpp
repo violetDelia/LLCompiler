@@ -35,6 +35,7 @@
 #include "mlir/IR/Location.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/TypeRange.h"
 #include "mlir/IR/ValueRange.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
@@ -62,6 +63,18 @@ bool check_matmal_illegal(Operation* op) {
   if (left_type.getRank() != left_type.getRank()) return false;
   if (left_type.getRank() != result_type.getRank()) return false;
   if (left_type.getRank() != 2 || left_type.getRank() != 3) return false;
+  return true;
+}
+
+bool check_conv_illegal(Operation* op) {
+  auto conv = cast_or_null<ConvOp>(op);
+  if (!conv) return false;
+  if (conv.getGroup() != 1) return false;
+  auto x_type = cast_or_null<ShapedType>(conv.getX().getType());
+  auto w_type = cast_or_null<ShapedType>(conv.getW().getType());
+  if (x_type || w_type) return false;
+  if (x_type.getRank() != w_type.getRank()) return false;
+  if (x_type.getRank() != 4 || w_type.getRank() != 5) return false;
   return true;
 }
 
@@ -167,6 +180,28 @@ struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
   }
 };
 
+struct ConvOpLowering : public OpConversionPattern<ConvOp> {
+  using OpConversionPattern<ConvOp>::OpConversionPattern;
+  LogicalResult match(ConvOp op) const final { return success(); }
+  void rewrite(ConvOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    auto loc = op.getLoc();
+    auto out = op.getResult();
+    auto out_type = cast<ShapedType>(out.getType());
+    auto atrrs = op->getAttrDictionary().getValue();
+    Operation* new_op;
+    if (out_type.getRank() == 4) {
+      new_op = rewriter.create<tosa::Conv2DOp>(loc, ::mlir::TypeRange{out},
+                                               adaptor.getOperands(), atrrs);
+    }
+    if (out_type.getRank() == 5) {
+      new_op = rewriter.create<tosa::Conv3DOp>(loc, ::mlir::TypeRange{out},
+                                               adaptor.getOperands(), atrrs);
+    }
+    rewriter.replaceOp(op, new_op);
+  };
+};
+
 }  // namespace
 
 //===----------------------------------------------------------------------===//
@@ -180,6 +215,7 @@ void mlir::llh::populateLLHToTosaConversionPatterns(
   patterns.add<WeightOpLowering>(converter, context);
   patterns.add<ConstantOpLowering>(converter, context);
   patterns.add<MatMulOpLowering>(converter, context);
+  patterns.add<ConvOpLowering>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -190,6 +226,7 @@ void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {
   target.addIllegalOp<WeightOp>();
   target.addIllegalOp<ReluOp>();
   target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
+  target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mlir::tosa::TosaDialect>();
   target.addLegalDialect<mlir::func::FuncDialect>();
 }
