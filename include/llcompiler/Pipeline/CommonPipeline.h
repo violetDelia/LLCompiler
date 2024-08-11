@@ -12,20 +12,13 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef LLC_CONVERSION_PASSES
-#define LLC_CONVERSION_PASSES
+#ifndef INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_
+#define INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_
 
-include "mlir/Pass/PassBase.td"
+namespace llc::pipleline {
 
-//===----------------------------------------------------------------------===//
-// LLH --> Tosa
-//===----------------------------------------------------------------------===//
-def ConvertLLHToTosa : Pass<"convert-llh-to-tosa"> {
-  let summary = "convert LLH IR to Tosa IR";
-  let description = [{
+void registerCommonPipeline();
 
-  }];
-  let dependentDialects = [ "::mlir::tosa::TosaDialect",
-                            "::mlir::func::FuncDialect"];
-}
-#endif // LLC_CONVERSION_PASSES
+}  // namespace llc::pipleline
+
+#endif  // INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_

@@ -14,6 +14,7 @@
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/Pipeline/CommonPipeline.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -34,24 +35,12 @@
 //--dump-pass-pipeline --inline --convert-llh-to-tosa
 int main(int argc, char **argv) {
   mlir::DialectRegistry registry;
-  registry.insert<mlir::linalg::LinalgDialect>();
-  registry.insert<mlir::affine::AffineDialect>();
-  registry.insert<mlir::LLVM::LLVMDialect>();
-  registry.insert<mlir::scf::SCFDialect>();
-  registry.insert<mlir::func::FuncDialect>();
-  registry.insert<mlir::vector::VectorDialect>();
-  registry.insert<mlir::shape::ShapeDialect>();
-  registry.insert<mlir::math::MathDialect>();
-  registry.insert<mlir::memref::MemRefDialect>();
-  registry.insert<mlir::func::FuncDialect>();
   registry.insert<mlir::llh::LLHDialect>();
-  registry.insert<mlir::tosa ::TosaDialect>();
-  mlir::registerAllExtensions(registry);
-
-  mlir::registerTransformsPasses();
-  mlir::registerConvertLLHToTosa();
-  mlir::tosa::registerTosaOptPasses();
-
+  registry.insert<mlir::func::FuncDialect>();
+  registry.insert<mlir::tosa::TosaDialect>();
+  mlir::func::registerInlinerExtension(registry);
+  mlir::registerAllPasses();
+  llc::pipleline::registerCommonPipeline();
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-opt", registry));
 }

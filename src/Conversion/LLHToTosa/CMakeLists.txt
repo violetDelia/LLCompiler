@@ -8,6 +8,7 @@ add_mlir_conversion_library(MLIRLLHToTosa
   LLCConversionPassIncGen
 
   LINK_LIBS PUBLIC
+  LLCMLIRUtility
   MLIRIR
   MLIRTosaDialect
   MLIRLLHDialect

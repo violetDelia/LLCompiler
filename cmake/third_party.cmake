@@ -71,7 +71,7 @@ function(build_llvm lib_path)
     message("******************************************")
     message("************* build llvm *****************")
     message("******************************************")
-    set(LLVM_TARGETS_TO_BUILD "Native;RISCV")
+    set(LLVM_TARGETS_TO_BUILD "all")
     set(LLVM_ENABLE_PROJECTS "mlir")
 
     # set(LLVM_ENABLE_RUNTIMES "libcxx")

@@ -102,7 +102,7 @@ endfunction()
 
 function(llcompiler_install_mlir_library name)
     cmake_parse_arguments(ARG
-        "DIALECT, TRANSFORM, CONVERSION"
+        "DIALECT, TRANSFORM, CONVERSION,PIPELINE"
         ""
         ""
         ${ARGN}
@@ -117,6 +117,14 @@ function(llcompiler_install_mlir_library name)
 
     if(ARG_TRANSFORM)
         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TRANSFORM ${name})
+    endif()
+
+    if(ARG_CONVERSION)
+        set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_CONVERSION ${name})
+    endif()
+
+    if(ARG_PIPELINE)
+        set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_PIPELINE ${name})
     endif()
 
     message("add MLIR lib: ${name}.")

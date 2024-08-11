@@ -13,11 +13,15 @@ llcompiler_add_executable(llc-opt
     ${ABSL_INCLUDE_DIR}
 
     LINKS
-    ${dialect_libs}
-    ${conversion_libs}
-    ${extension_libs}
     LLCSupport
-    LLCMLIRUtility
-    MLIRLLHToTosa
+    LLCCommonPipeline
     MLIROptLib
+    MLIRFuncInlinerExtension
+
+    # ${dialect_libs}
+    # ${conversion_libs}
+    # ${extension_libs}
+
+    # LLCMLIRUtility
+    # MLIRLLHToTosa
 )

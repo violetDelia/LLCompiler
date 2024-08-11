@@ -31,6 +31,7 @@ void configLLHToTosaConversionTarget(ConversionTarget& target);
 
 void populateLLHToTosaConversionPatterns(TypeConverter& converter,
                                          RewritePatternSet& patterns);
+
 }  // namespace llh
 
 }  // namespace mlir

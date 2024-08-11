@@ -96,10 +96,9 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
     auto attrs = adaptor.getAttributes().getValue();
     auto const_op =
         llc::create_tosa_const(&rewriter, out_shape, {0}, out_ele_type, loc);
-    auto types = ::mlir::TypeRange{out};
-    auto operands = ::mlir::ValueRange{input, const_op->getResult(0)};
-    auto new_op =
-        rewriter.create<mlir::tosa::MaximumOp>(loc, types, operands, attrs);
+    auto new_op = rewriter.create<mlir::tosa::MaximumOp>(
+        loc, ::mlir::TypeRange{out},
+        ::mlir::ValueRange{input, const_op->getResult(0)}, attrs);
     rewriter.replaceOp(op, new_op);
   }
 };
@@ -224,7 +223,7 @@ void mlir::llh::populateLLHToTosaConversionPatterns(
 void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {
   target.addIllegalOp<ConstantOp>();
   target.addIllegalOp<WeightOp>();
-  target.addIllegalOp<ReluOp>();
+  // target.addIllegalOp<ReluOp>();
   target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
   target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mlir::tosa::TosaDialect>();
@@ -236,8 +235,8 @@ void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {
 //===----------------------------------------------------------------------===//
 void mlir::llh::initLLHtoTosaConversionTypeConverter(TypeConverter& converter) {
   auto shaped_repalce = [](ShapedType type) { return type; };
-  // auto rank_tensor_replace = [](RankedTensorType type) { return type; };
-  //  converter.addConversion(shape_repalce);
+  auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
+  converter.addConversion(ranked_tensor_replace);
   converter.addConversion(shaped_repalce);
 }
 
