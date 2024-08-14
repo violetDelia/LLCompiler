@@ -8,6 +8,7 @@ add_mlir_dialect_library(LLCCommonPipeline
     MLIRPass
     MLIRTransforms
     MLIRLLHToTosa
+    MLIRTosaTransforms
 )
 
 llcompiler_install_mlir_library(LLCCommonPipeline PIPELINE)

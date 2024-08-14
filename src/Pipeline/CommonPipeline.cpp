@@ -14,15 +14,11 @@
 
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
-#include "mlir/Dialect/SparseTensor/Transforms/Passes.h"
-#include "mlir/Dialect/Tosa/Transforms/Passes.h"
-#include "mlir/InitAllPasses.h"
 #include "mlir/Pass/PassOptions.h"
 #include "mlir/Pass/PassRegistry.h"
-#include "mlir/Transforms/ControlFlowSinkUtils.h"
-#include "mlir/Transforms/LocationSnapshot.h"
 #include "mlir/Transforms/Passes.h"
 #include "mlir/pass/PassManager.h"
+#include "mlir/Dialect/Tosa/Transforms/Passes.h"
 
 namespace llc::pipleline {
 
