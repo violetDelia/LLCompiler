@@ -101,43 +101,6 @@ NullStream &NullStream::operator<<(const Ty val) {
 }
 }  // namespace llc::logger
 
-// unused
-namespace llc {
-#ifdef LLCOMPILER_HAS_LOG
-using Stream = logger::LoggerStream;
-#else
-using Stream = logger::NullStream;
-#endif
-
-void init_logger(const char *module, const char *root_path,
-                 const logger::LOG_LEVEL lever);
-
-Stream log(const char *module, const logger::LOG_LEVEL lever);
-
-Stream check_log(const char *module, bool condition,
-                 const logger::LOG_LEVEL lever);
-
-Stream debug(const char *module);
-
-Stream info(const char *module);
-
-Stream warning(const char *module);
-
-Stream error(const char *module);
-
-Stream fatal(const char *module);
-
-Stream print();
-
-Stream check(const char *module, bool condition);
-
-Stream check_debug(const char *module, bool condition);
-
-Stream unimplement(const char *module, bool condition);
-
-Stream warning_unimplement(const char *module, bool condition);
-
-}  // namespace llc
 
 #ifdef LLCOMPILER_HAS_LOG
 #define LLCOMPILER_INIT_LOGGER(module, root, lever) \
@@ -164,7 +127,7 @@ Stream warning_unimplement(const char *module, bool condition);
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
 
 #define print_info \
-  LLCOMPILER_LOG("ANONYMOUS_MODULE", ::llc::logger::LOG_LEVEL::ERROR_)
+  LLCOMPILER_LOG(::llc::GLOBAL, ::llc::logger::LOG_LEVEL::ERROR_)
 
 #define CHECK(module, condition)                                            \
   LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVEL::ERROR_) \

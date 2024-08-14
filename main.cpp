@@ -21,7 +21,7 @@
 #define LLCOMPILER_HAS_LOG
 // namespace llc::importer
 int main(int argc, char **argv) {
-  llc::front::FrontEndOption options{
+  llc::front::FrontEndOption options{   
       .input_file = "C:/LLCompiler/example/models/mnist-12.onnx",
       .onnx_convert_version = 16,
       .frontend_type = llc::front::FRONTEND_TYPE::ONNX_FILE};
