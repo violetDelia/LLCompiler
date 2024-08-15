@@ -25,12 +25,9 @@
 #include <string>
 #include <vector>
 
-#include "spdlog/async_logger.h"
 #include "spdlog/common.h"
-#include "spdlog/logger.h"
-#include "spdlog/sinks/file_sinks.h"
+#include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
-#include "spdlog/sinks/wincolor_sink.h"
 #include "spdlog/spdlog.h"
 
 namespace llc {
@@ -61,8 +58,8 @@ const char *log_level_to_str(const LOG_LEVEL lever) {
 }
 
 void register_logger(const char *module, const LoggerOption &option) {
-  using console_sink = spdlog::sinks::wincolor_stdout_sink_st;
-  using file_sink = spdlog::sinks::simple_file_sink_st;
+  using console_sink = spdlog::sinks::stdout_sink_st;
+  using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
@@ -85,7 +82,7 @@ void register_logger(const char *module, const LoggerOption &option) {
   auto log =
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
   log->set_pattern("[%T] [%^%l%$] %v");
-  log->set_level(static_cast<spdlog::level::level_enum>(option.level));
+  log->set_level(static_cast<spdlog::level>(option.level));
   spdlog::register_logger(log);
   INFO(GLOBAL) << "regist log module: " << module
                << "(lever:" << logger::log_level_to_str(option.level) << ")"
@@ -104,7 +101,9 @@ LoggerStream Logger::stream(const bool emit_message) {
 void Logger::info(const char *message) {
   std::shared_ptr<spdlog::logger> logger = spdlog::get(this->module_);
   if (logger) {
-    logger->log(static_cast<spdlog::level::level_enum>(this->level_), message);
+    logger->log(static_cast<spdlog::level>(this->level_), message);
+  } else {
+    spdlog::log(static_cast<spdlog::level>(this->level_), message);
   }
 }
 

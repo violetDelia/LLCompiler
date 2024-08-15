@@ -11,10 +11,11 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
+
 #include <cstdint>
 #include <cstdio>
 
-#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
@@ -40,6 +41,7 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
+
 
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTLLHTOTOSA
@@ -81,7 +83,7 @@ bool check_conv_illegal(Operation* op) {
 namespace {};
 //===----------------------------------------------------------------------===//
 // operation lowing
-//===----------------------------------------------------------------------===//**
+//===----------------------------------------------------------------------===//
 namespace {
 struct ReluOpLowering : public OpConversionPattern<ReluOp> {
   using OpConversionPattern<ReluOp>::OpConversionPattern;
@@ -156,13 +158,11 @@ struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
       left_shape.insert(left_shape.begin(), 1);
       auto left_reshape_op =
           rewriter.create<mlir::tosa::ReshapeOp>(loc, left, left_shape);
-      left_reshape_op.dump();
       auto right = adaptor.getRhs();
       auto right_shape = llc::get_shape_form(right.getType());
       right_shape.insert(right_shape.begin(), 1);
       auto right_reshape_op =
           rewriter.create<mlir::tosa::ReshapeOp>(loc, right, right_shape);
-      right_reshape_op.dump();
       auto new_out_shape = llc::get_shape_form(out_type);
       new_out_shape.insert(new_out_shape.begin(), 1);
       auto new_out_type =
