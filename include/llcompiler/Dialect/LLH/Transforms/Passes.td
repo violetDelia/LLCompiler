@@ -17,4 +17,11 @@
 
 include "mlir/Pass/PassBase.td"
 
+def TransformLayoutToNHWC : Pass<"buffer-deallocation"> {
+  let summary = "trans some llh op layout to nhwc for lowing to tosa";
+  let description = [{
+  }];
+  let constructor = "mlir::llh::createTransformLayoutToNHWCPass()";
+}
+
 #endif // LLH_PASS

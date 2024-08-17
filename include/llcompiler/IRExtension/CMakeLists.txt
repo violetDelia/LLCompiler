@@ -1,0 +1,7 @@
+set(LLVM_TARGET_DEFINITIONS Encoding.td)
+mlir_tablegen(EncodingEunms.h.inc -gen-enum-decls)
+mlir_tablegen(EncodingEunms.cpp.inc -gen-enum-defs)
+mlir_tablegen(Encoding.h.inc -gen-attrdef-decls)
+mlir_tablegen(Encoding.cpp.inc -gen-attrdef-defs)
+add_public_tablegen_target(MLIRIRExtensionEncodingIncGen)
+add_dependencies(mlir-headers MLIRIRExtensionEncodingIncGen)

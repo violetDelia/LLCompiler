@@ -12,15 +12,15 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.h"
-#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.h"
-#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h"
 #include "mlir/Dialect/Quant/QuantOps.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 
 #define FIX_HEADER
-#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.cpp.inc"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.cpp.inc"
 #undef FIX_HEADER
 
 namespace mlir::tosa_ex {
@@ -30,7 +30,7 @@ namespace mlir::tosa_ex {
 void TosaExDialect::initialize() {
   addOperations<
 #define GET_OP_LIST
-#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.cpp.inc"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.cpp.inc"
       >();
   registerTypes();
 }

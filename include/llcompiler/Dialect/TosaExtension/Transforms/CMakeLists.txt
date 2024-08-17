@@ -5,4 +5,4 @@ mlir_tablegen(PassesEnums.cpp.inc -gen-enum-defs)
 add_public_tablegen_target(MLIRTosaExPassIncGen)
 add_dependencies(mlir-headers MLIRTosaExPassIncGen)
 
-add_mlir_doc(TosaExPasses TosaExPasses TosaEx/ -gen-pass-doc)
+add_mlir_doc(TosaExPasses TosaExPasses TosaExtension/ -gen-pass-doc)

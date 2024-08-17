@@ -12,5 +12,5 @@ mlir_tablegen(TosaExDialect.cpp.inc -gen-dialect-defs -dialect=tosa_ex)
 add_public_tablegen_target(MLIRTosaExDialectIncGen)
 add_dependencies(mlir-headers MLIRTosaExDialectIncGen)
 
-add_mlir_doc(TosaExDialect TosaExDialect TosaEx/ -gen-dialect-doc)
-add_mlir_doc(TosaExOps TosaExOps TosaEx/ -gen-op-doc)
+add_mlir_doc(TosaExDialect TosaExDialect TosaExtension/ -gen-dialect-doc)
+add_mlir_doc(TosaExOps TosaExOps TosaExtension/ -gen-op-doc)

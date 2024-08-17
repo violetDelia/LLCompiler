@@ -13,14 +13,19 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXDIALECT_H_
-#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXDIALECT_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_
+#include <atomic>
+#include <cstdint>
 
-#include "mlir/Bytecode/BytecodeOpInterface.h"
-#include "mlir/IR/Dialect.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExEunms.h.inc"
+#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/DialectImplementation.h"
+#include "mlir/IR/ExtensibleDialect.h"
 
-#define LLCOMPILER_MACRO_FOR_FIX_HEAD
-#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.h.inc"
-#undef LLCOMPILER_MACRO_FOR_FIX_HEAD
+#define GET_ATTRDEF_CLASSES
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExAttrs.h.inc"
+#define GET_TYPEDEF_CLASSES
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h.inc"
 
-#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXDIALECT_H_
+#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_

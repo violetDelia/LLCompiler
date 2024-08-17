@@ -11,25 +11,16 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#ifndef LLH_TOSAEX_OPS
+#define LLH_TOSAEX_OPS
+include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.td"
+include "llcompiler/Dialect/TosaExtension/IR/TosaExConstraints.td"
+include "llcompiler/Dialect/TosaExtension/IR/TosaExEnums.td"
+include "llcompiler/Dialect/TosaExtension/IR/TosaExInterfaces.td"
+include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
 
-#include <memory>
 
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "mlir/Pass/Pass.h"
 
-namespace mlir::llh {
-
-std::unique_ptr<::mlir::Pass> createTransformLayoutToNHWCPass();
-
-#define GEN_PASS_DECL
-#define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
-
-}  // namespace mlir::llh
-
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
+#endif // LLH_TOSAEX_OPS

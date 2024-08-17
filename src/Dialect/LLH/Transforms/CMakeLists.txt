@@ -1,5 +1,5 @@
 add_mlir_library(MLIRLLHTransforms
-  Passes.cpp
+  TransformLayoutToNHWC.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include/llcompiler/Dialect/LLH/Transforms
@@ -7,6 +7,7 @@ add_mlir_library(MLIRLLHTransforms
   DEPENDS
   MLIRLLHDialectIncGen
   MLIRLLHPassIncGen
+  LLHTransformLayoutToNHWCIncGen
 
   LINK_LIBS PUBLIC
   MLIRLLHDialect

@@ -14,6 +14,7 @@ llcompiler_add_library(LLCFrontendOnnx
     LLCSupport
     LLCFrontendCore
     LLCMLIRUtility
+    MLIRIRExtensionEncoding
 
     PRIVATE
     onnx

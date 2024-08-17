@@ -13,7 +13,7 @@
 //    limitations under the License.
 //
 
-#include "llcompiler/Dialect/TosaEx/Transforms/Passes.h"
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Rewrite/FrozenRewritePatternSet.h"
@@ -22,5 +22,5 @@
 
 namespace llc::tosa_ex {
 #define GEN_PASS_DEF_STANDALONESWITCHBARFOO
-#include "llcompiler/Dialect/TosaEx/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h.inc"
 }  // namespace llc::tosa_ex

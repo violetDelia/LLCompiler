@@ -13,14 +13,14 @@
 //    limitations under the License.
 //
 
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/IR/PatternMatch.h"
-#include "mlir/Rewrite/FrozenRewritePatternSet.h"
-#include "mlir/Support/LogicalResult.h"
-#include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXDIALECT_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXDIALECT_H_
 
-namespace llc::llh {
-#define GEN_PASS_DEF_STANDALONESWITCHBARFOO
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
-}  // namespace llc::llh
+#include "mlir/Bytecode/BytecodeOpInterface.h"
+#include "mlir/IR/Dialect.h"
+
+#define LLCOMPILER_MACRO_FOR_FIX_HEAD
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h.inc"
+#undef LLCOMPILER_MACRO_FOR_FIX_HEAD
+
+#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXDIALECT_H_

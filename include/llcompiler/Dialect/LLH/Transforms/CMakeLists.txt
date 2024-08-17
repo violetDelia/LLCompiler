@@ -6,3 +6,7 @@ add_public_tablegen_target(MLIRLLHPassIncGen)
 add_dependencies(mlir-headers MLIRLLHPassIncGen)
 
 add_mlir_doc(LLHPasses LLHPasses LLH/ -gen-pass-doc)
+
+set(LLVM_TARGET_DEFINITIONS TransformLayoutToNHWC.td)
+mlir_tablegen(TransformLayoutToNHWC.inc -gen-rewriters)
+add_public_tablegen_target(LLHTransformLayoutToNHWCIncGen)

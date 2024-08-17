@@ -9,10 +9,12 @@
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
+//    See the License for the specific language g`overning permissions and
 //    limitations under the License.
-#ifndef LLH_TOSAEX_CONSTRAINTS
-#define LLH_TOSAEX_CONSTRAINTS
-include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.td"
-
-#endif // LLH_TOSAEX_CONSTRAINTS
+//
+#include "llcompiler/IRExtension/Encoding.h"
+#include "llvm/ADT/StringSwitch.h"
+namespace mlir::ex{}
+#include "llcompiler/IRExtension/EncodingEunms.cpp.inc"
+#define GET_ATTRDEF_CLASSES
+#include "llcompiler/IRExtension/Encoding.cpp.inc"

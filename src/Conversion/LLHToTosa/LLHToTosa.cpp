@@ -42,7 +42,6 @@
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
 
-
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTLLHTOTOSA
 #include "llcompiler/Conversion/Passes.h.inc"
@@ -54,6 +53,10 @@ using namespace mlir::llh;
 
 //===----------------------------------------------------------------------===//
 // common func
+//===----------------------------------------------------------------------===//
+
+//===----------------------------------------------------------------------===//
+// illegal func
 //===----------------------------------------------------------------------===//
 bool check_matmal_illegal(Operation* op) {
   auto matmal = cast_or_null<MatMulOp>(op);
@@ -80,7 +83,6 @@ bool check_conv_illegal(Operation* op) {
   return true;
 }
 
-namespace {};
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
@@ -204,9 +206,8 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
 }  // namespace
 
 //===----------------------------------------------------------------------===//
-// Pattern population
+// pattern population
 //===----------------------------------------------------------------------===//
-
 void mlir::llh::populateLLHToTosaConversionPatterns(
     TypeConverter& converter, RewritePatternSet& patterns) {
   auto context = patterns.getContext();
@@ -241,22 +242,27 @@ void mlir::llh::initLLHtoTosaConversionTypeConverter(TypeConverter& converter) {
 }
 
 //===----------------------------------------------------------------------===//
-// Pass definition
+// pass defination
 //===----------------------------------------------------------------------===//
 namespace {
 struct LLHToTosaConversion : impl::ConvertLLHToTosaBase<LLHToTosaConversion> {
   using impl::ConvertLLHToTosaBase<LLHToTosaConversion>::ConvertLLHToTosaBase;
 
-  void runOnOperation() override {
-    ConversionTarget target(getContext());
-    configLLHToTosaConversionTarget(target);
-    TypeConverter converter;
-    initLLHtoTosaConversionTypeConverter(converter);
-    RewritePatternSet patterns(&getContext());
-    populateLLHToTosaConversionPatterns(converter, patterns);
-    if (failed(applyPartialConversion(getOperation(), target,
-                                      std::move(patterns))))
-      signalPassFailure();
-  };
+  void runOnOperation() override;
 };
 }  // namespace
+
+//===----------------------------------------------------------------------===//
+// pass implement
+//===----------------------------------------------------------------------===//
+void LLHToTosaConversion::runOnOperation() {
+  ConversionTarget target(getContext());
+  configLLHToTosaConversionTarget(target);
+  TypeConverter converter;
+  initLLHtoTosaConversionTypeConverter(converter);
+  RewritePatternSet patterns(&getContext());
+  populateLLHToTosaConversionPatterns(converter, patterns);
+  if (failed(
+          applyPartialConversion(getOperation(), target, std::move(patterns))))
+    signalPassFailure();
+}

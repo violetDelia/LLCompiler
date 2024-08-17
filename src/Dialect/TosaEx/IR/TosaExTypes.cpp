@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.h"
-#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
@@ -24,9 +24,9 @@
 #include "mlir/IR/OpImplementation.h"
 
 #define FIX_HEADER
-#include "llcompiler/Dialect/TosaEx/IR/TosaExEunms.cpp.inc"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExEunms.cpp.inc"
 #undef FIX_HEADER
 #define GET_ATTRDEF_CLASSES
-#include "llcompiler/Dialect/TosaEx/IR/TosaExAttrs.cpp.inc"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExAttrs.cpp.inc"
 #define GET_TYPEDEF_CLASSES
-#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.cpp.inc"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.cpp.inc"

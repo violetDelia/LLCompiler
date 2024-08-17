@@ -1,5 +1,0 @@
-# python -m venv D:/python_env/llc
-# D:/python_env/llc/Scripts/activate
-# python -m pip  install -r requirements.txt
-onnx
-torch 

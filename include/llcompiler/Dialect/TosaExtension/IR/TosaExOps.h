@@ -13,19 +13,17 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_
-#include <atomic>
-#include <cstdint>
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
 
-#include "llcompiler/Dialect/TosaEx/IR/TosaExEunms.h.inc"
-#include "mlir/IR/BuiltinTypes.h"
-#include "mlir/IR/DialectImplementation.h"
-#include "mlir/IR/ExtensibleDialect.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h"
+#include "mlir/Bytecode/BytecodeOpInterface.h"
+#include "mlir/IR/Dialect.h"
+#include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OpImplementation.h"
+#include "mlir/Interfaces/InferTypeOpInterface.h"
+#include "mlir/Interfaces/SideEffectInterfaces.h"
 
-#define GET_ATTRDEF_CLASSES
-#include "llcompiler/Dialect/TosaEx/IR/TosaExAttrs.h.inc"
-#define GET_TYPEDEF_CLASSES
-#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.h.inc"
-
-#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXTYPES_H_
+#define GET_OP_CLASSES
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.h.inc"
+#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_

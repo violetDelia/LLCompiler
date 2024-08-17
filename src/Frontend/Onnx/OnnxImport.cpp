@@ -29,6 +29,7 @@
 #include "llcompiler/Frontend/Core/Builder.h"
 #include "llcompiler/Frontend/Core/Importer.h"
 #include "llcompiler/Frontend/Onnx/OnnxImporter.h"
+#include "llcompiler/IRExtension/Encoding.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -59,7 +60,6 @@
 #include "onnx/defs/shape_inference.h"
 #include "onnx/shape_inference/implementation.h"
 #include "onnx/version_converter/convert.h"
-
 namespace llc::front {
 namespace helper {
 
@@ -215,7 +215,7 @@ mlir::Type OnnxImporter::mlir_gen(mlir::OpBuilder *builder,
   return mlir::Type();
 }
 
-mlir::ShapedType OnnxImporter::mlir_gen(
+mlir::RankedTensorType OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::Value &value) const {
   llvm::SmallVector<int64_t> dims;
   for (auto dim : value.sizes()) {
@@ -226,7 +226,10 @@ mlir::ShapedType OnnxImporter::mlir_gen(
     }
   }
   auto type = mlir_gen(builder, value.elemType());
-  return mlir::RankedTensorType::get(dims, type);
+  auto context = builder->getContext();
+  auto layout = mlir::LayoutAttr::get(context, mlir::ex::Layout::NCHW);
+  auto encode = mlir::EncodingAttr::get(context, layout);
+  auto tensor = mlir::RankedTensorType::get(dims, type, encode);
 }
 
 llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(

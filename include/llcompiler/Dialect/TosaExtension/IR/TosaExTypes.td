@@ -16,7 +16,7 @@
 #define LLH_TOSAEX_TYPES
 
 include "mlir/IR/OpBase.td"
-include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.td"
+include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.td"
 include "mlir/Dialect/Tosa/IR/TosaTypesBase.td"
 
 #endif // LLH_TOSAEX_TYPES

@@ -11,19 +11,8 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#ifndef LLH_TOSAEX_CONSTRAINTS
+#define LLH_TOSAEX_CONSTRAINTS
+include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.td"
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
-#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
-
-#include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.h"
-#include "mlir/Bytecode/BytecodeOpInterface.h"
-#include "mlir/IR/Dialect.h"
-#include "mlir/IR/OpDefinition.h"
-#include "mlir/IR/OpImplementation.h"
-#include "mlir/Interfaces/InferTypeOpInterface.h"
-#include "mlir/Interfaces/SideEffectInterfaces.h"
-
-#define GET_OP_CLASSES
-#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.h.inc"
-#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
+#endif // LLH_TOSAEX_CONSTRAINTS

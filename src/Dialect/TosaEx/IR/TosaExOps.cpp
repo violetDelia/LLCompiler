@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.h"
-#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.h"
 
 #define GET_OP_CLASSES
-#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.cpp.inc"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.cpp.inc"

@@ -11,25 +11,13 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#ifndef LLH_TRANSFORMLAYOUTTONHWC
+#define LLH_TRANSFORMLAYOUTTONHWC
+include "mlir/IR/PatternBase.td"
+include "llcompiler/Dialect/LLH/IR/LLHOps.td"
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
+// def Transform_ConvOp_To_NHWC : 
+//     Pattern<    (LLH_ConvOp $X, $W, $B, $dilation, $kernel_shape, $pad, $stride, $group),
+//                 (LLH_ConvOp (LLH_TransposeOp($X )), $W, $B, $dilation, $kernel_shape, $pad, $stride, $group)>;
 
-#include <memory>
-
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "mlir/Pass/Pass.h"
-
-namespace mlir::llh {
-
-std::unique_ptr<::mlir::Pass> createTransformLayoutToNHWCPass();
-
-#define GEN_PASS_DECL
-#define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
-
-}  // namespace mlir::llh
-
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
+#endif // LLH_TRANSFORMLAYOUTTONHWC

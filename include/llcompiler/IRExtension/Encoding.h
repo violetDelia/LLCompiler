@@ -12,23 +12,20 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-
-#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
-
-#include <memory>
-
-#include "llcompiler/Dialect/TosaEx/IR/TosaExDialect.h"
-#include "llcompiler/Dialect/TosaEx/IR/TosaExOps.h"
-#include "mlir/Pass/Pass.h"
-
-namespace mlir::tosa_ext {
-
-#define GEN_PASS_DECL
-#include "llcompiler/Dialect/TosaEx/Transforms/Passes.h.inc"
-
-#define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/TosaEx/Transforms/Passes.h.inc"
-}  // namespace mlir::tosa_ext
-
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
+#ifndef INCLUDE_LLCOMPILER_IREXTENSION_ENCODING_H_
+#define INCLUDE_LLCOMPILER_IREXTENSION_ENCODING_H_
+#include <cstdint>
+#include <optional>
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/raw_ostream.h"
+#include "mlir/IR/Attributes.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OpImplementation.h"
+#include  "mlir/Support/LLVM.h"
+namespace mlir{}
+#include "llcompiler/IRExtension/EncodingEunms.h.inc"
+#define GET_ATTRDEF_CLASSES
+#include "llcompiler/IRExtension/Encoding.h.inc"
+#endif  // INCLUDE_LLCOMPILER_IREXTENSION_ENCODING_H_

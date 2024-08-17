@@ -11,16 +11,24 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLH_TOSAEX_OPS
-#define LLH_TOSAEX_OPS
-include "llcompiler/Dialect/TosaEx/IR/TosaExTypes.td"
-include "llcompiler/Dialect/TosaEx/IR/TosaExConstraints.td"
-include "llcompiler/Dialect/TosaEx/IR/TosaExEnums.td"
-include "llcompiler/Dialect/TosaEx/IR/TosaExInterfaces.td"
-include "mlir/Interfaces/InferTypeOpInterface.td"
-include "mlir/Interfaces/SideEffectInterfaces.td"
+//
 
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
 
+#include <memory>
 
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.h"
+#include "mlir/Pass/Pass.h"
 
-#endif // LLH_TOSAEX_OPS
+namespace mlir::tosa_ext {
+
+#define GEN_PASS_DECL
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h.inc"
+
+#define GEN_PASS_REGISTRATION
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h.inc"
+}  // namespace mlir::tosa_ext
+
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_

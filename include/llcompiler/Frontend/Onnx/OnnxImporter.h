@@ -48,7 +48,7 @@ class OnnxImporter : public Importer {
 
   LLC_MLIR_GEN(mlir::ModuleOp, const ONNX_NAMESPACE::ModelProto &model)
   LLC_MLIR_GEN(mlir::func::FuncOp, const ONNX_NAMESPACE::Graph &graph)
-  LLC_MLIR_GEN(mlir::ShapedType, const ONNX_NAMESPACE::Value &value)
+  LLC_MLIR_GEN(mlir::RankedTensorType, const ONNX_NAMESPACE::Value &value)
   LLC_MLIR_GEN(mlir::Type, const int32_t &elem_type)
   LLC_MLIR_GEN(
       llvm::SmallVector<mlir::Type>,
