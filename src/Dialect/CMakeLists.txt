@@ -1,4 +1,4 @@
 add_subdirectory(LLH)
-add_subdirectory(TosaEx)
+add_subdirectory(TosaExtension)
 add_subdirectory(IRExtension)
 add_subdirectory(Utility)

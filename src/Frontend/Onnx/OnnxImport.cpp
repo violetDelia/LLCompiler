@@ -253,9 +253,6 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
         llvm::ArrayRef<Type>(data_begin, data_begin + element_size);          \
     auto value = mlir::DenseElementsAttr::get(shape, value_date);             \
     auto op = build_op<Op>(builder, shape, value);                            \
-    if (add_layout) {                                                         \
-      add_layout_attr(op, {NCHW});                                            \
-    }                                                                         \
     DEBUG_BUILDED_OP(IMPORTER, op);                                           \
     return op;                                                                \
   }
@@ -354,7 +351,6 @@ mlir::Attribute OnnxImporter::mlir_gen(
   auto out_types = ::mlir::TypeRange{output};                                  \
   auto operands = ::mlir::ValueRange{input1, input2};                          \
   auto op_name = build_op<OP>(builder, out_types, operands);                   \
-  add_layout_attr(op_name, {NCHW, NCHW});                                      \
   DEBUG_BUILDED_OP(IMPORTER, op_name)
 
 #define COMMON_BINARY_OP(name, OP, input1_index, input2_index, output_index) \
@@ -380,7 +376,6 @@ mlir::Operation *OnnxImporter::mlir_gen(
     ADD_ATTR(op, "kernel", kernel_shape, builder, node)
     ADD_ATTR(op, "stride", strides, builder, node)
     ADD_ATTR(op, "pad", pads, builder, node)
-    add_layout_attr(op, {NCHW});
     return op;
   }
   IF_NODE_NAME_IS("Conv") {
@@ -411,7 +406,6 @@ mlir::Operation *OnnxImporter::mlir_gen(
     ADD_ATTR(op, "dilation", dilations, builder, node)
     ADD_ATTR(op, LLCGroupAttr, group, builder, node)
     ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
-    add_layout_attr(op, {NCHW, NCHW});
     auto in_shape = mlir::cast<mlir::ShapedType>(input.getType()).getShape();
     auto stride = op.getStride();
     auto out_shape = output.getShape();
