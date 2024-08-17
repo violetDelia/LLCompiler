@@ -11,12 +11,18 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+
+#include "llcompiler/Conversion/Passes.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/DialectRegistry.h"
+#include "mlir/IR/MLIRContext.h"
+#include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 
 //--dump-pass-pipeline --inline --convert-llh-to-tosa
@@ -25,8 +31,12 @@ int main(int argc, char **argv) {
   registry.insert<mlir::llh::LLHDialect>();
   registry.insert<mlir::func::FuncDialect>();
   registry.insert<mlir::tosa::TosaDialect>();
+  registry.insert<mlir::ex::IRExtensionDialect>();
   mlir::func::registerInlinerExtension(registry);
   llc::pipleline::registerCommonPipeline();
+  mlir::llh::registerLLHOptPasses();
+  mlir::registerConvertLLHToTosaPass();
   return mlir::asMainReturnCode(
-      mlir::MlirOptMain(argc, argv, "llc-opt", registry));
+      mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
+  return 0;
 }

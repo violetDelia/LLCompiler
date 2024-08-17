@@ -14,8 +14,11 @@
 //
 
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/Value.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 namespace mlir::llh {
 #define GEN_PASS_DEF_TRANSFORMLAYOUTTONHWC
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
@@ -25,18 +28,22 @@ using namespace mlir::llh;
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-
+mlir::DenseI64ArrayAttr GetTransposePerms(mlir::Value value) {
+  auto context = value.getContext();
+  auto perms = mlir::DenseI64ArrayAttr::get(context, {0, 1, 2, 3});
+  return perms;
+}
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
 namespace {
-  #include "llcompiler/Dialect/LLH/Transforms/TransformLayoutToNHWC.inc"
+#include "llcompiler/Dialect/LLH/Transforms/TransformLayoutToNHWC.inc"
 }
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateTransformLayoutToNHWCPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
+  populateWithGenerated(patterns);
 }
 //===----------------------------------------------------------------------===//
 // pass defination
@@ -56,7 +63,6 @@ void TransformLayoutToNHWC::runOnOperation() {
   RewritePatternSet patterns(context);
   populateTransformLayoutToNHWCPatterns(patterns);
   auto op = getOperation();
-
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
     signalPassFailure();
 }

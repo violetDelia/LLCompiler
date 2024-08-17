@@ -16,8 +16,11 @@
 include "mlir/IR/PatternBase.td"
 include "llcompiler/Dialect/LLH/IR/LLHOps.td"
 
-// def Transform_ConvOp_To_NHWC : 
-//     Pattern<    (LLH_ConvOp $X, $W, $B, $dilation, $kernel_shape, $pad, $stride, $group),
-//                 (LLH_ConvOp (LLH_TransposeOp($X )), $W, $B, $dilation, $kernel_shape, $pad, $stride, $group)>;
+def Gen_Transpose_Perms :
+  NativeCodeCall<"GetTransposePerms($0)">;
+
+def Transform_ConvOp_To_NHWC : 
+    Pat<    (LLH_ConvOp $X, $W, $B, $dilation, $kernel_shape, $pad, $stride, $group),
+                (LLH_ConvOp (LLH_TransposeOp $X, (Gen_Transpose_Perms $X)), $W, $B, $dilation, $kernel_shape, $pad, $stride, $group)>;
 
 #endif // LLH_TRANSFORMLAYOUTTONHWC

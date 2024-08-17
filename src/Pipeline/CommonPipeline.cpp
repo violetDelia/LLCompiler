@@ -15,6 +15,7 @@
 #include "llcompiler/Pipeline/CommonPipeline.h"
 
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Pipeline/Enums.h"
 #include "mlir/Conversion/TosaToArith/TosaToArith.h"
 #include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
@@ -47,11 +48,6 @@ struct CommonPipelineOptions
                                   run_mode_to_str(RUN_MODE::TRAINING), ""))};
 };
 
-void buildCommonPipelineTosaOpt(::mlir::OpPassManager &pm,
-                                const CommonPipelineOptions &options) {
-  // 规范化
-}
-
 void buildCommonPipeline(::mlir::OpPassManager &pm,
                          const CommonPipelineOptions &options) {
   //===----------------------------------------------------------------------===//
@@ -67,7 +63,8 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // llh
   //===----------------------------------------------------------------------===//
-  pm.addPass(::mlir::createInlinerPass());       // 内联
+  pm.addPass(::mlir::createInlinerPass());                   // 内联
+  pm.addPass(mlir::llh::createTransformLayoutToNHWCPass());  // 布局转换到NHWC
   pm.addPass(::mlir::createConvertLLHToTosa());  // LLH lowing to tosa
   //===----------------------------------------------------------------------===//
   // tosa opt

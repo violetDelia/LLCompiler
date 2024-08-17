@@ -13,9 +13,9 @@ llcompiler_add_executable(llcompiler
     ${ABSL_INCLUDE_DIR}
 
     LINKS
-    LLVMSupport
     LLCompiler
-    MLIRPass
-    MLIRLLHToTosa
+    LLCSupport
+    LLCCommonPipeline
     MLIROptLib
+    MLIRFuncInlinerExtension
 )

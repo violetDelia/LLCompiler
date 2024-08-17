@@ -12,5 +12,6 @@ add_mlir_library(MLIRLLHTransforms
   LINK_LIBS PUBLIC
   MLIRLLHDialect
   MLIRPass
+  MLIRIRExtension
 )
 llcompiler_install_mlir_library(MLIRLLHTransforms TRANSFORM)

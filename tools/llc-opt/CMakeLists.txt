@@ -18,10 +18,4 @@ llcompiler_add_executable(llc-opt
     MLIROptLib
     MLIRFuncInlinerExtension
 
-    # ${dialect_libs}
-    # ${conversion_libs}
-    # ${extension_libs}
-
-    # LLCMLIRUtility
-    # MLIRLLHToTosa
 )

@@ -81,7 +81,7 @@ void register_logger(const char *module, const LoggerOption &option) {
   }
   auto log =
       std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
-  log->set_pattern("[%T] [%^%l%$] %v");
+  log->set_pattern("[%T] [%n] [%^%l%$] %v");
   log->set_level(static_cast<spdlog::level>(option.level));
   spdlog::register_logger(log);
   INFO(GLOBAL) << "regist log module: " << module

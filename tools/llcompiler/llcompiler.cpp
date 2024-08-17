@@ -17,10 +17,13 @@
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/Utility/File.h"
 #include "llcompiler/Frontend/Core/Option.h"
+#include "llcompiler/Pipeline/CommonPipeline.h"
 #include "llcompiler/Support/Option.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/raw_ostream.h"
 #include "mlir/Dialect/Func/Extensions/AllExtensions.h"
+#include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/DialectRegistry.h"
@@ -30,24 +33,16 @@
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
 
 int main(int argc, char **argv) {
-  mlir::registerAsmPrinterCLOptions();
-  mlir::registerMLIRContextCLOptions();
-  mlir::registerPassManagerCLOptions();
-  llvm::cl::ParseCommandLineOptions(argc, argv, "llcompiler");
-  auto logger_option = llc::option::get_logger_option();
-  auto front_option = llc::option::get_front_end_option();
-  llc::compiler::init_global(logger_option);
-  llc::compiler::init_frontend(front_option, logger_option);
   mlir::DialectRegistry registry;
-  mlir::MLIRContext context(registry);
-  context.getOrLoadDialect<mlir::llh::LLHDialect>();
-  auto module = llc::compiler::gen_mlir_from(&context, front_option);
-  mlir::registerConvertLLHToTosa();
-  llc::file::mlir_to_file(&module, front_option.output_file.c_str());
-  mlir::asMainReturnCode(mlir::MlirOptMain(
-      argc, argv, "Minimal Standalone optimizer driver\n", registry));
-
+  registry.insert<mlir::llh::LLHDialect>();
+  registry.insert<mlir::func::FuncDialect>();
+  registry.insert<mlir::tosa::TosaDialect>();
+  mlir::func::registerInlinerExtension(registry);
+  llc::pipleline::registerCommonPipeline();
+  return mlir::asMainReturnCode(
+      mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
   return 0;
 }

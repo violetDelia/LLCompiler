@@ -8,6 +8,7 @@ add_mlir_dialect_library(LLCCommonPipeline
     LINK_LIBS PUBLIC
     MLIRPass
     MLIRTransforms
+    MLIRLLHTransforms
     MLIRLLHToTosa
     MLIRTosaTransforms
     MLIRTosaToArith
