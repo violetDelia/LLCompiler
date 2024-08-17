@@ -27,8 +27,23 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Types.h"
 #include "mlir/Support/LLVM.h"
+#include <string>
 
 namespace llc {
+#define ADD_ATTR_FUNC(name, input_type, attr_type)                       \
+  void add_##name##_attr(mlir::Operation *op, llvm::StringRef attr_name, \
+                         input_type value) {                             \
+    op->setAttr(attr_name, attr_type::get(op->getContext(), value));     \
+  }
+
+ADD_ATTR_FUNC(array_i64, llvm::SmallVector<int64_t>, mlir::DenseI64ArrayAttr)
+ADD_ATTR_FUNC(array_i64, llvm::ArrayRef<int64_t>, mlir::DenseI64ArrayAttr)
+ADD_ATTR_FUNC(array_i1, llvm::SmallVector<bool>, mlir::DenseBoolArrayAttr)
+ADD_ATTR_FUNC(array_i1, llvm::ArrayRef<bool>, mlir::DenseBoolArrayAttr)
+ADD_ATTR_FUNC(bool, bool, mlir::BoolAttr)
+ADD_ATTR_FUNC(string, llvm::StringRef, mlir::StringAttr)
+ADD_ATTR_FUNC(string, const char *, mlir::StringAttr)
+#undef ADD_ATTR_FUNC
 
 template <class Op, class... Args>
 Op build_op(mlir::OpBuilder *builder, Args... args) {

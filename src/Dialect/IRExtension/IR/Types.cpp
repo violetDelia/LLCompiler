@@ -12,20 +12,19 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#ifndef INCLUDE_LLCOMPILER_IREXTENSION_ENCODING_H_
-#define INCLUDE_LLCOMPILER_IREXTENSION_ENCODING_H_
-#include <cstdint>
-#include <optional>
-#include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/TypeSwitch.h"
-#include "llvm/Support/raw_ostream.h"
-#include "mlir/IR/Attributes.h"
-#include "mlir/IR/Builders.h"
-#include "mlir/IR/OpDefinition.h"
-#include "mlir/IR/OpImplementation.h"
-#include  "mlir/Support/LLVM.h"
-namespace mlir{}
-#include "llcompiler/IRExtension/EncodingEunms.h.inc"
-#define GET_ATTRDEF_CLASSES
-#include "llcompiler/IRExtension/Encoding.h.inc"
-#endif  // INCLUDE_LLCOMPILER_IREXTENSION_ENCODING_H_
+#include "llcompiler/Dialect/IRExtension/IR/Types.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+
+#define GET_TYPEDEF_CLASSES
+#include "llcompiler/Dialect/IRExtension/IR/Types.cpp.inc"
+namespace mlir::ex{
+//===----------------------------------------------------------------------===//
+// LLHDialect initialize method.
+//===----------------------------------------------------------------------===//
+void IRExtensionDialect::registerTypes() {
+  addTypes<
+#define GET_TYPEDEF_LIST
+#include "llcompiler/Dialect/IRExtension/IR/Types.cpp.inc"
+      >();
+}
+}

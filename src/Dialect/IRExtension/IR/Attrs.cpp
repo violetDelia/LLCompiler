@@ -11,24 +11,30 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
+//
 
-// using namespace mlir;
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
 
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "mlir/IR/Attributes.h"
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/DialectImplementation.h"
+#include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OpImplementation.h"
+#include "mlir/Support/LLVM.h"
+#define GET_ATTRDEF_CLASSES
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.cpp.inc"
 
-namespace mlir::llh {
+namespace mlir::ex {
 //===----------------------------------------------------------------------===//
 // LLHDialect initialize method.
 //===----------------------------------------------------------------------===//
-void LLHDialect::initialize() {
-  addOperations<
-#define GET_OP_LIST
-#include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
+void IRExtensionDialect::registerAttributes() {
+  addAttributes<
+#define GET_ATTRDEF_LIST
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.cpp.inc"
       >();
-  registerTypes();
 }
-
-}  // namespace mlir::llh
+}  // namespace mlir::ex

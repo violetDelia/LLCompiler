@@ -11,24 +11,30 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
+#ifndef LLC_IREX_DIALECT
+#define LLC_IREX_DIALECT
 
-// using namespace mlir;
+include "mlir/IR/OpBase.td"
 
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
-
-namespace mlir::llh {
 //===----------------------------------------------------------------------===//
-// LLHDialect initialize method.
+// IR extension dialect definition.
 //===----------------------------------------------------------------------===//
-void LLHDialect::initialize() {
-  addOperations<
-#define GET_OP_LIST
-#include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
-      >();
-  registerTypes();
+
+def IRExtension_Dialect : Dialect{
+    let name = "mlir_ex";
+    let summary = "mlir extension";
+    let description = [{
+     mlir extension.
+     }];
+    let cppNamespace = "::mlir::ex";
+    let useDefaultAttributePrinterParser = 1;
+    let useDefaultTypePrinterParser = 0;
+    let extraClassDeclaration = [{
+        void registerTypes();
+        void registerAttributes();
+    }];
+    
 }
 
-}  // namespace mlir::llh
+
+#endif // LLC_IREX_
