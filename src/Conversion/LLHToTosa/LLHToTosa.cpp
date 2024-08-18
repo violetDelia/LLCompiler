@@ -28,6 +28,8 @@
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/IR/Attributes.h"
+#include "mlir/IR/BuiltinAttributeInterfaces.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -54,6 +56,14 @@ using namespace mlir::llh;
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+DenseElementsAttr genDenseFromAttr(DenseI64ArrayAttr attr) {
+  auto size = attr.getSize();
+  auto element_type = attr.getElementType();
+  mlir::SmallVector<int64_t> shape;
+  shape.push_back(size);
+  auto tensor = RankedTensorType::get(shape, element_type);
+  return DenseElementsAttr::get(tensor, attr.asArrayRef());
+}
 
 //===----------------------------------------------------------------------===//
 // illegal func
@@ -61,9 +71,9 @@ using namespace mlir::llh;
 bool check_matmal_illegal(Operation* op) {
   auto matmal = cast_or_null<MatMulOp>(op);
   if (!matmal) return false;
-  auto left_type = cast_or_null<ShapedType>(matmal.getLhs().getType());
-  auto right_type = cast_or_null<ShapedType>(matmal.getRhs().getType());
-  auto result_type = cast_or_null<ShapedType>(matmal.getResult().getType());
+  auto left_type = cast_or_null<RankedTensorType>(matmal.getLhs().getType());
+  auto right_type = cast_or_null<RankedTensorType>(matmal.getRhs().getType());
+  auto result_type = cast_or_null<RankedTensorType>(matmal.getResult().getType());
   if (!left_type || !right_type || !result_type) return false;
   if (left_type.getRank() != left_type.getRank()) return false;
   if (left_type.getRank() != result_type.getRank()) return false;
@@ -75,8 +85,8 @@ bool check_conv_illegal(Operation* op) {
   auto conv = cast_or_null<ConvOp>(op);
   if (!conv) return false;
   if (conv.getGroup() != 1) return false;
-  auto x_type = cast_or_null<ShapedType>(conv.getX().getType());
-  auto w_type = cast_or_null<ShapedType>(conv.getW().getType());
+  auto x_type = cast_or_null<RankedTensorType>(conv.getX().getType());
+  auto w_type = cast_or_null<RankedTensorType>(conv.getW().getType());
   if (x_type || w_type) return false;
   if (x_type.getRank() != w_type.getRank()) return false;
   if (x_type.getRank() != 4 || w_type.getRank() != 5) return false;
@@ -87,6 +97,8 @@ bool check_conv_illegal(Operation* op) {
 // operation lowing
 //===----------------------------------------------------------------------===//
 namespace {
+#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.inc"
+
 struct ReluOpLowering : public OpConversionPattern<ReluOp> {
   using OpConversionPattern<ReluOp>::OpConversionPattern;
   LogicalResult match(ReluOp op) const final { return success(); }
@@ -213,6 +225,28 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
   };
 };
 
+// struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
+//   using OpConversionPattern<TransposeOp>::OpConversionPattern;
+//   LogicalResult match(TransposeOp op) const final { return success(); }
+//   void rewrite(TransposeOp op, OpAdaptor adaptor,
+//                ConversionPatternRewriter& rewriter) const final {
+//     LLC_RUN_IN_PATTERN
+//     auto loc = op.getLoc();
+//     auto out = op.getResult();
+//     auto input = op.getInput();
+//     auto perms = op.getPermsAttr();
+//     auto atrrs = op->getAttrDictionary().getValue();
+//     auto const_return = genTensorFromAttr(perms);
+//     auto const_op = rewriter.create<tosa::ConstOp>(loc, const_return, perms);
+//     auto con = const_op.getResult();
+//     auto new_op = rewriter.create<tosa::TransposeOp>(
+//         loc, ::mlir::TypeRange{out.getType()},
+//         ::mlir::ValueRange{op.getInput(), const_op->getResult(0)}, atrrs);
+//     rewriter.replaceOp(op, new_op);
+//     LLC_RUN_OUT_PATTERN
+//   };
+// };
+
 }  // namespace
 
 //===----------------------------------------------------------------------===//
@@ -226,6 +260,7 @@ void mlir::llh::populateLLHToTosaConversionPatterns(
   patterns.add<ConstantOpLowering>(converter, context);
   patterns.add<MatMulOpLowering>(converter, context);
   patterns.add<ConvOpLowering>(converter, context);
+  populateWithGenerated(patterns);
 }
 
 //===----------------------------------------------------------------------===//
@@ -234,7 +269,7 @@ void mlir::llh::populateLLHToTosaConversionPatterns(
 void mlir::llh::configLLHToTosaConversionTarget(ConversionTarget& target) {
   target.addIllegalOp<ConstantOp>();
   target.addIllegalOp<WeightOp>();
-  // target.addIllegalOp<ReluOp>();
+  target.addIllegalOp<ReluOp>();
   target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
   target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mlir::tosa::TosaDialect>();

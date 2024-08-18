@@ -6,6 +6,7 @@ add_mlir_conversion_library(MLIRLLHToTosa
 
   DEPENDS
   LLCConversionPassIncGen
+  MLIRLLHToTosaIncGen
 
   LINK_LIBS PUBLIC
   LLCMLIRUtility
