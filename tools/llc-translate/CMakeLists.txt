@@ -11,4 +11,5 @@ llcompiler_add_executable(llc-translate
     LLCCommonPipeline
     MLIROptLib
     MLIRFuncInlinerExtension
+    ${translation_libs}
 )

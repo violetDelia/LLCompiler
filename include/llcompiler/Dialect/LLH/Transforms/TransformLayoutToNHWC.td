@@ -14,13 +14,42 @@
 #ifndef LLH_TRANSFORMLAYOUTTONHWC
 #define LLH_TRANSFORMLAYOUTTONHWC
 include "mlir/IR/PatternBase.td"
+include "mlir/IR/Constraints.td"
 include "llcompiler/Dialect/LLH/IR/LLHOps.td"
 
-def Gen_Transpose_Perms :
-  NativeCodeCall<"GetTransposePerms($0)">;
+def Gen_Transpose_Perms_To_NHWC: NativeCodeCall<"genTransposePermsToNHWC($0)">;
+
+def Gen_Transpose_Perms_From_NHWC: NativeCodeCall<"genTransposePermsFromNHWC($0)">;
+
+def Gen_NHWC_Return_Tensor: NativeCodeCall<"genNHWCReturnTensor($0)">;
+
+def Layout_Is_Not_NHWC: Constraint<CPred<"layoutIsNotNHWC($0)">>;
+
+def Any_Layout_Is_Not_NHWC_3:
+    Constraint< Or<[    CPred<"layoutIsNotNHWC($0)">,
+                        CPred<"layoutIsNotNHWC($1)">,
+                        CPred<"layoutIsNotNHWC($2)">]>>;
+
+
+def Is_Same_Layout_3: 
+    Constraint< And<[   CPred<"llc::getLayoutFrom($0)==llc::getLayoutFrom($1)">,
+                        CPred<"llc::getLayoutFrom($1)==llc::getLayoutFrom($2)">]>>;
+
 
 def Transform_ConvOp_To_NHWC : 
-    Pat<    (LLH_ConvOp $X, $W, $B, $dilation, $kernel_shape, $pad, $stride, $group),
-                (LLH_ConvOp (LLH_TransposeOp $X, (Gen_Transpose_Perms $X)), $W, $B, $dilation, $kernel_shape, $pad, $stride, $group)>;
+    Pat<  (LLH_ConvOp:$res $X, $W, $B, $dilation, $kernel_shape, $pad, $stride, $group),
+          (LLH_TransposeOp
+            (LLH_ConvOp 
+                (LLH_TransposeOp $X, 
+                    (Gen_Transpose_Perms_To_NHWC $X), 
+                    (returnType (Gen_NHWC_Return_Tensor $X))),
+                (LLH_TransposeOp $W, 
+                    (Gen_Transpose_Perms_To_NHWC $W),
+                    (returnType (Gen_NHWC_Return_Tensor $W))), 
+                $B, $dilation, $kernel_shape, $pad, $stride, $group,
+                (returnType (Gen_NHWC_Return_Tensor $res))
+            ),
+            (Gen_Transpose_Perms_From_NHWC $res)),
+        [(Any_Layout_Is_Not_NHWC_3 $X, $W, $res), (Is_Same_Layout_3 $X, $W, $res)]>;
 
 #endif // LLH_TRANSFORMLAYOUTTONHWC

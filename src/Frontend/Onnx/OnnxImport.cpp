@@ -247,7 +247,7 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
                                  add_layout)                                  \
   if (weight.elem_type() ==                                                   \
       ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                     \
-    auto element_size = get_element_size_form(shape);                         \
+    auto element_size = getElementSizeFrom(shape);                         \
     auto data_begin = weight.data<Type>();                                    \
     auto value_date =                                                         \
         llvm::ArrayRef<Type>(data_begin, data_begin + element_size);          \
@@ -389,7 +389,7 @@ mlir::Operation *OnnxImporter::mlir_gen(
     if (input_size == 3) {
       blas = value_map->at(inputs[2]->uniqueName());
     } else if (input_size == 2) {
-      auto m = get_shape_form(weight.getType())[0];
+      auto m = getShapeFrom(weight.getType())[0];
       mlir::SmallVector<double> values(m, 0);
       auto ele_type = output.getElementType();
       auto const_op = create_tosa_const(builder, {m}, values, ele_type,

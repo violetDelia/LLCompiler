@@ -114,7 +114,7 @@ def LLH_WeightOp : LLH_ConstOp<"weight">{
     }];
 }
 
-def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultType, SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>{
+def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>{
     let description = [{
         WeightOp is the weight of model and it will change when traning;
         Example:

@@ -17,14 +17,14 @@
 #include <cstdint>
 #include <vector>
 
-#include "llvm/ADT/SmallVector.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/Value.h"
-#include "mlir/Support/LLVM.h"
+
 
 namespace llc {
-
-std::vector<int64_t> get_shape_form(const mlir::Type& shape_type);
-int64_t get_element_size_form(const mlir::ShapedType& shape_type);
+std::vector<int64_t> getShapeFrom(const mlir::Type& shape_type);
+int64_t getElementSizeFrom(const mlir::ShapedType& shape_type);
+mlir::ex::Layout getLayoutFrom(const mlir::Value& value);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_

@@ -12,26 +12,28 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#include <any>
+#include "llcompiler/Dialect/Utility/Type.h"
+
 #include <cstddef>
 #include <cstdint>
-#include <numeric>
 #include <vector>
 
-#include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Support/Logger.h"
-#include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
 
 namespace llc {
 
-std::vector<int64_t> get_shape_form(const mlir::Type& shape_type) {
+std::vector<int64_t> getShapeFrom(const mlir::Type& shape_type) {
   CHECK(UTILITY, mlir::isa<mlir::ShapedType>(shape_type));
   return mlir::cast<mlir::ShapedType>(shape_type).getShape().vec();
 }
 
-int64_t get_element_size_form(const mlir::ShapedType& shape_type) {
+int64_t getElementSizeFrom(const mlir::ShapedType& shape_type) {
   auto rank = shape_type.getRank();
   if (rank == 0) return 0;
   int64_t element_size = 1;
@@ -39,6 +41,14 @@ int64_t get_element_size_form(const mlir::ShapedType& shape_type) {
     element_size *= shape_type.getDimSize(i);
   }
   return element_size;
+}
+mlir::ex::Layout getLayoutFrom(const mlir::Value& value) {
+  auto tensor = mlir::cast_or_null<mlir::RankedTensorType>(value.getType());
+  CHECK(UTILITY, tensor) << "value is not mlir::RankedTensorType";
+  auto encode =
+      mlir::cast_or_null<mlir::ex::EncodingAttr>(tensor.getEncoding());
+  CHECK(UTILITY, encode) << "tensor not have mlir::ex::EncodingAttr";
+  return encode.getLayout();
 }
 
 }  // namespace llc

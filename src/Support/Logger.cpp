@@ -36,7 +36,7 @@ namespace llc {
 const char *GLOBAL = "global";
 const char *IMPORTER = "importer";
 const char *UTILITY = "utility";
-const char *LLHTOTOSA = "llh-to-tosa";
+const char *MLIR = "mlir";
 }  // namespace llc
 
 namespace llc::logger {

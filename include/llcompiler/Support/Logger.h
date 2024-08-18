@@ -33,7 +33,7 @@ namespace llc {
 extern const char *GLOBAL;
 extern const char *IMPORTER;
 extern const char *UTILITY;
-extern const char *LLHTOTOSA;
+extern const char *MLIR;
 };  // namespace llc
 
 namespace llc::logger {
@@ -101,7 +101,6 @@ NullStream &NullStream::operator<<(const Ty val) {
 }
 }  // namespace llc::logger
 
-
 #ifdef LLCOMPILER_HAS_LOG
 #define LLCOMPILER_INIT_LOGGER(module, root, lever) \
   ::llc::logger::register_logger(module, root, lever);
@@ -166,7 +165,17 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define UNIMPLEMENTED(module) \
   WRONG(module) << "function [" << __func__ << "] Unimplemented!"
 
-#define WARN_UNIMPLEMENTED(module)                                         \
-  WARN(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" << "function [" \
-               << __func__ << "] Unimplemented!"
+#define WARN_UNIMPLEMENTED(module)                         \
+  WARN(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" \
+               << "function [" << __func__ << "] Unimplemented!"
+
+#define LLC_RUN_IN_PASS \
+  INFO(llc::MLIR) << "----- run in pass: " << this->getPassName().str() << " -----";
+#define LLC_RUN_OUT_PASS \
+  INFO(llc::MLIR) << "----- run out pass: " << this->getPassName().str() << " -----";
+#define LLC_RUN_IN_PATTERN \
+  INFO(llc::MLIR) << "run in pattern " << this->getDebugName().str();
+#define LLC_RUN_OUT_PATTERN                                               \
+  INFO(llc::MLIR) << "rewrite " << op.getOperationName().str() << "in pattern " \
+                  << this->getDebugName().str();
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_
