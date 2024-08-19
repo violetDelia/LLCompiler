@@ -12,17 +12,22 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTOSA_H_
-#define INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTOSA_H_
-#include <memory>
-namespace mlir {
-class MLIRContext;
-class TypeConverter;
-class Pass;
-class RewritePatternSet;
-class ConversionTarget;
-#define GEN_PASS_DECL_CONVERTLLHTOTOSA
-#include "llcompiler/Conversion/Passes.h.inc"
+#include "llcompiler/Dialect/Utility/Tool.h"
 
-}  // namespace mlir
-#endif  // INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTOSA_H_
+#include "mlir/IR/Builders.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/Types.h"
+
+namespace llc {
+mlir::DenseElementsAttr genDenseElementsFromArrayAttr(
+    mlir::DenseI64ArrayAttr attr) {
+  auto size = attr.getSize();
+  auto element_type = attr.getElementType();
+  mlir::SmallVector<int64_t> shape;
+  shape.push_back(size);
+  auto tensor = mlir::RankedTensorType::get(shape, element_type);
+  return mlir::DenseElementsAttr::get(tensor, attr.asArrayRef());
+}
+
+}  // namespace llc

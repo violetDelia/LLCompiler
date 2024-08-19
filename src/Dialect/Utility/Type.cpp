@@ -29,12 +29,12 @@
 namespace llc {
 
 std::vector<int64_t> getShapeFrom(const mlir::Type& type) {
-  CHECK(UTILITY, mlir::isa<mlir::ShapedType>(type));
+  CHECK(::llc::UTILITY, mlir::isa<mlir::ShapedType>(type));
   return mlir::cast<mlir::ShapedType>(type).getShape().vec();
 }
 
 std::vector<int64_t> getRankTensorFrom(const mlir::Type& type) {
-  CHECK(UTILITY, mlir::isa<mlir::RankedTensorType>(type));
+  CHECK(::llc::UTILITY, mlir::isa<mlir::RankedTensorType>(type));
   return mlir::cast<mlir::RankedTensorType>(type).getShape().vec();
 }
 
@@ -54,6 +54,14 @@ mlir::ex::Layout getLayoutFrom(const mlir::Value& value) {
       mlir::cast_or_null<mlir::ex::EncodingAttr>(tensor.getEncoding());
   CHECK(UTILITY, encode) << "tensor not have mlir::ex::EncodingAttr";
   return encode.getLayout();
+}
+
+mlir::RankedTensorType cloneTensorWithEncoding(
+    const mlir::RankedTensorType& tensor, mlir::ex::Layout layout) {
+  auto type = tensor.getElementType();
+  auto shape = tensor.getShape();
+  auto encode = mlir::ex::EncodingAttr::get(tensor.getContext(), layout);
+  return mlir::RankedTensorType::get(shape, type, encode);
 }
 
 }  // namespace llc

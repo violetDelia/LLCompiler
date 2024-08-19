@@ -11,18 +11,12 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-
-#ifndef INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTOSA_H_
-#define INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTOSA_H_
-#include <memory>
-namespace mlir {
-class MLIRContext;
-class TypeConverter;
-class Pass;
-class RewritePatternSet;
-class ConversionTarget;
-#define GEN_PASS_DECL_CONVERTLLHTOTOSA
-#include "llcompiler/Conversion/Passes.h.inc"
-
-}  // namespace mlir
-#endif  // INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTOSA_H_
+//
+#ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_TOOL_H_
+#define INCLUDE_LLCOMPILER_DIALECT_UTILITY_TOOL_H_
+#include "mlir/IR/BuiltinAttributes.h"
+namespace llc {
+mlir::DenseElementsAttr genDenseElementsFromArrayAttr(
+    mlir::DenseI64ArrayAttr attr);
+}
+#endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TOOL_H_

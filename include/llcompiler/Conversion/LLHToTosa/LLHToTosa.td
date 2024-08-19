@@ -19,7 +19,11 @@ include "llcompiler/Dialect/LLH/IR/LLHOps.td"
 include "mlir/Dialect/Tosa/IR/TosaOps.td"
 
 
-def Gen_Dense_Form_Attr: NativeCodeCall<"genDenseFromAttr($0)">;
+def Gen_Dense_Form_Attr: NativeCodeCall<"llc::genDenseElementsFromArrayAttr($0)">;
+
+def Gen_Zore_ElementAttr: NativeCodeCall<"genZoreElementAttr($0)">;
+
+def Clone_Tensor_With_Layout_Any: NativeCodeCall<"cloneTensorWithLayoutAny($0)">;
 
 def Lowing_TransposeOp :
     Pat<    (LLH_TransposeOp:$res $X, $perms),
@@ -27,4 +31,22 @@ def Lowing_TransposeOp :
                 (Tosa_ConstOp (Gen_Dense_Form_Attr $perms))
             )>;
 
+def Lowing_WeightOp :
+    Pat<    (LLH_WeightOp:$res $value),
+            (Tosa_ConstOp $value)
+    >;
+
+def Lowing_ConstantOp :
+    Pat<    (LLH_ConstantOp:$res $value),
+            (Tosa_ConstOp $value)
+    >;
+
+def Lowing_ReluOp :
+    Pat<    (LLH_ReluOp:$res $x),
+            (Tosa_MaximumOp $x,
+                (Tosa_ConstOp (Gen_Zore_ElementAttr $res),
+                    (returnType  (Clone_Tensor_With_Layout_Any $res))
+                )
+            )
+    >;
 #endif // LLH_LLHTOTOSA

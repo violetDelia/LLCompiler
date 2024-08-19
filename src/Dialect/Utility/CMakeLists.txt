@@ -4,6 +4,7 @@ llcompiler_add_library(LLCMLIRUtility
     Builder.cpp
     Attribute.cpp
     File.cpp
+    Tool.cpp
 
     DEPENDS
     MLIRIR

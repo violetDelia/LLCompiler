@@ -23,4 +23,17 @@
   rewriter.replaceOp(op, new_op);                                      \
   DEBUG(module) << "convert " << op.getOperationName().str() << " to " \
                 << new_op.getOperationName().str() << "."
+
+#define LLC_COMMON_TYPE_CASE(MACRO, type, ...)             \
+  MACRO(type.isInteger(1), bool, __VA_ARGS__)              \
+  MACRO(type.isSignedInteger(8), int8_t, __VA_ARGS__)      \
+  MACRO(type.isSignedInteger(16), int16_t, __VA_ARGS__)    \
+  MACRO(type.isSignedInteger(32), int32_t, __VA_ARGS__)    \
+  MACRO(type.isSignedInteger(64), int64_t, __VA_ARGS__)    \
+  MACRO(type.isSignlessInteger(8), uint8_t, __VA_ARGS__)   \
+  MACRO(type.isSignlessInteger(16), uint16_t, __VA_ARGS__) \
+  MACRO(type.isSignlessInteger(32), uint32_t, __VA_ARGS__) \
+  MACRO(type.isSignlessInteger(64), uint64_t, __VA_ARGS__) \
+  MACRO(type.isF32(), float, __VA_ARGS__)                  \
+  MACRO(type.isF64(), double, __VA_ARGS__)
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_

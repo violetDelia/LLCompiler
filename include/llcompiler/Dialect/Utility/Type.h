@@ -19,13 +19,15 @@
 
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
-
 
 namespace llc {
 std::vector<int64_t> getShapeFrom(const mlir::Type& shape_type);
 std::vector<int64_t> getRankTensorFrom(const mlir::Type& type);
 int64_t getElementSizeFrom(const mlir::ShapedType& shape_type);
 mlir::ex::Layout getLayoutFrom(const mlir::Value& value);
+mlir::RankedTensorType cloneTensorWithEncoding(
+    const mlir::RankedTensorType& value, mlir::ex::Layout layout);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_

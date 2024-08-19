@@ -247,7 +247,7 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
 #define MLIR_GEN_TENSOR_CONST_OP(Onnx_Type, Type, weight, tensor, builder, Op) \
   if (weight.elem_type() ==                                                    \
       ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                      \
-    auto element_size = getElementSizeFrom(tensor);                            \
+    auto element_size = getElementSizeFrom(tensor);             \
     auto data_begin = weight.data<Type>();                                     \
     auto value_date =                                                          \
         llvm::ArrayRef<Type>(data_begin, data_begin + element_size);           \
@@ -439,12 +439,13 @@ mlir::Operation *OnnxImporter::mlir_gen(
 mlir::func::FuncOp OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::Graph &graph) const {
   INFO(IMPORTER) << "----- building func op-----";
+  auto loc = builder->getUnknownLoc();
   auto inputs = graph.inputs();
   auto outputs = graph.outputs();
   auto func_inputs = mlir_gen(builder, graph.inputs());
   auto func_outputs = mlir_gen(builder, graph.outputs());
   auto func_type = builder->getFunctionType(func_inputs, func_outputs);
-  auto func = build_op<mlir::func::FuncOp>(builder, graph.name(), func_type);
+  auto func = builder->create<mlir::func::FuncOp>(loc, graph.name(), func_type);
   DEBUG_BUILDED_OP(IMPORTER, func);
   auto block = func.addEntryBlock();
   std::map<std::string, mlir::Value> value_map;
@@ -468,7 +469,6 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   INFO(IMPORTER) << "----- building weight ops -----";
   for (auto &tensor : graph.initializers()) {
     auto tensor_op = mlir_gen(builder, tensor, &weight_shape_map);
-    add_op_name_attr(tensor_op, tensor.name());
     value_map[tensor.name()] = tensor_op->getResult(0);
     block->push_back(tensor_op);
   }
@@ -476,7 +476,6 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   for (auto node : graph.nodes()) {
     auto op = mlir_gen(builder, *node, &value_map);
     if (!op) continue;
-    add_op_name_attr(op, node->name());
     auto outputs = node->outputs();
     auto result_num = op->getNumResults();
     for (int i{0}; i < result_num; i++) {
@@ -498,7 +497,8 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
 mlir::ModuleOp OnnxImporter::mlir_gen(
     mlir::OpBuilder *builder, const ONNX_NAMESPACE::ModelProto &model) const {
   INFO(IMPORTER) << "----- building module op -----";
-  auto module = build_op<mlir::ModuleOp>(builder);
+  auto loc = builder->getUnknownLoc();
+  auto module = builder->create<mlir::ModuleOp>(loc);
   DEBUG_BUILDED_OP(IMPORTER, module);
   auto graph = ONNX_NAMESPACE::ImportModelProto(model);
   auto func = mlir_gen(builder, *graph);

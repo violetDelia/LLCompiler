@@ -19,6 +19,7 @@
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/Utility/Tool.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
@@ -29,6 +30,7 @@
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
 
 namespace mlir::llh {
 #define GEN_PASS_DEF_TRANSFORMLAYOUTTONHWC

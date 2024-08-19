@@ -22,7 +22,7 @@ void mlir_to_file(mlir::OwningOpRef<mlir::ModuleOp>* module, const char* file) {
   auto file_dir = std::filesystem::path(file).parent_path();
   if (!std::filesystem::exists(file_dir)) {
     std::filesystem::create_directory(file_dir);
-    INFO(GLOBAL) << "create directory " << file_dir;
+    INFO(llc::GLOBAL) << "create directory " << file_dir;
   }
   llvm::raw_fd_stream file_stream(file, error_code);
   (*module)->print(file_stream);

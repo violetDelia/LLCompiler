@@ -15,6 +15,7 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_BUILDER_H_
 #include <cstdint>
+#include <string>
 #include <utility>
 
 #include "llvm/ADT/ArrayRef.h"
@@ -27,7 +28,6 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Types.h"
 #include "mlir/Support/LLVM.h"
-#include <string>
 
 namespace llc {
 template <class Op, class... Args>
