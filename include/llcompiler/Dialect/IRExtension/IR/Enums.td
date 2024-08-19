@@ -18,9 +18,10 @@ include "llcompiler/Dialect/IRExtension/IR/Dialect.td"
 
 def IRExtension_LAYOUT_NCHW         : I32EnumAttrCase<"NCHW", 0>;
 def IRExtension_LAYOUT_NHWC        : I32EnumAttrCase<"NHWC", 1>;
+def IRExtension_LAYOUT_Any        : I32EnumAttrCase<"Any", 2>;
 def IRExtension_Layout : I32EnumAttr<"Layout",
     "Layout of tensor",
-    [IRExtension_LAYOUT_NCHW, IRExtension_LAYOUT_NHWC]> {
+    [IRExtension_LAYOUT_NCHW, IRExtension_LAYOUT_NHWC, IRExtension_LAYOUT_Any]> {
   let genSpecializedAttr = 0;
   let cppNamespace = "::mlir::ex";
 }

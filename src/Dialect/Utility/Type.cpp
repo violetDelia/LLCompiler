@@ -28,9 +28,14 @@
 
 namespace llc {
 
-std::vector<int64_t> getShapeFrom(const mlir::Type& shape_type) {
-  CHECK(UTILITY, mlir::isa<mlir::ShapedType>(shape_type));
-  return mlir::cast<mlir::ShapedType>(shape_type).getShape().vec();
+std::vector<int64_t> getShapeFrom(const mlir::Type& type) {
+  CHECK(UTILITY, mlir::isa<mlir::ShapedType>(type));
+  return mlir::cast<mlir::ShapedType>(type).getShape().vec();
+}
+
+std::vector<int64_t> getRankTensorFrom(const mlir::Type& type) {
+  CHECK(UTILITY, mlir::isa<mlir::RankedTensorType>(type));
+  return mlir::cast<mlir::RankedTensorType>(type).getShape().vec();
 }
 
 int64_t getElementSizeFrom(const mlir::ShapedType& shape_type) {
