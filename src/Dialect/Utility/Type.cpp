@@ -38,18 +38,16 @@ std::vector<int64_t> getRankTensorFrom(const mlir::Type& type) {
   return mlir::cast<mlir::RankedTensorType>(type).getShape().vec();
 }
 
-int64_t getElementSizeFrom(const mlir::ShapedType& shape_type) {
-  auto rank = shape_type.getRank();
+int64_t getElementSizeFrom(const mlir::ShapedType& shapeType) {
+  auto rank = shapeType.getRank();
   if (rank == 0) return 0;
   int64_t element_size = 1;
   for (size_t i = 0; i < rank; ++i) {
-    element_size *= shape_type.getDimSize(i);
+    element_size *= shapeType.getDimSize(i);
   }
   return element_size;
 }
-mlir::ex::Layout getLayoutFrom(const mlir::Value& value) {
-  auto tensor = mlir::cast_or_null<mlir::RankedTensorType>(value.getType());
-  CHECK(UTILITY, tensor) << "value is not mlir::RankedTensorType";
+mlir::ex::Layout getLayoutFrom(const mlir::RankedTensorType& tensor) {
   auto encode =
       mlir::cast_or_null<mlir::ex::EncodingAttr>(tensor.getEncoding());
   CHECK(UTILITY, encode) << "tensor not have mlir::ex::EncodingAttr";
@@ -62,6 +60,35 @@ mlir::RankedTensorType cloneTensorWithEncoding(
   auto shape = tensor.getShape();
   auto encode = mlir::ex::EncodingAttr::get(tensor.getContext(), layout);
   return mlir::RankedTensorType::get(shape, type, encode);
+}
+
+std::vector<int64_t> getUnsqueezeShape(const mlir::ShapedType& shapeType,
+                                       int dim) {
+  auto shape = shapeType.getShape().vec();
+  shape.insert(shape.begin() + dim, 1);
+  return shape;
+}
+
+std::vector<int64_t> getSqueezeShape(const mlir::ShapedType& shapeType,
+                                     int dim) {
+  auto shape = shapeType.getShape().vec();
+  CHECK(UTILITY, shape.size() > 0);
+  shape.erase(shape.begin() + dim);
+  return shape;
+}
+mlir::RankedTensorType getUnsqueezeTensor(const mlir::RankedTensorType& tensor,
+                                          int dim) {
+  auto encode =
+      mlir::ex::EncodingAttr::get(tensor.getContext(), getLayoutFrom(tensor));
+  return mlir::RankedTensorType::get(getUnsqueezeShape(tensor),
+                                     tensor.getElementType(), encode);
+}
+mlir::RankedTensorType getSqueezeTensor(const mlir::RankedTensorType& tensor,
+                                        int dim) {
+  auto encode =
+      mlir::ex::EncodingAttr::get(tensor.getContext(), getLayoutFrom(tensor));
+  return mlir::RankedTensorType::get(getSqueezeShape(tensor),
+                                     tensor.getElementType(), encode);
 }
 
 }  // namespace llc

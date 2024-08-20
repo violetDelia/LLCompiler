@@ -21,13 +21,22 @@
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
+#include "mlir/Support/LLVM.h"
 
 namespace llc {
-std::vector<int64_t> getShapeFrom(const mlir::Type& shape_type);
+std::vector<int64_t> getShapeFrom(const mlir::Type& shapeType);
 std::vector<int64_t> getRankTensorFrom(const mlir::Type& type);
-int64_t getElementSizeFrom(const mlir::ShapedType& shape_type);
-mlir::ex::Layout getLayoutFrom(const mlir::Value& value);
+int64_t getElementSizeFrom(const mlir::ShapedType& shapeType);
+mlir::ex::Layout getLayoutFrom(const mlir::RankedTensorType& value);
 mlir::RankedTensorType cloneTensorWithEncoding(
     const mlir::RankedTensorType& value, mlir::ex::Layout layout);
+std::vector<int64_t> getUnsqueezeShape(const mlir::ShapedType& shapeType,
+                                       int dim = 0);
+std::vector<int64_t> getSqueezeShape(const mlir::ShapedType& shapeType,
+                                     int dim = 0);
+mlir::RankedTensorType getUnsqueezeTensor(const mlir::RankedTensorType& tensor,
+                                        int dim = 0);
+mlir::RankedTensorType getSqueezeTensor(const mlir::RankedTensorType& tensor,
+                                      int dim = 0);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_

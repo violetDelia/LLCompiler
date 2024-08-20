@@ -32,8 +32,8 @@ def Any_Layout_Is_Not_NHWC_3:
 
 
 def Is_Same_Layout_3: 
-    Constraint< And<[   CPred<"llc::getLayoutFrom($0)==llc::getLayoutFrom($1)">,
-                        CPred<"llc::getLayoutFrom($1)==llc::getLayoutFrom($2)">]>>;
+    Constraint< And<[   CPred<"layoutIsSame($0,$1)">,
+                        CPred<"layoutIsSame($1,$2)">]>>;
 
 
 def Transform_ConvOp_To_NHWC : 

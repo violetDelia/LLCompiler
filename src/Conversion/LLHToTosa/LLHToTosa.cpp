@@ -26,6 +26,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -55,7 +56,6 @@ namespace mlir {
 
 using namespace mlir;
 using namespace mlir::llh;
-
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
@@ -69,6 +69,7 @@ using namespace mlir::llh;
 
 DenseElementsAttr genZoreElementAttr(Value value) {
   auto val = cast<mlir::RankedTensorType>(value.getType());
+  val.getRank();
   CHECK(llc::MLIR, val);
   auto tensor = llc::cloneTensorWithEncoding(val, mlir::ex::Layout::Any);
   auto type = tensor.getElementType();
@@ -92,6 +93,32 @@ RankedTensorType cloneTensorWithLayoutAny(Value value) {
   CHECK(llc::MLIR, val);
   return llc::cloneTensorWithEncoding(val, mlir::ex::Layout::Any);
 }
+
+mlir::DenseI64ArrayAttr UnsqueezeShape(Value value, int dim = 0) {
+  auto shape = cast<mlir::ShapedType>(value.getType());
+  CHECK(llc::MLIR, shape);
+  return DenseI64ArrayAttr::get(value.getContext(),
+                                llc::getUnsqueezeShape(shape, dim));
+}
+
+mlir::DenseI64ArrayAttr GetShape(Value value) {
+  auto shape = cast<mlir::ShapedType>(value.getType());
+  CHECK(llc::MLIR, shape);
+  return DenseI64ArrayAttr::get(value.getContext(), shape.getShape());
+}
+
+mlir::RankedTensorType UnsqueezeTensor(Value value, int dim = 0) {
+  auto tensor = cast<mlir::RankedTensorType>(value.getType());
+  CHECK(llc::MLIR, tensor);
+  return llc::getUnsqueezeTensor(tensor);
+}
+
+mlir::RankedTensorType SqueezeTensor(Value value, int dim = 0) {
+  auto tensor = cast<mlir::RankedTensorType>(value.getType());
+  CHECK(llc::MLIR, tensor);
+  return llc::getSqueezeTensor(tensor);
+}
+
 #undef BUILD_ATTR
 //===----------------------------------------------------------------------===//
 // illegal func
@@ -128,64 +155,63 @@ bool check_conv_illegal(Operation* op) {
 namespace {
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.inc"
 
-// struct ReluOpLowering : public OpConversionPattern<ReluOp> {
-//   using OpConversionPattern<ReluOp>::OpConversionPattern;
-//   LogicalResult match(ReluOp op) const final { return success(); }
-//   void rewrite(ReluOp op, OpAdaptor adaptor,
-//                ConversionPatternRewriter& rewriter) const final {
-//     LLC_RUN_IN_PATTERN
-//     auto loc = op.getLoc();
-//     auto input = adaptor.getInput();
-//     auto out = op.getResult().getType();
-//     auto out_shape = cast<ShapedType>(out).getShape();
-//     auto out_ele_type = cast<ShapedType>(out).getElementType();
-//     auto attrs = adaptor.getAttributes().getValue();
-//     auto const_op =
-//         llc::create_tosa_const(&rewriter, out_shape, {0}, out_ele_type, loc);
-//     auto new_op = rewriter.create<mlir::tosa::MaximumOp>(
-//         loc, ::mlir::TypeRange{out},
-//         ::mlir::ValueRange{input, const_op->getResult(0)}, attrs);
-//     rewriter.replaceOp(op, new_op);
-//     LLC_RUN_OUT_PATTERN
-//   }
-// };
+struct ReluOpLowering : public OpConversionPattern<ReluOp> {
+  using OpConversionPattern<ReluOp>::OpConversionPattern;
+  LogicalResult match(ReluOp op) const final { return success(); }
+  void rewrite(ReluOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    LLC_RUN_IN_PATTERN
+    auto loc = op.getLoc();
+    auto input = adaptor.getInput();
+    auto out = op.getResult().getType();
+    auto out_shape = cast<ShapedType>(out).getShape();
+    auto out_ele_type = cast<ShapedType>(out).getElementType();
+    auto attrs = adaptor.getAttributes().getValue();
+    auto const_op =
+        llc::create_tosa_const(&rewriter, out_shape, {0}, out_ele_type, loc);
+    auto new_op = rewriter.create<mlir::tosa::MaximumOp>(
+        loc, ::mlir::TypeRange{out},
+        ::mlir::ValueRange{input, const_op->getResult(0)}, attrs);
+    rewriter.replaceOp(op, new_op);
+    LLC_RUN_OUT_PATTERN
+  }
+};
 
-// struct WeightOpLowering : public OpConversionPattern<WeightOp> {
-//   using OpConversionPattern<WeightOp>::OpConversionPattern;
-//   LogicalResult match(WeightOp op) const final { return success(); }
-//   void rewrite(WeightOp op, OpAdaptor adaptor,
-//                ConversionPatternRewriter& rewriter) const final {
-//     LLC_RUN_IN_PATTERN
-//     auto loc = op.getLoc();
-//     auto out = op.getResult().getType();
-//     auto attrs = adaptor.getAttributes().getValue();
-//     auto types = ::mlir::TypeRange{out};
-//     auto new_op = rewriter.create<mlir::tosa::ConstOp>(
-//         loc, types, ::mlir::ValueRange{}, attrs);
-//     new_op.setValueAttr(adaptor.getValueAttr());
-//     llc::add_is_weight_attr(new_op, true);
-//     rewriter.replaceOp(op, new_op);
-//     LLC_RUN_OUT_PATTERN
-//   }
-// };
+struct WeightOpLowering : public OpConversionPattern<WeightOp> {
+  using OpConversionPattern<WeightOp>::OpConversionPattern;
+  LogicalResult match(WeightOp op) const final { return success(); }
+  void rewrite(WeightOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    LLC_RUN_IN_PATTERN
+    auto loc = op.getLoc();
+    auto out = op.getResult().getType();
+    auto attrs = adaptor.getAttributes().getValue();
+    auto types = ::mlir::TypeRange{out};
+    auto new_op = rewriter.create<mlir::tosa::ConstOp>(
+        loc, types, ::mlir::ValueRange{}, attrs);
+    new_op.setValueAttr(adaptor.getValueAttr());
+    rewriter.replaceOp(op, new_op);
+    LLC_RUN_OUT_PATTERN
+  }
+};
 
-// struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
-//   using OpConversionPattern<ConstantOp>::OpConversionPattern;
-//   LogicalResult match(ConstantOp op) const final { return success(); }
-//   void rewrite(ConstantOp op, OpAdaptor adaptor,
-//                ConversionPatternRewriter& rewriter) const final {
-//     LLC_RUN_IN_PATTERN
-//     auto loc = op.getLoc();
-//     auto out = op.getResult().getType();
-//     auto attrs = adaptor.getAttributes().getValue();
-//     auto types = ::mlir::TypeRange{out};
-//     auto new_op = rewriter.create<mlir::tosa::ConstOp>(
-//         loc, types, ::mlir::ValueRange{}, attrs);
-//     new_op.setValueAttr(adaptor.getValueAttr());
-//     rewriter.replaceOp(op, new_op);
-//     LLC_RUN_OUT_PATTERN
-//   }
-// };
+struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
+  using OpConversionPattern<ConstantOp>::OpConversionPattern;
+  LogicalResult match(ConstantOp op) const final { return success(); }
+  void rewrite(ConstantOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    LLC_RUN_IN_PATTERN
+    auto loc = op.getLoc();
+    auto out = op.getResult().getType();
+    auto attrs = adaptor.getAttributes().getValue();
+    auto types = ::mlir::TypeRange{out};
+    auto new_op = rewriter.create<mlir::tosa::ConstOp>(
+        loc, types, ::mlir::ValueRange{}, attrs);
+    new_op.setValueAttr(adaptor.getValueAttr());
+    rewriter.replaceOp(op, new_op);
+    LLC_RUN_OUT_PATTERN
+  }
+};
 
 struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
   using OpConversionPattern<MatMulOp>::OpConversionPattern;
@@ -204,26 +230,20 @@ struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
     }
     if (out_type.getRank() == 2) {
       auto left = adaptor.getLhs();
-      auto left_shape = llc::getShapeFrom(left.getType());
-      left_shape.insert(left_shape.begin(), 1);
-      auto left_reshape_op =
-          rewriter.create<mlir::tosa::ReshapeOp>(loc, left, left_shape);
+      auto left_reshape_op = rewriter.create<mlir::tosa::ReshapeOp>(
+          loc, UnsqueezeTensor(left), left, UnsqueezeShape(left));
       auto right = adaptor.getRhs();
-      auto right_shape = llc::getShapeFrom(right.getType());
-      right_shape.insert(right_shape.begin(), 1);
-      auto right_reshape_op =
-          rewriter.create<mlir::tosa::ReshapeOp>(loc, right, right_shape);
+      auto right_reshape_op = rewriter.create<mlir::tosa::ReshapeOp>(
+          loc, UnsqueezeTensor(right), right, UnsqueezeShape(right));
       auto new_out_shape = llc::getShapeFrom(out_type);
       new_out_shape.insert(new_out_shape.begin(), 1);
       auto new_out_type =
           RankedTensorType::get(new_out_shape, out_type.getElementType());
       auto matmul_op = rewriter.create<tosa::MatMulOp>(
-          loc, ::mlir::TypeRange{new_out_type},
-          ::mlir::ValueRange{left_reshape_op.getResult(),
-                             right_reshape_op.getResult()},
-          attrs);
+          loc, ::mlir::TypeRange{UnsqueezeTensor(out)},
+          ::mlir::ValueRange{left_reshape_op, right_reshape_op}, attrs);
       auto reshape_op = rewriter.create<mlir::tosa::ReshapeOp>(
-          loc, matmul_op.getResult(), out_type.getShape());
+          loc, out_type, matmul_op, GetShape(out));
       rewriter.replaceOp(op, reshape_op);
     }
     LLC_RUN_OUT_PATTERN
@@ -283,10 +303,10 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
 void populateLLHToTosaConversionPatterns(TypeConverter& converter,
                                          RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  // patterns.add<ReluOpLowering>(converter, context);
-  //  patterns.add<WeightOpLowering>(converter, context);
-  //  patterns.add<ConstantOpLowering>(converter, context);
-  // patterns.add<MatMulOpLowering>(converter, context);
+  patterns.add<ReluOpLowering>(converter, context);
+   patterns.add<WeightOpLowering>(converter, context);
+   patterns.add<ConstantOpLowering>(converter, context);
+  patterns.add<MatMulOpLowering>(converter, context);
   patterns.add<ConvOpLowering>(converter, context);
   populateWithGenerated(patterns);
 }
@@ -298,7 +318,7 @@ void configLLHToTosaConversionTarget(ConversionTarget& target) {
   target.addIllegalOp<ConstantOp>();
   target.addIllegalOp<WeightOp>();
   target.addIllegalOp<ReluOp>();
-  // target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
+  target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
   target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mlir::tosa::TosaDialect>();
   target.addLegalDialect<mlir::func::FuncDialect>();

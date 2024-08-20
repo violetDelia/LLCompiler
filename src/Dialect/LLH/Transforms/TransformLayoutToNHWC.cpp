@@ -16,10 +16,8 @@
 #include <cstdint>
 
 #include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/Utility/Tool.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
@@ -30,7 +28,6 @@
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-
 
 namespace mlir::llh {
 #define GEN_PASS_DEF_TRANSFORMLAYOUTTONHWC
@@ -100,7 +97,17 @@ mlir::RankedTensorType genNHWCReturnTensor(mlir::TypeRange types) {
 }
 
 bool layoutIsNotNHWC(mlir::Value value) {
-  return llc::getLayoutFrom(value) != mlir::ex::Layout::NHWC;
+  auto tensor = cast<mlir::RankedTensorType>(value.getType());
+  CHECK(llc::MLIR, tensor);
+  return llc::getLayoutFrom(tensor) != mlir::ex::Layout::NHWC;
+}
+
+bool layoutIsSame(mlir::Value left, Value right) {
+  auto left_tensor = cast<mlir::RankedTensorType>(left.getType());
+  CHECK(llc::MLIR, left_tensor);
+  auto right_tensor = cast<mlir::RankedTensorType>(right.getType());
+  CHECK(llc::MLIR, right_tensor);
+  return llc::getLayoutFrom(right_tensor) == llc::getLayoutFrom(left_tensor);
 }
 
 //===----------------------------------------------------------------------===//

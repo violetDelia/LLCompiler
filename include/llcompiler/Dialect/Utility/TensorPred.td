@@ -11,26 +11,14 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#ifndef TENSORPRED
+#define TENSORPRED
+include "mlir/IR/Constraints.td"
+class Tensor_Rank_Is<int n>: 
+    Constraint< And<[   CPred<"::llvm::cast<::mlir::RankedTensorType>($_self).getRank() == " # n>]
+                    >,"tensor rank is " # n>;
+def Is_2D_Tensor :Tensor_Rank_Is<2>;
+def Is_3D_Tensor :Tensor_Rank_Is<3>;
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
 
-#include <memory>
-
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
-#include "mlir/Pass/Pass.h"
-
-namespace mlir::llh {
-
-std::unique_ptr<::mlir::Pass> createTransformLayoutToNHWCPass();
-
-#define GEN_PASS_DECL
-#define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
-
-}  // namespace mlir::llh
-
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
+#endif // TENSORPRED

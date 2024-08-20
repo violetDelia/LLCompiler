@@ -79,8 +79,6 @@ def LLH_MatMulOp          : LLH_Op<"matmal",[SameOperandsAndResultRank]>{
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_ReshapeOp          : LLH_UnaryOp<"reshape", [], LLH_Tensor>;
-
 def LLH_ConstantOp : LLH_ConstOp<"constant">{
     let description = [{
         ConstantOp is a const that will never changed;
