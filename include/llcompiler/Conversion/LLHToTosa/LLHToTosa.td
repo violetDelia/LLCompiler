@@ -36,11 +36,11 @@ def Gen_Unsqueeze_Dim0_Tensor: NativeCodeCall<"UnsqueezeTensor($0, 0)">;
 
 def Gen_Squeeze_Dim0_Tensor: NativeCodeCall<"SqueezeTensor($0, 0)">;
 
-def Lowing_TransposeOp :
-    Pat<    (LLH_TransposeOp:$res $X, $perms),
-            (Tosa_TransposeOp $X, 
-                (Tosa_ConstOp (Gen_Dense_Form_Attr $perms))
-            )>;
+// def Lowing_TransposeOp :
+//     Pat<    (LLH_TransposeOp:$res $X, $perms),
+//             (Tosa_TransposeOp $X, 
+//                 (Tosa_ConstOp (Gen_Dense_Form_Attr $perms))
+//             )>;
 
 // def Lowing_WeightOp :
 //     Pat<    (LLH_WeightOp:$res $value),

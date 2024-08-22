@@ -46,9 +46,9 @@ mlir::tosa::ConstOp create_tosa_const(mlir::OpBuilder *builder,
                                       mlir::Type type,
                                       const mlir::Location &loc) {
   CHECK(UTILITY, type.isIntOrFloat()) << "Invalid element type";
-  auto encode =
-      mlir::ex::EncodingAttr::get(builder->getContext(), mlir::ex::Layout::Any);
-  auto shape_type = mlir::RankedTensorType::get(shape, type, encode);
+  // auto encode =
+  //     mlir::ex::EncodingAttr::get(builder->getContext(), mlir::ex::Layout::Any);
+  auto shape_type = mlir::RankedTensorType::get(shape, type);
   BUILD_CONST_OP(type.isInteger(1), bool, mlir::tosa::ConstOp, loc)
   BUILD_CONST_OP(type.isSignedInteger(8), int8_t, mlir::tosa::ConstOp, loc)
   BUILD_CONST_OP(type.isSignedInteger(16), int16_t, mlir::tosa::ConstOp, loc)

@@ -29,18 +29,21 @@
 namespace llc {
 
 enum LAYOUT : int64_t { NCHW = 0, NHWC = 1 };
+const char* layout_to_str(LAYOUT layout);
 
 extern const char* LLCOperationNmaeAttr;
+extern const char* LLCGloabalLayoutAttr;
 extern const char* LLCLayoutAttr;
 extern const char* LLCGroupAttr;
 extern const char* LLCKernelShapeAttr;
 extern const char* LLCIsWeightAttr;
 
 void add_op_name_attr(mlir::Operation* op, llvm::StringRef value);
-void add_layout_attr(mlir::Operation* op, mlir::ArrayRef<LAYOUT> value);
+void add_gloabal_layout_attr(mlir::Operation* op, LAYOUT value);
 void add_group_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
 void add_kernal_shape_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
 void add_is_weight_attr(mlir::Operation* op, bool value);
+void add_layout_attr(mlir::Operation* op, LAYOUT value);
 
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_

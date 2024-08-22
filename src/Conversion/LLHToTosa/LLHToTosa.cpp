@@ -20,6 +20,7 @@
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Dialect/Utility/Macro.h"
 #include "llcompiler/Dialect/Utility/Tool.h"
@@ -190,6 +191,7 @@ struct WeightOpLowering : public OpConversionPattern<WeightOp> {
     auto new_op = rewriter.create<mlir::tosa::ConstOp>(
         loc, types, ::mlir::ValueRange{}, attrs);
     new_op.setValueAttr(adaptor.getValueAttr());
+    llc::add_is_weight_attr(new_op, true);
     rewriter.replaceOp(op, new_op);
     LLC_RUN_OUT_PATTERN
   }
@@ -274,27 +276,28 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
   };
 };
 
-// struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
-//   using OpConversionPattern<TransposeOp>::OpConversionPattern;
-//   LogicalResult match(TransposeOp op) const final { return success(); }
-//   void rewrite(TransposeOp op, OpAdaptor adaptor,
-//                ConversionPatternRewriter& rewriter) const final {
-//     LLC_RUN_IN_PATTERN
-//     auto loc = op.getLoc();
-//     auto out = op.getResult();
-//     auto input = op.getInput();
-//     auto perms = op.getPermsAttr();
-//     auto atrrs = op->getAttrDictionary().getValue();
-//     auto const_return = genTensorFromAttr(perms);
-//     auto const_op = rewriter.create<tosa::ConstOp>(loc, const_return, perms);
-//     auto con = const_op.getResult();
-//     auto new_op = rewriter.create<tosa::TransposeOp>(
-//         loc, ::mlir::TypeRange{out.getType()},
-//         ::mlir::ValueRange{op.getInput(), const_op->getResult(0)}, atrrs);
-//     rewriter.replaceOp(op, new_op);
-//     LLC_RUN_OUT_PATTERN
-//   };
-// };
+struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
+  using OpConversionPattern<TransposeOp>::OpConversionPattern;
+  LogicalResult match(TransposeOp op) const final { return success(); }
+  void rewrite(TransposeOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    LLC_RUN_IN_PATTERN
+    auto loc = op.getLoc();
+    auto out = op.getResult();
+    auto input = op.getInput();
+    auto perms = op.getPermsAttr();
+    auto atrrs = op->getAttrDictionary().getValue();
+    auto const_shape = SmallVector<int64_t>(1, perms.size());
+    auto const_out = RankedTensorType::get(const_shape, rewriter.getI64Type());
+    auto const_value = llc::genDenseElementsFromArrayAttr(perms);
+    auto const_op = rewriter.create<tosa::ConstOp>(loc, const_out, const_value);
+    auto new_op = rewriter.create<tosa::TransposeOp>(
+        loc, ::mlir::TypeRange{out.getType()},
+        ::mlir::ValueRange{input, const_op}, atrrs);
+    rewriter.replaceOp(op, new_op);
+    LLC_RUN_OUT_PATTERN
+  };
+};
 }  // namespace
 
 //===----------------------------------------------------------------------===//
@@ -304,10 +307,11 @@ void populateLLHToTosaConversionPatterns(TypeConverter& converter,
                                          RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<ReluOpLowering>(converter, context);
-   patterns.add<WeightOpLowering>(converter, context);
-   patterns.add<ConstantOpLowering>(converter, context);
+  patterns.add<WeightOpLowering>(converter, context);
+  patterns.add<ConstantOpLowering>(converter, context);
   patterns.add<MatMulOpLowering>(converter, context);
   patterns.add<ConvOpLowering>(converter, context);
+  patterns.add<TransposeOpLowering>(converter, context);
   populateWithGenerated(patterns);
 }
 
@@ -318,6 +322,7 @@ void configLLHToTosaConversionTarget(ConversionTarget& target) {
   target.addIllegalOp<ConstantOp>();
   target.addIllegalOp<WeightOp>();
   target.addIllegalOp<ReluOp>();
+  target.addIllegalOp<TransposeOp>();
   target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
   target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mlir::tosa::TosaDialect>();

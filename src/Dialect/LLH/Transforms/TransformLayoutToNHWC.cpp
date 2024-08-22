@@ -17,12 +17,16 @@
 
 #include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/TypeRange.h"
 #include "mlir/IR/Types.h"
@@ -38,46 +42,43 @@ using namespace mlir::llh;
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-mlir::DenseI64ArrayAttr genTransposePermsToNHWC(mlir::Value value) {
+mlir::DenseI64ArrayAttr genTransposePermsToNHWC(mlir::Value value,
+                                                llc::LAYOUT src) {
   auto context = value.getContext();
-  auto tensor = cast<RankedTensorType>(value.getType());
-  auto encode = cast<mlir::ex::EncodingAttr>(tensor.getEncoding());
-  if (encode.getLayout() == mlir::ex::Layout::NCHW) {
+  if (src == llc::LAYOUT::NCHW) {
     return mlir::DenseI64ArrayAttr::get(context, {{0, 2, 3, 1}});
   }
-  if (encode.getLayout() == mlir::ex::Layout::NHWC) {
+  if (src == llc::LAYOUT::NHWC) {
     return mlir::DenseI64ArrayAttr::get(context, {{0, 1, 2, 3}});
   }
   UNIMPLEMENTED(llc::MLIR);
   return {};
 }
 
-mlir::DenseI64ArrayAttr genTransposePermsFromNHWC(mlir::Value value) {
+mlir::DenseI64ArrayAttr genTransposePermsFromNHWC(mlir::Value value,
+                                                  llc::LAYOUT target) {
   auto context = value.getContext();
-  auto tensor = cast<RankedTensorType>(value.getType());
-  auto encode = cast<mlir::ex::EncodingAttr>(tensor.getEncoding());
-  if (encode.getLayout() == mlir::ex::Layout::NCHW) {
+  if (target == llc::LAYOUT::NHWC) {
     return mlir::DenseI64ArrayAttr::get(context, {{0, 3, 1, 2}});
   }
-  if (encode.getLayout() == mlir::ex::Layout::NHWC) {
+  if (target == llc::LAYOUT::NCHW) {
     return mlir::DenseI64ArrayAttr::get(context, {{0, 1, 2, 3}});
   }
   UNIMPLEMENTED(llc::MLIR);
   return {};
 }
 
-mlir::RankedTensorType genNHWCReturnTensor(mlir::Value value) {
+mlir::RankedTensorType genReturnTensorFrom(mlir::Value value, llc::LAYOUT src) {
   auto context = value.getContext();
   auto tensor = cast<RankedTensorType>(value.getType());
-  auto layout = cast<mlir::ex::EncodingAttr>(tensor.getEncoding()).getLayout();
-  auto encode = mlir::ex::EncodingAttr::get(context, mlir::ex::Layout::NHWC);
   auto shape = tensor.getShape();
   llvm::SmallVector<int64_t> new_shape;
-  if (layout == mlir::ex::Layout::NHWC) {
+  if (src == llc::LAYOUT::NHWC) {
     for (auto val : shape) {
       new_shape.push_back(val);
     }
-  } else if (layout == mlir::ex::Layout::NCHW) {
+  }
+  if (src = llc::LAYOUT::NCHW) {
     new_shape.push_back(shape[0]);
     new_shape.push_back(shape[2]);
     new_shape.push_back(shape[3]);
@@ -85,29 +86,14 @@ mlir::RankedTensorType genNHWCReturnTensor(mlir::Value value) {
   } else {
     UNIMPLEMENTED(llc::MLIR);
   }
-  return RankedTensorType::get(new_shape, tensor.getElementType(), encode);
-}
-mlir::RankedTensorType genNHWCReturnTensor(mlir::TypeRange types) {
-  auto type = types[0];
-  auto context = type.getContext();
-  auto tensor = cast<RankedTensorType>(type);
-  auto encode = mlir::ex::EncodingAttr::get(context, mlir::ex::Layout::NHWC);
-  return RankedTensorType::get(tensor.getShape(), tensor.getElementType(),
-                               encode);
+  return RankedTensorType::get(new_shape, tensor.getElementType());
 }
 
-bool layoutIsNotNHWC(mlir::Value value) {
-  auto tensor = cast<mlir::RankedTensorType>(value.getType());
-  CHECK(llc::MLIR, tensor);
-  return llc::getLayoutFrom(tensor) != mlir::ex::Layout::NHWC;
-}
-
-bool layoutIsSame(mlir::Value left, Value right) {
-  auto left_tensor = cast<mlir::RankedTensorType>(left.getType());
-  CHECK(llc::MLIR, left_tensor);
-  auto right_tensor = cast<mlir::RankedTensorType>(right.getType());
-  CHECK(llc::MLIR, right_tensor);
-  return llc::getLayoutFrom(right_tensor) == llc::getLayoutFrom(left_tensor);
+bool HaslLayoutAttr(mlir::Value value, llc::LAYOUT layout) {
+  auto op = value.getDefiningOp();
+  if (!op->hasAttr(llc::LLCLayoutAttr)) return false;
+  auto attr = cast<StringAttr>(op->getAttr(llc::LLCLayoutAttr));
+  return attr == llc::layout_to_str(layout);
 }
 
 //===----------------------------------------------------------------------===//
@@ -115,11 +101,20 @@ bool layoutIsSame(mlir::Value left, Value right) {
 //===----------------------------------------------------------------------===//
 namespace {
 #include "llcompiler/Dialect/LLH/Transforms/TransformLayoutToNHWC.inc"
-}
+struct ConvOpToNHWC : public OpRewritePattern<ConvOp> {
+  using OpRewritePattern::OpRewritePattern;
+  void rewrite(ConvOp op, PatternRewriter& rewriter) const final { ; }
+  LogicalResult match(ConvOp op) const final {
+    llvm_unreachable("must override match or matchAndRewrite");
+  }
+};
+
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateTransformLayoutToNHWCPatterns(RewritePatternSet& patterns) {
+  auto context = patterns.getContext();
   populateWithGenerated(patterns);
 }
 //===----------------------------------------------------------------------===//
@@ -135,12 +130,25 @@ struct TransformLayoutToNHWC
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
+void markOpsNeedTranspose(ModuleOp module) {
+  auto layout = cast<StringAttr>(module->getAttr(llc::LLCGloabalLayoutAttr));
+  CHECK(llc::MLIR, layout);
+  if (layout == llc::layout_to_str(llc::LAYOUT::NHWC)) return;
+  auto mark_op = [layout](Operation* op) {
+    if (isa<llh::ConvOp>(op)) {
+      op->setAttr(llc::LLCLayoutAttr, layout);
+    }
+  };
+  module->walk(mark_op);
+}
+
 void TransformLayoutToNHWC::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   RewritePatternSet patterns(context);
   populateTransformLayoutToNHWCPatterns(patterns);
   auto op = getOperation();
+  markOpsNeedTranspose(op);
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS

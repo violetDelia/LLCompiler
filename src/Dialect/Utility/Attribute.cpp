@@ -13,9 +13,10 @@
 //    limitations under the License.
 //**
 
+#include "llcompiler/Dialect/Utility/Attribute.h"
+
 #include <cstdint>
 
-#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -24,6 +25,7 @@
 
 namespace llc {
 const char* LLCOperationNmaeAttr = "op_name";
+const char* LLCGloabalLayoutAttr = "builtin.gloabal_layout";
 const char* LLCLayoutAttr = "layout";
 const char* LLCGroupAttr = "group";
 const char* LLCKernelShapeAttr = "kernel_shape";
@@ -46,15 +48,24 @@ ADD_ATTR_FUNC(string, llvm::StringRef, mlir::StringAttr)
 ADD_ATTR_FUNC(string, const char*, mlir::StringAttr)
 #undef ADD_ATTR_FUNC
 
+const char* layout_to_str(LAYOUT layout) {
+  switch (layout) {
+    case llc::LAYOUT::NCHW:
+      return "NCHW";
+    case llc::LAYOUT::NHWC:
+      return "NHWC";
+  };
+  UNIMPLEMENTED(UTILITY);
+}
+
 void add_op_name_attr(mlir::Operation* op, llvm::StringRef value) {
   add_string_attr(op, LLCOperationNmaeAttr, value);
 }
-void add_layout_attr(mlir::Operation* op, mlir::ArrayRef<LAYOUT> value) {
-  mlir::SmallVector<int64_t> attr_value;
-  for (auto layout : value) {
-    attr_value.push_back(static_cast<int64_t>(layout));
-  }
-  add_array_i64_attr(op, LLCLayoutAttr, attr_value);
+void add_gloabal_layout_attr(mlir::Operation* op, LAYOUT value) {
+  add_string_attr(op, LLCGloabalLayoutAttr, layout_to_str(value));
+}
+void add_layout_attr(mlir::Operation* op, LAYOUT value) {
+  add_string_attr(op, LLCGloabalLayoutAttr, layout_to_str(value));
 }
 void add_group_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value) {
   add_array_i64_attr(op, LLCGroupAttr, value);
@@ -66,9 +77,4 @@ void add_is_weight_attr(mlir::Operation* op, bool value) {
   add_bool_attr(op, LLCIsWeightAttr, value);
 }
 
-void add_lay_out_attr(mlir::Operation* op, llvm::StringRef value) {
-  CHECK(UTILITY, (value == "NCHW" || value == "NHWC"))
-      << "Invalid layout attribute!";
-  add_string_attr(op, LLCLayoutAttr, value);
-}
 }  // namespace llc

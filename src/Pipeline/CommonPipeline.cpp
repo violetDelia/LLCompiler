@@ -64,7 +64,7 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   // llh
   //===----------------------------------------------------------------------===//
   pm.addPass(::mlir::createInlinerPass());                   // 内联
-  pm.addPass(mlir::llh::createTransformLayoutToNHWCPass());  // 布局转换到NHWC
+  //pm.addPass(mlir::llh::createTransformLayoutToNHWCPass());  // 布局转换到NHWC
   pm.addPass(::mlir::createConvertLLHToTosa());  // LLH lowing to tosa
   //===----------------------------------------------------------------------===//
   // tosa opt
@@ -83,8 +83,8 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   // lowing tosa
   //===----------------------------------------------------------------------===//
 
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
-      {.preferConv2DKernelLayoutHWCF = false}));
+  // pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
+  //     {.preferConv2DKernelLayoutHWCF = false}));
   // pm.addPass(mlir::tosa::createTosaToArith(true, true));
   // pm.addPass(mlir::tosa::createTosaToTensor());
   // pm.addPass(mlir::tosa::createTosaToSCF());

@@ -228,8 +228,8 @@ mlir::RankedTensorType OnnxImporter::mlir_gen(
   }
   auto type = mlir_gen(builder, value.elemType());
   auto context = builder->getContext();
-  auto encode = mlir::ex::EncodingAttr::get(context, mlir::ex::Layout::NCHW);
-  auto tensor = mlir::RankedTensorType::get(dims, type, encode);
+  // auto encode = mlir::ex::EncodingAttr::get(context, mlir::ex::Layout::NCHW);
+  auto tensor = mlir::RankedTensorType::get(dims, type);
   return tensor;
 }
 
@@ -247,7 +247,7 @@ llvm::SmallVector<mlir::Type> OnnxImporter::mlir_gen(
 #define MLIR_GEN_TENSOR_CONST_OP(Onnx_Type, Type, weight, tensor, builder, Op) \
   if (weight.elem_type() ==                                                    \
       ONNX_NAMESPACE::TensorProto_DataType_##Onnx_Type) {                      \
-    auto element_size = getElementSizeFrom(tensor);             \
+    auto element_size = getElementSizeFrom(tensor);                            \
     auto data_begin = weight.data<Type>();                                     \
     auto value_date =                                                          \
         llvm::ArrayRef<Type>(data_begin, data_begin + element_size);           \
@@ -499,6 +499,7 @@ mlir::ModuleOp OnnxImporter::mlir_gen(
   INFO(IMPORTER) << "----- building module op -----";
   auto loc = builder->getUnknownLoc();
   auto module = builder->create<mlir::ModuleOp>(loc);
+  add_gloabal_layout_attr(module, LAYOUT::NCHW);
   DEBUG_BUILDED_OP(IMPORTER, module);
   auto graph = ONNX_NAMESPACE::ImportModelProto(model);
   auto func = mlir_gen(builder, *graph);
