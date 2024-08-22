@@ -16,7 +16,6 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
 
-#include "mlir/Bytecode/BytecodeOpInterface.h"
 #include "mlir/IR/Dialect.h"
 
 #define LLCOMPILER_MACRO_FOR_FIX_HEAD

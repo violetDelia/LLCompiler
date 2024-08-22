@@ -174,8 +174,8 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define LLC_RUN_OUT_PASS \
   INFO(llc::MLIR) << "----- run out pass: " << this->getPassName().str() << " -----";
 #define LLC_RUN_IN_PATTERN \
-  INFO(llc::MLIR) << "run in pattern " << this->getDebugName().str();
+  DEBUG(llc::MLIR) << "run in pattern " << this->getDebugName().str();
 #define LLC_RUN_OUT_PATTERN                                               \
-  INFO(llc::MLIR) << "rewrite " << op.getOperationName().str() << " in pattern " \
+  DEBUG(llc::MLIR) << "rewrite " << op.getOperationName().str() << " in pattern " \
                   << this->getDebugName().str();
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_

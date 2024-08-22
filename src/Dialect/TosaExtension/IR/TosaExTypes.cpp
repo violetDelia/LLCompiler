@@ -12,8 +12,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h"
+
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
@@ -30,3 +31,14 @@
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExAttrs.cpp.inc"
 #define GET_TYPEDEF_CLASSES
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.cpp.inc"
+namespace mlir::tosa_ex {
+//===----------------------------------------------------------------------===//
+// LLHDialect initialize method.
+//===----------------------------------------------------------------------===//
+void mlir::tosa_ex::TosaExDialect::registerTypes() {
+  addTypes<
+#define GET_TYPEDEF_LIST
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h"
+      >();
+}
+}  // namespace mlir::tosa_ex

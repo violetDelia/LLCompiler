@@ -1,5 +1,5 @@
 add_mlir_library(MLIRTosaExTransforms
-  Passes.cpp
+  TransformLayoutToNHWC.cpp
 
   ADDITIONAL_HEADER_DIRS
   ${PROJECT_SOURCE_DIR}/include/llcompiler/Dialect/TosaExtension/Transforms

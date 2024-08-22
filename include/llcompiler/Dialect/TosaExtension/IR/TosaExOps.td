@@ -20,7 +20,4 @@ include "llcompiler/Dialect/TosaExtension/IR/TosaExInterfaces.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 
-
-
-
 #endif // LLH_TOSAEX_OPS

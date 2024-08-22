@@ -28,8 +28,8 @@ def TosaEx_Dialect : Dialect{
      }];
     let cppNamespace = "::mlir::tosa_ex";
     let dependentDialects = ["tensor::TensorDialect", "quant::QuantizationDialect", "tosa::TosaDialect"];
-    let useDefaultAttributePrinterParser = 1;
-    let hasConstantMaterializer = 1;
+    let useDefaultAttributePrinterParser = 0;
+    let hasConstantMaterializer = 0;
     let extraClassDeclaration = [{
         void registerTypes();
     }];

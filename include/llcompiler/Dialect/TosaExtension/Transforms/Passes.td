@@ -14,7 +14,17 @@
 //
 #ifndef LLH_PASS
 #define LLH_PASS
-
 include "mlir/Pass/PassBase.td"
+
+def TransformLayoutToNHWC : Pass<"transform-layout-to-nhwc","ModuleOp"> {
+  let summary = "trans some llh op layout to nhwc for lowing to tosa";
+  let description = [{
+  }];
+  let constructor = "mlir::tosa_ex::createTransformLayoutToNHWCPass()";
+  let dependentDialects = [ "::mlir::tosa::TosaDialect",
+                            "::mlir::tosa_ex::TosaExDialect"];
+}
+
+
 
 #endif // LLH_PASS

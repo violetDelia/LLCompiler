@@ -15,7 +15,7 @@
 #include "llcompiler/Pipeline/CommonPipeline.h"
 
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "llcompiler/Pipeline/Enums.h"
 #include "mlir/Conversion/TosaToArith/TosaToArith.h"
 #include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
@@ -63,15 +63,16 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // llh
   //===----------------------------------------------------------------------===//
-  pm.addPass(::mlir::createInlinerPass());                   // 内联
-  //pm.addPass(mlir::llh::createTransformLayoutToNHWCPass());  // 布局转换到NHWC
+  pm.addPass(::mlir::createInlinerPass());       // 内联
   pm.addPass(::mlir::createConvertLLHToTosa());  // LLH lowing to tosa
   //===----------------------------------------------------------------------===//
   // tosa opt
   //===----------------------------------------------------------------------===//
+  pm.addPass(
+      mlir::tosa_ex::createTransformLayoutToNHWCPass());  // 布局转换到NHWC
   pm.addPass(mlir::tosa::createTosaOptionalDecompositions());  // 算子分解
-  pm.addPass(mlir::createCanonicalizerPass());                 // 规范化
-  pm.addPass(mlir::tosa::createTosaInferShapesPass());         // 形状推导
+  pm.addPass(mlir::createCanonicalizerPass());            // 规范化
+  pm.addPass(mlir::tosa::createTosaInferShapesPass());    // 形状推导
   pm.addPass(
       mlir::tosa::createTosaMakeBroadcastablePass());  // 规范算子广播形状
   pm.addPass(mlir::tosa::createTosaLayerwiseConstantFoldPass(

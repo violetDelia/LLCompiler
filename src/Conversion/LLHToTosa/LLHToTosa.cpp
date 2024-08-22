@@ -60,7 +60,7 @@ using namespace mlir::llh;
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-
+namespace {
 #define BUILD_ATTR(judge, Ty, shape)                        \
   if (judge) {                                              \
     llvm::ArrayRef<Ty> value(0);                            \
@@ -153,7 +153,7 @@ bool check_conv_illegal(Operation* op) {
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
-namespace {
+
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.inc"
 
 struct ReluOpLowering : public OpConversionPattern<ReluOp> {
@@ -167,7 +167,7 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
     auto out = op.getResult().getType();
     auto out_shape = cast<ShapedType>(out).getShape();
     auto out_ele_type = cast<ShapedType>(out).getElementType();
-    auto attrs = adaptor.getAttributes().getValue();
+    auto attrs = op->getAttrs();
     auto const_op =
         llc::create_tosa_const(&rewriter, out_shape, {0}, out_ele_type, loc);
     auto new_op = rewriter.create<mlir::tosa::MaximumOp>(
@@ -186,7 +186,7 @@ struct WeightOpLowering : public OpConversionPattern<WeightOp> {
     LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
     auto out = op.getResult().getType();
-    auto attrs = adaptor.getAttributes().getValue();
+    auto attrs = op->getAttrs();
     auto types = ::mlir::TypeRange{out};
     auto new_op = rewriter.create<mlir::tosa::ConstOp>(
         loc, types, ::mlir::ValueRange{}, attrs);
@@ -205,7 +205,7 @@ struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
     LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
     auto out = op.getResult().getType();
-    auto attrs = adaptor.getAttributes().getValue();
+    auto attrs = op->getAttrs();
     auto types = ::mlir::TypeRange{out};
     auto new_op = rewriter.create<mlir::tosa::ConstOp>(
         loc, types, ::mlir::ValueRange{}, attrs);
@@ -224,7 +224,7 @@ struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
     auto loc = op.getLoc();
     auto out = op.getResult();
     auto out_type = cast<ShapedType>(out.getType());
-    auto attrs = adaptor.getAttributes().getValue();
+    auto attrs = op->getAttrs();
     if (out_type.getRank() == 3) {
       auto new_op = rewriter.create<tosa::MatMulOp>(
           loc, ::mlir::TypeRange{out_type}, adaptor.getOperands(), attrs);
@@ -261,7 +261,7 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
     auto loc = op.getLoc();
     auto out = op.getResult();
     auto out_type = cast<ShapedType>(out.getType());
-    auto atrrs = op->getAttrDictionary().getValue();
+    auto atrrs = op->getAttrs();
     Operation* new_op;
     if (out_type.getRank() == 4) {
       new_op = rewriter.create<tosa::Conv2DOp>(loc, ::mlir::TypeRange{out},
@@ -286,7 +286,7 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
     auto out = op.getResult();
     auto input = op.getInput();
     auto perms = op.getPermsAttr();
-    auto atrrs = op->getAttrDictionary().getValue();
+    auto atrrs = op->getAttrs();
     auto const_shape = SmallVector<int64_t>(1, perms.size());
     auto const_out = RankedTensorType::get(const_shape, rewriter.getI64Type());
     auto const_value = llc::genDenseElementsFromArrayAttr(perms);
@@ -298,7 +298,6 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
     LLC_RUN_OUT_PATTERN
   };
 };
-}  // namespace
 
 //===----------------------------------------------------------------------===//
 // pattern population
@@ -312,7 +311,7 @@ void populateLLHToTosaConversionPatterns(TypeConverter& converter,
   patterns.add<MatMulOpLowering>(converter, context);
   patterns.add<ConvOpLowering>(converter, context);
   patterns.add<TransposeOpLowering>(converter, context);
-  populateWithGenerated(patterns);
+  // populateWithGenerated(patterns);
 }
 
 //===----------------------------------------------------------------------===//
@@ -342,7 +341,6 @@ void initLLHtoTosaConversionTypeConverter(TypeConverter& converter) {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-namespace {
 struct LLHToTosaConversion : impl::ConvertLLHToTosaBase<LLHToTosaConversion> {
   using impl::ConvertLLHToTosaBase<LLHToTosaConversion>::ConvertLLHToTosaBase;
   void runOnOperation() override;

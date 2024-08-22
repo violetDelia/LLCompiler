@@ -15,21 +15,15 @@
 
 #include <cstdint>
 
-#include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
-#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
-#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/PatternMatch.h"
-#include "mlir/IR/TypeRange.h"
-#include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
@@ -42,6 +36,8 @@ using namespace mlir::llh;
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+namespace {
+
 mlir::DenseI64ArrayAttr genTransposePermsToNHWC(mlir::Value value,
                                                 llc::LAYOUT src) {
   auto context = value.getContext();
@@ -95,11 +91,9 @@ bool HaslLayoutAttr(mlir::Value value, llc::LAYOUT layout) {
   auto attr = cast<StringAttr>(op->getAttr(llc::LLCLayoutAttr));
   return attr == llc::layout_to_str(layout);
 }
-
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-namespace {
 #include "llcompiler/Dialect/LLH/Transforms/TransformLayoutToNHWC.inc"
 struct ConvOpToNHWC : public OpRewritePattern<ConvOp> {
   using OpRewritePattern::OpRewritePattern;
@@ -109,7 +103,6 @@ struct ConvOpToNHWC : public OpRewritePattern<ConvOp> {
   }
 };
 
-}  // namespace
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -117,6 +110,7 @@ void populateTransformLayoutToNHWCPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   populateWithGenerated(patterns);
 }
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
@@ -124,13 +118,13 @@ namespace {
 struct TransformLayoutToNHWC
     : llh::impl::TransformLayoutToNHWCBase<TransformLayoutToNHWC> {
   void runOnOperation() override;
+  void markOpsNeedTranspose(ModuleOp module);
 };
-}  // namespace
 
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
-void markOpsNeedTranspose(ModuleOp module) {
+void TransformLayoutToNHWC::markOpsNeedTranspose(ModuleOp module) {
   auto layout = cast<StringAttr>(module->getAttr(llc::LLCGloabalLayoutAttr));
   CHECK(llc::MLIR, layout);
   if (layout == llc::layout_to_str(llc::LAYOUT::NHWC)) return;
@@ -141,7 +135,7 @@ void markOpsNeedTranspose(ModuleOp module) {
   };
   module->walk(mark_op);
 }
-
+}  // namespace
 void TransformLayoutToNHWC::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
