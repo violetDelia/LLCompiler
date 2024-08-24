@@ -404,8 +404,8 @@ mlir::Operation *OnnxImporter::mlir_gen(
     auto op = build_op<mlir::llh::ConvOp>(builder, out_types, operands);
     ADD_ATTR(op, "stride", strides, builder, node)
     ADD_ATTR(op, "dilation", dilations, builder, node)
-    ADD_ATTR(op, LLCGroupAttr, group, builder, node)
-    ADD_ATTR(op, LLCKernelShapeAttr, kernel_shape, builder, node)
+    ADD_ATTR(op, GroupAttr, group, builder, node)
+    ADD_ATTR(op, KernelShapeAttr, kernel_shape, builder, node)
     auto in_shape =
         mlir::cast<mlir::RankedTensorType>(input.getType()).getShape();
     auto stride = op.getStride();
@@ -413,11 +413,12 @@ mlir::Operation *OnnxImporter::mlir_gen(
     auto dilation = op.getDilation();
     auto kernel_shape =
         mlir::cast<mlir::DenseI64ArrayAttr>(kernel_shape_attr).asArrayRef();
-    auto pads = mlir::SmallVector<int64_t>(in_shape.size() - 2, 0);
+    auto pads = mlir::SmallVector<int64_t>();
     for (int i = 0; i < in_shape.size() - 2; i++) {
       auto pad = ((out_shape[i + 2] - 1) * stride[i] + 1 - in_shape[i + 2] +
                   dilation[i] * (kernel_shape[i] - 1)) /
                  2;
+      pads.push_back(pad);
       pads.push_back(pad);
     }
     op.setPad(pads);

@@ -17,12 +17,16 @@
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "llcompiler/Pipeline/Enums.h"
+#include "mlir/Conversion/LinalgToStandard/LinalgToStandard.h"
+#include "mlir/Conversion/TensorToLinalg/TensorToLinalgPass.h"
 #include "mlir/Conversion/TosaToArith/TosaToArith.h"
 #include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
 #include "mlir/Conversion/TosaToSCF/TosaToSCF.h"
 #include "mlir/Conversion/TosaToTensor/TosaToTensor.h"
 #include "mlir/Dialect/Affine/Utils.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Linalg/Passes.h"
+#include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
 #include "mlir/Pass/PassOptions.h"
 #include "mlir/Pass/PassRegistry.h"
@@ -46,6 +50,15 @@ struct CommonPipelineOptions
                                   run_mode_to_str(RUN_MODE::INFERENCE), ""),
                        clEnumValN(RUN_MODE::TRAINING,
                                   run_mode_to_str(RUN_MODE::TRAINING), ""))};
+  Option<bool> onlyCompiler{*this, "only-compiler",
+                            llvm::cl::desc("only compiler ther model"),
+                            llvm::cl::init(false)};
+  Option<bool> optInTosa{*this, "opt-tosa",
+                         llvm::cl::desc("optimization in tosa dialcet"),
+                         llvm::cl::init(true)};
+  Option<bool> optInTensor{*this, "opt-tensor",
+                           llvm::cl::desc("optimization in tensor dialcet"),
+                           llvm::cl::init(true)};
 };
 
 void buildCommonPipeline(::mlir::OpPassManager &pm,
@@ -60,6 +73,12 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   if (options.runMode == RUN_MODE::TRAINING) {
     ValidationOption.profile = mlir::tosa::TosaProfileEnum::MainTraining;
   }
+  mlir::TosaToLinalgOptions TosaToLinalgOption{
+      .disableTosaDecompositions = true, .aggressiveReduceConstant = false};
+  if (options.ReduceConstant) {
+    TosaToLinalgOption.aggressiveReduceConstant = true;
+  }
+
   //===----------------------------------------------------------------------===//
   // llh
   //===----------------------------------------------------------------------===//
@@ -70,35 +89,56 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(
       mlir::tosa_ex::createTransformLayoutToNHWCPass());  // 布局转换到NHWC
-  pm.addPass(mlir::tosa::createTosaOptionalDecompositions());  // 算子分解
-  pm.addPass(mlir::createCanonicalizerPass());            // 规范化
-  pm.addPass(mlir::tosa::createTosaInferShapesPass());    // 形状推导
+  if (!options.onlyCompiler && options.optInTosa) {
+    pm.addPass(mlir::tosa::createTosaOptionalDecompositions());  // 算子分解
+    pm.addPass(mlir::createCanonicalizerPass());                 // 规范化
+    pm.addPass(mlir::tosa::createTosaInferShapesPass());         // 形状推导
+  }
   pm.addPass(
       mlir::tosa::createTosaMakeBroadcastablePass());  // 规范算子广播形状
-  pm.addPass(mlir::tosa::createTosaLayerwiseConstantFoldPass(
-      {.aggressiveReduceConstant = options.ReduceConstant}));  // 常量折叠
   pm.addPass(
       mlir::tosa::createTosaValidation(ValidationOption));  // 检测算子合法性
-  pm.addPass(mlir::createCanonicalizerPass());
   //===----------------------------------------------------------------------===//
   // lowing tosa
   //===----------------------------------------------------------------------===//
+  pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
+      {.preferConv2DKernelLayoutHWCF = false}));  // Tosa lowing to linalg step1
+  pm.addPass(
+      mlir::tosa::createTosaMakeBroadcastablePass());  // 规范算子广播形状
+  if (!options.onlyCompiler && options.optInTosa) {
+    pm.addPass(mlir::tosa::createTosaLayerwiseConstantFoldPass(
+        {.aggressiveReduceConstant = options.ReduceConstant}));  // 常量折叠
+    pm.addPass(mlir::createCanonicalizerPass());                 // 规范化
+  }
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::tosa::createTosaToLinalg());  // Tosa lowing to linalg step2
+  //===----------------------------------------------------------------------===//
+  // tensor opt
+  //===----------------------------------------------------------------------===//
+  if (!options.onlyCompiler && options.optInTensor) {
+    pm.addPass(
+        mlir::tensor::createFoldTensorSubsetOpsPass());  // tensor.insert_slice
+    // 的常量折叠
+  }
+  //===----------------------------------------------------------------------===//
+  // lowing tensor
+  //===----------------------------------------------------------------------===//
 
-  // pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
-  //     {.preferConv2DKernelLayoutHWCF = false}));
   // pm.addPass(mlir::tosa::createTosaToArith(true, true));
   // pm.addPass(mlir::tosa::createTosaToTensor());
   // pm.addPass(mlir::tosa::createTosaToSCF());
-  // pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalg());
+  // pm.addPass(mlir::createConvertTensorToLinalgPass());
+  // pm.addPass(mlir::createConvertLinalgToAffineLoopsPass());
+  // pm.addPass(mlir::createConvertLinalgToLoopsPass());
   //===----------------------------------------------------------------------===//
   // lowing tosa
   //===----------------------------------------------------------------------===//
-  if (options.printOpGraph) {
-    pm.addPass(mlir::createPrintOpGraphPass());  // 输出Op Graph
-  }  // 输出Op graph
-  pm.addPass(mlir::createCSEPass());               // 公共表达式消除
-  pm.addPass(mlir::createRemoveDeadValuesPass());  // 死代码消除
-  pm.addPass(mlir::createSymbolDCEPass());         // 死符号消除
+  // if (options.printOpGraph) {
+  //   pm.addPass(mlir::createPrintOpGraphPass());  // 输出Op Graph
+  // }  // 输出Op graph
+  // pm.addPass(mlir::createCSEPass());               // 公共表达式消除
+  // pm.addPass(mlir::createRemoveDeadValuesPass());  // 死代码消除
+  // pm.addPass(mlir::createSymbolDCEPass());         // 死符号消除
 }
 
 void registerCommonPipeline() {

@@ -9,12 +9,12 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
     %6 = "llh.constant"() <{value = dense<[256, 10]> : tensor<2xi64>}> : () -> tensor<2xi64>
     %7 = "llh.weight"() <{value = dense<[[-0.0448560268, 0.00779166119, 0.0681008175, 0.0299937408, -0.126409635, 0.14021875, -0.0552849025, -0.0493838154, 0.0843220502, -0.0545404144]]> : tensor<1x10xf32>}> : () -> tensor<1x10xf32>
     %8 = "tosa.const"() <{value = dense<0.000000e+00> : tensor<8xf32>}> : () -> tensor<8xf32>
-    %9 = "llh.conv"(%arg0, %2, %8) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, pad = array<i64: 0, 0, 2, 2>, stride = array<i64: 1, 1>}> : (tensor<1x1x28x28xf32>, tensor<8x1x5x5xf32>, tensor<8xf32>) -> tensor<1x8x28x28xf32>
+    %9 = "llh.conv"(%arg0, %2, %8) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, pad = array<i64: 2, 2, 2, 2>, stride = array<i64: 1, 1>}> : (tensor<1x1x28x28xf32>, tensor<8x1x5x5xf32>, tensor<8xf32>) -> tensor<1x8x28x28xf32>
     %10 = tosa.add %9, %3 : (tensor<1x8x28x28xf32>, tensor<8x1x1xf32>) -> tensor<1x8x28x28xf32>
     %11 = "llh.relu"(%10) : (tensor<1x8x28x28xf32>) -> tensor<1x8x28x28xf32>
     %12 = tosa.max_pool2d %11 {kernel = array<i64: 2, 2>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 2, 2>} : (tensor<1x8x28x28xf32>) -> tensor<1x8x14x14xf32>
     %13 = "tosa.const"() <{value = dense<0.000000e+00> : tensor<16xf32>}> : () -> tensor<16xf32>
-    %14 = "llh.conv"(%12, %1, %13) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, pad = array<i64: 0, 0, 2, 2>, stride = array<i64: 1, 1>}> : (tensor<1x8x14x14xf32>, tensor<16x8x5x5xf32>, tensor<16xf32>) -> tensor<1x16x14x14xf32>
+    %14 = "llh.conv"(%12, %1, %13) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, pad = array<i64: 2, 2, 2, 2>, stride = array<i64: 1, 1>}> : (tensor<1x8x14x14xf32>, tensor<16x8x5x5xf32>, tensor<16xf32>) -> tensor<1x16x14x14xf32>
     %15 = tosa.add %14, %4 : (tensor<1x16x14x14xf32>, tensor<16x1x1xf32>) -> tensor<1x16x14x14xf32>
     %16 = "llh.relu"(%15) : (tensor<1x16x14x14xf32>) -> tensor<1x16x14x14xf32>
     %17 = tosa.max_pool2d %16 {kernel = array<i64: 3, 3>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 3, 3>} : (tensor<1x16x14x14xf32>) -> tensor<1x16x4x4xf32>

@@ -16,31 +16,48 @@
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
+#include "mlir/Conversion/Passes.h"
+#include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Linalg/IR/Linalg.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/IR/MLIRContext.h"
+#include "mlir/InitAllDialects.h"
+#include "mlir/InitAllExtensions.h"
+#include "mlir/InitAllPasses.h"
 #include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 
-//--dump-pass-pipeline --inline --convert-llh-to-tosa
+//  -pass-pipeline=
+//    "builtin.module(  inline,
+//                      convert-llh-to-tosa,
+//       )"
+//
 int main(int argc, char **argv) {
   mlir::DialectRegistry registry;
   auto logger_option = llc::option::get_logger_option();
   llc::logger::register_logger(llc::MLIR, logger_option);
   llc::logger::register_logger(llc::UTILITY, logger_option);
   registry.insert<mlir::llh::LLHDialect>();
+  registry.insert<mlir::ex::IRExtensionDialect>();
+  registry.insert<mlir::tosa_ex::TosaExDialect>();
   registry.insert<mlir::func::FuncDialect>();
   registry.insert<mlir::tosa::TosaDialect>();
-  registry.insert<mlir::ex::IRExtensionDialect>();
+  registry.insert<mlir::tensor::TensorDialect>();
+  registry.insert<mlir::arith::ArithDialect>();
+  registry.insert<mlir::linalg::LinalgDialect>();
   mlir::func::registerInlinerExtension(registry);
   llc::pipleline::registerCommonPipeline();
-  mlir::llh::registerLLHOptPasses();
-  mlir::registerConvertLLHToTosaPass();
+  mlir::registerTosaToLinalgNamed();
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
   return 0;

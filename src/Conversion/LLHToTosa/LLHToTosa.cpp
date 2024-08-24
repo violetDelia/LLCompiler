@@ -147,6 +147,7 @@ bool check_conv_illegal(Operation* op) {
   if (x_type || w_type) return false;
   if (x_type.getRank() != w_type.getRank()) return false;
   if (x_type.getRank() != 4 || w_type.getRank() != 5) return false;
+  DEBUG(llc::MLIR)<<"??";
   return true;
 }
 

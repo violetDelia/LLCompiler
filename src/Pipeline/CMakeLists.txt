@@ -16,6 +16,7 @@ add_mlir_dialect_library(LLCCommonPipeline
     MLIRTosaToLinalg
     MLIRTosaToSCF
     MLIRTosaExTransforms
+    MLIRTensorToLinalg
 )
 
 llcompiler_install_mlir_library(LLCCommonPipeline PIPELINE)

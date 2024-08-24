@@ -24,12 +24,13 @@
 #include "mlir/Support/LLVM.h"
 
 namespace llc {
-const char* LLCOperationNmaeAttr = "op_name";
-const char* LLCGloabalLayoutAttr = "builtin.gloabal_layout";
-const char* LLCLayoutAttr = "layout";
-const char* LLCGroupAttr = "group";
-const char* LLCKernelShapeAttr = "kernel_shape";
-const char* LLCIsWeightAttr = "is_weight";
+const char* OperationNmaeAttr = "op_name";
+const char* GloabalLayoutAttr = "builtin.gloabal_layout";
+const char* LayoutAttr = "layout";
+const char* GroupAttr = "group";
+const char* KernelShapeAttr = "kernel_shape";
+const char* IsWeightAttr = "is_weight";
+ const char* PadAttr = "pad";
 }  // namespace llc
 
 namespace llc {
@@ -59,22 +60,22 @@ const char* layout_to_str(LAYOUT layout) {
 }
 
 void add_op_name_attr(mlir::Operation* op, llvm::StringRef value) {
-  add_string_attr(op, LLCOperationNmaeAttr, value);
+  add_string_attr(op, OperationNmaeAttr, value);
 }
 void add_gloabal_layout_attr(mlir::Operation* op, LAYOUT value) {
-  add_string_attr(op, LLCGloabalLayoutAttr, layout_to_str(value));
+  add_string_attr(op, GloabalLayoutAttr, layout_to_str(value));
 }
 void add_layout_attr(mlir::Operation* op, LAYOUT value) {
-  add_string_attr(op, LLCGloabalLayoutAttr, layout_to_str(value));
+  add_string_attr(op, GloabalLayoutAttr, layout_to_str(value));
 }
 void add_group_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value) {
-  add_array_i64_attr(op, LLCGroupAttr, value);
+  add_array_i64_attr(op, GroupAttr, value);
 }
 void add_kernal_shape_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value) {
-  add_array_i64_attr(op, LLCKernelShapeAttr, value);
+  add_array_i64_attr(op, KernelShapeAttr, value);
 }
 void add_is_weight_attr(mlir::Operation* op, bool value) {
-  add_bool_attr(op, LLCIsWeightAttr, value);
+  add_bool_attr(op, IsWeightAttr, value);
 }
 
 }  // namespace llc

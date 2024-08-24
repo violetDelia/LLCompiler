@@ -87,8 +87,8 @@ mlir::RankedTensorType genReturnTensorFrom(mlir::Value value, llc::LAYOUT src) {
 
 bool HaslLayoutAttr(mlir::Value value, llc::LAYOUT layout) {
   auto op = value.getDefiningOp();
-  if (!op->hasAttr(llc::LLCLayoutAttr)) return false;
-  auto attr = cast<StringAttr>(op->getAttr(llc::LLCLayoutAttr));
+  if (!op->hasAttr(llc::LayoutAttr)) return false;
+  auto attr = cast<StringAttr>(op->getAttr(llc::LayoutAttr));
   return attr == llc::layout_to_str(layout);
 }
 //===----------------------------------------------------------------------===//
@@ -125,12 +125,12 @@ struct TransformLayoutToNHWC
 // pass implement
 //===----------------------------------------------------------------------===//
 void TransformLayoutToNHWC::markOpsNeedTranspose(ModuleOp module) {
-  auto layout = cast<StringAttr>(module->getAttr(llc::LLCGloabalLayoutAttr));
+  auto layout = cast<StringAttr>(module->getAttr(llc::GloabalLayoutAttr));
   CHECK(llc::MLIR, layout);
   if (layout == llc::layout_to_str(llc::LAYOUT::NHWC)) return;
   auto mark_op = [layout](Operation* op) {
     if (isa<llh::ConvOp>(op)) {
-      op->setAttr(llc::LLCLayoutAttr, layout);
+      op->setAttr(llc::LayoutAttr, layout);
     }
   };
   module->walk(mark_op);

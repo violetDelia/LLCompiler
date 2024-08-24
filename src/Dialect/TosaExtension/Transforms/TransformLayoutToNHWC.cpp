@@ -105,8 +105,8 @@ mlir::RankedTensorType genReturnTensorFromTo(mlir::Value value, StringRef from,
 }
 
 bool HaslLayoutAttr(Operation* op, llc::LAYOUT layout) {
-  if (!op->hasAttr(llc::LLCLayoutAttr)) return false;
-  auto attr = cast<StringAttr>(op->getAttr(llc::LLCLayoutAttr));
+  if (!op->hasAttr(llc::LayoutAttr)) return false;
+  auto attr = cast<StringAttr>(op->getAttr(llc::LayoutAttr));
   return attr == llc::layout_to_str(layout);
 }
 
@@ -119,16 +119,31 @@ mlir::tosa::TransposeOp buildTansposeFromTo(OpBuilder* builder, Value value,
   return tranpose;
 }
 
+DenseI64ArrayAttr genNewPadFrom(DenseI64ArrayAttr pad, StringRef from) {
+  auto context = pad.getContext();
+  auto pad_value = pad.asArrayRef().vec();
+  SmallVector<long long> new_pad_value;
+  if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
+    new_pad_value.push_back(pad_value[0]);
+    new_pad_value.push_back(pad_value[2]);
+    new_pad_value.push_back(pad_value[3]);
+    new_pad_value.push_back(pad_value[1]);
+  } else {
+    UNIMPLEMENTED(llc::MLIR);
+  }
+  return DenseI64ArrayAttr::get(context, new_pad_value);
+};
+
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
 namespace {
-template <class SourceOp>
-struct ConvToNHWCWithTwoOperand : public OpRewritePattern<SourceOp> {
+template <class SourceOp, int N>
+struct ConvToNHWCWithOperands : public OpRewritePattern<SourceOp> {
   using OpRewritePattern<SourceOp>::OpRewritePattern;
 
   LogicalResult match(SourceOp op) const final {
-    if (!op->hasAttr(llc::LLCLayoutAttr)) return failure();
+    if (!op->hasAttr(llc::LayoutAttr)) return failure();
     return success();
   }
 
@@ -136,30 +151,34 @@ struct ConvToNHWCWithTwoOperand : public OpRewritePattern<SourceOp> {
     LLC_RUN_IN_PATTERN
     auto loc = op->getLoc();
     auto attrs = op->getAttrs();
-    auto operand1 = op->getOperand(0);
-    auto operand2 = op->getOperand(1);
     auto out = op->getResult(0);
     auto operand_nums = op->getNumOperands();
-    auto layout = cast<StringAttr>(op->getAttr(llc::LLCLayoutAttr)).getValue();
-    auto new_operand1 =
-        buildTansposeFromTo(&rewriter, operand1, layout,
-                            llc::layout_to_str(llc::LAYOUT::NHWC), loc);
-    auto new_operand2 =
-        buildTansposeFromTo(&rewriter, operand2, layout,
-                            llc::layout_to_str(llc::LAYOUT::NHWC), loc);
+    auto layout = cast<StringAttr>(op->getAttr(llc::LayoutAttr)).getValue();
     SmallVector<Value> new_operands;
-    new_operands.push_back(new_operand1);
-    new_operands.push_back(new_operand2);
-    for (int i = 2; i < operand_nums; i++) {
+    for (int i = 0; i < N; i++) {
+      auto operand = op->getOperand(i);
+      auto new_operand =
+          buildTansposeFromTo(&rewriter, operand, layout,
+                              llc::layout_to_str(llc::LAYOUT::NHWC), loc);
+      new_operands.push_back(new_operand);
+    }
+    for (int i = N; i < operand_nums; i++) {
       new_operands.push_back(op->getOperand(i));
     }
     auto new_out = genReturnTensorFromTo(out, layout,
                                          llc::layout_to_str(llc::LAYOUT::NHWC));
-    auto new_op = rewriter.create<Conv2DOp>(loc, ::mlir::TypeRange{new_out},
+    auto new_op = rewriter.create<SourceOp>(loc, ::mlir::TypeRange{new_out},
                                             new_operands);
     for (auto attr : attrs) {
-      if (attr.getName() == llc::LLCLayoutAttr) continue;
-      new_op->setAttr(attr.getName(), attr.getValue());
+      if (attr.getName() == llc::LayoutAttr)
+        continue;
+      else if (attr.getName() == llc::PadAttr) {
+        auto pad = cast<DenseI64ArrayAttr>(attr.getValue());
+        auto new_pad = genNewPadFrom(pad, layout);
+        new_op->setAttr(llc::PadAttr, new_pad);
+      } else {
+        new_op->setAttr(attr.getName(), attr.getValue());
+      }
     }
     auto out_transpose = buildTansposeFromTo(
         &rewriter, new_op, llc::layout_to_str(llc::LAYOUT::NHWC), layout, loc);
@@ -174,7 +193,8 @@ struct ConvToNHWCWithTwoOperand : public OpRewritePattern<SourceOp> {
 //===----------------------------------------------------------------------===//
 void populateTransformLayoutToNHWCPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<ConvToNHWCWithTwoOperand<Conv2DOp>>(context);
+  patterns.add<ConvToNHWCWithOperands<Conv2DOp, 2>>(context);
+  patterns.add<ConvToNHWCWithOperands<MaxPool2dOp, 1>>(context);
 }
 //===----------------------------------------------------------------------===//
 // pass defination
@@ -190,12 +210,16 @@ struct TransformLayoutToNHWC
 // pass implement
 //===----------------------------------------------------------------------===//
 void markOpsNeedTranspose(ModuleOp module) {
-  auto layout = cast<StringAttr>(module->getAttr(llc::LLCGloabalLayoutAttr));
+  if (!module->hasAttr(llc::GloabalLayoutAttr)) {
+    WRONG(llc::MLIR) << "not has " << llc::GloabalLayoutAttr;
+    return;
+  }
+  auto layout = cast<StringAttr>(module->getAttr(llc::GloabalLayoutAttr));
   CHECK(llc::MLIR, layout);
   if (layout == llc::layout_to_str(llc::LAYOUT::NHWC)) return;
   auto mark_op = [layout](Operation* op) {
-    if (isa<tosa::Conv2DOp>(op)) {
-      op->setAttr(llc::LLCLayoutAttr, layout);
+    if (isa<tosa::Conv2DOp, tosa::MaxPool2dOp>(op)) {
+      op->setAttr(llc::LayoutAttr, layout);
       DEBUG(llc::MLIR) << "add " << op->getName().getStringRef().str();
     }
   };

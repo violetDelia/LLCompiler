@@ -31,12 +31,13 @@ namespace llc {
 enum LAYOUT : int64_t { NCHW = 0, NHWC = 1 };
 const char* layout_to_str(LAYOUT layout);
 
-extern const char* LLCOperationNmaeAttr;
-extern const char* LLCGloabalLayoutAttr;
-extern const char* LLCLayoutAttr;
-extern const char* LLCGroupAttr;
-extern const char* LLCKernelShapeAttr;
-extern const char* LLCIsWeightAttr;
+extern const char* OperationNmaeAttr;
+extern const char* GloabalLayoutAttr;
+extern const char* LayoutAttr;
+extern const char* GroupAttr;
+extern const char* KernelShapeAttr;
+extern const char* IsWeightAttr;
+extern const char* PadAttr;
 
 void add_op_name_attr(mlir::Operation* op, llvm::StringRef value);
 void add_gloabal_layout_attr(mlir::Operation* op, LAYOUT value);
