@@ -24,8 +24,15 @@
 #include "mlir/Conversion/TosaToSCF/TosaToSCF.h"
 #include "mlir/Conversion/TosaToTensor/TosaToTensor.h"
 #include "mlir/Dialect/Affine/Utils.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
+#include "mlir/Dialect/Bufferization/IR/Bufferization.h"
+#include "mlir/Dialect/Bufferization/Transforms/OneShotAnalysis.h"
+#include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Passes.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
 #include "mlir/Pass/PassOptions.h"
@@ -58,6 +65,9 @@ struct CommonPipelineOptions
                          llvm::cl::init(true)};
   Option<bool> optInTensor{*this, "opt-tensor",
                            llvm::cl::desc("optimization in tensor dialcet"),
+                           llvm::cl::init(true)};
+  Option<bool> optInLinalg{*this, "opt-linalg",
+                           llvm::cl::desc("optimization in linalg dialcet"),
                            llvm::cl::init(true)};
 };
 
@@ -111,7 +121,9 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
     pm.addPass(mlir::createCanonicalizerPass());                 // 规范化
   }
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createTosaToLinalg());  // Tosa lowing to linalg step2
+      mlir::tosa::createTosaToLinalg());         // Tosa lowing to linalg step2
+  pm.addPass(mlir::tosa::createTosaToTensor());  // Tosa lowing to tensor
+  pm.addPass(mlir::tosa::createTosaToArith(true));  // Tosa lowing to arith
   //===----------------------------------------------------------------------===//
   // tensor opt
   //===----------------------------------------------------------------------===//
@@ -123,6 +135,23 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // lowing tensor
   //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::createConvertTensorToLinalgPass());  // tensor.pad -> linalg
+  mlir::bufferization::OneShotBufferizationOptions tensor_buffer_opts;
+  //===----------------------------------------------------------------------===//
+  // linalg opt
+  //===----------------------------------------------------------------------===//
+  if (!options.onlyCompiler && options.optInLinalg) {
+    pm.addPass(mlir::createLinalgElementwiseOpFusionPass());
+  }
+  //===----------------------------------------------------------------------===//
+  // bufferization
+  //===----------------------------------------------------------------------===//
+  tensor_buffer_opts.analysisHeuristic = mlir::bufferization::
+      OneShotBufferizationOptions::AnalysisHeuristic::BottomUpFromTerminators;
+  tensor_buffer_opts.opFilter.allowDialect<
+      mlir::tensor::TensorDialect, mlir::bufferization::BufferizationDialect>();
+  pm.addPass(mlir::bufferization::createOneShotBufferizePass(
+      tensor_buffer_opts));  // tensor -> memref
 
   // pm.addPass(mlir::tosa::createTosaToArith(true, true));
   // pm.addPass(mlir::tosa::createTosaToTensor());

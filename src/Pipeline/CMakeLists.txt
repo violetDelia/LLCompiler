@@ -19,4 +19,7 @@ add_mlir_dialect_library(LLCCommonPipeline
     MLIRTensorToLinalg
 )
 
+set_property(GLOBAL APPEND PROPERTY LLCOMPILER_COMMON_PIPELINE_DEPENDS MLIRFuncInlinerExtension)
+set_property(GLOBAL APPEND PROPERTY LLCOMPILER_COMMON_PIPELINE_DEPENDS MLIRTensorInferTypeOpInterfaceImpl)
+
 llcompiler_install_mlir_library(LLCCommonPipeline PIPELINE)

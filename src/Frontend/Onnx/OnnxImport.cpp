@@ -482,6 +482,7 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
     for (int i{0}; i < result_num; i++) {
       value_map[outputs[i]->uniqueName()] = op->getResult(i);
     }
+    add_op_name_attr(op, node->name());
     block->push_back(op);
   }
   INFO(IMPORTER) << "----- building return op -----";

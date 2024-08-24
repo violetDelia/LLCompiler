@@ -10,18 +10,18 @@ func.func @CNTKGraph(%arg0: tensor<1x1x28x28xf32>) -> tensor<1x10xf32> {
   %7 = "llh.constant"() <{value = dense<[1, 256]> : tensor<2xi64>}> : () -> tensor<2xi64>
   %8 = "llh.constant"() <{value = dense<[256, 10]> : tensor<2xi64>}> : () -> tensor<2xi64>
   %9 = "llh.weight"() <{value = dense<[[-0.0448560268, 0.00779166119, 0.0681008175, 0.0299937408, -0.126409635, 0.14021875, -0.0552849025, -0.0493838154, 0.0843220502, -0.0545404144]]> : tensor<1x10xf32>}> : () -> tensor<1x10xf32>
-  %10 = "llh.conv"(%arg0, %4, %1) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, pad = array<i64: 2, 2, 2, 2>, stride = array<i64: 1, 1>}> : (tensor<1x1x28x28xf32>, tensor<8x1x5x5xf32>, tensor<8xf32>) -> tensor<1x8x28x28xf32>
-  %11 = tosa.add %10, %5 : (tensor<1x8x28x28xf32>, tensor<8x1x1xf32>) -> tensor<1x8x28x28xf32>
-  %12 = "llh.relu"(%11) : (tensor<1x8x28x28xf32>) -> tensor<1x8x28x28xf32>
-  %13 = tosa.max_pool2d %12 {kernel = array<i64: 2, 2>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 2, 2>} : (tensor<1x8x28x28xf32>) -> tensor<1x8x14x14xf32>
-  %14 = "llh.conv"(%13, %3, %0) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, pad = array<i64: 2, 2, 2, 2>, stride = array<i64: 1, 1>}> : (tensor<1x8x14x14xf32>, tensor<16x8x5x5xf32>, tensor<16xf32>) -> tensor<1x16x14x14xf32>
-  %15 = tosa.add %14, %6 : (tensor<1x16x14x14xf32>, tensor<16x1x1xf32>) -> tensor<1x16x14x14xf32>
-  %16 = "llh.relu"(%15) : (tensor<1x16x14x14xf32>) -> tensor<1x16x14x14xf32>
-  %17 = tosa.max_pool2d %16 {kernel = array<i64: 3, 3>, pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 3, 3>} : (tensor<1x16x14x14xf32>) -> tensor<1x16x4x4xf32>
-  %18 = tosa.reshape %17 {new_shape = array<i64: 1, 256>} : (tensor<1x16x4x4xf32>) -> tensor<1x256xf32>
-  %19 = tosa.reshape %2 {new_shape = array<i64: 256, 10>} : (tensor<16x4x4x10xf32>) -> tensor<256x10xf32>
-  %20 = "llh.matmal"(%18, %19) : (tensor<1x256xf32>, tensor<256x10xf32>) -> tensor<1x10xf32>
-  %21 = tosa.add %20, %9 : (tensor<1x10xf32>, tensor<1x10xf32>) -> tensor<1x10xf32>
+  %10 = "llh.conv"(%arg0, %4, %1) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, pad = array<i64: 2, 2, 2, 2>, stride = array<i64: 1, 1>}> {op_name = "Convolution28"} : (tensor<1x1x28x28xf32>, tensor<8x1x5x5xf32>, tensor<8xf32>) -> tensor<1x8x28x28xf32>
+  %11 = tosa.add %10, %5 {op_name = "Plus30"} : (tensor<1x8x28x28xf32>, tensor<8x1x1xf32>) -> tensor<1x8x28x28xf32>
+  %12 = "llh.relu"(%11) {op_name = "ReLU32"} : (tensor<1x8x28x28xf32>) -> tensor<1x8x28x28xf32>
+  %13 = tosa.max_pool2d %12 {kernel = array<i64: 2, 2>, op_name = "Pooling66", pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 2, 2>} : (tensor<1x8x28x28xf32>) -> tensor<1x8x14x14xf32>
+  %14 = "llh.conv"(%13, %3, %0) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, pad = array<i64: 2, 2, 2, 2>, stride = array<i64: 1, 1>}> {op_name = "Convolution110"} : (tensor<1x8x14x14xf32>, tensor<16x8x5x5xf32>, tensor<16xf32>) -> tensor<1x16x14x14xf32>
+  %15 = tosa.add %14, %6 {op_name = "Plus112"} : (tensor<1x16x14x14xf32>, tensor<16x1x1xf32>) -> tensor<1x16x14x14xf32>
+  %16 = "llh.relu"(%15) {op_name = "ReLU114"} : (tensor<1x16x14x14xf32>) -> tensor<1x16x14x14xf32>
+  %17 = tosa.max_pool2d %16 {kernel = array<i64: 3, 3>, op_name = "Pooling160", pad = array<i64: 0, 0, 0, 0>, stride = array<i64: 3, 3>} : (tensor<1x16x14x14xf32>) -> tensor<1x16x4x4xf32>
+  %18 = tosa.reshape %17 {new_shape = array<i64: 1, 256>, op_name = "Times212_reshape0"} : (tensor<1x16x4x4xf32>) -> tensor<1x256xf32>
+  %19 = tosa.reshape %2 {new_shape = array<i64: 256, 10>, op_name = "Times212_reshape1"} : (tensor<16x4x4x10xf32>) -> tensor<256x10xf32>
+  %20 = "llh.matmal"(%18, %19) {op_name = "Times212"} : (tensor<1x256xf32>, tensor<256x10xf32>) -> tensor<1x10xf32>
+  %21 = tosa.add %20, %9 {op_name = "Plus214"} : (tensor<1x10xf32>, tensor<1x10xf32>) -> tensor<1x10xf32>
   return %21 : tensor<1x10xf32>
 }
 
