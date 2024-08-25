@@ -11,3 +11,4 @@ __pycache__
 out
 python_venv
 mlir-ir-dir
+mlir-ir-dir-only-compiler
