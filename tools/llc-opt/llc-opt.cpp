@@ -35,6 +35,7 @@
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/MemRef/Transforms/AllocationOpInterfaceImpl.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
@@ -71,18 +72,15 @@ int main(int argc, char **argv) {
   registry.insert<mlir::memref::MemRefDialect>();
   registry.insert<mlir::affine::AffineDialect>();
   registry.insert<mlir::scf::SCFDialect>();
-  {  // register BufferizableOpInterface
-    mlir::tensor::registerBufferizableOpInterfaceExternalModels(registry);
-    mlir::bufferization::func_ext::
-        registerBufferizableOpInterfaceExternalModels(registry);
-    mlir::arith::registerBufferizableOpInterfaceExternalModels(registry);
-    mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
-    mlir::scf::registerBufferizableOpInterfaceExternalModels(registry);
-  }
-  mlir::tensor::registerInferTypeOpInterfaceExternalModels(
-      registry);  // ReifyRankedShapedTypeOpInterface in tensor
-  mlir::func::registerInlinerExtension(
-      registry);  // register func InlinerInterface
+  mlir::tensor::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
+      registry);
+  mlir::arith::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::scf::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::tensor::registerInferTypeOpInterfaceExternalModels(registry);
+  mlir::func::registerInlinerExtension(registry);
+  mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
   llc::pipleline::registerCommonPipeline();
   mlir::bufferization::registerOneShotBufferize();
   return mlir::asMainReturnCode(

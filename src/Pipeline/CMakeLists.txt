@@ -17,6 +17,7 @@ add_mlir_dialect_library(LLCCommonPipeline
     MLIRTosaToSCF
     MLIRTosaExTransforms
     MLIRTensorToLinalg
+    MLIRAffineToStandard
 )
 
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_COMMON_PIPELINE_DEPENDS MLIRFuncInlinerExtension)
