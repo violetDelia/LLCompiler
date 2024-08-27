@@ -11,40 +11,59 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Compiler/Init.h"
-#include "llcompiler/Compiler/Utility.h"
 #include "llcompiler/Conversion/Passes.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/Utility/File.h"
-#include "llcompiler/Frontend/Core/Option.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
+#include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
-#include "llvm/IR/Module.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/raw_ostream.h"
-#include "mlir/Dialect/Func/Extensions/AllExtensions.h"
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/TargetSelect.h"
+#include "mlir/Conversion/Passes.h"
+#include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
+#include "mlir/Dialect/Affine/IR/AffineOps.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Arith/Transforms/BufferizableOpInterfaceImpl.h"
+#include "mlir/Dialect/Bufferization/IR/Bufferization.h"
+#include "mlir/Dialect/Bufferization/Transforms/FuncBufferizableOpInterfaceImpl.h"
+#include "mlir/Dialect/Bufferization/Transforms/Passes.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/IR/AsmState.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
+#include "mlir/Dialect/Linalg/IR/Linalg.h"
+#include "mlir/Dialect/Linalg/Transforms/BufferizableOpInterfaceImpl.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/MemRef/Transforms/AllocationOpInterfaceImpl.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
+#include "mlir/Dialect/SCF/Transforms/BufferizableOpInterfaceImpl.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
+#include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/Dialect/UB/IR/UBOps.h"
+#include "mlir/ExecutionEngine/JitRunner.h"
+#include "mlir/ExecutionEngine/OptUtils.h"
+#include "mlir/IR/Dialect.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/IR/MLIRContext.h"
-#include "mlir/Pass/PassManager.h"
-#include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
-#include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
+#include "mlir/InitAllDialects.h"
+#include "mlir/InitAllExtensions.h"
+#include "mlir/InitAllPasses.h"
+#include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
-#include "mlir/Transforms/Passes.h"
-#include "mlir/Dialect/Tosa/IR/TosaOps.h"
+
 
 int main(int argc, char **argv) {
+  llvm::InitLLVM y(argc, argv);
+  llvm::InitializeNativeTarget();
+  llvm::InitializeNativeTargetAsmPrinter();
+  llvm::InitializeNativeTargetAsmParser();
+
   mlir::DialectRegistry registry;
-  auto logger_option = llc::option::get_logger_option();
-  llc::logger::register_logger(llc::MLIR, logger_option);
-  registry.insert<mlir::llh::LLHDialect>();
-  registry.insert<mlir::func::FuncDialect>();
-  registry.insert<mlir::tosa::TosaDialect>();
-  mlir::func::registerInlinerExtension(registry);
-  llc::pipleline::registerCommonPipeline();
-  return mlir::asMainReturnCode(
-      mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
-  return 0;
+  mlir::registerAllToLLVMIRTranslations(registry);
+
+  return mlir::JitRunnerMain(argc, argv, registry);
 }

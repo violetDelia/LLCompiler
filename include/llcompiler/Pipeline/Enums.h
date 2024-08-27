@@ -21,5 +21,10 @@ enum RUN_MODE : std::int64_t {
   TRAINING = 1,
 };
 const char* run_mode_to_str(const RUN_MODE mode);
+enum TARGET : std::int64_t {
+  LLVM = 0,
+  SPIRV = 1,
+};
+const char* target_to_str(const TARGET target);
 }  // namespace llc::pipleline
 #endif  // INCLUDE_LLCOMPILER_PIPELINE_ENUMS_H_

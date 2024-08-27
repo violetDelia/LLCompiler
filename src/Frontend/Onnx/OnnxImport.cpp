@@ -446,7 +446,7 @@ mlir::func::FuncOp OnnxImporter::mlir_gen(
   auto func_inputs = mlir_gen(builder, graph.inputs());
   auto func_outputs = mlir_gen(builder, graph.outputs());
   auto func_type = builder->getFunctionType(func_inputs, func_outputs);
-  auto func = builder->create<mlir::func::FuncOp>(loc, graph.name(), func_type);
+  auto func = builder->create<mlir::func::FuncOp>(loc, "main", func_type);
   DEBUG_BUILDED_OP(IMPORTER, func);
   auto block = func.addEntryBlock();
   std::map<std::string, mlir::Value> value_map;

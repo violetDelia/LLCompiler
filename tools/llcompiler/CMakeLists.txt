@@ -13,9 +13,16 @@ llcompiler_add_executable(llcompiler
     ${ABSL_INCLUDE_DIR}
 
     LINKS
-    LLCompiler
-    LLCSupport
-    LLCCommonPipeline
-    MLIROptLib
-    MLIRFuncInlinerExtension
+    MLIRAnalysis
+    MLIRBuiltinToLLVMIRTranslation
+    MLIRExecutionEngine
+    MLIRIR
+    MLIRJitRunner
+    MLIRLLVMDialect
+    MLIRLLVMToLLVMIRTranslation
+    MLIRToLLVMIRTranslationRegistration
+    MLIRParser
+    MLIRTargetLLVMIRExport
+    MLIRSupport
+    LLVMX86AsmParser
 )

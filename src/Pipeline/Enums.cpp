@@ -23,4 +23,13 @@ const char* run_mode_to_str(const RUN_MODE mode) {
   }
   return "unimplemented";
 }
+const char* target_to_str(const TARGET target) {
+  switch (target) {
+    case TARGET::LLVM:
+      return "llvm";
+    case TARGET::SPIRV:
+      return "spirv";
+  }
+  return "unimplemented";
+}
 }  // namespace llc::pipleline
