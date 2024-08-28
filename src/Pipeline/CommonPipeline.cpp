@@ -43,6 +43,7 @@
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Affine/Utils.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Arith/Transforms/Passes.h"
 #include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Bufferization/Transforms/OneShotAnalysis.h"
@@ -60,6 +61,8 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Pass/PassOptions.h"
 #include "mlir/Pass/PassRegistry.h"
 #include "mlir/Transforms/Passes.h"
@@ -103,6 +106,9 @@ struct CommonPipelineOptions
   Option<bool> optInSCF{*this, "opt-scf",
                         llvm::cl::desc("optimization in scf dialcet"),
                         llvm::cl::init(true)};
+  Option<bool> optInArith{*this, "opt-arith",
+                          llvm::cl::desc("optimization in arith dialcet"),
+                          llvm::cl::init(true)};
   Option<bool> optInLLVM{*this, "opt-llvm",
                          llvm::cl::desc("optimization in llvm dialcet"),
                          llvm::cl::init(true)};
@@ -212,9 +218,14 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::bufferization::createOneShotBufferizePass(
       bufferization_opts));                           // Bufferize
   pm.addPass(mlir::func::createFuncBufferizePass());  // func Bufferize
-  pm.addPass(mlir::bufferization::
-                 createBufferResultsToOutParamsPass());  // 内存inpalce
-  pm.addPass(mlir::createCanonicalizerPass());           // 规范化
+  mlir::bufferization::BufferResultsToOutParamsOpts buffer_result_opts;
+  buffer_result_opts.filterFn = [](mlir::func::FuncOp *func) {
+    auto name = func->getSymName();
+    return (name != "main");
+  };
+  pm.addPass(mlir::bufferization::createBufferResultsToOutParamsPass(
+      buffer_result_opts));                     // 内存inpalce
+  pm.addPass(mlir::createCanonicalizerPass());  // 规范化
   pm.addPass(
       mlir::bufferization::createFinalizingBufferizePass());  // Bufferize规范化
 
@@ -223,6 +234,50 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::createConvertLinalgToAffineLoopsPass());  // convert linalg
                                                              // to affine
+  //===----------------------------------------------------------------------===//
+  // lowing affine to scf and affine opt
+  //===----------------------------------------------------------------------===//
+  if (!options.onlyCompiler && options.usingAffine) {
+    pm.addPass(
+        mlir::affine::
+            createAffineExpandIndexOpsPass());  // 去除affine.delinearize_index
+    // pm.addPass(mlir::affine::createAffineDataCopyGenerationPass(3, 1, 0,
+    // 1024,1024 *1024));//添加dma
+    pm.addPass(mlir::affine::createLoopFusionPass(
+        0, 1024 * 1024, false,
+        mlir::affine::FusionMode::Greedy));                    // loop融合
+    pm.addPass(mlir::memref::createFoldMemRefAliasOpsPass());  // 内存折叠
+    pm.addPass(
+        mlir::affine::createAffineScalarReplacementPass());  // 去除冗余内存操作
+    pm.addPass(mlir::affine::createPipelineDataTransferPass());  // 简化dma
+  }
+  // mlir::affine::AffineVectorizeOptions vector_options;
+  // vector_options.vectorSizes = {1024};
+  // pm.addPass(mlir::affine::createAffineVectorize(vector_options));  //
+  // 向量化
+  if (!options.onlyCompiler && options.usingAffine) {
+    pm.addPass(mlir::affine::createLoopUnrollAndJamPass());  // 循环展开+融合
+    pm.addPass(mlir::affine::createLoopCoalescingPass());     // 循环合并
+    pm.addPass(mlir::affine::createAffineParallelizePass());  // affine 并行化
+    pm.addPass(mlir::affine::createLoopCoalescingPass());     // 简化loop
+    pm.addPass(
+        mlir::affine::createSimplifyAffineStructuresPass());  // 简化affine表达
+  }
+  pm.addPass(mlir::createLowerAffinePass());  // lowing affine to scf
+  //===----------------------------------------------------------------------===//
+  // arith opt
+  //===----------------------------------------------------------------------===//
+  if (!options.onlyCompiler && options.optInArith) {
+    pm.addPass(
+        mlir::arith::
+            createArithEmulateUnsupportedFloats());  // 消除不支持的浮点数
+    pm.addPass(mlir::arith::
+                   createArithUnsignedWhenEquivalentPass());  // 转换为Unsigned
+    pm.addPass(
+        mlir::arith::createIntRangeOptimizationsPass());  // 优化int的位宽
+    pm.addPass(mlir::createCanonicalizerPass());          // 规范化
+  }
+  pm.addPass(mlir::arith::createArithExpandOpsPass());  // 合法化lowing to LLVM
   //===----------------------------------------------------------------------===//
   // memref opt step
   //===----------------------------------------------------------------------===//
@@ -238,7 +293,6 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
     pm.addPass(
         mlir::memref::
             createResolveRankedShapeTypeResultDimsPass());  // 化简memref.dim
-    pm.addPass(mlir::memref::createFoldMemRefAliasOpsPass());  // 内存折叠
     pm.addPass(
         mlir::memref::
             createExpandStridedMetadataPass());  // 内存访问转为reinterpret_cast
@@ -252,46 +306,22 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
       mlir::memref::createExpandOpsPass());  // legalizes memref dialect ops
                                              // to be convertible to LLVM
   //===----------------------------------------------------------------------===//
-  // affine opt
+  //  scf  opt
   //===----------------------------------------------------------------------===//
-  if (!options.onlyCompiler && options.usingAffine) {
-    pm.addPass(
-        mlir::affine::
-            createAffineExpandIndexOpsPass());  // 去除affine.delinearize_index
-    // pm.addPass(mlir::affine::createAffineDataCopyGenerationPass(3, 1, 0,
-    // 1024,1024 *1024));//添加dma
-    pm.addPass(mlir::affine::createLoopFusionPass(
-        0, 1024 * 1024, false,
-        mlir::affine::FusionMode::Greedy));  // loop融合
-    pm.addPass(
-        mlir::affine::createAffineScalarReplacementPass());  // 去除冗余内存操作
-    pm.addPass(mlir::affine::createPipelineDataTransferPass());  // 简化dma
-  }
-  // mlir::affine::AffineVectorizeOptions vector_options;
-  // vector_options.vectorSizes = {1024};
-  // pm.addPass(mlir::affine::createAffineVectorize(vector_options));  //
-  // 向量化
-  if (!options.onlyCompiler && options.usingAffine) {
-    pm.addPass(mlir::affine::createLoopCoalescingPass());  // 简化loop
-    pm.addPass(
-        mlir::affine::createSimplifyAffineStructuresPass());  // 简化affine表达
-  }
-  //===----------------------------------------------------------------------===//
-  // lowing affine to scf and opt
-  //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::createLowerAffinePass());  // lowing affine to scf
   if (!options.onlyCompiler && options.optInSCF) {
+    pm.addPass(mlir::createForallToParallelLoopPass());  // forall ->for.para
     pm.addPass(
         mlir::createLoopInvariantCodeMotionPass());  // 固定变量移到loop外
     pm.addPass(
         mlir::createLoopInvariantSubsetHoistingPass());  // 固定Op移到loop外
-    pm.addPass(mlir::createControlFlowSinkPass());       // 控制流下沉
-    pm.addPass(mlir::createCanonicalizerPass());         // 规范化
-    pm.addPass(mlir::createForallToForLoopPass());       // forall ->for
+    pm.addPass(mlir::createForLoopPeelingPass());        // 剥离循环首尾
     pm.addPass(mlir::createForLoopRangeFoldingPass());   // 外移计算
+    pm.addPass(mlir::createControlFlowSinkPass());       // 控制流下沉
+    pm.addPass(mlir::createParallelLoopFusionPass());    // scf fusion
     pm.addPass(mlir::createSCFForLoopCanonicalizationPass());  // 规范化scf
-    pm.addPass(mlir::createForToWhileLoopPass());              // for -> while
-    pm.addPass(mlir::createSCCPPass());  // 条件常量传播
+    pm.addPass(mlir::createSCCPPass());            // 条件常量传播
+    pm.addPass(mlir::createForToWhileLoopPass());  // for -> while
+    pm.addPass(mlir::createCanonicalizerPass());   // 规范化
   }
   //===----------------------------------------------------------------------===//
   // lowing to scf to cf
@@ -302,7 +332,7 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(
       mlir::func::createDuplicateFunctionEliminationPass());  // 去重重复的func
-  if (options.target == TARGET::SPIRV ) {
+  if (options.target == TARGET::SPIRV) {
     pm.addPass(mlir::createConvertControlFlowToSPIRVPass());
   }
   if (options.target == TARGET::LLVM) {
