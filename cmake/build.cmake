@@ -87,11 +87,11 @@ function(llcompiler_add_library name)
     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_ALL_TARGETS ${name})
 
     if(NOT DISABLE_INSTALL)
-        llcompiler_install_library(${name})
+        llcompiler_install_target(${name})
     endif()
 endfunction()
 
-function(llcompiler_install_library name)
+function(llcompiler_install_target name)
     install(TARGETS ${name}
         EXPORT ${name}Targets
         RUNTIME DESTINATION ${LLCOMPILER_INSTALL_RUNTIME_DIR}
@@ -100,7 +100,7 @@ function(llcompiler_install_library name)
     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_INSTALLED_TARGETS ${name})
 endfunction()
 
-function(llcompiler_install_mlir_library name)
+function(llcompiler_install_mlir_target name)
     cmake_parse_arguments(ARG
         "DIALECT, TRANSFORM, CONVERSION,PIPELINE"
         ""
@@ -128,5 +128,5 @@ function(llcompiler_install_mlir_library name)
     endif()
 
     message("add MLIR lib: ${name}.")
-    llcompiler_install_library(${name})
+    llcompiler_install_target(${name})
 endfunction()

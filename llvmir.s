@@ -6,14 +6,14 @@
 	.globl	@feat.00
 .set @feat.00, 0
 	.file	"LLVMDialectModule"
-	.def	main;
+	.def	test;
 	.scl	2;
 	.type	32;
 	.endef
-	.globl	main                            # -- Begin function main
+	.globl	test                            # -- Begin function test
 	.p2align	4, 0x90
-main:                                   # @main
-.seh_proc main
+test:                                   # @test
+.seh_proc test
 # %bb.0:
 	pushq	%rbp
 	.seh_pushreg %rbp
@@ -41,7 +41,6 @@ main:                                   # @main
 	movq	%rdx, %r12
 	movq	%rcx, 104(%rbp)                 # 8-byte Spill
 	subq	$32, %rsp
-	callq	__main
 	movl	$4, %ecx
 	callq	malloc
 	addq	$32, %rsp

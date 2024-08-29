@@ -14,4 +14,4 @@ add_mlir_dialect_library(MLIRTosaExDialect
     MLIRInferTypeOpInterface
     MLIRFuncDialect
 )
-llcompiler_install_mlir_library(MLIRTosaExDialect DIALECT)
+llcompiler_install_mlir_target(MLIRTosaExDialect DIALECT)

@@ -41,6 +41,7 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/Dialect/Transform/Transforms/Passes.h"
 #include "mlir/Dialect/UB/IR/UBOps.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/IR/MLIRContext.h"
@@ -82,7 +83,7 @@ int main(int argc, char **argv) {
   mlir::func::registerInlinerExtension(registry);
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
   llc::pipleline::registerCommonPipeline();
-  mlir::bufferization::registerOneShotBufferize();
+  mlir::transform::registerInterpreterPass();
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
   return 0;

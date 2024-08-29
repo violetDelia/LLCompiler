@@ -14,4 +14,4 @@ add_mlir_dialect_library(MLIRIRExtension
     LINK_LIBS PUBLIC
     MLIRSupport
 )
-llcompiler_install_mlir_library(MLIRIRExtension DIALECT)
+llcompiler_install_mlir_target(MLIRIRExtension DIALECT)

@@ -61,6 +61,7 @@
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
+#include "mlir/Dialect/Transform/Transforms/Passes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Pass/PassOptions.h"
@@ -117,6 +118,8 @@ struct CommonPipelineOptions
       llvm::cl::init(TARGET::LLVM),
       llvm::cl::values(
           clEnumValN(TARGET::LLVM, target_to_str(TARGET::LLVM), "llvm ir"))};
+  Option<unsigned> indexBitWidth{
+      *this, "index-width", llvm::cl::desc("index-width"), llvm::cl::init(32)};
 };
 
 void buildCommonPipeline(::mlir::OpPassManager &pm,
@@ -275,6 +278,7 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
                    createArithUnsignedWhenEquivalentPass());  // 转换为Unsigned
     pm.addPass(
         mlir::arith::createIntRangeOptimizationsPass());  // 优化int的位宽
+    pm.addPass(mlir::createCSEPass());                    // cse
     pm.addPass(mlir::createCanonicalizerPass());          // 规范化
   }
   pm.addPass(mlir::arith::createArithExpandOpsPass());  // 合法化lowing to LLVM
@@ -304,7 +308,7 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
       mlir::bufferization::createBufferDeallocationPass());  // 添加内存释放op
   pm.addPass(
       mlir::memref::createExpandOpsPass());  // legalizes memref dialect ops
-                                             // to be convertible to LLVM
+  // to be convertible to LLVM
   //===----------------------------------------------------------------------===//
   //  scf  opt
   //===----------------------------------------------------------------------===//
@@ -336,10 +340,16 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
     pm.addPass(mlir::createConvertControlFlowToSPIRVPass());
   }
   if (options.target == TARGET::LLVM) {
-    pm.addPass(mlir::createConvertFuncToLLVMPass());
-    pm.addPass(mlir::createConvertControlFlowToLLVMPass());
-    pm.addPass(mlir::createFinalizeMemRefToLLVMConversionPass());
-    pm.addPass(mlir::createArithToLLVMConversionPass());
+    pm.addPass(mlir::createConvertFuncToLLVMPass(
+        {.indexBitwidth = options.indexBitWidth, .useBarePtrCallConv = false}));
+    pm.addPass(mlir::createConvertControlFlowToLLVMPass(
+        {.indexBitwidth = options.indexBitWidth}));
+    pm.addPass(mlir::createFinalizeMemRefToLLVMConversionPass(
+        {.indexBitwidth = options.indexBitWidth,
+         .useAlignedAlloc = false,
+         .useGenericFunctions = false}));
+    pm.addPass(mlir::createArithToLLVMConversionPass(
+        {.indexBitwidth = options.indexBitWidth}));
   }
   //===----------------------------------------------------------------------===//
   // opt last ir
@@ -351,7 +361,8 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::createCSEPass());            // 公共表达式消除
   pm.addPass(mlir::createSymbolDCEPass());      // 死符号消除
   pm.addPass(mlir::createCanonicalizerPass());  // 规范化
-  pm.addPass(mlir::createReconcileUnrealizedCastsPass());  // 消除多余的
+  pm.addPass(
+      mlir::createReconcileUnrealizedCastsPass());  // 消除多余的未定义转换
 }
 
 void registerCommonPipeline() {

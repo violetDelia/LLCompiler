@@ -1,9 +1,4 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 3.15)
-file(GLOB_RECURSE LLCOMPILER_CMAKE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.cmake)
-
-foreach(CMAKE_FILE ${LLCOMPILER_CMAKE_FILES})
-    include(${CMAKE_FILE})
-endforeach()
 
 # #---------- options cache----------##
 unset(BUILD_SHARED_LIBS CACHE)
@@ -16,7 +11,7 @@ unset(LLCOMPILER_BUILD_WARNINGS CACHE)
 unset(LLCOMPILER_BUILD_WITH_ONNX_ML CACHE)
 
 # #---------- options ----------##
-option(BUILD_SHARED_LIBS "build shared libs" OFF)
+option(BUILD_SHARED_LIBS "build shared libs" ON)
 option(BUILD_LLCOMPILER_TEST "build test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
 option(BUILD_LLCOMPILER_DOCS "build examples" ON)
@@ -61,10 +56,10 @@ set(LLCOMPILER_DOC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs")
 
 # #---------- define install absolute path ----------##
 set(LLCOMPILER_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/install")
-set(LLCOMPILER_INSTALL_INCLUDE_DIR "${INSTALL_DIR}/include")
-set(LLCOMPILER_INSTALL_LIB_DIR "${INSTALL_DIR}/lib")
-set(LLCOMPILER_INSTALL_RUNTIME_DIR "${INSTALL_DIR}/bin")
-set(LLCOMPILER_INSTALL_CMAKE_DIR "${INSTALL_DIR}/cmake")
+set(LLCOMPILER_INSTALL_INCLUDE_DIR "${LLCOMPILER_INSTALL_DIR}/include")
+set(LLCOMPILER_INSTALL_LIB_DIR "${LLCOMPILER_INSTALL_DIR}/lib")
+set(LLCOMPILER_INSTALL_RUNTIME_DIR "${LLCOMPILER_INSTALL_DIR}/bin")
+set(LLCOMPILER_INSTALL_CMAKE_DIR "${LLCOMPILER_INSTALL_DIR}/cmake")
 
 # #---------- define include dirs ----------##
 set(LLCOMPILER_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
@@ -77,6 +72,12 @@ set(LLVM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/llvm-project/llvm/
 set(LLVM_INCLDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/include")
 set(MLIR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/llvm-project/mlir/include")
 set(MLIR_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/tools/mlir/include")
+# #---------- cmake func ----------##
+file(GLOB_RECURSE LLCOMPILER_CMAKE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.cmake)
+
+foreach(CMAKE_FILE ${LLCOMPILER_CMAKE_FILES})
+    include(${CMAKE_FILE})
+endforeach()
 
 # #---------- external library ----------##
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})

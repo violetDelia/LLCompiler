@@ -18,4 +18,4 @@ add_mlir_conversion_library(MLIRLLHToTosa
   MLIRTransformUtils
 )
 
-llcompiler_install_mlir_library(MLIRLLHToTosa CONVERSION)
+llcompiler_install_mlir_target(MLIRLLHToTosa CONVERSION)

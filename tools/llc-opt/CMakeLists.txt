@@ -18,4 +18,5 @@ llcompiler_add_executable(llc-opt
     LLCCommonPipeline
     MLIROptLib
     ${common_pipeline_depends}
+    MLIRTransformDialectTransforms
 )

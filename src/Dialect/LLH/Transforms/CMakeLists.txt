@@ -15,4 +15,4 @@ add_mlir_library(MLIRLLHTransforms
   MLIRIRExtension
   LLCMLIRUtility
 )
-llcompiler_install_mlir_library(MLIRLLHTransforms TRANSFORM)
+llcompiler_install_mlir_target(MLIRLLHTransforms TRANSFORM)

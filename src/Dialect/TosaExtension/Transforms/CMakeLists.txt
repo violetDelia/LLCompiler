@@ -12,4 +12,4 @@ add_mlir_library(MLIRTosaExTransforms
   MLIRTosaExDialect
   MLIRPass
 )
-llcompiler_install_mlir_library(MLIRTosaExTransforms TRANSFORM)
+llcompiler_install_mlir_target(MLIRTosaExTransforms TRANSFORM)

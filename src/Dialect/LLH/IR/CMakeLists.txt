@@ -13,4 +13,4 @@ add_mlir_dialect_library(MLIRLLHDialect
     MLIRIR
     LLCSupport
 )
-llcompiler_install_mlir_library(MLIRLLHDialect DIALECT)
+llcompiler_install_mlir_target(MLIRLLHDialect DIALECT)

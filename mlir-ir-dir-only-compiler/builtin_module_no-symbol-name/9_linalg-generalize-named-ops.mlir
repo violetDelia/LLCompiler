@@ -21,7 +21,7 @@
 #map19 = affine_map<(d0, d1) -> (0, d1)>
 #map20 = affine_map<(d0, d1) -> (d0, d1)>
 module attributes {builtin.gloabal_layout = "NCHW"} {
-  func.func @CNTKGraph(%arg0: tensor<1x1x28x28xf32>) -> tensor<1x10xf32> {
+  func.func @main(%arg0: tensor<1x1x28x28xf32>) -> tensor<1x10xf32> {
     %cst = arith.constant -3.40282347E+38 : f32
     %cst_0 = arith.constant 0.000000e+00 : f32
     %cst_1 = arith.constant dense<[[[[-0.0822488219]], [[-0.108868778]], [[-0.141039595]], [[-0.204869166]], [[-0.17913565]], [[-0.215438381]], [[-0.133805066]], [[-0.195724562]], [[-0.268250644]], [[-0.258212209]], [[-0.0761560649]], [[0.0132841459]], [[-0.00444464432]], [[-0.414740831]], [[-0.17879115]], [[-0.0386558883]]]]> : tensor<1x16x1x1xf32>
