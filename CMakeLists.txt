@@ -53,6 +53,9 @@ if(LLCOMPILER_BUILD_WARNINGS)
     endif()
 endif()
 
+add_compile_options(-fPIC)
+add_compile_options(-fno-rtti)
+
 # #---------- define absolute path ----------##
 set(LLCOMPILER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(LLCOMPILER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")

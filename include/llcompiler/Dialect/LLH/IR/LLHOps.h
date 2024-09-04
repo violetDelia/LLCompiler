@@ -16,14 +16,19 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
-#include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
+#include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
 #include "mlir/Bytecode/BytecodeOpInterface.h"
-#include "mlir/IR/Dialect.h"
-#include "mlir/IR/OpDefinition.h"
-#include "mlir/IR/OpImplementation.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
+#define PLACEHOLD_FOR_FIX_HEADER
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHEunms.h.inc"
+#define GET_ATTRDEF_CLASSES
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h.inc"
+#define GET_TYPEDEF_CLASSES
+#include "llcompiler/Dialect/LLH/IR/LLHTypes.h.inc"
 #define GET_OP_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"
+#undef PLACEHOLD_FOR_FIX_HEADER
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_

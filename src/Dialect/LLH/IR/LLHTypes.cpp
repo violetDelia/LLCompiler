@@ -13,8 +13,7 @@
 //    limitations under the License.
 #include <utility>
 
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHTypes.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"

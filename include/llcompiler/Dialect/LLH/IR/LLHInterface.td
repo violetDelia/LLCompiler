@@ -11,15 +11,15 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#ifndef LLC_LLH_INTERFACE
+#define LLC_LLH_INTERFACE
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
+include "mlir/IR/OpBase.td"
+include "mlir/Interfaces/InferTypeOpInterface.td"
+def LLHOpInterface : OpInterface<"LLHOp"> {
+  let cppNamespace = "mlir::llh";
+  let description = [{
+  }];
+}
 
-#include "mlir/IR/Dialect.h"
-
-#define LLCOMPILER_MACRO_FOR_FIX_HEAD
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h.inc"
-#undef LLCOMPILER_MACRO_FOR_FIX_HEAD
-
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHDIALECT_H_
+#endif // LLC_LLH_INTERFACE

@@ -11,25 +11,19 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
+#ifndef LLH_ATTRIBUTES
+#define LLH_ATTRIBUTES
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
+include "llcompiler/Dialect/LLH/IR/LLHEnums.td"
+include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
 
-#include <memory>
+class LLH_Attr<string name, string attrMnemonic, list<Trait> traits = [],
+                   string baseCppClass = "::mlir::Attribute">
+    : AttrDef<LLH_Dialect, name, traits, baseCppClass> {
+  let mnemonic = attrMnemonic;
+  let attrName = "llh." # attrMnemonic;
+  let genStorageClass = 1;
+  
+}
 
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
-#include "mlir/Pass/Pass.h"
-
-namespace mlir::llh {
-
-std::unique_ptr<::mlir::Pass> createTransformLayoutToNHWCPass();
-
-#define GEN_PASS_DECL
-#define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
-
-}  // namespace mlir::llh
-
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
+#endif // LLH_ATTRIBUTES

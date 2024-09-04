@@ -19,11 +19,7 @@
 #include <atomic>
 #include <cstdint>
 
-#include "llcompiler/Support/Core.h"
-#include "llcompiler/Support/Logger.h"
-#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/DialectImplementation.h"
-#include "mlir/IR/ExtensibleDialect.h"
 
 namespace mlir::llh {
 namespace detail {
@@ -83,16 +79,9 @@ namespace mlir {
 template <>
 struct FieldParser<llh::DynamicDim> {
   static FailureOr<llh::DynamicDim> parse(AsmParser &parser) {
-    UNIMPLEMENTED(::llc::IMPORTER);
     return mlir::llh::DynamicDim(1);
   }
 };
 }  // namespace mlir
-
-#include "llcompiler/Dialect/LLH/IR/LLHEunms.h.inc"
-#define GET_ATTRDEF_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h.inc"
-#define GET_TYPEDEF_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHTypes.h.inc"
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_

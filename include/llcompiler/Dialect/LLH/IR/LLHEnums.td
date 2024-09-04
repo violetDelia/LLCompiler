@@ -13,8 +13,11 @@
 //    limitations under the License.
 #ifndef LLH_EUNMS
 #define LLH_EUNMS
+
 include "mlir/IR/EnumAttr.td"
 include "mlir/IR/PatternBase.td"
+include "llcompiler/Dialect/LLH/IR/LLHDialect.td"
+
 
 def LLH_AUTO_PAD_NOTSET         : I32EnumAttrCase<"DEFAULT", 0>;
 def LLH_AUTO_PAD_SAME_UPPER     : I32EnumAttrCase<"SAME_UPPER", 1>;

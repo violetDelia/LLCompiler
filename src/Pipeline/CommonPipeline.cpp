@@ -17,38 +17,25 @@
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "llcompiler/Pipeline/Enums.h"
-#include "llvm/Support/raw_ostream.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
-#include "mlir/Conversion/ArithToSPIRV/ArithToSPIRV.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
 #include "mlir/Conversion/ControlFlowToSPIRV/ControlFlowToSPIRVPass.h"
-#include "mlir/Conversion/ConvertToLLVM/ToLLVMPass.h"
-#include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
-#include "mlir/Conversion/FuncToSPIRV/FuncToSPIRVPass.h"
-#include "mlir/Conversion/LinalgToStandard/LinalgToStandard.h"
-#include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
-#include "mlir/Conversion/MemRefToSPIRV/MemRefToSPIRVPass.h"
+#include "mlir/Conversion/Passes.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
-#include "mlir/Conversion/SCFToSPIRV/SCFToSPIRVPass.h"
-#include "mlir/Conversion/SPIRVToLLVM/SPIRVToLLVM.h"
-#include "mlir/Conversion/SPIRVToLLVM/SPIRVToLLVMPass.h"
 #include "mlir/Conversion/TensorToLinalg/TensorToLinalgPass.h"
 #include "mlir/Conversion/TosaToArith/TosaToArith.h"
 #include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
 #include "mlir/Conversion/TosaToSCF/TosaToSCF.h"
 #include "mlir/Conversion/TosaToTensor/TosaToTensor.h"
 #include "mlir/Dialect/Affine/Passes.h"
-#include "mlir/Dialect/Affine/Utils.h"
-#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Arith/Transforms/Passes.h"
 #include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Bufferization/Transforms/OneShotAnalysis.h"
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
-#include "mlir/Dialect/Bufferization/Transforms/Transforms.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Func/Transforms/Passes.h"
 #include "mlir/Dialect/LLVMIR/Transforms/LegalizeForExport.h"
@@ -56,18 +43,13 @@
 #include "mlir/Dialect/Linalg/Passes.h"
 #include "mlir/Dialect/MemRef/Transforms/Passes.h"
 #include "mlir/Dialect/SCF/Transforms/Passes.h"
-#include "mlir/Dialect/SCF/Transforms/Patterns.h"
-#include "mlir/Dialect/SCF/Transforms/Transforms.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
-#include "mlir/Dialect/Transform/Transforms/Passes.h"
-#include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassOptions.h"
 #include "mlir/Pass/PassRegistry.h"
 #include "mlir/Transforms/Passes.h"
-#include "mlir/pass/PassManager.h"
 
 namespace llc::pipleline {
 
@@ -341,12 +323,12 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   }
   if (options.target == TARGET::LLVM) {
     pm.addPass(mlir::createConvertFuncToLLVMPass(
-        {.indexBitwidth = options.indexBitWidth, .useBarePtrCallConv = false}));
+        {.useBarePtrCallConv = false, .indexBitwidth = options.indexBitWidth}));
     pm.addPass(mlir::createConvertControlFlowToLLVMPass(
         {.indexBitwidth = options.indexBitWidth}));
     pm.addPass(mlir::createFinalizeMemRefToLLVMConversionPass(
-        {.indexBitwidth = options.indexBitWidth,
-         .useAlignedAlloc = false,
+        {.useAlignedAlloc = false,
+         .indexBitwidth = options.indexBitWidth,
          .useGenericFunctions = false}));
     pm.addPass(mlir::createArithToLLVMConversionPass(
         {.indexBitwidth = options.indexBitWidth}));

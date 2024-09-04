@@ -44,7 +44,6 @@ class LLH_Op<string mnemonic, list<Trait> traits = []> :
     let summary = cppNamespace#opName#" op";
     let description = [{
         $_name op;
-        https://onnx.ai/onnx/operators/index.html
     }];
 }
 
@@ -57,7 +56,4 @@ class LLH_OpTrait<string name> : NativeOpTrait<""> {
   let cppNamespace = "::llc::llh::OpTrait";
 }
 
-//===----------------------------------------------------------------------===//
-// Base LLH operation trait definition.
-//===----------------------------------------------------------------------===//
 #endif // LLH_DIALECT

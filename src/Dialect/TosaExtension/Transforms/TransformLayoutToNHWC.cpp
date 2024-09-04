@@ -122,7 +122,7 @@ mlir::tosa::TransposeOp buildTansposeFromTo(OpBuilder* builder, Value value,
 DenseI64ArrayAttr genNewPadFrom(DenseI64ArrayAttr pad, StringRef from) {
   auto context = pad.getContext();
   auto pad_value = pad.asArrayRef().vec();
-  SmallVector<long long> new_pad_value;
+  SmallVector<long int> new_pad_value;
   if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
     new_pad_value.push_back(pad_value[0]);
     new_pad_value.push_back(pad_value[2]);

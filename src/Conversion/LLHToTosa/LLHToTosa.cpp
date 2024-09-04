@@ -18,7 +18,6 @@
 #include <iostream>
 
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
-#include "llcompiler/Dialect/LLH/IR/LLHDialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Builder.h"

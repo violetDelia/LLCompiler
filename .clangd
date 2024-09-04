@@ -1,20 +1,15 @@
 CompileFlags:
   Add: [-xc++,-Wall
-  -IC:/coding/LLCompiler/include/,
-  -IC:/coding/LLCompiler/src/,
-  -IC:/coding/LLCompiler/third_party/onnx/,
-  -IC:/coding/LLCompiler/build/third_party/onnx/,
-  -IC:/coding/LLCompiler/third_party/spdlog/include/,
-  -IC:/coding/LLCompiler/build/third_party/llvm-project/llvm/include/,
-  -IC:/coding/LLCompiler/third_party/llvm-project/llvm/include/,
-  -IC:/coding/LLCompiler/build/third_party/llvm-project/llvm/tools/mlir/include/,
-  -IC:/coding/LLCompiler/third_party/llvm-project/mlir/include/,
-  -IC:/coding/LLCompiler/build/_deps/protobuf-src/src/,
-  -IC:/coding/LLCompiler/third_party/MegCC/,
-  -IC:/coding/LLCompiler/other_party/onnx-mlir/include/,
-  -IC:/coding/LLCompiler/other_party/onnx-mlir/,
-  -IC:/coding/LLCompiler/other_party/MegCC/compiler/include/,
-  -IC:/coding/LLCompiler/other_party/MegCC/compiler/lib/,
+  -I/home/lfr/LLCompiler/include/,
+  -I/home/lfr/LLCompiler/src/,
+  -I/home/lfr/LLCompiler/third_party/onnx/,
+  -I/home/lfr/LLCompiler/build/third_party/onnx/,
+  -I/home/lfr/LLCompiler/third_party/spdlog/include/,
+  -I/home/lfr/LLCompiler/build/third_party/llvm-project/llvm/include/,
+  -I/home/lfr/LLCompiler/third_party/llvm-project/llvm/include/,
+  -I/home/lfr/LLCompiler/build/third_party/llvm-project/llvm/tools/mlir/include/,
+  -I/home/lfr/LLCompiler/third_party/llvm-project/mlir/include/,
+  -I/home/lfr/LLCompiler/build/_deps/protobuf-src/src/,
   ]
 Diagnostics:
   UnusedIncludes: Strict

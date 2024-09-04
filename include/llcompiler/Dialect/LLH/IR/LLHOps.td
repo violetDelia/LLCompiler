@@ -13,10 +13,10 @@
 //    limitations under the License.
 #ifndef LLH_OPS
 #define LLH_OPS
-include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
+include "llcompiler/Dialect/LLH/IR/LLHAttrs.td"
 include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
-include "llcompiler/Dialect/LLH/IR/LLHEnums.td"
-include "mlir/Interfaces/InferTypeOpInterface.td"
+include "llcompiler/Dialect/LLH/IR/LLHInterface.td"
+
 
 class LLH_ConstOp <string mnemonic, list<Trait> traits = []>:
         LLH_Op<mnemonic, traits# []>{
