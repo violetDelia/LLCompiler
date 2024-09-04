@@ -1,0 +1,44 @@
+//    Copyright 2024 时光丶人爱
+
+//    Licensed under the Apache License, Version 2.0 (the "License");
+//    you may not use this file except in compliance with the License.
+//    You may obtain a copy of the License at
+
+//        http://www.apache.org/licenses/LICENSE-2.0
+
+//    Unless required by applicable law or agreed to in writing, software
+//    distributed under the License is distributed on an "AS IS" BASIS,
+//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//    See the License for the specific language governing permissions and
+//    limitations under the License.
+
+@LIT_SITE_CFG_IN_HEADER@
+
+import sys
+
+config.llvm_lib_dir = "@LLVM_LIBRARY_DIR@"
+config.llvm_tools_dir = "@LLVM_TOOLS_DIR@"
+config.enable_bindings_python = True
+
+config.mlir_lib_dir = "@MLIR_LIB_DIR@" or "@LLVM_LIBRARY_DIR@"
+config.mlir_binary_dir = "@MLIR_BINARY_DIR@" or "@LLVM_BINARY_DIR@"
+config.mlir_obj_dir = "@MLIR_BINARY_DIR@"
+config.mlir_llc_tools_dir = "@LLCOMPILER_TOOLS_DIR@"
+config.llvm_shlib_ext = "@SHLIBEXT@"
+
+# Support substitution of the tools_dir with user parameters. This is
+# used when we can't determine the tool dir at configuration time.
+try:
+    config.llvm_tools_dir = config.llvm_tools_dir % lit_config.params
+    config.llvm_shlib_dir = config.llvm_shlib_dir % lit_config.params
+except KeyError:
+    e = sys.exc_info()[1]
+    key, = e.args
+    lit_config.fatal("unable to find %r parameter, use '--param=%s=VALUE'" % (key,key))
+
+
+import lit.llvm
+lit.llvm.initialize(lit_config, config)
+
+# Let the main config do the real work.
+lit_config.load_config(config, "@LLCOMPILER_TEST_DIR@/lit.cfg.py")

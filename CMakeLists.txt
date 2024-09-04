@@ -24,6 +24,13 @@ option(LLCOMPILER_BUILD_WITH_ONNX_ML "if disable,will throw error when convert o
 project(LLCompiler LANGUAGES C CXX)
 set(LLCOMPILER_VERSION 1.0)
 
+# #---------- cmake config ----------##
+file(GLOB_RECURSE LLCOMPILER_CMAKE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.cmake)
+
+foreach(CMAKE_FILE ${LLCOMPILER_CMAKE_FILES})
+    include(${CMAKE_FILE})
+endforeach()
+
 # #---------- compiler setting ----------##
 set(CMAKE_C_STANDARD 17)
 set(CMAKE_CXX_STANDARD 20)
@@ -72,12 +79,6 @@ set(LLVM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/llvm-project/llvm/
 set(LLVM_INCLDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/include")
 set(MLIR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/llvm-project/mlir/include")
 set(MLIR_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/tools/mlir/include")
-# #---------- cmake func ----------##
-file(GLOB_RECURSE LLCOMPILER_CMAKE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.cmake)
-
-foreach(CMAKE_FILE ${LLCOMPILER_CMAKE_FILES})
-    include(${CMAKE_FILE})
-endforeach()
 
 # #---------- external library ----------##
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
@@ -101,18 +102,6 @@ include_directories(${SPDLOG_INCLUDE_DIR})
 add_subdirectory("${LLCOMPILER_INCLUDE_DIR}/llcompiler")
 add_subdirectory(${LLCOMPILER_SOURCE_DIR})
 add_subdirectory(${LLCOMPILER_TOOLS_DIR})
-
-# # #---------- main ----------##
-add_executable(main EXCLUDE_FROM_ALL "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp")
-target_include_directories(main PRIVATE
-    $<BUILD_INTERFACE:${LLCOMPILER_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${ONNX_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${ONNX_INCLUDE_GENERATE_DIR}>
-    $<BUILD_INTERFACE:${PROTOBUF_INCLUDE_DIR}>
-    $<BUILD_INTERFACE:${ABSL_INCLUDE_DIR}>
-)
-get_property(llcompiler_all_targets GLOBAL PROPERTY LLCOMPILER_ALL_TARGETS)
-target_link_libraries(main PRIVATE ${llcompiler_all_targets} onnx)
 
 # #---------- message ----------##
 message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})

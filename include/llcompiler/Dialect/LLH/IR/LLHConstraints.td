@@ -63,12 +63,9 @@ def LLH_F32Tensor     : TensorOf<[LLH_F32]>;
 def LLH_F64Tensor     : TensorOf<[LLH_F64]>;
 def LLH_BF16Tensor    : TensorOf<[LLH_BF16]>;
 
-def LLH_FloatTensor   : TensorOf<[LLH_Float]>;
+def LLH_FloatTensor   : AnyTypeOf<[LLH_F16Tensor, LLH_F32Tensor, LLH_F64Tensor, LLH_BF16Tensor]>;
 
 def LLH_Tensor        : AnyTypeOf<[LLH_FloatTensor,LLH_IntTensor]>;
-
-def LLH_ScalarTensor  : Type<And<[IsTensorTypePred,
-                                  CPred<"::llvm::cast<::mlir::TensorType>($_self).getRank() == 0">]>>;
 
 def LLH_Rank1BoolTensor : TensorOf<[LLH_Bool], [CPred<"::llvm::cast<::mlir::TensorType>($_self).getRank() == 1">]>;
 

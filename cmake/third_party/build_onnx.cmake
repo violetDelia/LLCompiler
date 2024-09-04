@@ -1,0 +1,26 @@
+function(build_onnx lib_path)
+    message("******************************************")
+    message("************* build onnx *****************")
+    message("******************************************")
+
+    if(STATIC_WINDOWS_RUNTIME)
+        set(ONNX_USE_MSVC_STATIC_RUNTIME ON)
+    endif()
+
+    if(LLCOMPILER_BUILD_WITH_ONNX_ML)
+        set(ONNX_ML ON)
+    else()
+        set(ONNX_ML OFF)
+    endif()
+
+    set(ONNX_BUILD_SHARED_LIBS OFF)
+    set(ONNX_USE_PROTOBUF_SHARED_LIBS OFF)
+
+    set(ONNX_DISABLE_EXCEPTIONS ON)
+    set(ONNX_VERIFY_PROTO3 ON)
+    set(BUILD_ONNX_PYTHON OFF)
+    set(ONNX_BUILD_TESTS OFF)
+    set(ONNX_WERROR OFF)
+    set(ONNX_DISABLE_STATIC_REGISTRATION ON)
+    add_subdirectory(${lib_path})
+endfunction(build_onnx)
