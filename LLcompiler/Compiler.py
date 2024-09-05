@@ -1,7 +1,7 @@
 import torch.fx
+from . import core
 
-
-class LLCompiler:
+class LLCompiler(core.importer.Importer):
     """
     LLCompiler
 
@@ -13,15 +13,6 @@ class LLCompiler:
 
     def __init__(self) -> None:
         return
-
-    def importer(self, model, *args, **kwargs):
-        """
-        import model to MLIR module.
-        """
-        raise NotImplementedError
-    
-    def _importer_torch_module(self, model, *args, **kwargs):
-        raise NotImplementedError
 
     def compiler(self, model: torch.fx.GraphModule):
         raise NotImplementedError

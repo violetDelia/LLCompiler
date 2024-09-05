@@ -26,6 +26,7 @@ add_mlir_dialect_library(LLCCommonPipeline
     MLIRSPIRVToLLVM
     MLIRSCFToSPIRV
     MLIRFuncToLLVM
+    MLIRLLVMIRTransforms
 )
 
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_COMMON_PIPELINE_DEPENDS MLIRFuncInlinerExtension)

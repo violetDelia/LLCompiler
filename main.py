@@ -1,9 +1,11 @@
-import Python.core as llc_core
-import mlir.ir as ir
+import LLcompiler.Compiler as compiler
 
+# import mlir.ir as ir
+import sys
+import torchvision
 
 
 if __name__ == "__main__":
-    importer =  llc_core.Importer()
-
-
+    model = torchvision.models.resnet18()
+    compiler = compiler.LLCompiler()
+    compiler.importer(model)
