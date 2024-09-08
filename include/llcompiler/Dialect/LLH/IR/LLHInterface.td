@@ -16,6 +16,8 @@
 
 include "mlir/IR/OpBase.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
+
 def LLHOpInterface : OpInterface<"LLHOp"> {
   let cppNamespace = "mlir::llh";
   let description = [{

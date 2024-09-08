@@ -1,11 +1,51 @@
-import LLcompiler.Compiler as compiler
-
-# import mlir.ir as ir
-import sys
+import LLcompiler.Compiler as LLC
+import torch
 import torchvision
+import torch.nn as nn
+import torch.nn.functional as F
+from torch._dynamo.backends.common import aot_autograd
+import torch.fx
+from LLcompiler.core.utility import run_time
+
+class Net(nn.Module):
+    def __init__(self):
+        super(Net, self).__init__()
+        self.conv_layer1 = nn.Conv2d(3, 100, kernel_size=3, padding=2)
+
+    def forward(self, x):
+        x = self.conv_layer1(x)
+        return x
+
+@run_time
+def compiler_model(model, inputs):
+    compiler = LLC.LLCompiler(mode="inference")
+    model_opt = torch.compile(
+        model=model,
+        backend=compiler,
+        dynamic=True,
+        fullgraph=True,
+    )
+    return model_opt(inputs)
+
+@run_time
+def torch_compiler(model, inputs):
+    model_opt = torch.compile(
+        model=model,
+        backend="inductor",
+        dynamic=True,
+        fullgraph=True,
+    )
+    return model_opt(inputs)
+
+@run_time 
+def test():
+    inputs = torch.randn((1, 3, 224, 224))
+    compiler_model(model, inputs)
+    torch_compiler(model, inputs)
 
 
 if __name__ == "__main__":
-    model = torchvision.models.resnet18()
-    compiler = compiler.LLCompiler()
-    compiler.importer(model)
+    model = Net()
+    input = torch.randn((1, 3, 224, 224))
+    compiler_model(model, input)
+    torch_compiler(model, input)

@@ -19,7 +19,7 @@ include "llcompiler/Dialect/LLH/IR/LLHInterface.td"
 
 
 class LLH_ConstOp <string mnemonic, list<Trait> traits = []>:
-        LLH_Op<mnemonic, traits# []>{
+        LLH_Op<mnemonic, traits#[Pure]>{
     let arguments = (ins 
        DenseElementsAttr:$value);
     let results = (outs LLH_Tensor);
@@ -59,6 +59,16 @@ class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandT
 class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
         LLH_BinaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank, Elementwise], OperandType, ResultType, attributes>;
 
+def LLH_ConstantOp : LLH_ConstOp<"constant">{
+    let description = [{
+        ConstantOp is a const that will never changed;
+        Example:
+        ```mlir
+        %output = llh.constant dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
+        ```
+    }];
+}
+
 def LLH_UndefinedOp     : LLH_Op<"undefined"> {
     let summary = "undefined op";
     let description = [{
@@ -78,16 +88,6 @@ def LLH_MatMulOp          : LLH_Op<"matmal",[SameOperandsAndResultRank]>{
 }
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
-
-def LLH_ConstantOp : LLH_ConstOp<"constant">{
-    let description = [{
-        ConstantOp is a const that will never changed;
-        Example:
-        ```mlir
-        %output = llh.constant dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
-        ```
-    }];
-}
 
 def LLH_ConvOp : LLH_Op<"conv">{
     let arguments = (ins 

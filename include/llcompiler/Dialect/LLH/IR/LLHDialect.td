@@ -14,6 +14,7 @@
 #ifndef LLH_DIALECT
 #define LLH_DIALECT
 
+include "mlir/IR/AttrTypeBase.td"
 include "mlir/IR/OpBase.td"
 
 //===----------------------------------------------------------------------===//
