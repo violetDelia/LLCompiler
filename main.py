@@ -6,6 +6,8 @@ import torch.nn.functional as F
 from torch._dynamo.backends.common import aot_autograd
 import torch.fx
 from LLcompiler.core.utility import run_time
+import onnx
+
 
 class Net(nn.Module):
     def __init__(self):
@@ -16,8 +18,14 @@ class Net(nn.Module):
         x = self.conv_layer1(x)
         return x
 
+
 @run_time
 def compiler_model(model, inputs):
+    if isinstance(model, onnx.ModelProto):
+        compiler = LLC.LLCompiler(mode="inference")
+        compiler.compiler(model, inputs)
+        return
+
     compiler = LLC.LLCompiler(mode="inference")
     model_opt = torch.compile(
         model=model,
@@ -27,8 +35,10 @@ def compiler_model(model, inputs):
     )
     return model_opt(inputs)
 
+
 @run_time
 def torch_compiler(model, inputs):
+
     model_opt = torch.compile(
         model=model,
         backend="inductor",
@@ -37,7 +47,8 @@ def torch_compiler(model, inputs):
     )
     return model_opt(inputs)
 
-@run_time 
+
+@run_time
 def test():
     inputs = torch.randn((1, 3, 224, 224))
     compiler_model(model, inputs)
@@ -47,5 +58,10 @@ def test():
 if __name__ == "__main__":
     model = Net()
     input = torch.randn((1, 3, 224, 224))
-    compiler_model(model, input)
+
+    onnx_model = torch.onnx.dynamo_export(
+        model, input, export_options=torch.onnx.ExportOptions(dynamic_shapes=True)
+    )
+
+    compiler_model(onnx_model.model_proto, input)
     torch_compiler(model, input)

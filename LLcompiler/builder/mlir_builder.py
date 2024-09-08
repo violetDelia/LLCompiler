@@ -12,7 +12,7 @@ import numpy as np
 import os
 from datetime import datetime
 import torch
-
+import onnx
 
 class MLIR_Builder:
     def __init__(self) -> None:
@@ -24,6 +24,8 @@ class MLIR_Builder:
     def mlir_gen(self, input, **kwargs):
         if isinstance(input, torch.fx.GraphModule):
             return self._fx_mlir_gen(input, **kwargs)
+        if isinstance(input,onnx.GraphProto):
+            return self._onnx_mlir_gen(input, **kwargs)
         raise NotImplementedError
 
     def _fx_mlir_gen(self, model: torch.fx.GraphModule, **kwargs):
@@ -53,14 +55,14 @@ class MLIR_Builder:
             )
             value_map[name] = op.result
             block.add_op(op)
-        input_type = []
-        output_type = []
+        input_types = []
+        output_types = []
         for node in model.graph.nodes:
             if node.op == "placeholder" :
                 if node.type is torch.Tensor:
                     args = torch_tensor_translate(node.meta["example_value"])
-                    value_map[node.name] = block.insert_arg(args, len(input_type))
-                    input_type.append(args)
+                    value_map[node.name] = block.insert_arg(args, len(input_types))
+                    input_types.append(args)
             if node.op == "call_module":
                 op = torch_module_translate(node,value_map)
                 
@@ -76,7 +78,7 @@ class MLIR_Builder:
             #     args = torch_tensor_translate(node.meta["example_value"])
             #     printer.print(args)
             #     output_type.append(args)
-        func = FuncOp("mian", (input_type, output_type))
+        func = FuncOp("mian", (input_types, output_types))
         func.regions[0].add_block(block)
         # print(model.graph.print_tabular())
 
@@ -93,4 +95,23 @@ class MLIR_Builder:
         module = ModuleOp([func])
 
         printer.print(module)
+        raise NotImplementedError
+
+    
+    def _onnx_mlir_gen(self, model: onnx.GraphProto, **kwargs):
+        printer = Printer()
+        symbol_map = dict()
+        op_map = dict()
+        input_types = [onnx_value_translate(value,symbol_map) for value in model.input]
+        output_types = [onnx_value_translate(value,symbol_map) for value in model.output]
+        func = FuncOp("mian", (input_types, output_types))
+        for weight in model.initializer:
+            op = onnx_weight_translate(weight)
+            op_map[weight.name] = op
+            func.body.block.add_op(op)
+        for node in model.node:
+            op = onnx_node_translate(node, op_map, symbol_map)
+            op_map[node.name] = op
+            func.body.block.add_op(op)
+        printer.print(func)
         raise NotImplementedError

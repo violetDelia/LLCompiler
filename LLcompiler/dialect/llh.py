@@ -13,6 +13,8 @@ from xdsl.printer import Printer
 from xdsl.traits import *
 from xdsl.utils.exceptions import VerifyException
 
+
+#python 验证速度比较慢
 i8 = IntegerType(8)
 
 LLH_Bool: TypeAlias = I1
@@ -80,5 +82,17 @@ class WeightOp(IRDLOperation):
     weight_file = attr_def(StringAttr)
     result = result_def(TensorType)
 
+@irdl_op_definition
+class ConvBiasOp(IRDLOperation):
+    name = "llh.conv_bias"
+    X = operand_def(TensorType)
+    W = operand_def(TensorType)
+    B = operand_def(TensorType)
+    dilations = attr_def(ArrayAttr)
+    group = attr_def(IntegerAttr)
+    kernel_shape = attr_def(ArrayAttr)
+    pads = attr_def(ArrayAttr)
+    stride = attr_def(ArrayAttr)
+    result = result_def(TensorType)
 
 LLH = Dialect("llh", [ConstantOp, WeightOp], [])

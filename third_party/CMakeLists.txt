@@ -8,6 +8,7 @@ if(BUILD_LLCOMPILER_TEST)
     build_googletest("${CMAKE_CURRENT_SOURCE_DIR}/googletest")
 endif()
 
+build_abseil("${CMAKE_CURRENT_SOURCE_DIR}/abseil-cpp")
 build_spdlog("${CMAKE_CURRENT_SOURCE_DIR}/spdlog")
-#build_onnx("${CMAKE_CURRENT_SOURCE_DIR}/onnx")
+build_onnx("${CMAKE_CURRENT_SOURCE_DIR}/onnx")
 build_llvm("${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
