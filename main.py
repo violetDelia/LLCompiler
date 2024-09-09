@@ -28,7 +28,7 @@ def compiler_model(model, inputs):
         compiler.compiler(model, inputs)
         return
 
-    compiler = LLC.LLCompiler(mode="training")
+    compiler = LLC.LLCompiler(mode="inference")
     model_opt = torch.compile(
         model=model,
         backend=compiler,

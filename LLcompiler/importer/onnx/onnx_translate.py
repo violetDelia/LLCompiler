@@ -1,8 +1,8 @@
-from ..dialect.llh import *
+from ...dialect.llh import *
 from datetime import datetime
 import torch.nn
 from torch._subclasses.fake_tensor import FakeTensor
-from ..core.utility import run_time
+from ...core.utility import run_time
 import os
 import numpy as np
 import torch.fx

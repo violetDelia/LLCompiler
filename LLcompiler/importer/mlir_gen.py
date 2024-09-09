@@ -6,14 +6,15 @@ from xdsl.ir import Region
 from ..dialect.llh import *
 import torch.utils._pytree as pytree
 from xdsl.printer import Printer
-from .fx_translate import *
-from .onnx_translate import *
+from .fx_graph import *
+from .onnx.onnx_translate import *
 import tempfile
 import numpy as np
 import os
 from datetime import datetime
 import torch
 import onnx
+from torch._subclasses.fake_tensor import FakeTensor
 
 
 class MLIR_Builder:
@@ -66,8 +67,16 @@ class MLIR_Builder:
                     args = torch_fake_tensor_translate(node.meta["example_value"])
                     value_map[node.name] = [block.insert_arg(args, len(input_types))]
                     input_types.append(args)
-                if node.type is None:
-                    print(node.meta)
+                elif node.type is None:
+                    val = node.meta["val"]
+                    if isinstance(val, FakeTensor):
+                        args = torch_fake_tensor_translate(node.meta["val"])
+                        value_map[node.name] = [
+                            block.insert_arg(args, len(input_types))
+                        ]
+                        input_types.append(args)
+                    else:
+                        print("unimplemented placeholder type: ", type(val))
                 else:
                     print("unimplemented placeholder type: ", node.type)
             elif node.op == "call_module":
@@ -88,8 +97,12 @@ class MLIR_Builder:
                             raise NotImplementedError(type(arg))
 
                 trav_args(node.args)
+            elif node.op == "call_function":
+                op = torch_function_translate(node, value_map)
+                value_map[node.name] = op.results
+                block.add_op(op)
             else:
-                raise NotImplementedError(node.op)
+                raise NotImplementedError(node.op, type(node.op))
         block.add_op(Return(*return_values))
         func = FuncOp("mian", (input_types, output_types))
         func.regions[0].add_block(block)
