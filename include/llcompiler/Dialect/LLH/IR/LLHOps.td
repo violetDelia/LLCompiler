@@ -18,22 +18,6 @@ include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
 include "llcompiler/Dialect/LLH/IR/LLHInterface.td"
 
 
-class LLH_ConstOp <string mnemonic, list<Trait> traits = []>:
-        LLH_Op<mnemonic, traits#[Pure]>{
-    let arguments = (ins 
-       DenseElementsAttr:$value);
-    let results = (outs LLH_Tensor);
-    let builders = [
-        OpBuilder<(ins "DenseElementsAttr":$value),
-        [{
-            $_state.getOrAddProperties<Properties>().value = value;
-            $_state.addTypes(value.getType());
-        }]>
-    ];
-    //let hasFolder = 1;
-    //let hasCanonicalizer = 1;
-}
-
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
         LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface]>{
         let arguments = !con((ins
@@ -59,37 +43,37 @@ class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandT
 class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
         LLH_BinaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank, Elementwise], OperandType, ResultType, attributes>;
 
-def LLH_ConstantOp : LLH_ConstOp<"constant">{
-    let description = [{
-        ConstantOp is a const that will never changed;
-        Example:
-        ```mlir
-        %output = llh.constant dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
-        ```
-    }];
+def LLH_ConstantOp : LLH_Op<"constant", [Pure]>{
+    let arguments = (ins 
+       DenseElementsAttr:$value);
+    let results = (outs LLH_Tensor);
+    let builders = [
+        OpBuilder<(ins "DenseElementsAttr":$value),
+        [{
+            $_state.getOrAddProperties<Properties>().value = value;
+            $_state.addTypes(value.getType());
+        }]>
+    ];
+    //let hasFolder = 1;
+    //let hasCanonicalizer = 1;
 }
 
-def LLH_UndefinedOp     : LLH_Op<"undefined"> {
-    let summary = "undefined op";
+def LLH_WeightOp : LLH_Op<"matmal">{
     let description = [{
-        undefined op;
+        WeightOp is the constant weight only contain weight file;
     }];
-
-    let arguments = (ins LLH_String:$name);
-    let results = (outs);
-}
-
-def LLH_MatMulOp          : LLH_Op<"matmal",[SameOperandsAndResultRank]>{
-        let arguments = (ins
-            LLH_Tensor:$lhs,
-            LLH_Tensor:$rhs);
-        let results = (outs 
-            LLH_Tensor:$result);
+    let arguments = (ins 
+        LLH_String:$weight_file);
+    let results = (outs 
+        LLH_Tensor:$result);
 }
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_ConvOp : LLH_Op<"conv">{
+def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
+
+
+def LLH_ConvBiasOp : LLH_Op<"conv_bias",[InferShapedTypeOpInterface]>{
     let arguments = (ins 
         LLH_FloatTensor:$X,
         LLH_FloatTensor:$W,
@@ -102,25 +86,27 @@ def LLH_ConvOp : LLH_Op<"conv">{
     let results = (outs LLH_FloatTensor);
 }
 
-def LLH_WeightOp : LLH_ConstOp<"weight">{
-    let description = [{
-        WeightOp is the weight of model and it will change when traning;
-        Example:
-        ```mlir
-        %output = llh.weight dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
-        ```
-    }];
+def LLH_ConvOp : LLH_Op<"conv",[InferShapedTypeOpInterface]>{
+    let arguments = (ins 
+        LLH_FloatTensor:$X,
+        LLH_FloatTensor:$W,
+        DenseI64ArrayAttr:$dilation,
+        DenseI64ArrayAttr:$kernel_shape,
+        DenseI64ArrayAttr:$pad,
+        DenseI64ArrayAttr:$stride,
+        DefaultValuedAttr<I64Attr, "1">:$group);
+    let results = (outs LLH_FloatTensor);
 }
 
-def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>{
-    let description = [{
-        WeightOp is the weight of model and it will change when traning;
-        Example:
-        ```mlir
-        %output = llh.weight dense<[[0.0, 1.0], [2.0, 3.0]]> : tensor<2x2xf32>
-        ```
-    }];
+def LLH_MatMulOp          : LLH_Op<"matmal",[SameOperandsAndResultRank]>{
+        let arguments = (ins
+            LLH_Tensor:$lhs,
+            LLH_Tensor:$rhs);
+        let results = (outs 
+            LLH_Tensor:$result);
 }
+
+
 // def LLH_CastOp          : LLH_UnaryOp<"cast", [Elementwise], LLH_Tensor, LLH_Tensor, (ins DefaultValuedAttr<SI64Attr, "1">:$saturate, SI64Attr:$to)>;
 
 // def LLH_CeluOp        : LLH_UnaryElementwiseOp<"celu", [], LLH_FloatTensor, LLH_FloatTensor, (ins DefaultValuedAttr<F64Attr, "1">:$alpha)>;

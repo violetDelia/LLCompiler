@@ -33,6 +33,7 @@ class LLCompiler(core.importer.Importer):
 
     def compiler(self, model: Any, inputs: List[torch.Tensor]):
         mlir_module = self.importer(model)
+        print(mlir_module)
         return model
 
     def _compiler_torch_module():

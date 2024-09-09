@@ -89,10 +89,22 @@ class ConvBiasOp(IRDLOperation):
     W = operand_def(TensorType)
     B = operand_def(TensorType)
     dilations = attr_def(ArrayAttr)
-    group = attr_def(IntegerAttr)
     kernel_shape = attr_def(ArrayAttr)
     pads = attr_def(ArrayAttr)
     stride = attr_def(ArrayAttr)
+    group = attr_def(IntegerAttr)
     result = result_def(TensorType)
 
-LLH = Dialect("llh", [ConstantOp, WeightOp], [])
+@irdl_op_definition
+class ConvOp(IRDLOperation):
+    name = "llh.conv"
+    X = operand_def(TensorType)
+    W = operand_def(TensorType)
+    dilation = attr_def(ArrayAttr)
+    kernel_shape = attr_def(ArrayAttr)
+    pad = attr_def(ArrayAttr)
+    stride = attr_def(ArrayAttr)
+    group = attr_def(IntegerAttr)
+    result = result_def(TensorType)
+
+LLH = Dialect("llh", [ConstantOp, WeightOp,ConvBiasOp,ConvOp], [])

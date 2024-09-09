@@ -2,7 +2,7 @@ from typing import Any, Union
 import torch
 import torch.fx
 from torch.fx import symbolic_trace
-from ..builder import MLIR_Builder
+from ..importer import MLIR_Builder
 import onnx
 
 class Importer:
