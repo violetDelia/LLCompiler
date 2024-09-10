@@ -1,13 +1,10 @@
+from sympy.core.numbers import Integer
+import torch.fx.experimental
+import torch.fx.experimental.sym_node
+from xdsl.ir import SSAValue
+from xdsl.ir.affine.affine_expr import AffineSymExpr
 from xdsl.dialects.builtin import (
-    IndexType,
-    IntegerType,
-    StringAttr,
-    DenseIntOrFPElementsAttr,
     TensorType,
-    DenseArrayBase,
-    ShapedType,
-    Signedness,
-    BFloat16Type,
     i64,
     i32,
     i16,
@@ -16,8 +13,12 @@ from xdsl.dialects.builtin import (
     f32,
     f64,
     DYNAMIC_INDEX,
+    StringAttr,
+    i64,
+    SymbolRefAttr,
+    AffineMapAttr,
 )
-from ...dialect.llh import *
+from ...core.utility import Dict_Registry
 from datetime import datetime
 import torch.nn
 from torch._subclasses.fake_tensor import FakeTensor
@@ -25,6 +26,35 @@ from ...core.utility import run_time
 import os
 import numpy as np
 import torch.fx
+from torch.fx.experimental.sym_node import SymNode
+from ...dialect.llh import SymbolicIntOp, SymbolicShapeBindOp
+import sympy
+
+
+def torch_symbol_translate(symbol: torch.SymInt, symbol_map: dict[str, SymbolicIntOp]):
+    name: str = symbol.node.expr.name
+    atts = {"value": StringAttr(name)}
+    op = SymbolicIntOp(attributes=atts, result_types=[i64])
+    symbol_map[name] = op
+    return op
+
+
+def torch_bind_shape(
+    operand: SSAValue, tensor: FakeTensor, symbol_map: dict[str, SymbolicIntOp]
+):
+    bind_symbols = []
+    for dim in tensor.shape:
+        if isinstance(dim, int):
+            continue
+        elif str(dim).isdigit():
+            continue
+        else:
+            node: SymNode = dim.node
+            print(dim)
+    expressions = AffineMapAttr(AffineSymExpr(0))
+    return SymbolicShapeBindOp(
+        operands=[operand, bind_symbols], attributes={"expressions": expressions}
+    )
 
 
 def torch_fake_tensor_translate(tensor: FakeTensor):
@@ -34,7 +64,10 @@ def torch_fake_tensor_translate(tensor: FakeTensor):
         if isinstance(dim, int):
             shape.append(dim)
         if isinstance(dim, torch.SymInt):
-            shape.append(DYNAMIC_INDEX)
+            if str(dim).isdigit():
+                shape.append(dim.node.int_())
+            else:
+                shape.append(DYNAMIC_INDEX)
     return TensorType(element_type=ele_type, shape=shape)
 
 
@@ -52,10 +85,6 @@ def torch_dtype_translate(dtype: torch.dtype):
     return TORCH_DTYPE_TO_MLIR_TYPE[dtype]
 
 
+TORCH_FUNCTION_TRANSLATE = Dict_Registry()
 
-
-def torch_function_translate(
-    node: torch.fx.node.Node, value_map: dict[str, list[SSAValue]]
-) -> Operation:
-    print(node.target)
-    print(type(node.target))
+TORCH_MODULE_TRANSLATE = Dict_Registry()

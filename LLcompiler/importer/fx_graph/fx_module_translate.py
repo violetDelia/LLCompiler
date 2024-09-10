@@ -1,10 +1,24 @@
-from ...core.utility import Dict_Registry
-from .fx_translate import *
+from .fx_translate import TORCH_MODULE_TRANSLATE, torch_fake_tensor_translate
+import torch
+from xdsl.dialects.builtin import (
+    TensorType,
+    i64,
+    i32,
+    i16,
+    i1,
+    f16,
+    f32,
+    f64,
+    DYNAMIC_INDEX,
+    DenseArrayBase,
+    IntegerAttr,
+)
+import torch.fx
+from ...dialect.llh import ConvBiasOp, ConvOp
+from xdsl.ir import SSAValue, Operation
 
-module_translate = Dict_Registry()
 
-
-@module_translate(torch.nn.modules.conv.Conv2d)
+@TORCH_MODULE_TRANSLATE(torch.nn.modules.conv.Conv2d)
 def torch_conv_convert(
     node: torch.fx.node.Node, value_map: dict, module: torch.nn.modules.conv._ConvNd
 ):
@@ -23,8 +37,9 @@ def torch_conv_convert(
         "stride": DenseArrayBase.from_list(i64, module.stride),
     }
     if module.bias != None:
+        B = value_map[node.target + ".bias"][0]
         return ConvBiasOp.build(
-            operands=[X, W, value_map[node.target + ".bias"][0]],
+            operands=[X, W, B],
             result_types=[result_type],
             attributes=attrs,
         )
@@ -43,5 +58,5 @@ def torch_module_translate(
 ) -> Operation:
     module_stack = node.meta["nn_module_stack"]
     target = node.target
-    build_fn = module_translate[module_stack[target][1]]
+    build_fn = TORCH_MODULE_TRANSLATE[module_stack[target][1]]
     return build_fn(node, value_map, module)

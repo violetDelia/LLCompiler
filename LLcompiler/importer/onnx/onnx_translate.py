@@ -10,6 +10,26 @@ import onnx
 import onnx.onnx_ml_pb2
 
 
+from xdsl.dialects.builtin import (
+    IndexType,
+    IntegerType,
+    StringAttr,
+    DenseIntOrFPElementsAttr,
+    TensorType,
+    ShapedType,
+    Signedness,
+    BFloat16Type,
+    i64,
+    i32,
+    i16,
+    i1,
+    f16,
+    f32,
+    f64,
+    DYNAMIC_INDEX,
+)
+
+
 def onnx_node_translate(
     node: onnx.onnx_ml_pb2.NodeProto, op_map: dict, symbol_map: dict
 ):
@@ -48,25 +68,6 @@ def onnx_weight_translate(weight: onnx.onnx_ml_pb2.TensorProto):
     )
     return op
 
-
-from xdsl.dialects.builtin import (
-    IndexType,
-    IntegerType,
-    StringAttr,
-    DenseIntOrFPElementsAttr,
-    TensorType,
-    ShapedType,
-    Signedness,
-    BFloat16Type,
-    i64,
-    i32,
-    i16,
-    i1,
-    f16,
-    f32,
-    f64,
-    DYNAMIC_INDEX,
-)
 
 ONNX_ELEMENT_TYPE_TO_MLIR_TYPE = {
     1: f32,

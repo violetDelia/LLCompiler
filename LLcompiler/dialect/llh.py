@@ -1,20 +1,49 @@
-from __future__ import annotations
-
-from collections.abc import Sequence
-
-from xdsl.dialects.builtin import *
-from xdsl.dialects.utils import *
-from xdsl.ir import *
-from typing import *
-from xdsl.irdl import *
-from xdsl.irdl.constraints import *
+from xdsl.dialects.builtin import (
+    IntegerAttr,
+    IntegerType,
+    I1,
+    I16,
+    I64,
+    I32,
+    Signedness,
+    Float16Type,
+    Float32Type,
+    Float64Type,
+    AnyFloat,
+    TensorType,
+    DenseArrayBase,
+    DenseIntOrFPElementsAttr,
+    AnySignlessIntegerType,
+    SignednessAttr,
+    IntAttr,
+    BFloat16Type,
+    ArrayAttr,
+    StringAttr,
+    SymbolRefAttr,
+    AffineMapAttr,
+)
+from xdsl.ir.affine.affine_expr import AffineExpr
+from xdsl.ir import Dialect
+from xdsl.irdl import (
+    result_def,
+    attr_def,
+    OpResult,
+    var_operand_def,
+    irdl_attr_definition,
+    operand_def,
+    irdl_op_definition,
+    IRDLOperation,
+    ParameterDef,
+    ParametrizedAttribute,
+)
+from xdsl.irdl.constraints import ParamAttrConstraint
+from typing import TypeAlias, Annotated
 from xdsl.parser import Parser
 from xdsl.printer import Printer
-from xdsl.traits import *
 from xdsl.utils.exceptions import VerifyException
 
 
-#python 验证速度比较慢
+# python 验证速度比较慢
 i8 = IntegerType(8)
 
 LLH_Bool: TypeAlias = I1
@@ -70,6 +99,21 @@ LLH_Tensor: TypeAlias = TensorType
 
 
 @irdl_op_definition
+class SymbolicIntOp(IRDLOperation):
+    name = "llh.symbolic_int"
+    value = attr_def(StringAttr)
+    result = result_def(IntegerType)
+
+
+@irdl_op_definition
+class SymbolicShapeBindOp(IRDLOperation):
+    name = "llh.symbolic_shape_bind"
+    operand = operand_def(TensorType)
+    bind_symbols = var_operand_def(IntegerType)
+    expressions = attr_def(AffineMapAttr)
+
+
+@irdl_op_definition
 class ConstantOp(IRDLOperation):
     name = "llh.constant"
     value = attr_def(DenseIntOrFPElementsAttr)
@@ -81,6 +125,7 @@ class WeightOp(IRDLOperation):
     name = "llh.weight"
     weight_file = attr_def(StringAttr)
     result = result_def(TensorType)
+
 
 @irdl_op_definition
 class ConvBiasOp(IRDLOperation):
@@ -95,6 +140,7 @@ class ConvBiasOp(IRDLOperation):
     group = attr_def(IntegerAttr)
     result = result_def(TensorType)
 
+
 @irdl_op_definition
 class ConvOp(IRDLOperation):
     name = "llh.conv"
@@ -107,4 +153,5 @@ class ConvOp(IRDLOperation):
     group = attr_def(IntegerAttr)
     result = result_def(TensorType)
 
-LLH = Dialect("llh", [ConstantOp, WeightOp,ConvBiasOp,ConvOp], [])
+
+LLH = Dialect("llh", [ConstantOp, WeightOp, ConvBiasOp, ConvOp], [])

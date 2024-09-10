@@ -12,9 +12,12 @@ import onnx
 class Net(nn.Module):
     def __init__(self):
         super(Net, self).__init__()
-        self.conv_layer1 = nn.Conv2d(3, 100, kernel_size=3, padding=2)
+        self.conv_layer1 = nn.Conv2d(
+            3, 10, stride=2, kernel_size=5, padding=2, dilation=5
+        )
+        self.conv_layer2 = nn.Conv2d(10, 3, kernel_size=5, padding=5, bias=True)
         self.batch = nn.BatchNorm2d(100)
-        self.cf = nn.Linear(226,2)
+        self.cf = nn.Linear(int((224 - 17) / 2 + 7), 2)
 
     def forward(self, x):
         x = self.conv_layer1(x)
@@ -50,16 +53,11 @@ def torch_compiler(model, inputs):
     return model_opt(inputs)
 
 
-@run_time
-def test():
-    inputs = torch.randn((1, 3, 224, 224))
-    compiler_model(model, inputs)
-    torch_compiler(model, inputs)
 
 
 if __name__ == "__main__":
     model = Net()
-    input = torch.randn((1, 3, 224, 224))
+    input = torch.randn((2, 3, 224, 224))
 
     # onnx_model = torch.onnx.dynamo_export(
     #     model, input, export_options=torch.onnx.ExportOptions(dynamic_shapes=True)

@@ -1,1 +1,1 @@
-from .llh import *
+from .llh import LLH
