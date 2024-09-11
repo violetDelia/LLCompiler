@@ -88,7 +88,7 @@ class MLIR_Builder:
                     value_map[node.name] = [arg_value]
                     input_types.append(tensor_type)
                     shape_bind = torch_bind_shape(arg_value, fake_tensor, symbol_map)
-                    print(shape_bind)
+                    block.add_op(shape_bind)
                 elif node.type is None:
                     val = node.meta["val"]
                     if isinstance(val, FakeTensor):
@@ -97,8 +97,10 @@ class MLIR_Builder:
                         arg_value = block.insert_arg(tensor_type, len(input_types))
                         value_map[node.name] = [arg_value]
                         input_types.append(tensor_type)
-                        shape_bind = torch_bind_shape(arg_value, fake_tensor, symbol_map)
-                        print(shape_bind)
+                        shape_bind = torch_bind_shape(
+                            arg_value, fake_tensor, symbol_map
+                        )
+                        block.add_op(shape_bind)
                     elif isinstance(val, torch.SymInt):
                         op: SymbolicIntOp = torch_symbol_translate(
                             node.meta["val"], symbol_map
@@ -125,6 +127,10 @@ class MLIR_Builder:
                 op = torch_module_translate(node, value_map, module)
                 value_map[node.name] = op.results
                 block.add_op(op)
+                shape_bind = torch_bind_shape(
+                    op.results[0], node.meta["example_value"], symbol_map
+                )
+                block.add_op(shape_bind)
             elif node.op == "output":
 
                 def trav_args(args):
@@ -144,6 +150,10 @@ class MLIR_Builder:
                 op = torch_function_translate(node, value_map)
                 value_map[node.name] = op.results
                 block.add_op(op)
+                shape_bind = torch_bind_shape(
+                    op.results[0], node.meta["val"], symbol_map
+                )
+                block.add_op(shape_bind)
             else:
                 raise NotImplementedError(node.op, type(node.op))
         block.add_op(Return(*return_values))

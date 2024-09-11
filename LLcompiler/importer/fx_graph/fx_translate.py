@@ -1,8 +1,10 @@
 from sympy.core.numbers import Integer
+from sympy.core.symbol import Symbol
 import torch.fx.experimental
 import torch.fx.experimental.sym_node
 from xdsl.ir import SSAValue
-from xdsl.ir.affine.affine_expr import AffineSymExpr
+from xdsl.ir.affine.affine_expr import AffineSymExpr, AffineConstantExpr
+from xdsl.ir.affine.affine_map import AffineMap
 from xdsl.dialects.builtin import (
     TensorType,
     i64,
@@ -39,19 +41,47 @@ def torch_symbol_translate(symbol: torch.SymInt, symbol_map: dict[str, SymbolicI
     return op
 
 
+def _generate_symbol_expression(
+    dim: torch.SymInt,
+    symbol_map: dict[str, SymbolicIntOp],
+    affine_expr_map: dict[str, AffineSymExpr],
+    bind_symbols: list[SSAValue],
+    results: list[AffineSymExpr],
+):
+    node: SymNode = dim.node
+    exp: Symbol = node.expr
+    name: str = exp.name
+    if isinstance(exp, Symbol):
+        if name in symbol_map:
+            if name not in affine_expr_map:
+                affine_expr_map[name] = AffineSymExpr(len(bind_symbols))
+                bind_symbols.append(symbol_map[name].result)
+            results.append(affine_expr_map[name])
+        else:
+            raise NotImplementedError
+    else:
+        pass
+
+
 def torch_bind_shape(
     operand: SSAValue, tensor: FakeTensor, symbol_map: dict[str, SymbolicIntOp]
 ):
-    bind_symbols = []
+    bind_symbols: list[SSAValue] = []
+    affine_expr_map: dict[str, AffineSymExpr] = dict()
+    results: list[AffineSymExpr] = []
     for dim in tensor.shape:
         if isinstance(dim, int):
+            results.append(AffineConstantExpr(dim))
             continue
         elif str(dim).isdigit():
+            results.append(AffineConstantExpr(int(dim)))
             continue
         else:
-            node: SymNode = dim.node
-            print(dim)
-    expressions = AffineMapAttr(AffineSymExpr(0))
+            _generate_symbol_expression(
+                dim, symbol_map, affine_expr_map, bind_symbols, results
+            )
+    map = AffineMap(0, len(symbol_map), results=results)
+    expressions = AffineMapAttr(map)
     return SymbolicShapeBindOp(
         operands=[operand, bind_symbols], attributes={"expressions": expressions}
     )
