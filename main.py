@@ -19,8 +19,14 @@ class Net(nn.Module):
         self.batch = nn.BatchNorm2d(100)
         self.cf = nn.Linear(int((224 - 17) / 2 + 7), 2)
 
-    def forward(self, x):
+    def forward(self, x:torch.Tensor):
         x = self.conv_layer1(x)
+        x = x + x
+        c = 2 + 2 * 5 / 3
+        x = x / c
+        x = x + x + x * x
+        x = self.conv_layer2(x)
+        #x = self.cf(x)
         return x
 
 
@@ -31,7 +37,7 @@ def compiler_model(model, inputs):
         compiler.compiler(model, inputs)
         return
 
-    compiler = LLC.LLCompiler(mode="inference")
+    compiler = LLC.LLCompiler(mode="training")
     model_opt = torch.compile(
         model=model,
         backend=compiler,
@@ -51,8 +57,6 @@ def torch_compiler(model, inputs):
         fullgraph=True,
     )
     return model_opt(inputs)
-
-
 
 
 if __name__ == "__main__":

@@ -21,10 +21,13 @@ from xdsl.dialects.builtin import (
     StringAttr,
     SymbolRefAttr,
     AffineMapAttr,
+    ContainerOf,
 )
 from xdsl.ir.affine.affine_expr import AffineExpr
 from xdsl.ir import Dialect
 from xdsl.irdl import (
+    AnyOf,
+    ConstraintVar,
     result_def,
     attr_def,
     OpResult,
@@ -97,6 +100,12 @@ LLH_FloatTensor: TypeAlias = TensorType[LLH_Float]
 
 LLH_Tensor: TypeAlias = TensorType
 
+LLH_ComputableType = ContainerOf(
+    AnyOf(
+        [TensorType, IntegerType, Float16Type, Float32Type, Float64Type, BFloat16Type]
+    )
+)
+
 
 @irdl_op_definition
 class SymbolicIntOp(IRDLOperation):
@@ -117,7 +126,7 @@ class SymbolicShapeBindOp(IRDLOperation):
 class ConstantOp(IRDLOperation):
     name = "llh.constant"
     value = attr_def(DenseIntOrFPElementsAttr)
-    result = result_def(TensorType)
+    result = result_def(LLH_ComputableType)
 
 
 @irdl_op_definition
@@ -128,11 +137,35 @@ class WeightOp(IRDLOperation):
 
 
 @irdl_op_definition
+class AddOp(IRDLOperation):
+    name = "llh.add"
+    lhs = operand_def(LLH_ComputableType)
+    rhs = operand_def(LLH_ComputableType)
+    result = result_def(LLH_ComputableType)
+
+
+@irdl_op_definition
+class DivOp(IRDLOperation):
+    name = "llh.div"
+    lhs = operand_def(LLH_ComputableType)
+    rhs = operand_def(LLH_ComputableType)
+    result = result_def(LLH_ComputableType)
+
+
+@irdl_op_definition
+class MulOp(IRDLOperation):
+    name = "llh.mul"
+    lhs = operand_def(LLH_ComputableType)
+    rhs = operand_def(LLH_ComputableType)
+    result = result_def(LLH_ComputableType)
+
+
+@irdl_op_definition
 class ConvBiasOp(IRDLOperation):
     name = "llh.conv_bias"
     X = operand_def(TensorType)
     W = operand_def(TensorType)
-    B = operand_def(TensorType)
+    B = operand_def(LLH_ComputableType)
     dilations = attr_def(ArrayAttr)
     kernel_shape = attr_def(ArrayAttr)
     pads = attr_def(ArrayAttr)
@@ -154,4 +187,67 @@ class ConvOp(IRDLOperation):
     result = result_def(TensorType)
 
 
-LLH = Dialect("llh", [ConstantOp, WeightOp, ConvBiasOp, ConvOp], [])
+@irdl_op_definition
+class MatmulOp(IRDLOperation):
+    name = "llh.matmul"
+    lhs = operand_def(TensorType)
+    rhs = operand_def(TensorType)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class TransposrOp(IRDLOperation):
+    name = "llh.transpose"
+    input = operand_def(TensorType)
+    perms = attr_def(ArrayAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class DimOp(IRDLOperation):
+    name = "llh.dim"
+    input = operand_def(TensorType)
+    dim = operand_def(IntegerType)
+    result = result_def(IntegerType)
+
+
+@irdl_op_definition
+class ReshapeOp(IRDLOperation):
+    name = "llh.reshape"
+    input = operand_def(TensorType)
+    shape = var_operand_def(IntegerType)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class ReshapeOp(IRDLOperation):
+    name = "llh.reshape"
+    input = operand_def(TensorType)
+    shape = var_operand_def(IntegerType)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class ReshapeOp(IRDLOperation):
+    name = "llh.reshape"
+    input = operand_def(TensorType)
+    shape = var_operand_def(IntegerType)
+    result = result_def(TensorType)
+
+
+LLH = Dialect(
+    "llh",
+    [
+        ConstantOp,
+        WeightOp,
+        ConvBiasOp,
+        ConvOp,
+        AddOp,
+        DivOp,
+        MatmulOp,
+        TransposrOp,
+        MulOp,
+        DimOp,
+    ],
+    [],
+)
