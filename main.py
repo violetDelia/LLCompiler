@@ -23,10 +23,15 @@ class Net(nn.Module):
         x = self.conv_layer1(x)
         x = x + x
         c = 2 + 2 * 5 / 3
+<<<<<<< HEAD
         c = c +2
         c = c *6
         x = x / c
         x = x + x + x * x+3
+=======
+        x = x / c
+        x = x + x + x * x
+>>>>>>> 90404bdad6c6902367347064e72203c1922d9000
         x = self.conv_layer2(x)
         #x = self.cf(x)
         return x
@@ -39,7 +44,7 @@ def compiler_model(model, inputs):
         compiler.compiler(model, inputs)
         return
 
-    compiler = LLC.LLCompiler(mode="inference")
+    compiler = LLC.LLCompiler(mode="training")
     model_opt = torch.compile(
         model=model,
         backend=compiler,
