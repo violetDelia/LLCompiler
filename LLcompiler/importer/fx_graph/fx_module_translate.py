@@ -31,7 +31,7 @@ def torch_conv_convert(
     module: torch.nn.modules.conv._ConvNd,
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_fake_tensor(node))
+    result_type = torch_fake_tensor_translate(get_result_type(node))
     X = get_arg_value(node.args[0], value_map, block)
     W = value_map[node.target + ".weight"][0]
     padding = module.padding
