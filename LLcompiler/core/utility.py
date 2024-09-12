@@ -19,14 +19,16 @@ class Dict_Registry(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def __call__(self, target) -> Any:
-        return self.register(target)
+    def __call__(self, *keys) -> Any:
+        return self.register(*keys)
 
-    def register(self, key):
+    def register(self, *keys):
         def add_callable(func):
             if not callable(func):
-                    raise ValueError("Value must be callable")
-            if key in self.keys():
+                raise ValueError("Value must be callable")
+            for key in keys:
+                if key in self.keys():
                     raise ValueError(f"Key '{key}' already registered")
-            self[key] = func
+                self[key] = func
+
         return add_callable

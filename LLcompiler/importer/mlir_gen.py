@@ -7,6 +7,7 @@ from xdsl.dialects.builtin import (
     Block,
     DenseIntOrFPElementsAttr,
     StringAttr,
+    TensorType,
 )
 from xdsl.ir import SSAValue, BlockArgument
 from xdsl.ir import Region
@@ -28,6 +29,7 @@ from .fx_graph import (
     torch_module_translate,
     torch_function_translate,
     torch_bind_shape,
+    get_result_type,
 )
 from datetime import datetime
 import torch
@@ -124,13 +126,14 @@ class MLIR_Builder:
                     print("unimplemented placeholder type: ", node.type)
             elif node.op == "call_module":
                 module = model.get_submodule(node.target)
-                op = torch_module_translate(node, value_map, module)
+                op = torch_module_translate(node, value_map, module, block)
                 value_map[node.name] = op.results
                 block.add_op(op)
-                shape_bind = torch_bind_shape(
-                    op.results[0], node.meta["example_value"], symbol_map
-                )
-                block.add_op(shape_bind)
+                if isinstance(op.results[0].type, TensorType):
+                    shape_bind = torch_bind_shape(
+                        op.results[0], node.meta["example_value"], symbol_map
+                    )
+                    block.add_op(shape_bind)
             elif node.op == "output":
 
                 def trav_args(args):
@@ -147,13 +150,14 @@ class MLIR_Builder:
 
                 trav_args(node.args)
             elif node.op == "call_function":
-                op = torch_function_translate(node, value_map)
+                op = torch_function_translate(node, value_map, block)
                 value_map[node.name] = op.results
                 block.add_op(op)
-                shape_bind = torch_bind_shape(
-                    op.results[0], node.meta["val"], symbol_map
-                )
-                block.add_op(shape_bind)
+                if isinstance(op.results[0].type, TensorType):
+                    shape_bind = torch_bind_shape(
+                        op.results[0], get_result_type(node), symbol_map
+                    )
+                    block.add_op(shape_bind)
             else:
                 raise NotImplementedError(node.op, type(node.op))
         block.add_op(Return(*return_values))
