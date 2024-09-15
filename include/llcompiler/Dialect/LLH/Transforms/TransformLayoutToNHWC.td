@@ -26,20 +26,20 @@ def Gen_Return_Tensor_For_NCHW_To_NHWC: NativeCodeCall<"genReturnTensorFrom($0,l
 def Has_LayoutAttr_NCHW: Constraint<CPred<"HaslLayoutAttr($0,llc::LAYOUT::NCHW)">>;
 
 
-def Transform_ConvOp_NCHW_To_NHWC : 
-    Pat<  (LLH_ConvOp:$res $X, $W, $B, $dilation, $kernel_shape, $pad, $stride, $group),
-          (LLH_TransposeOp
-            (LLH_ConvOp 
-                (LLH_TransposeOp $X, 
-                    (Gen_Transpose_Perms_NCHW_To_NHWC $X), 
-                    (returnType (Gen_Return_Tensor_For_NCHW_To_NHWC $X))),
-                (LLH_TransposeOp $W, 
-                    (Gen_Transpose_Perms_NCHW_To_NHWC $W),
-                    (returnType (Gen_Return_Tensor_For_NCHW_To_NHWC $W))), 
-                $B, $dilation, $kernel_shape, $pad, $stride, $group,
-                (returnType (Gen_Return_Tensor_For_NCHW_To_NHWC $res))
-            ),
-            (Gen_Transpose_Perms_NCHW_From_NHWC $res)),
-        [(Has_LayoutAttr_NCHW $res)]>;
+// def Transform_ConvOp_NCHW_To_NHWC : 
+//     Pat<  (LLH_ConvOp:$res $X, $W, $B, $dilation, $kernel_shape, $pad, $stride, $group),
+//           (LLH_TransposeOp
+//             (LLH_ConvOp 
+//                 (LLH_TransposeOp $X, 
+//                     (Gen_Transpose_Perms_NCHW_To_NHWC $X), 
+//                     (returnType (Gen_Return_Tensor_For_NCHW_To_NHWC $X))),
+//                 (LLH_TransposeOp $W, 
+//                     (Gen_Transpose_Perms_NCHW_To_NHWC $W),
+//                     (returnType (Gen_Return_Tensor_For_NCHW_To_NHWC $W))), 
+//                 $B, $dilation, $kernel_shape, $pad, $stride, $group,
+//                 (returnType (Gen_Return_Tensor_For_NCHW_To_NHWC $res))
+//             ),
+//             (Gen_Transpose_Perms_NCHW_From_NHWC $res)),
+//         [(Has_LayoutAttr_NCHW $res)]>;
 
 #endif // LLH_TRANSFORMLAYOUTTONHWC

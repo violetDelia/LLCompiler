@@ -11,13 +11,17 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include "llcompiler/Compiler/Init.h"
+
+#include <iostream>
 #include <string>
 
-#include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Support/Logger.h"
 
 namespace llc::compiler {
+
+void test() { std::cout << "aaa" << std::endl; };
 
 void init_global(const logger::LoggerOption& logger_option) {
   logger::register_logger(GLOBAL, logger_option);

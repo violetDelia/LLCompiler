@@ -146,7 +146,7 @@ bool check_conv_illegal(Operation* op) {
   if (x_type || w_type) return false;
   if (x_type.getRank() != w_type.getRank()) return false;
   if (x_type.getRank() != 4 || w_type.getRank() != 5) return false;
-  DEBUG(llc::MLIR)<<"??";
+  DEBUG(llc::MLIR) << "??";
   return true;
 }
 
@@ -178,24 +178,24 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
   }
 };
 
-struct WeightOpLowering : public OpConversionPattern<WeightOp> {
-  using OpConversionPattern<WeightOp>::OpConversionPattern;
-  LogicalResult match(WeightOp op) const final { return success(); }
-  void rewrite(WeightOp op, OpAdaptor adaptor,
-               ConversionPatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
-    auto loc = op.getLoc();
-    auto out = op.getResult().getType();
-    auto attrs = op->getAttrs();
-    auto types = ::mlir::TypeRange{out};
-    auto new_op = rewriter.create<mlir::tosa::ConstOp>(
-        loc, types, ::mlir::ValueRange{}, attrs);
-    new_op.setValueAttr(adaptor.getValueAttr());
-    llc::add_is_weight_attr(new_op, true);
-    rewriter.replaceOp(op, new_op);
-    LLC_RUN_OUT_PATTERN
-  }
-};
+// struct WeightOpLowering : public OpConversionPattern<WeightOp> {
+//   using OpConversionPattern<WeightOp>::OpConversionPattern;
+//   LogicalResult match(WeightOp op) const final { return success(); }
+//   void rewrite(WeightOp op, OpAdaptor adaptor,
+//                ConversionPatternRewriter& rewriter) const final {
+//     LLC_RUN_IN_PATTERN
+//     auto loc = op.getLoc();
+//     auto out = op.getResult().getType();
+//     auto attrs = op->getAttrs();
+//     auto types = ::mlir::TypeRange{out};
+//     auto new_op = rewriter.create<mlir::tosa::ConstOp>(
+//         loc, types, ::mlir::ValueRange{}, attrs);
+//     new_op.setValueAttr(adaptor.getValueAttr());
+//     llc::add_is_weight_attr(new_op, true);
+//     rewriter.replaceOp(op, new_op);
+//     LLC_RUN_OUT_PATTERN
+//   }
+// };
 
 struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
   using OpConversionPattern<ConstantOp>::OpConversionPattern;
@@ -306,7 +306,7 @@ void populateLLHToTosaConversionPatterns(TypeConverter& converter,
                                          RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<ReluOpLowering>(converter, context);
-  patterns.add<WeightOpLowering>(converter, context);
+  // patterns.add<WeightOpLowering>(converter, context);
   patterns.add<ConstantOpLowering>(converter, context);
   patterns.add<MatMulOpLowering>(converter, context);
   patterns.add<ConvOpLowering>(converter, context);

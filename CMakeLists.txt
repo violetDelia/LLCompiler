@@ -18,7 +18,7 @@ option(BUILD_LLCOMPILER_DOCS "build examples" ON)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
-option(LLCOMPILER_BUILD_WITH_ONNX_ML "if disable,will throw error when convert onnx model" ON)
+option(LLCOMPILER_BUILD_WITH_ONNX_ML "if disable,will throw error when convert onnx model" OFF)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)
@@ -58,6 +58,7 @@ add_compile_options(-fno-rtti)
 
 # #---------- define absolute path ----------##
 set(LLCOMPILER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(LLCOMPILER_GENERATE_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
 set(LLCOMPILER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(LLCOMPILER_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(LLCOMPILER_TOOLS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools")
@@ -74,6 +75,7 @@ set(LLCOMPILER_INSTALL_CMAKE_DIR "${LLCOMPILER_INSTALL_DIR}/cmake")
 # #---------- define include dirs ----------##
 set(LLCOMPILER_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
 set(SPDLOG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/spdlog/include")
+set(PYBIND11_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/include")
 set(ONNX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/onnx")
 set(ONNX_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/onnx")
 set(PROTOBUF_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_deps/protobuf-src/src")
@@ -112,3 +114,27 @@ message(STATUS STATIC_WINDOWS_RUNTIME: ${STATIC_WINDOWS_RUNTIME})
 message(STATUS CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS})
 message(STATUS BUILD_LLCOMPILER_LOG: ${BUILD_LLCOMPILER_LOG})
 message(STATUS CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX})
+
+# #---------- install ----------##
+include(CMakePackageConfigHelpers)
+
+# # 安装头文件
+install(DIRECTORY "${LLCOMPILER_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}")
+install(DIRECTORY "${LLCOMPILER_GENERATE_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}")
+
+# 生成Config.cmake文件并安装
+configure_package_config_file("${LLCOMPILER_CMAKE_DIR}/LLCompilerConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/LLCompilerConfig.cmake"
+    INSTALL_DESTINATION ${LLCOMPILER_INSTALL_CMAKE_DIR}
+)
+
+# # 生成ConfigVersion.cmake文件
+write_basic_package_version_file(
+    "${CMAKE_CURRENT_BINARY_DIR}/LLCompilerConfigVersion.cmake"
+    VERSION ${LLCOMPILER_VERSION}
+    COMPATIBILITY SameMajorVersion)
+
+# # 安装LLFrameConfigVersion.cmake文件
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LLCompilerConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/LLCompilerConfigVersion.cmake"
+    DESTINATION ${LLCOMPILER_INSTALL_CMAKE_DIR})

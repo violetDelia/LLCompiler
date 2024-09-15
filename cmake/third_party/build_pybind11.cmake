@@ -1,0 +1,6 @@
+function(build_pybind11 lib_path)
+    message("******************************************")
+    message("************* build pybind11 *****************")
+    message("******************************************")
+    add_subdirectory(${lib_path})
+endfunction()

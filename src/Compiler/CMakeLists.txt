@@ -1,7 +1,7 @@
 llcompiler_add_library(LLCompiler
     SRC_FILES
     Init.cpp
-    Utility.cpp
+    #Utility.cpp
 
     ADDITIONAL_INCLUDE_DIRS
     ${ONNX_INCLUDE_DIR}
@@ -11,11 +11,8 @@ llcompiler_add_library(LLCompiler
 
     LINKS PUBLIC
     MLIRIR
-    LLCFrontendOnnx
     LLCSupport
 
-    PRIVATE
-    onnx
 )
 
 if(LLCOMPILER_BUILD_WITH_ONNX_ML)
