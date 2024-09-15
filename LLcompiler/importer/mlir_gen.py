@@ -28,8 +28,9 @@ from .fx_graph import (
     torch_fake_tensor_translate,
     torch_module_translate,
     torch_function_translate,
-    torch_bind_shape,
+    torch_symbol_bind,
     get_result_type,
+    torch_build_func,
 )
 from datetime import datetime
 import torch
@@ -38,17 +39,18 @@ from torch._subclasses.fake_tensor import FakeTensor
 
 
 class MLIR_Builder:
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         self.context = MLContext()
         self.context.load_dialect(Builtin)
         self.context.load_dialect(Func)
         self.context.load_dialect(LLH)
+        self.kwargs = kwargs
 
-    def mlir_gen(self, input, **kwargs):
+    def mlir_gen(self, input):
         if isinstance(input, torch.fx.GraphModule):
-            return self._fx_mlir_gen(input, **kwargs)
+            return self._fx_mlir_gen(input, **self.kwargs)
         if isinstance(input, onnx.GraphProto):
-            return self._onnx_mlir_gen(input, **kwargs)
+            return self._onnx_mlir_gen(input, **self.kwargs)
         raise NotImplementedError
 
     def _fx_mlir_gen(self, model: torch.fx.GraphModule, **kwargs):
@@ -59,9 +61,6 @@ class MLIR_Builder:
         model.graph.print_tabular()
         value_map: dict[str, list[SSAValue]] = dict()
         symbol_map: dict[str, SymbolicIntOp] = dict()
-        input_types = []
-        output_types = []
-        return_values = []
         block = Block()
         weight_dir = os.path.join(
             os.path.dirname(__file__),
@@ -81,88 +80,7 @@ class MLIR_Builder:
             )
             value_map[name] = op.results
             block.add_op(op)
-        for node in model.graph.nodes:
-            if node.op == "placeholder":
-                if node.type is torch.Tensor:
-                    fake_tensor = node.meta["example_value"]
-                    tensor_type = torch_fake_tensor_translate(fake_tensor)
-                    arg_value = block.insert_arg(tensor_type, len(input_types))
-                    value_map[node.name] = [arg_value]
-                    input_types.append(tensor_type)
-                    shape_bind = torch_bind_shape(arg_value, fake_tensor, symbol_map)
-                    block.add_op(shape_bind)
-                elif node.type is None:
-                    val = node.meta["val"]
-                    if isinstance(val, FakeTensor):
-                        fake_tensor = node.meta["val"]
-                        tensor_type = torch_fake_tensor_translate(fake_tensor)
-                        arg_value = block.insert_arg(tensor_type, len(input_types))
-                        value_map[node.name] = [arg_value]
-                        input_types.append(tensor_type)
-                        shape_bind = torch_bind_shape(
-                            arg_value, fake_tensor, symbol_map
-                        )
-                        block.add_op(shape_bind)
-                    elif isinstance(val, torch.SymInt):
-                        op: SymbolicIntOp = torch_symbol_translate(
-                            node.meta["val"], symbol_map
-                        )
-                        value_map[node.name] = [
-                            block.insert_arg(op.result.type, len(input_types))
-                        ]
-                        input_types.append(op.result.type)
-                        block.add_op(op)
-                    else:
-                        print("unimplemented placeholder type: ", type(val))
-                elif node.type is torch.SymInt:
-                    symbol: torch.SymInt = node.meta["example_value"]
-                    op: SymbolicIntOp = torch_symbol_translate(symbol, symbol_map)
-                    value_map[node.name] = [
-                        block.insert_arg(op.result.type, len(input_types))
-                    ]
-                    input_types.append(op.result.type)
-                    block.add_op(op)
-                else:
-                    print("unimplemented placeholder type: ", node.type)
-            elif node.op == "call_module":
-                module = model.get_submodule(node.target)
-                op = torch_module_translate(node, value_map, module, block)
-                value_map[node.name] = op.results
-                block.add_op(op)
-                if isinstance(op.results[0].type, TensorType):
-                    shape_bind = torch_bind_shape(
-                        op.results[0], node.meta["example_value"], symbol_map
-                    )
-                    block.add_op(shape_bind)
-            elif node.op == "output":
-
-                def trav_args(args):
-                    for arg in args:
-                        if isinstance(arg, tuple):
-                            trav_args(arg)
-                        elif isinstance(arg, list):
-                            trav_args(arg)
-                        elif isinstance(arg, torch.fx.node.Node):
-                            output_types.append(value_map[arg.name][0].type)
-                            return_values.append(value_map[arg.name][0])
-                        else:
-                            raise NotImplementedError(type(arg))
-
-                trav_args(node.args)
-            elif node.op == "call_function":
-                op = torch_function_translate(node, value_map, block)
-                value_map[node.name] = op.results
-                block.add_op(op)
-                if isinstance(op.results[0].type, TensorType):
-                    shape_bind = torch_bind_shape(
-                        op.results[0], get_result_type(node), symbol_map
-                    )
-                    block.add_op(shape_bind)
-            else:
-                raise NotImplementedError(node.op, type(node.op))
-        block.add_op(Return(*return_values))
-        func = FuncOp("mian", (input_types, output_types))
-        func.regions[0].add_block(block)
+        func = torch_build_func(model.graph, "main", block, value_map, symbol_map)
         module = ModuleOp([func])
         return module
 

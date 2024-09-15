@@ -8,12 +8,16 @@ from xdsl.dialects.builtin import (
     Signedness,
     Float16Type,
     Float32Type,
+    FloatAttr,
     Float64Type,
     AnyFloat,
     TensorType,
     DenseArrayBase,
     DenseIntOrFPElementsAttr,
     AnySignlessIntegerType,
+    AnyTensorType,
+    AnySignlessIntegerOrIndexType,
+    AnyFloatConstr,
     SignednessAttr,
     IntAttr,
     BFloat16Type,
@@ -22,6 +26,7 @@ from xdsl.dialects.builtin import (
     SymbolRefAttr,
     AffineMapAttr,
     ContainerOf,
+    BoolAttr,
 )
 from xdsl.ir.affine.affine_expr import AffineExpr
 from xdsl.ir import Dialect
@@ -35,11 +40,13 @@ from xdsl.irdl import (
     irdl_attr_definition,
     operand_def,
     irdl_op_definition,
+    var_result_def,
     IRDLOperation,
     ParameterDef,
     ParametrizedAttribute,
+    TypeVar,
 )
-from xdsl.irdl.constraints import ParamAttrConstraint
+from xdsl.irdl.constraints import ParamAttrConstraint, AnyOf
 from typing import TypeAlias, Annotated
 from xdsl.parser import Parser
 from xdsl.printer import Printer
@@ -100,11 +107,20 @@ LLH_FloatTensor: TypeAlias = TensorType[LLH_Float]
 
 LLH_Tensor: TypeAlias = TensorType
 
+llh_Symbolic_Type = ContainerOf(AnyOf([TensorType, IntegerType]))
 LLH_ComputableType = ContainerOf(
     AnyOf(
         [TensorType, IntegerType, Float16Type, Float32Type, Float64Type, BFloat16Type]
     )
 )
+
+
+@irdl_op_definition
+class AOTOp(IRDLOperation):
+    name = "llh.aot"
+    name = attr_def(StringAttr)
+    inputs = var_operand_def(LLH_ComputableType)
+    outputs = var_result_def(LLH_ComputableType)
 
 
 @irdl_op_definition
@@ -115,9 +131,9 @@ class SymbolicIntOp(IRDLOperation):
 
 
 @irdl_op_definition
-class SymbolicShapeBindOp(IRDLOperation):
-    name = "llh.symbolic_shape_bind"
-    operand = operand_def(TensorType)
+class SymbolicBindOp(IRDLOperation):
+    name = "llh.symbolic_bind"
+    operand = operand_def(llh_Symbolic_Type)
     bind_symbols = var_operand_def(IntegerType)
     expressions = attr_def(AffineMapAttr)
 
@@ -163,9 +179,9 @@ class MulOp(IRDLOperation):
 @irdl_op_definition
 class ConvBiasOp(IRDLOperation):
     name = "llh.conv_bias"
-    X = operand_def(TensorType)
-    W = operand_def(TensorType)
-    B = operand_def(LLH_ComputableType)
+    input = operand_def(TensorType)
+    weight = operand_def(TensorType)
+    bias = operand_def(LLH_ComputableType)
     dilations = attr_def(ArrayAttr)
     kernel_shape = attr_def(ArrayAttr)
     pads = attr_def(ArrayAttr)
@@ -196,7 +212,7 @@ class MatmulOp(IRDLOperation):
 
 
 @irdl_op_definition
-class TransposrOp(IRDLOperation):
+class TransposeOp(IRDLOperation):
     name = "llh.transpose"
     input = operand_def(TensorType)
     perms = attr_def(ArrayAttr)
@@ -220,6 +236,14 @@ class ReshapeOp(IRDLOperation):
 
 
 @irdl_op_definition
+class ExpandOp(IRDLOperation):
+    name = "llh.expand"
+    input = operand_def(TensorType)
+    shape = var_operand_def(IntegerType)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
 class ReshapeOp(IRDLOperation):
     name = "llh.reshape"
     input = operand_def(TensorType)
@@ -235,6 +259,94 @@ class ReshapeOp(IRDLOperation):
     result = result_def(TensorType)
 
 
+@irdl_op_definition
+class FlattenOp(IRDLOperation):
+    name = "llh.flatten"
+    input = operand_def(TensorType)
+    dim = operand_def(IntegerAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class shapeOfOp(IRDLOperation):
+    name = "llh.shape"
+    input = operand_def(TensorType)
+    results = var_result_def(IntegerType)
+
+
+@irdl_op_definition
+class CatOp(IRDLOperation):
+    name = "llh.cat"
+    inputs = var_operand_def(TensorType)
+    dim = attr_def(IntegerAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class DropOp(IRDLOperation):
+    name = "llh.drop"
+    input = operand_def(TensorType)
+    p = attr_def(FloatAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class LayerNormOp(IRDLOperation):
+    name = "llh.layer_norm"
+    input = operand_def(TensorType)
+    scale = operand_def(TensorType)
+    bias = operand_def(TensorType)
+    epsilon = attr_def(FloatAttr)
+    axis = attr_def(IntegerAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class BatchNormOp(IRDLOperation):
+    name = "llh.batch_norm"
+    input = operand_def(TensorType)
+    scale = operand_def(TensorType)
+    bias = operand_def(TensorType)
+    input_mean = operand_def(TensorType)
+    input_var = operand_def(TensorType)
+    epsilon = attr_def(FloatAttr)
+    momentum = attr_def(FloatAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class ReluOp(IRDLOperation):
+    name = "llh.relu"
+    input = operand_def(TensorType)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class MaxPoolOp(IRDLOperation):
+    name = "llh.maxpool"
+    input = operand_def(TensorType)
+    ceil_mode = attr_def(BoolAttr)
+    dilation = attr_def(ArrayAttr)
+    kernel_shape = attr_def(ArrayAttr)
+    pad = attr_def(ArrayAttr)
+    stride = attr_def(ArrayAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class AdaptiveAvgPoolOp(IRDLOperation):
+    name = "llh.adaptive_average_pool"
+    input = operand_def(TensorType)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class AdaptiveAvgPoolOp(IRDLOperation):
+    name = "llh.adaptive_average_pool"
+    input = operand_def(TensorType)
+    result = result_def(TensorType)
+
+
 LLH = Dialect(
     "llh",
     [
@@ -245,9 +357,18 @@ LLH = Dialect(
         AddOp,
         DivOp,
         MatmulOp,
-        TransposrOp,
+        TransposeOp,
         MulOp,
         DimOp,
+        shapeOfOp,
+        ExpandOp,
+        CatOp,
+        DropOp,
+        LayerNormOp,
+        ReluOp,
+        MaxPoolOp,
+        AdaptiveAvgPoolOp,
+        FlattenOp,BatchNormOp
     ],
     [],
 )

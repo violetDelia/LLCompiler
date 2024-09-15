@@ -8,6 +8,9 @@ from xdsl.ir.affine.affine_expr import (
 from xdsl.ir.affine.affine_map import AffineMap
 from xdsl.dialects.builtin import (
     TensorType,
+    IntegerType,
+    IntegerAttr,
+    FloatAttr,
     i64,
     i32,
     i16,
@@ -24,15 +27,16 @@ from xdsl.dialects.builtin import (
     DenseArrayBase,
 )
 
-from .llh import SymbolicIntOp, SymbolicShapeBindOp, ConstantOp, TransposrOp
+from .llh import SymbolicIntOp, SymbolicBindOp, ConstantOp, TransposeOp
 
 
 def build_llh_constant(val: int | float):
     if isinstance(val, int):
-        type = TensorType(i64, [1])
+        type = i64
+        value = IntegerAttr(val, i64)
     if isinstance(val, float):
-        type = TensorType(f32, [1])
-    value = DenseIntOrFPElementsAttr.from_list(type, [val])
+        type = f32
+        value = FloatAttr(val, f32)
     return ConstantOp.build(attributes={"value": value}, result_types=[type])
 
 
@@ -43,7 +47,7 @@ def build_llh_transpose(input: SSAValue, perms: list[int]):
     for p in perms:
         new_shape.append(shape[p])
     result = TensorType(tensor.get_element_type(), new_shape)
-    return TransposrOp.build(
+    return TransposeOp.build(
         operands=[input],
         attributes={"perms": DenseArrayBase.from_list(i64, perms)},
         result_types=[result],

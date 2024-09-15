@@ -7,6 +7,11 @@ from torch._dynamo.backends.common import aot_autograd
 import torch.fx
 from LLcompiler.core.utility import run_time
 import onnx
+import torchgen
+import torch._dynamo
+torch._dynamo.config.suppress_errors = True
+torch.nn.Transformer
+from transformers import BertTokenizer, BertModel, BertForMaskedLM
 
 
 class Net(nn.Module):
@@ -19,21 +24,14 @@ class Net(nn.Module):
         self.batch = nn.BatchNorm2d(100)
         self.cf = nn.Linear(int((224 - 17) / 2 + 7), 2)
 
-    def forward(self, x:torch.Tensor):
+    def forward(self, x: torch.Tensor):
         x = self.conv_layer1(x)
         x = x + x
         c = 2 + 2 * 5 / 3
-<<<<<<< HEAD
-        c = c +2
-        c = c *6
-        x = x / c
-        x = x + x + x * x+3
-=======
         x = x / c
         x = x + x + x * x
->>>>>>> 90404bdad6c6902367347064e72203c1922d9000
         x = self.conv_layer2(x)
-        #x = self.cf(x)
+        # x = self.cf(x)
         return x
 
 
@@ -44,30 +42,33 @@ def compiler_model(model, inputs):
         compiler.compiler(model, inputs)
         return
 
-    compiler = LLC.LLCompiler(mode="training")
-    model_opt = torch.compile(
+    compiler = LLC.LLCompiler(mode="inference")
+    model = torch.compile(
         model=model,
         backend=compiler,
         dynamic=True,
         fullgraph=True,
     )
-    return model_opt(inputs)
+    return model(inputs)
 
 
 @run_time
 def torch_compiler(model, inputs):
 
-    model_opt = torch.compile(
+    model = torch.compile(
         model=model,
         backend="inductor",
         dynamic=True,
         fullgraph=True,
     )
-    return model_opt(inputs)
+    return model(inputs)
 
 
 if __name__ == "__main__":
-    model = Net()
+
+    model = torchvision.models.resnet18()
+    #input = (torch.rand((10, 32, 512)), torch.rand((20, 32, 512)))
+    # model = Net()
     input = torch.randn((2, 3, 224, 224))
 
     # onnx_model = torch.onnx.dynamo_export(

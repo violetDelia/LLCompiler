@@ -3,11 +3,13 @@ import sympy.core.facts
 import sympy.core.mul
 from sympy.core.numbers import Integer
 import sympy.core.numbers
+import sympy.core.power
 from sympy.core.symbol import Symbol
 import sympy.core
+import torch._ops as op
 import torch.fx.experimental
 import torch.fx.experimental.sym_node
-from xdsl.ir import SSAValue, Block
+from xdsl.ir import SSAValue, Block, Operation, Mapping, Attribute
 from xdsl.ir.affine.affine_expr import (
     AffineSymExpr,
     AffineConstantExpr,
@@ -41,7 +43,8 @@ import os
 import numpy as np
 import torch.fx
 from torch.fx.experimental.sym_node import SymNode
-from ...dialect.llh import SymbolicIntOp, SymbolicShapeBindOp, ConstantOp
+from ...dialect.llh import SymbolicIntOp, SymbolicBindOp, ConstantOp
+from xdsl.dialects.func import Return, FuncOp
 import sympy
 
 
@@ -92,6 +95,17 @@ def _generate_affine_symbolic(
                 arg.args[1], symbol_map, affine_expr_map, bind_symbols
             ),
         )
+    elif isinstance(arg, sympy.core.power.Pow):
+        assert isinstance(arg.args[1], sympy.core.numbers.Integer)
+        pow = int(arg.args[1])
+        base = _generate_affine_symbolic(
+            arg.args[0], symbol_map, affine_expr_map, bind_symbols
+        )
+        while pow >= 2:
+            base = AffineBinaryOpExpr(AffineBinaryOpKind.Mul, base, base)
+            pow -= 1
+        return base
+
     elif isinstance(arg, Symbol):
         name: str = arg.name
         if name in symbol_map:
@@ -102,11 +116,12 @@ def _generate_affine_symbolic(
             return affine_expr_map[name]
         else:
             raise NotImplementedError("name must in symbol map")
+
     else:
-        raise NotImplementedError(arg, type(arg).__name__)
+        raise NotImplementedError(arg, type(arg), type(arg).__name__)
 
 
-def torch_bind_shape(
+def torch_symbol_bind(
     operand: SSAValue, tensor: FakeTensor, symbol_map: dict[str, SymbolicIntOp]
 ):
 
@@ -127,7 +142,7 @@ def torch_bind_shape(
             results.append(affine_exp)
     map = AffineMap(0, len(symbol_map), results=results)
     expressions = AffineMapAttr(map)
-    return SymbolicShapeBindOp(
+    return SymbolicBindOp(
         operands=[operand, bind_symbols], attributes={"expressions": expressions}
     )
 
@@ -188,4 +203,203 @@ def get_arg_value(
 
 TORCH_FUNCTION_TRANSLATE = Dict_Registry()
 
+
+def torch_function_translate(
+    node: torch.fx.node.Node,
+    value_map: dict[str, list[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
+) -> Operation:
+    target: op.OpOverload = node.target
+    if type(target).__name__ == "builtin_function_or_method":
+        build_fn = TORCH_FUNCTION_TRANSLATE[target.__name__]
+    else:
+        build_fn = TORCH_FUNCTION_TRANSLATE[target.name()]
+    return build_fn(node, value_map, symbol_map, block)
+
+
 TORCH_MODULE_TRANSLATE = Dict_Registry()
+
+
+def torch_module_translate(
+    node: torch.fx.node.Node,
+    value_map: dict[str, list[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    module: torch.nn.Module,
+    block: Block,
+) -> Operation:
+    module_stack = node.meta["nn_module_stack"]
+    target = node.target
+    build_fn = TORCH_MODULE_TRANSLATE[module_stack[target][1]]
+    return build_fn(node, value_map, symbol_map, module, block)
+
+
+TORCH_METHOD_TRANSLATE = Dict_Registry()
+
+
+def torch_method_translate(
+    node: torch.fx.node.Node,
+    value_map: dict[str, list[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
+) -> Operation:
+    target = node.target
+    build_fn = TORCH_METHOD_TRANSLATE[target]
+    return build_fn(node, value_map, symbol_map, block)
+
+
+def commond_build_op(
+    op_build: callable,
+    operand_nums: int,
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    block: Block,
+    attrs: Mapping[str, Attribute | None] = None,
+):
+    out = get_result_type(node)
+    if isinstance(out, FakeTensor):
+        result_type = torch_fake_tensor_translate(out)
+        return op_build(
+            operands=[
+                get_arg_value(node.args[n], value_map, block)
+                for n in range(operand_nums)
+            ],
+            result_types=[result_type],
+            attributes=attrs,
+        )
+    if isinstance(out, torch.SymInt):
+        return op_build(
+            operands=[
+                get_arg_value(node.args[n], value_map, block)
+                for n in range(operand_nums)
+            ],
+            result_types=[i64],
+            attributes=attrs,
+        )
+    raise NotImplementedError
+
+
+def _expand_to_2_if_int(value):
+    if isinstance(value, int):
+        return [value, value]
+    return value
+
+
+def torch_build_func(
+    graph: torch.fx.Graph,
+    name: str,
+    block: Block,
+    value_map: dict[str, list[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+):
+    # 输入输出
+    input_types = []
+    output_types = []
+    return_values = []
+    for node in graph.nodes:
+        if node.op == "placeholder":
+            # 张量输入
+            if node.type is torch.Tensor:
+                fake_tensor = node.meta["example_value"]
+                tensor_type = torch_fake_tensor_translate(fake_tensor)
+                arg_value = block.insert_arg(tensor_type, len(input_types))
+                value_map[node.name] = [arg_value]
+                input_types.append(tensor_type)
+                shape_bind = torch_symbol_bind(arg_value, fake_tensor, symbol_map)
+                block.add_op(shape_bind)
+            elif node.type is None:
+                val = node.meta["val"]
+                # 张量输入
+                if isinstance(val, FakeTensor):
+                    fake_tensor = node.meta["val"]
+                    tensor_type = torch_fake_tensor_translate(fake_tensor)
+                    arg_value = block.insert_arg(tensor_type, len(input_types))
+                    value_map[node.name] = [arg_value]
+                    input_types.append(tensor_type)
+                    shape_bind = torch_symbol_bind(arg_value, fake_tensor, symbol_map)
+                    block.add_op(shape_bind)
+                # 符号输入
+                elif isinstance(val, torch.SymInt):
+                    op: SymbolicIntOp = torch_symbol_translate(
+                        node.meta["val"], symbol_map
+                    )
+                    value_map[node.name] = [
+                        block.insert_arg(op.result.type, len(input_types))
+                    ]
+                    input_types.append(op.result.type)
+                    block.add_op(op)
+                else:
+                    print("unimplemented placeholder type: ", type(val))
+            # 符号输入
+            elif node.type is torch.SymInt:
+                symbol: torch.SymInt = node.meta["example_value"]
+                if isinstance(symbol.node.expr, sympy.core.numbers.Integer):
+                    op = build_llh_constant(int(symbol))
+                elif isinstance(symbol.node.expr, sympy.core.symbol.Symbol):
+                    op: SymbolicIntOp = torch_symbol_translate(symbol, symbol_map)
+                else:
+                    raise NotImplementedError
+                value_map[node.name] = [
+                    block.insert_arg(op.result.type, len(input_types))
+                ]
+                input_types.append(op.result.type)
+                block.add_op(op)
+            else:
+                print("unimplemented placeholder type: ", node.type)
+        elif node.op == "call_module":
+            module = graph.owning_module.get_submodule(node.target)
+            op = torch_module_translate(node, value_map, symbol_map, module, block)
+            value_map[node.name] = op.results
+            block.add_op(op)
+            _updata_torch_symbol_bind(op, block, symbol_map, node)
+        # 输出
+        elif node.op == "output":
+
+            def trav_args(args):
+                for arg in args:
+                    if isinstance(arg, tuple):
+                        trav_args(arg)
+                    elif isinstance(arg, list):
+                        trav_args(arg)
+                    elif isinstance(arg, torch.fx.node.Node):
+                        output_types.append(value_map[arg.name][0].type)
+                        return_values.append(value_map[arg.name][0])
+                    else:
+                        raise NotImplementedError(type(arg))
+
+            trav_args(node.args)
+        elif node.op == "call_function":
+            print(node)
+            op = torch_function_translate(node, value_map, symbol_map, block)
+            value_map[node.name] = op.results
+            block.add_op(op)
+            _updata_torch_symbol_bind(op, block, symbol_map, node)
+        elif node.op == "call_method":
+            if node.target == "size":
+                value_map[node.name] = value_map[node.args[0].name]
+            else:
+                op = torch_method_translate(node, value_map, symbol_map, block)
+                value_map[node.name] = op.results
+                block.add_op(op)
+                _updata_torch_symbol_bind(op, block, symbol_map, node)
+        elif node.op == "get_attr":
+            value_map[node.name] = value_map[node.target]
+        else:
+            raise NotImplementedError(node.op, type(node.op))
+    block.add_op(Return(*return_values))
+    func = FuncOp(name, (input_types, output_types))
+    func.regions[0].add_block(block)
+    return func
+
+
+def _updata_torch_symbol_bind(
+    op: Operation,
+    block: Block,
+    symbol_map: dict[str, SymbolicIntOp],
+    node: torch.fx.node.Node,
+):
+    for i in range(len(op.results)):
+        if not isinstance(op.results[i].type, TensorType):
+            continue
+        shape_bind = torch_symbol_bind(op.results[0], get_result_type(node), symbol_map)
+        block.add_op(shape_bind)

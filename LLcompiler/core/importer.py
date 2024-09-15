@@ -45,9 +45,9 @@ class Importer:
         return self._importer_fx_module(model, **kwargs)
 
     def _importer_fx_module(self, model: torch.fx.GraphModule, **kwargs):
-        builder = MLIR_Builder()
-        return builder.mlir_gen(model, **kwargs)
+        builder = MLIR_Builder(**kwargs)
+        return builder.mlir_gen(model)
 
     def _importer_onnx(self, model, **kwargs):
-        builder = MLIR_Builder()
-        raise builder.mlir_gen(model, **kwargs)
+        builder = MLIR_Builder(**kwargs)
+        raise builder.mlir_gen(model)

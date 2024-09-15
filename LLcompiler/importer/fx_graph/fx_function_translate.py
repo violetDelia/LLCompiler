@@ -4,6 +4,8 @@ from .fx_translate import (
     torch_fake_tensor_translate,
     get_result_type,
     get_arg_value,
+    commond_build_op,
+    _expand_to_2_if_int,
 )
 import torch._ops as op
 import torch.fx
@@ -22,73 +24,100 @@ from xdsl.dialects.builtin import (
     DYNAMIC_INDEX,
     DenseArrayBase,
     IntegerAttr,
+    BoolAttr,
 )
-from ...dialect.llh import ConvBiasOp, ConvOp, AddOp, DivOp, MulOp, DimOp, ReshapeOp
-from ...dialect.llh_utility import build_llh_transpose
+from ...dialect.llh import (
+    ConvBiasOp,
+    ConvOp,
+    AddOp,
+    DivOp,
+    MulOp,
+    DimOp,
+    ReshapeOp,
+    ConstantOp,
+    SymbolicIntOp,
+    CatOp,
+    FlattenOp,
+    ReluOp,
+    AdaptiveAvgPoolOp,
+    MaxPoolOp,
+)
+from ...dialect.llh_utility import build_llh_transpose, build_llh_constant
 from torch._subclasses.fake_tensor import FakeTensor
-
-
-def commond_build_op(
-    op_build: callable,
-    operand_nums: int,
-    node: torch.fx.node.Node,
-    value_map: dict[str:[SSAValue]],
-    block: Block,
-    attrs: Mapping[str, Attribute | None] = None,
-):
-    out = get_result_type(node)
-    if isinstance(out, FakeTensor):
-        result_type = torch_fake_tensor_translate(out)
-        return op_build(
-            operands=[
-                get_arg_value(node.args[n], value_map, block)
-                for n in range(operand_nums)
-            ],
-            result_types=[result_type],
-            attributes=attrs,
-        )
-    if isinstance(out, torch.SymInt):
-        return op_build(
-            operands=[
-                get_arg_value(node.args[n], value_map, block)
-                for n in range(operand_nums)
-            ],
-            result_types=[i64],
-            attributes=attrs,
-        )
 
 
 @TORCH_FUNCTION_TRANSLATE("mul", "aten::mul.Tensor")
 def builtin_mul_convert(
-    node: torch.fx.node.Node, value_map: dict[str:[SSAValue]], block: Block
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
 ):
     return commond_build_op(MulOp.build, 2, node, value_map, block)
 
 
-@TORCH_FUNCTION_TRANSLATE("aten::add.Tensor", "add")
+@TORCH_FUNCTION_TRANSLATE("aten::add.Tensor", "add","iadd")
 def builtin_add_convert(
-    node: torch.fx.node.Node, value_map: dict[str:[SSAValue]], block: Block
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
 ):
     return commond_build_op(AddOp.build, 2, node, value_map, block)
 
 
-@TORCH_FUNCTION_TRANSLATE("truediv", "aten::div.Tensor")
+@TORCH_FUNCTION_TRANSLATE("truediv", "aten::div.Tensor", "floordiv")
 def builtin_truediv_convert(
-    node: torch.fx.node.Node, value_map: dict[str:[SSAValue]], block: Block
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
 ):
     return commond_build_op(DivOp.build, 2, node, value_map, block)
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::sym_size.int")
 def aten_sym_size_int_convert(
-    node: torch.fx.node.Node, value_map: dict[str:[SSAValue]], block: Block
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
 ):
     return commond_build_op(DimOp.build, 2, node, value_map, block)
 
 
+@TORCH_FUNCTION_TRANSLATE("aten::relu")
+def aten_sym_size_int_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(ReluOp.build, 1, node, value_map, block)
+
+
+@TORCH_FUNCTION_TRANSLATE("getitem")
+def builtin_getitem_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
+):
+    inputs = value_map[node.args[0].name]
+    if (len(inputs) == 1) and isinstance(inputs[0].type, TensorType):
+        dim: ConstantOp = build_llh_constant(node.args[1])
+        return DimOp(operands=[inputs[0], dim.result], result_types=[i64])
+
+    else:
+        raise NotImplementedError
+
+
 @TORCH_FUNCTION_TRANSLATE("aten::view")
-def aten_view_tensor(
-    node: torch.fx.node.Node, value_map: dict[str:[SSAValue]], block: Block
+def aten_view_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
 ):
     result_type = torch_fake_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
@@ -98,9 +127,55 @@ def aten_view_tensor(
     return ReshapeOp(operands=[input, dims], result_types=[result_type])
 
 
+@TORCH_FUNCTION_TRANSLATE("aten::max_pool2d_with_indices")
+def aten_view_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
+):
+    arg_len = len(node.args)
+    kernel_shape = node.args[1]
+    stride = node.args[2] if (arg_len > 2) else [1, 1]
+    padding = node.args[3] if (arg_len > 3) else [0, 0]
+    dilation = node.args[4] if (arg_len > 4) else [1, 1]
+    ceil_mode = node.args[5] if (arg_len > 5) else 0
+    node = get_result_type(node)
+    print(node)
+    result_type = torch_fake_tensor_translate(get_result_type(node))
+    input = get_arg_value(node.args[0], value_map, block)
+    attrs = {
+        "dilation": DenseArrayBase.from_list(i64, _expand_to_2_if_int(dilation)),
+        "pad": DenseArrayBase.from_list(
+            i64, (padding[0], padding[1], padding[0], padding[1])
+        ),
+        "kernel_shape": DenseArrayBase.from_list(
+            i64, _expand_to_2_if_int(kernel_shape)
+        ),
+        "stride": DenseArrayBase.from_list(i64, _expand_to_2_if_int(stride)),
+        "ceil_mode": BoolAttr(ceil_mode, i1),
+    }
+    return MaxPoolOp.build(
+        operands=[input], attributes=attrs, result_types=[result_type]
+    )
+
+
+@TORCH_FUNCTION_TRANSLATE("flatten")
+def flatten_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(FlattenOp.build, 2, node, value_map, block)
+
+
 @TORCH_FUNCTION_TRANSLATE("aten::t")
-def aten_view_tensor(
-    node: torch.fx.node.Node, value_map: dict[str:[SSAValue]], block: Block
+def aten_t_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
 ):
     input = get_arg_value(node.args[0], value_map, block)
     return build_llh_transpose(
@@ -108,9 +183,27 @@ def aten_view_tensor(
     )
 
 
+@TORCH_FUNCTION_TRANSLATE("cat")
+def cat_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
+):
+    result_type = torch_fake_tensor_translate(get_result_type(node))
+    operands = []
+    for arg in node.args[0]:
+        operands.append(get_arg_value(arg, value_map, block))
+    attrs = {"dim": IntegerAttr(node.kwargs["dim"], i64)}
+    return CatOp(operands=[operands], attributes=attrs, result_types=[result_type])
+
+
 @TORCH_FUNCTION_TRANSLATE("aten::convolution")
 def aten_convolution_convert(
-    node: torch.fx.node.Node, value_map: dict[str:[SSAValue]], block: Block
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
 ):
     result_type = torch_fake_tensor_translate(get_result_type(node))
     X = get_arg_value(node.args[0], value_map, block)
@@ -141,11 +234,14 @@ def aten_convolution_convert(
 
 
 def torch_function_translate(
-    node: torch.fx.node.Node, value_map: dict[str, list[SSAValue]], block: Block
+    node: torch.fx.node.Node,
+    value_map: dict[str, list[SSAValue]],
+    symbol_map: dict[str, SymbolicIntOp],
+    block: Block,
 ) -> Operation:
     target: op.OpOverload = node.target
     if type(target).__name__ == "builtin_function_or_method":
         build_fn = TORCH_FUNCTION_TRANSLATE[target.__name__]
     else:
         build_fn = TORCH_FUNCTION_TRANSLATE[target.name()]
-    return build_fn(node, value_map, block)
+    return build_fn(node, value_map, symbol_map, block)
