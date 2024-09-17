@@ -12,7 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "include/llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Compiler/Utility.h"
 #include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"

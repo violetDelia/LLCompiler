@@ -1,17 +1,19 @@
 import torch.fx
-from . import core
+import llcompiler.core
 from typing import Any, Union, List, Dict
 
 from torch._functorch.aot_autograd import aot_module_simplified
 from functorch.compile import make_boxed_func
 from torch._dynamo.backends.common import aot_autograd
 from xdsl.printer import Printer
+from llcompiler_.entrance import do_compile
+
 
 def empty_call(*args, **kwargs):
     return 1
 
 
-class LLCompiler(core.importer.Importer):
+class LLCompiler(llcompiler.core.Importer):
     """
     LLCompiler
 
@@ -33,7 +35,7 @@ class LLCompiler(core.importer.Importer):
 
     def compiler(self, model: Any, inputs: List[torch.Tensor]):
         mlir_module = self.importer(model)
-        print(mlir_module.__str__())
+        do_compile(mlir_module.__str__(), 1, 1)
         return model
 
     def _compiler_torch_module():
@@ -53,4 +55,4 @@ class LLCompiler(core.importer.Importer):
                 fw_compiler=self.compiler,
             )
         if self.kwargs["mode"] in ["inference"]:
-            return self.compiler(model,inputs)
+            return self.compiler(model, inputs)

@@ -27,7 +27,7 @@
 #define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 namespace llc::compiler {
 
-extern "C" void do_compiler();
+extern "C" void do_compile(const char* module, int ex, int options);
 
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_

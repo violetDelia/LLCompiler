@@ -6,26 +6,20 @@ import os
 import setuptools
 from pybind11.setup_helpers import (
     Pybind11Extension,
-    ParallelCompile,
-    naive_recompile,
     build_ext,
 )
 import shutil
 
 
 import contextlib
-import datetime
 import glob
 import logging
 import multiprocessing
 import os
-import platform
 import shlex
 import shutil
 import subprocess
-import sys
 import sysconfig
-import textwrap
 from typing import ClassVar
 
 import setuptools
@@ -37,7 +31,7 @@ import setuptools.command.develop
 # Global variables
 ################################################################################
 
-VERSION = "1.0"
+VERSION = "0.0.1"
 TOP_DIR = os.path.realpath(os.path.dirname(__file__))
 CMAKE_BUILD_DIR = os.path.join(TOP_DIR, ".setuptools-cmake-build")
 WINDOWS = os.name == "nt"
@@ -147,6 +141,10 @@ class CmakeBuild(setuptools.Command):
 ################################################################################
 class BuildPy(setuptools.command.build_py.build_py):
     def run(self):
+        # if self.editable_mode:
+        #     dst_dir = TOP_DIR
+        # else:
+        #     dst_dir = self.build_lib
         return super().run()
 
 
@@ -163,34 +161,30 @@ class BuildPy(setuptools.command.build_py.build_py):
 ################################################################################
 
 
+class BuildExt(setuptools.command.build_ext.build_ext):
+    def run(self):
+        self.run_command("cmake_build")
+        return super().run()
+
+
+################################################################################
+# ext_modules
+################################################################################
 ext_modules = []
-# could only be relative paths, otherwise the `build` command would fail if you use a MANIFEST.in to distribute your package
-# only source files (.cpp, .c, .cc) are needed
 source_files = glob.glob("{}/*.cpp".format(PYBIND_DIR), recursive=True)
-
-# If any libraries are used, e.g. libabc.so
-include_dirs = [
-    "/home/lfr/LLCompiler/include",
-    "/home/lfr/LLCompiler/.setuptools-cmake-build/include",
-]
-library_dirs = ["/home/lfr/LLCompiler/.setuptools-cmake-build/lib"]
-# # (optional) if the library is not in the dir like `/usr/lib/`
-# # either to add its dir to `runtime_library_dirs` or to the env variable "LD_LIBRARY_PATH"
-# # MUST be absolute path
-runtime_library_dirs = [
-    "/home/lfr/LLCompiler/.setuptools-cmake-build/lib",
-]
+include_dirs = ["/home/lfr/LLCompiler/install/include"]
+library_dirs = ["/home/lfr/LLCompiler/install/lib"]
+runtime_library_dirs = ["/home/lfr/LLCompiler/install/lib"]
 libraries = ["LLCompiler"]
-
 ext_modules = [
     Pybind11Extension(
-        "llcompiler",  # depends on the structure of your package
+        "llcompiler_",  # depends on the structure of your package
         source_files,
         # Example: passing in the version to the compiled code
-        # include_dirs=include_dirs,
-        # library_dirs=library_dirs,
-        # runtime_library_dirs=runtime_library_dirs,
-        # libraries=libraries,
+        include_dirs=include_dirs,
+        library_dirs=library_dirs,
+        runtime_library_dirs=runtime_library_dirs,
+        libraries=libraries,
         language="C++",
         define_macros=[("VERSION_INFO", VERSION)],
     ),
@@ -207,7 +201,7 @@ setuptools.setup(
     cmdclass={
         "cmake_build": CmakeBuild,
         "build_py": BuildPy,
-        "build_ext": build_ext,
+        "build_ext": BuildExt,
         # "develop": Develop,
     },
     ext_modules=ext_modules,

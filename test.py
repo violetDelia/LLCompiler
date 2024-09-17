@@ -5,6 +5,5 @@ import torch.nn.functional as F
 x = torch.randn(3, 7, 7)
 out = F.max_pool2d_with_indices(x, [3, 3])
 import sys
-import llcompiler.entrance
-llcompiler.entrance.test()
-llcompiler.entrance.test2()
+from  llcompiler_.entrance import do_compile
+do_compile("aaa",1,1)

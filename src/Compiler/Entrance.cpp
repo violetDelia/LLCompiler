@@ -16,8 +16,9 @@
 #include <iostream>
 #include <string>
 namespace llc::compiler {
-void do_compiler() {
-  std::cout << "in " << __func__ << std::endl;
+void do_compile(const char* module, int ex, int options) {
+  std::cout << module << std::endl;
+  std::cout << module << std::endl;std::cout << module << std::endl;
   return;
 }
 

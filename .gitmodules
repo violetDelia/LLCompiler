@@ -1,10 +1,6 @@
 # git submodule update --init --recursive --progress
-[submodule "third_party/onnx"]
-	path = third_party/onnx
-	url = https://github.com/onnx/onnx.git
-[submodule "third_party/googletest"]
-	path = third_party/googletest
-	url = https://github.com/google/googletest.git
+
+
 [submodule "third_party/spdlog"]
 	path = third_party/spdlog
 	url = https://github.com/gabime/spdlog.git
@@ -12,19 +8,30 @@
 [submodule "third_party/llvm-project"]
 	path = third_party/llvm-project
 	url = https://mirrors.tuna.tsinghua.edu.cn/git/llvm-project.git
+[submodule "third_party/pybind11"]
+    path = third_party/pybind11
+    url = https://github.com/pybind/pybind11.git
+# TODO: will remove 
 [submodule "third_party/protobuf"]
 	path = third_party/protobuf
 	url = https://github.com/protocolbuffers/protobuf.git
+# TODO: will remove 
 [submodule "third_party/abseil-cpp"]
 	path = third_party/abseil-cpp
 	url = https://github.com/abseil/abseil-cpp.git
+# TODO: will remove 
+[submodule "third_party/onnx"]
+	path = third_party/onnx
+	url = https://github.com/onnx/onnx.git
+# TODO: will remove 
+[submodule "third_party/googletest"]
+	path = third_party/googletest
+	url = https://github.com/google/googletest.git
+
 
 # [submodule "third_party/stablehlo"]
 # 	path = third_party/stablehlo
 # 	url = https://github.com/openxla/stablehlo.git
-[submodule "third_party/pybind11"]
-    path = third_party/pybind11
-    url = https://github.com/pybind/pybind11.git
 
 # [submodule "third_party/onnx-mlir"]
 #     path = third_party/onnx-mlir

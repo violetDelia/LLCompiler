@@ -8,13 +8,15 @@ unset(BUILD_LLCOMPILER_DOCS CACHE)
 unset(BUILD_LLCOMPILER_LOG CACHE)
 unset(CMAKE_EXPORT_COMPILE_COMMANDS CACHE)
 unset(LLCOMPILER_BUILD_WARNINGS CACHE)
-unset(LLCOMPILER_BUILD_WITH_ONNX_ML CACHE)
+
+# TODO: discard for remove onnx
+# unset(LLCOMPILER_BUILD_WITH_ONNX_ML CACHE)
 
 # #---------- options ----------##
 option(BUILD_SHARED_LIBS "build shared libs" ON)
-option(BUILD_LLCOMPILER_TEST "build test" ON)
-option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" ON)
-option(BUILD_LLCOMPILER_DOCS "build examples" ON)
+option(BUILD_LLCOMPILER_TEST "build test" OFF)
+option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" OFF)
+option(BUILD_LLCOMPILER_DOCS "build examples" OFF)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
@@ -23,7 +25,8 @@ option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)
-set(LLCOMPILER_VERSION 1.0.0)
+set(LLCOMPILER_VERSION 0.0.1)
+
 # #---------- cmake config ----------##
 file(GLOB_RECURSE LLCOMPILER_CMAKE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.cmake)
 
@@ -72,12 +75,13 @@ set(LLCOMPILER_BUILD_ARCHIVE_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
 
 # #---------- define install absolute path ----------##
 set(LLCOMPILER_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
-set(LLCOMPILER_INSTALL_INCLUDE_DIR "${LLCOMPILER_INSTALL_DIR}/include/llcompiler")
+set(LLCOMPILER_INSTALL_INCLUDE_DIR "${LLCOMPILER_INSTALL_DIR}/include")
 set(LLCOMPILER_INSTALL_CMAKE_DIR "${LLCOMPILER_INSTALL_DIR}/lib/cmake/llcompiler")
 set(LLCOMPILER_INSTALL_LIBRARY_DIR "${LLCOMPILER_INSTALL_DIR}/lib")
 set(LLCOMPILER_INSTALL_RUNTIME_DIR "${LLCOMPILER_INSTALL_DIR}/bin")
 set(LLCOMPILER_INSTALL_ARCHIVE_DIR "${LLCOMPILER_INSTALL_DIR}/lib")
-#set(CMAKE_INSTALL_RPATH ${LLCOMPILER_INSTALL_RUNTIME_DIR})
+
+# set(CMAKE_INSTALL_RPATH ${LLCOMPILER_INSTALL_RUNTIME_DIR})
 # #---------- define include dirs ----------##
 set(LLCOMPILER_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
 set(SPDLOG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/spdlog/include")
