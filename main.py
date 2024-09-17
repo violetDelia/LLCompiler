@@ -1,11 +1,11 @@
-import LLcompiler.Compiler as LLC
+import llcompilerCompiler as LLC
 import torch
 import torchvision
 import torch.nn as nn
 import torch.nn.functional as F
 from torch._dynamo.backends.common import aot_autograd
 import torch.fx
-from LLcompiler.core.utility import run_time
+from llcompiler.core.utility import run_time
 import onnx
 import torchgen
 import torch._dynamo

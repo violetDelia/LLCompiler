@@ -28,7 +28,6 @@
 #ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 #define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 namespace llc::compiler {
-extern "C" void test();
 
 void init_global(const logger::LoggerOption& logger_option);
 void init_frontend(const front::FrontEndOption& front_option,

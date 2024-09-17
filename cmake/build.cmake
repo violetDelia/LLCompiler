@@ -9,7 +9,10 @@ function(llcompiler_add_executable name src)
     add_executable(${name} ${src})
 
     if(ARG_ADDITIONAL_INCLUDE_DIRS)
-        target_include_directories(${name} PRIVATE $<BUILD_INTERFACE:${ARG_ADDITIONAL_INCLUDE_DIRS}>)
+        target_include_directories(${name}
+            PRIVATE
+            $<BUILD_INTERFACE:${ARG_ADDITIONAL_INCLUDE_DIRS}>
+            $<INSTALL_INTERFACE:${LLCOMPILER_INSTALL_INCLUDE_DIR}>)
     endif()
 
     if(ARG_DEPENDS)
@@ -25,11 +28,7 @@ function(llcompiler_add_executable name src)
     endif()
 
     if(NOT DISABLE_INSTALL)
-        install(TARGETS ${name}
-            EXPORT ${name}Targets
-            RUNTIME DESTINATION ${LLCOMPILER_INSTALL_RUNTIME_DIR}
-            LIBRARY DESTINATION ${LLCOMPILER_INSTALL_LIB_DIR}
-            ARCHIVE DESTINATION ${LLCOMPILER_INSTALL_LIB_DIR})
+        llcompiler_install_target(${name})
     endif()
 
     message("add executable: ${name}.")
@@ -92,41 +91,50 @@ function(llcompiler_add_library name)
 endfunction()
 
 function(llcompiler_install_target name)
+    set_target_properties(${name}
+        PROPERTIES
+        ARCHIVE_OUTPUT_DIRECTORY ${LLCOMPILER_BUILD_ARCHIVE_DIR}
+        LIBRARY_OUTPUT_DIRECTORY ${LLCOMPILER_BUILD_LIBRARY_DIR}
+        RUNTIME_OUTPUT_DIRECTORY ${LLCOMPILER_BUILD_RUNTIME_DIR}
+        INSTALL_RPATH ${LLCOMPILER_INSTALL_LIBRARY_DIR}
+        )
+
     install(TARGETS ${name}
         EXPORT ${name}Targets
         RUNTIME DESTINATION ${LLCOMPILER_INSTALL_RUNTIME_DIR}
-        LIBRARY DESTINATION ${LLCOMPILER_INSTALL_LIB_DIR}
-        ARCHIVE DESTINATION ${LLCOMPILER_INSTALL_LIB_DIR})
+        LIBRARY DESTINATION ${LLCOMPILER_INSTALL_LIBRARY_DIR}
+        ARCHIVE DESTINATION ${LLCOMPILER_INSTALL_ARCHIVE_DIR}
+        PUBLIC_HEADER DESTINATION ${LLCOMPILER_INSTALL_DIR}/include)
     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_INSTALLED_TARGETS ${name})
 endfunction()
 
-function(llcompiler_install_mlir_target name)
-    cmake_parse_arguments(ARG
-        "DIALECT, TRANSFORM, CONVERSION,PIPELINE"
-        ""
-        ""
-        ${ARGN}
-    )
-    set_target_properties(${name} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-    set_property(GLOBAL APPEND PROPERTY LLCOMPILER_ALL_TARGETS ${name})
-    set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TARGETS ${name})
+# function(llcompiler_install_mlir_target name)
+#     cmake_parse_arguments(ARG
+#         "DIALECT, TRANSFORM, CONVERSION,PIPELINE"
+#         ""
+#         ""
+#         ${ARGN}
+#     )
+#     set_target_properties(${name} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
+#     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_ALL_TARGETS ${name})
+#     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TARGETS ${name})
 
-    if(ARG_DIALECT)
-        set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_DIALECT ${name})
-    endif()
+#     if(ARG_DIALECT)
+#         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_DIALECT ${name})
+#     endif()
 
-    if(ARG_TRANSFORM)
-        set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TRANSFORM ${name})
-    endif()
+#     if(ARG_TRANSFORM)
+#         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TRANSFORM ${name})
+#     endif()
 
-    if(ARG_CONVERSION)
-        set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_CONVERSION ${name})
-    endif()
+#     if(ARG_CONVERSION)
+#         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_CONVERSION ${name})
+#     endif()
 
-    if(ARG_PIPELINE)
-        set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_PIPELINE ${name})
-    endif()
+#     if(ARG_PIPELINE)
+#         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_PIPELINE ${name})
+#     endif()
 
-    message("add MLIR lib: ${name}.")
-    llcompiler_install_target(${name})
-endfunction()
+#     message("add MLIR lib: ${name}.")
+#     llcompiler_install_target(${name})
+# endfunction()

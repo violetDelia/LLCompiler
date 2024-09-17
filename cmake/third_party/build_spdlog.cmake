@@ -10,6 +10,6 @@ function(build_spdlog lib_path)
     endif()
 
     set(SPDLOG_BUILD_TESTS OFF)
-    set(SPDLOG_INSTALL OFF)
+    set(SPDLOG_INSTALL ON)
     add_subdirectory(${lib_path})
 endfunction(build_spdlog)

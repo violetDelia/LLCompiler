@@ -18,12 +18,12 @@ option(BUILD_LLCOMPILER_DOCS "build examples" ON)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
-option(LLCOMPILER_BUILD_WITH_ONNX_ML "if disable,will throw error when convert onnx model" OFF)
+
+# option(LLCOMPILER_BUILD_WITH_ONNX_ML "if disable,will throw error when convert onnx model" OFF)
 
 # #---------- cmake setting ----------##
 project(LLCompiler LANGUAGES C CXX)
-set(LLCOMPILER_VERSION 1.0)
-
+set(LLCOMPILER_VERSION 1.0.0)
 # #---------- cmake config ----------##
 file(GLOB_RECURSE LLCOMPILER_CMAKE_FILES ${CMAKE_CURRENT_SOURCE_DIR}/cmake/*.cmake)
 
@@ -50,11 +50,13 @@ if(LLCOMPILER_BUILD_WARNINGS)
         add_compile_options($<$<COMPILE_LANGUAGE:CXX>:/Wall>)
     else()
         add_compile_options($<$<COMPILE_LANGUAGE:CXX>:-w>)
+        add_compile_options($<$<COMPILE_LANGUAGE:C>:-w>)
     endif()
 endif()
 
 add_compile_options(-fPIC)
-#add_compile_options(-fno-rtti)
+
+# add_compile_options(-fno-rtti)
 
 # #---------- define absolute path ----------##
 set(LLCOMPILER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
@@ -64,18 +66,23 @@ set(LLCOMPILER_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
 set(LLCOMPILER_TOOLS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/tools")
 set(LLCOMPILER_THIRDPARTY_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party")
 set(LLCOMPILER_DOC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs")
+set(LLCOMPILER_BUILD_RUNTIME_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
+set(LLCOMPILER_BUILD_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
+set(LLCOMPILER_BUILD_ARCHIVE_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
 
 # #---------- define install absolute path ----------##
-set(LLCOMPILER_INSTALL_DIR "${CMAKE_CURRENT_SOURCE_DIR}/install")
-set(LLCOMPILER_INSTALL_INCLUDE_DIR "${LLCOMPILER_INSTALL_DIR}/include")
-set(LLCOMPILER_INSTALL_LIB_DIR "${LLCOMPILER_INSTALL_DIR}/lib")
+set(LLCOMPILER_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
+set(LLCOMPILER_INSTALL_INCLUDE_DIR "${LLCOMPILER_INSTALL_DIR}/include/llcompiler")
+set(LLCOMPILER_INSTALL_CMAKE_DIR "${LLCOMPILER_INSTALL_DIR}/lib/cmake/llcompiler")
+set(LLCOMPILER_INSTALL_LIBRARY_DIR "${LLCOMPILER_INSTALL_DIR}/lib")
 set(LLCOMPILER_INSTALL_RUNTIME_DIR "${LLCOMPILER_INSTALL_DIR}/bin")
-set(LLCOMPILER_INSTALL_CMAKE_DIR "${LLCOMPILER_INSTALL_DIR}/cmake")
-
+set(LLCOMPILER_INSTALL_ARCHIVE_DIR "${LLCOMPILER_INSTALL_DIR}/lib")
+#set(CMAKE_INSTALL_RPATH ${LLCOMPILER_INSTALL_RUNTIME_DIR})
 # #---------- define include dirs ----------##
 set(LLCOMPILER_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
 set(SPDLOG_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/spdlog/include")
 set(PYBIND11_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/pybind11/include")
+
 # set(ONNX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/onnx")
 # set(ONNX_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/onnx")
 # set(PROTOBUF_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_deps/protobuf-src/src")
@@ -89,9 +96,6 @@ set(MLIR_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-proj
 add_subdirectory(${LLCOMPILER_THIRDPARTY_DIR})
 
 # #---------- sub library ----------##
-# error for macro 'interface' in llvm-mingw-20240518-msvcrt-x86_64/include/rpc.h
-add_definitions(-D__OBJC__)
-
 if(BUILD_LLCOMPILER_LOG)
     add_definitions(-DLLCOMPILER_HAS_LOG)
 endif()
@@ -107,7 +111,6 @@ include_directories(${SPDLOG_INCLUDE_DIR})
 add_subdirectory("${LLCOMPILER_INCLUDE_DIR}/llcompiler")
 add_subdirectory(${LLCOMPILER_SOURCE_DIR})
 add_subdirectory(${LLCOMPILER_TOOLS_DIR})
-add_subdirectory(LLcompiler/pybind)
 
 # #---------- message ----------##
 message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})
@@ -122,6 +125,12 @@ include(CMakePackageConfigHelpers)
 # # 安装头文件
 install(DIRECTORY "${LLCOMPILER_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}")
 install(DIRECTORY "${LLCOMPILER_GENERATE_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}")
+
+# 生成setup.cfg文件
+configure_package_config_file("${CMAKE_CURRENT_SOURCE_DIR}/setup.cfg.in"
+    "${CMAKE_CURRENT_SOURCE_DIR}/setup.cfg"
+    INSTALL_DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
 # 生成Config.cmake文件并安装
 configure_package_config_file("${LLCOMPILER_CMAKE_DIR}/LLCompilerConfig.cmake.in"

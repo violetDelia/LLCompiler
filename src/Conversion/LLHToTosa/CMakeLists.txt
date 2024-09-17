@@ -1,14 +1,12 @@
-add_mlir_conversion_library(MLIRLLHToTosa
+llcompiler_add_library(MLIRLLHToTosa
+  SRC_FILES
   LLHToTosa.cpp
-
-  ADDITIONAL_HEADER_DIRS
-  ${LLCOMPILER_INCLUDE_DIR}/llcompiler/Conversion/LLHToTosa
 
   DEPENDS
   LLCConversionPassIncGen
   MLIRLLHToTosaIncGen
 
-  LINK_LIBS PUBLIC
+  LINKS PUBLIC
   LLCMLIRUtility
   MLIRIR
   MLIRTosaDialect
@@ -18,4 +16,24 @@ add_mlir_conversion_library(MLIRLLHToTosa
   MLIRTransformUtils
 )
 
-llcompiler_install_mlir_target(MLIRLLHToTosa CONVERSION)
+# add_mlir_conversion_library(MLIRLLHToTosa
+# LLHToTosa.cpp
+
+# ADDITIONAL_HEADER_DIRS
+# ${LLCOMPILER_INCLUDE_DIR}/llcompiler/Conversion/LLHToTosa
+
+# DEPENDS
+# LLCConversionPassIncGen
+# MLIRLLHToTosaIncGen
+
+# LINK_LIBS PUBLIC
+# LLCMLIRUtility
+# MLIRIR
+# MLIRTosaDialect
+# MLIRLLHDialect
+# MLIRFuncDialect
+# MLIRPass
+# MLIRTransformUtils
+# )
+
+# llcompiler_install_mlir_target(MLIRLLHToTosa CONVERSION)

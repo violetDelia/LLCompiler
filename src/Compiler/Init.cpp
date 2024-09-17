@@ -21,7 +21,6 @@
 
 namespace llc::compiler {
 
-  void test() { std::cout << "aaa" << std::endl; };
 
 void init_global(const logger::LoggerOption& logger_option) {
   logger::register_logger(GLOBAL, logger_option);

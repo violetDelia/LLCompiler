@@ -8,10 +8,9 @@ install
 __pycache__
 .cache
 .clangd
-out
-python_venv
-mlir-ir-dir
-mlir-ir-dir-only-compiler
 python_env
 LLcompiler_weight_temp
+.setuptools-cmake-build
+dist
+llcompiler.egg-info
 

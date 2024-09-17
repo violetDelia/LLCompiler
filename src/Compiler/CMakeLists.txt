@@ -1,6 +1,7 @@
 llcompiler_add_library(LLCompiler
     SRC_FILES
     Init.cpp
+    Entrance.cpp
     #Utility.cpp
 
     ADDITIONAL_INCLUDE_DIRS
@@ -12,6 +13,7 @@ llcompiler_add_library(LLCompiler
     LINKS PUBLIC
     MLIRIR
     LLCSupport
+    LLCFrontendCore
 
 )
 
