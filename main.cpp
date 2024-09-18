@@ -13,7 +13,6 @@
 //    limitations under the License.
 
 #include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Compiler/Utility.h"
 #include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Frontend/Core/Option.h"

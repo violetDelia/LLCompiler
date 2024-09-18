@@ -4,6 +4,7 @@ import sympy.core.mul
 from sympy.core.numbers import Integer
 import sympy.core.numbers
 import sympy.core.power
+from inspect import isfunction
 from sympy.core.symbol import Symbol
 import sympy.core
 import torch._ops as op
@@ -211,8 +212,10 @@ def torch_function_translate(
     block: Block,
 ) -> Operation:
     target: op.OpOverload = node.target
-    if type(target).__name__ == "builtin_function_or_method":
+    if type(target) == "builtin_function_or_method":
         build_fn = TORCH_FUNCTION_TRANSLATE[target.__name__]
+    elif isfunction(target):
+        build_fn = TORCH_FUNCTION_TRANSLATE[target]
     else:
         build_fn = TORCH_FUNCTION_TRANSLATE[target.name()]
     return build_fn(node, value_map, symbol_map, block)
@@ -369,7 +372,6 @@ def torch_build_func(
 
             trav_args(node.args)
         elif node.op == "call_function":
-            print(node)
             op = torch_function_translate(node, value_map, symbol_map, block)
             value_map[node.name] = op.results
             block.add_op(op)

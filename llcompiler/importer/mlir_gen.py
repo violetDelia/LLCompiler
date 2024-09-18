@@ -81,7 +81,7 @@ class MLIR_Builder:
             value_map[name] = op.results
             block.add_op(op)
         func = torch_build_func(model.graph, "main", block, value_map, symbol_map)
-        module = ModuleOp([func])
+        module = ModuleOp([func], attributes={"builtin.gloabal_layout": StringAttr("NCHW")})
         return module
 
     def _onnx_mlir_gen(self, model: onnx.GraphProto, **kwargs):

@@ -43,6 +43,27 @@ class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandT
 class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
         LLH_BinaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank, Elementwise], OperandType, ResultType, attributes>;
 
+
+def LLH_SymbolicIntOp : LLH_Op<"symbolic_int">{
+    let arguments = (ins 
+       LLH_String:$value);
+    let results = (outs LLH_Int64);
+}
+
+def LLH_SymbolicBindOp: LLH_Op<"symbolic_bind">{
+    let arguments = (ins 
+       LLH_Symbolic_Type:$operand ,
+       Variadic<LLH_Int64>:$bind_symbols,
+       AffineMapAttr:$expressions);
+}
+
+def LLH_AotOp : LLH_Op<"aot", [Pure]>{
+    let arguments = (ins 
+       LLH_String:$name,
+       Variadic<LLH_Computable_Type>:$inputs);
+    let results = (outs Variadic<LLH_Computable_Type>:$outputs);
+}
+
 def LLH_ConstantOp : LLH_Op<"constant", [Pure]>{
     let arguments = (ins 
        DenseElementsAttr:$value);
@@ -65,13 +86,59 @@ def LLH_WeightOp : LLH_Op<"matmal">{
     let arguments = (ins 
         LLH_String:$weight_file);
     let results = (outs 
-        LLH_Tensor:$result);
+        LLH_Tensor);
 }
+
+def LLH_DimOp : LLH_Op<"dim">{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        LLH_Int64:$dim);
+    let results = (outs 
+        LLH_Int64);
+}
+
+def LLH_ReshapeOp : LLH_Op<"reshape">{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        Variadic<LLH_Int64>:$shapes);
+    let results = (outs 
+        LLH_Tensor);
+}
+
+
+def LLH_ShapeOfOp : LLH_Op<"shape_of">{
+    let arguments = (ins 
+        LLH_Tensor:$input);
+    let results = (outs 
+        Variadic<LLH_Int64>);
+}
+
+def LLH_CatOp : LLH_Op<"cat">{
+    let arguments = (ins 
+        Variadic<LLH_Tensor>:$inputs,
+        I64Attr:$dim);
+    let results = (outs 
+        LLH_Tensor);
+}
+
+def LLH_ExpandOp : LLH_Op<"expand">{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        Variadic<LLH_Int64>:$shapes);
+    let results = (outs 
+        LLH_Tensor);
+}
+
+def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
+def LLH_DropOp : LLH_UnaryOp<"drop", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
+def LLH_FlattenOp : LLH_UnaryOp<"flatten", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins LLH_Int64:$dim)>;
+def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor, LLH_Tensor>;
+
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
-
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [], LLH_Computable_Type>;
+def LLH_MulOp          : LLH_BinaryElementwiseOp<"mul", [], LLH_Computable_Type>;
 
 def LLH_ConvBiasOp : LLH_Op<"conv_bias",[InferShapedTypeOpInterface]>{
     let arguments = (ins 
@@ -99,13 +166,48 @@ def LLH_ConvOp : LLH_Op<"conv",[InferShapedTypeOpInterface]>{
 }
 
 def LLH_MatMulOp          : LLH_Op<"matmal",[SameOperandsAndResultRank]>{
-        let arguments = (ins
-            LLH_Tensor:$lhs,
-            LLH_Tensor:$rhs);
-        let results = (outs 
-            LLH_Tensor:$result);
+    let arguments = (ins
+        LLH_Tensor:$lhs,
+        LLH_Tensor:$rhs);
+    let results = (outs 
+        LLH_Tensor:$result);
 }
 
+def LLH_LayerNormOp     : LLH_Op<"layer_norm",[]>{
+    let arguments = (ins
+        LLH_Tensor:$input,
+        LLH_Tensor:$scale,
+        LLH_Tensor:$bias,
+        F64Attr:$epsilon,
+        I64Attr:$axis);
+    let results = (outs 
+        LLH_Tensor:$result);
+}
+
+def LLH_BatchNormOp     : LLH_Op<"batch_norm",[]>{
+    let arguments = (ins
+        LLH_Tensor:$input,
+        LLH_Tensor:$scale,
+        LLH_Tensor:$bias,
+        LLH_Tensor:$input_mean,
+        LLH_Tensor:$input_var,
+        F64Attr:$epsilon,
+        F64Attr:$momentum);
+    let results = (outs 
+        LLH_Tensor:$result);
+}
+
+def LLH_MaxPoolOp       : LLH_Op<"max_pool",[]>{
+    let arguments = (ins
+        LLH_Tensor:$input,
+        I1Attr:$ceil_mode,
+        DenseI64ArrayAttr:$dilation,
+        DenseI64ArrayAttr:$kernel_shape,
+        DenseI64ArrayAttr:$pad,
+        DenseI64ArrayAttr:$stride);
+    let results = (outs 
+        LLH_Tensor:$result);
+}
 
 // def LLH_CastOp          : LLH_UnaryOp<"cast", [Elementwise], LLH_Tensor, LLH_Tensor, (ins DefaultValuedAttr<SI64Attr, "1">:$saturate, SI64Attr:$to)>;
 

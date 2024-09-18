@@ -1,3 +1,4 @@
+import torch.nn.functional
 from ...core.utility import Dict_Registry
 from .fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
@@ -9,6 +10,7 @@ from .fx_translate import (
 )
 import torch._ops as op
 import torch.fx
+import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 
 from xdsl.dialects.builtin import (
@@ -86,7 +88,7 @@ def aten_sym_size_int_convert(
     return commond_build_op(DimOp.build, 2, node, value_map, block)
 
 
-@TORCH_FUNCTION_TRANSLATE("aten::relu")
+@TORCH_FUNCTION_TRANSLATE("aten::relu",F.relu)
 def aten_sym_size_int_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
@@ -127,7 +129,7 @@ def aten_view_convert(
     return ReshapeOp(operands=[input, dims], result_types=[result_type])
 
 
-@TORCH_FUNCTION_TRANSLATE("aten::max_pool2d_with_indices")
+@TORCH_FUNCTION_TRANSLATE(F.max_pool2d)
 def aten_view_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
@@ -139,9 +141,7 @@ def aten_view_convert(
     stride = node.args[2] if (arg_len > 2) else [1, 1]
     padding = node.args[3] if (arg_len > 3) else [0, 0]
     dilation = node.args[4] if (arg_len > 4) else [1, 1]
-    ceil_mode = node.args[5] if (arg_len > 5) else 0
-    node = get_result_type(node)
-    print(node)
+    ceil_mode = node.args[5] if (arg_len > 5) else 0    
     result_type = torch_fake_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     attrs = {

@@ -14,6 +14,8 @@
 #ifndef LLH_CONSTRAINTS
 #define LLH_CONSTRAINTS
 include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
+include "mlir/IR/CommonAttrConstraints.td"
+
 
 def LLH_AnyType   : Type<CPred<"true">, "any type">;
 
@@ -67,8 +69,11 @@ def LLH_FloatTensor   : AnyTypeOf<[LLH_F16Tensor, LLH_F32Tensor, LLH_F64Tensor, 
 
 def LLH_Tensor        : AnyTypeOf<[LLH_FloatTensor,LLH_IntTensor]>;
 
-def LLH_Rank1BoolTensor : TensorOf<[LLH_Bool], [CPred<"::llvm::cast<::mlir::TensorType>($_self).getRank() == 1">]>;
+def LLH_Rank1BoolTensor   : TensorOf<[LLH_Bool], [CPred<"::llvm::cast<::mlir::TensorType>($_self).getRank() == 1">]>;
 
+def LLH_Computable_Type    : AnyTypeOf<[LLH_Tensor, LLH_Float, LLH_Int]>;
+
+def LLH_Symbolic_Type     : AnyTypeOf<[LLH_Tensor, LLH_Int64]>;
 
 def LLH_String : StringBasedAttr<CPred<"::llvm::isa<::mlir::StringAttr>($_self)">,
                               "string attribute">;

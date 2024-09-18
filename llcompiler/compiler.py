@@ -23,19 +23,20 @@ class LLCompiler(llcompiler.core.Importer):
         out = execution.run(inputs)
     """
 
-    def __init__(self, mode: str = "training", **kwargs) -> None:
+    def __init__(self, mode: str = "training", vebose_first_ir=False, **kwargs) -> None:
         """
         args:
             mode: 推理/训练
-        """
-        assert mode in ["inference", "training"]
-        kwargs["mode"] = mode
+        """        
         super().__init__(**kwargs)
-        self.kwargs = kwargs
+        self.vebose_first_ir = vebose_first_ir
+        self.mode = mode
 
     def compiler(self, model: Any, inputs: List[torch.Tensor]):
-        mlir_module = self.importer(model)
-        do_compile(mlir_module.__str__(), 1, 1)
+        self._mlir_module = self.importer(model)
+        if self.vebose_first_ir:
+            print(self._mlir_module)
+        do_compile(self._mlir_module.__str__(), 1, 1)
         return model
 
     def _compiler_torch_module():
@@ -48,11 +49,11 @@ class LLCompiler(llcompiler.core.Importer):
         raise NotImplementedError
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
-        if self.kwargs["mode"] in ["training"]:
+        if self.mode in ["training"]:
             return aot_module_simplified(
                 model,
                 inputs,
                 fw_compiler=self.compiler,
             )
-        if self.kwargs["mode"] in ["inference"]:
+        if self.mode in ["inference"]:
             return self.compiler(model, inputs)
