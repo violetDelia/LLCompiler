@@ -14,7 +14,7 @@ unset(LLCOMPILER_BUILD_WARNINGS CACHE)
 
 # #---------- options ----------##
 option(BUILD_SHARED_LIBS "build shared libs" ON)
-option(BUILD_LLCOMPILER_TEST "build test" OFF)
+option(BUILD_LLCOMPILER_TEST "build test" ON)
 option(STATIC_WINDOWS_RUNTIME "Use static (MT/MTd) Windows runtime" OFF)
 option(BUILD_LLCOMPILER_DOCS "build examples" OFF)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
@@ -72,6 +72,7 @@ set(LLCOMPILER_DOC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/docs")
 set(LLCOMPILER_BUILD_RUNTIME_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
 set(LLCOMPILER_BUILD_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(LLCOMPILER_BUILD_ARCHIVE_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
+set(LLCOMPILER_BUILD_TOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/tools")
 
 # #---------- define install absolute path ----------##
 set(LLCOMPILER_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
@@ -116,12 +117,19 @@ add_subdirectory("${LLCOMPILER_INCLUDE_DIR}/llcompiler")
 add_subdirectory(${LLCOMPILER_SOURCE_DIR})
 add_subdirectory(${LLCOMPILER_TOOLS_DIR})
 
-# #---------- message ----------##
-message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})
-message(STATUS STATIC_WINDOWS_RUNTIME: ${STATIC_WINDOWS_RUNTIME})
-message(STATUS CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS})
-message(STATUS BUILD_LLCOMPILER_LOG: ${BUILD_LLCOMPILER_LOG})
-message(STATUS CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX})
+if(BUILD_LLCOMPILER_TEST)
+    set(LLVM_CMAKE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/lib/cmake/llvm")
+    set(MLIR_CMAKE_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib/cmake/mlir")
+    list(APPEND CMAKE_MODULE_PATH "${MLIR_CMAKE_DIR}")
+    list(APPEND CMAKE_MODULE_PATH "${LLVM_CMAKE_DIR}")
+    include(LLVMConfig)
+    include(MLIRConfig)
+    include(TableGen)
+    include(AddLLVM)
+    include(AddMLIR)
+    include(HandleLLVMOptions)
+    add_subdirectory(test)
+endif()
 
 # #---------- install ----------##
 include(CMakePackageConfigHelpers)
@@ -152,3 +160,10 @@ write_basic_package_version_file(
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LLCompilerConfig.cmake"
     "${CMAKE_CURRENT_BINARY_DIR}/LLCompilerConfigVersion.cmake"
     DESTINATION ${LLCOMPILER_INSTALL_CMAKE_DIR})
+
+# #---------- message ----------##
+message(STATUS BUILD_SHARED_LIBS: ${BUILD_SHARED_LIBS})
+message(STATUS STATIC_WINDOWS_RUNTIME: ${STATIC_WINDOWS_RUNTIME})
+message(STATUS CMAKE_EXPORT_COMPILE_COMMANDS: ${CMAKE_EXPORT_COMPILE_COMMANDS})
+message(STATUS BUILD_LLCOMPILER_LOG: ${BUILD_LLCOMPILER_LOG})
+message(STATUS CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX})

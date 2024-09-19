@@ -1,44 +1,36 @@
-//    Copyright 2024 时光丶人爱
+#  Copyright 2024 时光丶人爱
 
-//    Licensed under the Apache License, Version 2.0 (the "License");
-//    you may not use this file except in compliance with the License.
-//    You may obtain a copy of the License at
+#  Licensed under the Apache License, Version 2.0 (the "License");
+#  you may not use this file except in compliance with the License.
+#  You may obtain a copy of the License at
 
-//        http://www.apache.org/licenses/LICENSE-2.0
+#      http://www.apache.org/licenses/LICENSE-2.0
 
-//    Unless required by applicable law or agreed to in writing, software
-//    distributed under the License is distributed on an "AS IS" BASIS,
-//    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-//    See the License for the specific language governing permissions and
-//    limitations under the License.
+#  Unless required by applicable law or agreed to in writing, software
+#  distributed under the License is distributed on an "AS IS" BASIS,
+#  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#  See the License for the specific language governing permissions and
+#  limitations under the License.
 
 @LIT_SITE_CFG_IN_HEADER@
 
 import sys
 
-config.llvm_lib_dir = "@LLVM_LIBRARY_DIR@"
-config.llvm_tools_dir = "@LLVM_TOOLS_DIR@"
-config.enable_bindings_python = True
-
+config.llvm_src_root = "@LLVM_SOURCE_DIR@"
+config.llvm_obj_root = "@LLVM_BINARY_DIR@"
+config.llvm_tools_dir = "@LLVM_BINARY_DIR@/bin"
+config.llvm_lib_dir = "@LLVM_BINARY_DIR@/lib"
+config.llvm_shlib_dir = "@SHLIBDIR@"
+config.llvm_shlib_ext = "@SHLIBEXT@"
+config.llvm_exe_ext = "@EXEEXT@"
+config.lit_tools_dir = "@LLVM_LIT_TOOLS_DIR@"
+config.python_executable = "@Python3_EXECUTABLE@"
 config.mlir_lib_dir = "@MLIR_LIB_DIR@" or "@LLVM_LIBRARY_DIR@"
 config.mlir_binary_dir = "@MLIR_BINARY_DIR@" or "@LLVM_BINARY_DIR@"
-config.mlir_obj_dir = "@MLIR_BINARY_DIR@"
-config.mlir_llc_tools_dir = "@LLCOMPILER_TOOLS_DIR@"
-config.llvm_shlib_ext = "@SHLIBEXT@"
-
-# Support substitution of the tools_dir with user parameters. This is
-# used when we can't determine the tool dir at configuration time.
-try:
-    config.llvm_tools_dir = config.llvm_tools_dir % lit_config.params
-    config.llvm_shlib_dir = config.llvm_shlib_dir % lit_config.params
-except KeyError:
-    e = sys.exc_info()[1]
-    key, = e.args
-    lit_config.fatal("unable to find %r parameter, use '--param=%s=VALUE'" % (key,key))
-
+config.mlir_llcompiler_tools_dir = "@LLCOMPILER_BUILD_RUNTIME_DIR@"
 
 import lit.llvm
 lit.llvm.initialize(lit_config, config)
 
 # Let the main config do the real work.
-lit_config.load_config(config, "@LLCOMPILER_TEST_DIR@/lit.cfg.py")
+lit_config.load_config(config, "@CMAKE_CURRENT_SOURCE_DIR@/lit.cfg.py")

@@ -1,3 +1,4 @@
+# RUN: %PYTHON %s | FileCheck %s
 import llcompiler.compiler as LLC
 import llcompiler.core
 import torch
