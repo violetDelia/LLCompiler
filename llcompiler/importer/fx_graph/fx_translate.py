@@ -212,7 +212,7 @@ def torch_function_translate(
     block: Block,
 ) -> Operation:
     target: op.OpOverload = node.target
-    if type(target) == "builtin_function_or_method":
+    if type(target).__name__ == "builtin_function_or_method":
         build_fn = TORCH_FUNCTION_TRANSLATE[target.__name__]
     elif isfunction(target):
         build_fn = TORCH_FUNCTION_TRANSLATE[target]

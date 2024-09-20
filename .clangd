@@ -11,15 +11,13 @@ CompileFlags:
   -I/home/lfr/LLCompiler/.setuptools-cmake-build/third_party/llvm-project/llvm/tools/mlir/include/,
   -I/home/lfr/LLCompiler/third_party/llvm-project/mlir/include/,
   -I/home/lfr/LLCompiler/.setuptools-cmake-build/_deps/protobuf-src/src/,
+  -I/home/lfr/LLCompiler/.setuptools-cmake-build/include/,
   ]
 Diagnostics:
   UnusedIncludes: Strict
-  MissingIncludes: Strict
 
 InlayHints:
-  BlockEnd: Yes
   Designators: Yes
   Enabled: Yes
   ParameterNames: Yes
   DeducedTypes: Yes
-  TypeNameLimit: 24

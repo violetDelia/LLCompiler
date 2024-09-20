@@ -9,6 +9,7 @@ from llcompiler.core.utility import run_time
 import onnx
 import torchgen
 import torch._dynamo
+
 torch._dynamo.config.suppress_errors = True
 torch.nn.Transformer
 from transformers import BertTokenizer, BertModel, BertForMaskedLM
@@ -37,11 +38,6 @@ class Net(nn.Module):
 
 @run_time
 def compiler_model(model, inputs):
-    if isinstance(model, onnx.ModelProto):
-        compiler = LLC.LLCompiler(mode="inference")
-        compiler.compiler(model, inputs)
-        return
-
     compiler = LLC.LLCompiler(mode="inference")
     model = torch.compile(
         model=model,
@@ -66,8 +62,8 @@ def torch_compiler(model, inputs):
 
 if __name__ == "__main__":
 
-    model = torchvision.models.resnet18()
-    #input = (torch.rand((10, 32, 512)), torch.rand((20, 32, 512)))
+    model = Net()
+    # input = (torch.rand((10, 32, 512)), torch.rand((20, 32, 512)))
     # model = Net()
     input = torch.randn((2, 3, 224, 224))
 

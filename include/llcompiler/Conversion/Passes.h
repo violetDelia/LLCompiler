@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef INCLUDE_LLCOMPILER_CONVERSION_PASSRS_H_
-#define INCLUDE_LLCOMPILER_CONVERSION_PASSRS_H_
+#ifndef INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
+#define INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "mlir/Pass/PassRegistry.h"
 namespace mlir {
@@ -23,4 +23,4 @@ namespace mlir {
 
 }  // namespace mlir
 
-#endif  // INCLUDE_LLCOMPILER_CONVERSION_PASSRS_H_
+#endif  // INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_

@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_TRANSFORMS_PASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_TRANSFORMS_PASSES_H_
 
 #include <memory>
 
@@ -29,4 +29,4 @@ std::unique_ptr<::mlir::Pass> createTransformLayoutToNHWCPass();
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h.inc"
 }  // namespace mlir::tosa_ex
 
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_TOSAEX_TRANSFORMS_PASSES_H_
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_TRANSFORMS_PASSES_H_

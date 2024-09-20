@@ -59,7 +59,7 @@ mlir::RankedTensorType cloneTensorWithEncoding(
   auto type = tensor.getElementType();
   auto shape = tensor.getShape();
   auto encode = mlir::ex::EncodingAttr::get(tensor.getContext(), layout);
-  return mlir::RankedTensorType::get(shape, type,encode);
+  return mlir::RankedTensorType::get(shape, type, encode);
 }
 
 std::vector<int64_t> getUnsqueezeShape(const mlir::ShapedType& shapeType,
@@ -72,7 +72,7 @@ std::vector<int64_t> getUnsqueezeShape(const mlir::ShapedType& shapeType,
 std::vector<int64_t> getSqueezeShape(const mlir::ShapedType& shapeType,
                                      int dim) {
   auto shape = shapeType.getShape().vec();
-  CHECK(UTILITY, shape.size() > 0);
+  CHECK_GT(UTILITY, shape.size(), 0);
   shape.erase(shape.begin() + dim);
   return shape;
 }

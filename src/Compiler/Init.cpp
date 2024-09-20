@@ -16,11 +16,19 @@
 #include <iostream>
 #include <string>
 
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Support/Logger.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 
 namespace llc::compiler {
 
+void load_dialect(mlir::MLIRContext* context) {
+  context->loadDialect<mlir::llh::LLHDialect>();
+  context->loadDialect<mlir::func::FuncDialect>();
+}
+
+void add_extension_and_interface(mlir::DialectRegistry* registry) {}
 
 void init_global(const logger::LoggerOption& logger_option) {
   logger::register_logger(GLOBAL, logger_option);

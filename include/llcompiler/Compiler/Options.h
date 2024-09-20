@@ -11,21 +11,14 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-//
-#include "llcompiler/Dialect/IRExtension/IR/Types.h"
 
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#ifndef INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_
+#define INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_
+namespace llc::compiler {
 
-#define GET_TYPEDEF_CLASSES
-#include "llcompiler/Dialect/IRExtension/IR/Types.cpp.inc"
-namespace mlir::ex {
-//===----------------------------------------------------------------------===//
-// LLHDialect initialize method.
-//===----------------------------------------------------------------------===//
-void IRExtensionDialect::registerTypes() {
-  addTypes<
-#define GET_TYPEDEF_LIST
-#include "llcompiler/Dialect/IRExtension/IR/Types.cpp.inc"
-      >();
-}
-}  // namespace mlir::ex
+extern "C" void do_compile(const char* module, int ex, int options);
+
+void real_do_compiler(const char* module, int ex, int options);
+
+}  // namespace llc::compiler
+#endif  // INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_

@@ -15,9 +15,10 @@ for root in check_dirs:
 
 def cpplint():
     cpplint_filters = [
-        # "-build/namespaces",
+        "-runtime/references",
+        "-build/namespaces",
         "-build/include",
-        "-build/c++11",
+        "-build/c++11"
         # "-whitespace/comments",
         # "-whitespace/indent",
     ]

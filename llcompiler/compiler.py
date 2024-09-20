@@ -23,14 +23,25 @@ class LLCompiler(llcompiler.core.Importer):
         out = execution.run(inputs)
     """
 
-    def __init__(self, mode: str = "training", vebose_first_ir=False, **kwargs) -> None:
+    def __init__(
+        self,
+        mode: str = "inference",
+        vebose_first_ir=False,
+        log_path: str = None,
+        log_level: str = "debug",
+        **kwargs
+    ) -> None:
         """
         args:
             mode: 推理/训练
-        """        
+        """
         super().__init__(**kwargs)
         self.vebose_first_ir = vebose_first_ir
+        assert mode in ["training", "inference"]
         self.mode = mode
+        self.log_path = log_path
+        assert log_level in ["debug", "info", "warn", "error", "fatal"]
+        self.log_level = log_level
 
     def compiler(self, model: Any, inputs: List[torch.Tensor]):
         self._mlir_module = self.importer(model)

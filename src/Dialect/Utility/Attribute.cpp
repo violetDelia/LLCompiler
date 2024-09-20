@@ -30,7 +30,7 @@ const char* LayoutAttr = "layout";
 const char* GroupAttr = "group";
 const char* KernelShapeAttr = "kernel_shape";
 const char* IsWeightAttr = "is_weight";
- const char* PadAttr = "pad";
+const char* PadAttr = "pad";
 }  // namespace llc
 
 namespace llc {
@@ -55,7 +55,7 @@ const char* layout_to_str(LAYOUT layout) {
       return "NCHW";
     case llc::LAYOUT::NHWC:
       return "NHWC";
-  };
+  }
   UNIMPLEMENTED(UTILITY);
 }
 

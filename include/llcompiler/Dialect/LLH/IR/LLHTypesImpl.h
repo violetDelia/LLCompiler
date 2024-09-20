@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPESIMPL_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPESIMPL_H_
 
 #include <atomic>
 #include <cstdint>
@@ -84,4 +84,4 @@ struct FieldParser<llh::DynamicDim> {
 };
 }  // namespace mlir
 
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPES_H_
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHTYPESIMPL_H_

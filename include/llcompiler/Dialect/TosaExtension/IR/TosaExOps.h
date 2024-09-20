@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
-#define INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXOPS_H_
+#define INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXOPS_H_
 
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h"
 #include "mlir/Bytecode/BytecodeOpInterface.h"
@@ -26,4 +26,4 @@
 
 #define GET_OP_CLASSES
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.h.inc"
-#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEX_IR_TOSAEXOPS_H_
+#endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXOPS_H_

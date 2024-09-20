@@ -11,9 +11,10 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include "llcompiler/Dialect/Utility/File.h"
+
 #include <filesystem>
 
-#include "llcompiler/Dialect/Utility/File.h"
 #include "llcompiler/Support/Logger.h"
 
 namespace llc::file {

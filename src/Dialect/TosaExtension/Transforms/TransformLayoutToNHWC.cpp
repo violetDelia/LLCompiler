@@ -122,7 +122,7 @@ mlir::tosa::TransposeOp buildTansposeFromTo(OpBuilder* builder, Value value,
 DenseI64ArrayAttr genNewPadFrom(DenseI64ArrayAttr pad, StringRef from) {
   auto context = pad.getContext();
   auto pad_value = pad.asArrayRef().vec();
-  SmallVector<long int> new_pad_value;
+  SmallVector<int64_t> new_pad_value;
   if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
     new_pad_value.push_back(pad_value[0]);
     new_pad_value.push_back(pad_value[2]);
@@ -132,7 +132,7 @@ DenseI64ArrayAttr genNewPadFrom(DenseI64ArrayAttr pad, StringRef from) {
     UNIMPLEMENTED(llc::MLIR);
   }
   return DenseI64ArrayAttr::get(context, new_pad_value);
-};
+}
 
 //===----------------------------------------------------------------------===//
 // transform patterns
@@ -170,9 +170,9 @@ struct ConvToNHWCWithOperands : public OpRewritePattern<SourceOp> {
     auto new_op = rewriter.create<SourceOp>(loc, ::mlir::TypeRange{new_out},
                                             new_operands);
     for (auto attr : attrs) {
-      if (attr.getName() == llc::LayoutAttr)
+      if (attr.getName() == llc::LayoutAttr) {
         continue;
-      else if (attr.getName() == llc::PadAttr) {
+      } else if (attr.getName() == llc::PadAttr) {
         auto pad = cast<DenseI64ArrayAttr>(attr.getValue());
         auto new_pad = genNewPadFrom(pad, layout);
         new_op->setAttr(llc::PadAttr, new_pad);
