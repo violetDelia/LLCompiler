@@ -14,11 +14,21 @@
 
 #ifndef INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_
 #define INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_
+#include <cstdint>
+#include <string>
+
+#include "llcompiler/Support/Logger.h"
+
 namespace llc::compiler {
+enum MODE : int64_t { Trainning, Inference };
+const char *mode_to_str(const MODE level);
+MODE str_to_mode(const char *);
 
-extern "C" void do_compile(const char* module, int ex, int options);
-
-void real_do_compiler(const char* module, int ex, int options);
+struct CompilerOptions {
+  MODE mode;
+  std::string log_root;
+  llc::logger::LOG_LEVEL log_level;
+};
 
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_

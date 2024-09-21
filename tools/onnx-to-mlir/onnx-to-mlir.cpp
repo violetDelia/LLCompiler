@@ -28,7 +28,7 @@ int main(int argc, char **argv) {
   llvm::cl::ParseCommandLineOptions(argc, argv, "onnx-to-mlir");
   auto logger_option = llc::option::get_logger_option();
   auto front_option = llc::option::get_front_end_option();
-  llc::compiler::init_global(logger_option);
+  llc::compiler::init_logger(logger_option);
   llc::compiler::init_frontend(front_option, logger_option);
   mlir::MLIRContext context;
   auto module = llc::compiler::gen_mlir_from(&context, front_option);

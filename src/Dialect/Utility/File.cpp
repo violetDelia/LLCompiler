@@ -16,6 +16,12 @@
 #include <filesystem>
 
 #include "llcompiler/Support/Logger.h"
+#include "llvm/Support/Error.h"
+#include "llvm/Support/MemoryBuffer.h"
+#include "llvm/Support/SourceMgr.h"
+#include "mlir/IR/AsmState.h"
+#include "mlir/IR/PatternMatch.h"
+#include "mlir/Parser/Parser.h"
 
 namespace llc::file {
 void mlir_to_file(mlir::OwningOpRef<mlir::ModuleOp>* module, const char* file) {
@@ -29,5 +35,45 @@ void mlir_to_file(mlir::OwningOpRef<mlir::ModuleOp>* module, const char* file) {
   (*module)->print(file_stream);
   INFO(GLOBAL) << "module convert to file: " << file;
 }
+
+void file_to_mlir_module(mlir::MLIRContext& context,
+                         mlir::OwningOpRef<mlir::ModuleOp>& module,
+                         const char* file) {
+  // Handle '.toy' input to the compiler.
+
+  if (!llvm::StringRef(file).ends_with(".mlir")) {
+    UNIMPLEMENTED(UTILITY);
+  }
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
+      llvm::MemoryBuffer::getFileOrSTDIN(file);
+  if (std::error_code ec = fileOrErr.getError()) {
+    FATAL(UTILITY) << "could not open input file: " << file;
+  }
+  llvm::SourceMgr sourceMgr;
+  sourceMgr.AddNewSourceBuffer(std::move(*fileOrErr), llvm::SMLoc());
+  module = mlir::parseSourceFile<mlir::ModuleOp>(sourceMgr, &context);
+  if (!module) {
+    FATAL(UTILITY) << "error can't load file " << file << "\n";
+  }
+}
+
+void str_to_mlir_module(mlir::MLIRContext& context,
+                        mlir::OwningOpRef<mlir::ModuleOp>& module,
+                        const char* str) {
+  llvm::ErrorOr<std::unique_ptr<llvm::MemoryBuffer>> fileOrErr =
+      llvm::MemoryBuffer::getMemBuffer(str, "xdsl_module");
+  if (std::error_code ec = fileOrErr.getError()) {
+    FATAL(UTILITY) << "load xdsl module fatal error!";
+    return;
+  }
+  llvm::SourceMgr sourceMgr;
+  sourceMgr.AddNewSourceBuffer(std::move(*fileOrErr), llvm::SMLoc());
+  module = mlir::parseSourceFile<mlir::ModuleOp>(sourceMgr, &context);
+  if (!module) {
+    FATAL(UTILITY) << "parse xdsl module fatal error!";
+    return;
+  }
+  return;
+};
 
 }  // namespace llc::file

@@ -63,6 +63,7 @@ def torch_compiler(model, inputs):
 if __name__ == "__main__":
 
     model = Net()
+    #model = torchvision.models.resnet18()
     # input = (torch.rand((10, 32, 512)), torch.rand((20, 32, 512)))
     # model = Net()
     input = torch.randn((2, 3, 224, 224))
@@ -72,4 +73,4 @@ if __name__ == "__main__":
     # )
 
     compiler_model(model, input)
-    torch_compiler(model, input)
+    #torch_compiler(model, input)

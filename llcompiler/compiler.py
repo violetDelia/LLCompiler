@@ -27,7 +27,7 @@ class LLCompiler(llcompiler.core.Importer):
         self,
         mode: str = "inference",
         vebose_first_ir=False,
-        log_path: str = None,
+        log_path: str = "",
         log_level: str = "debug",
         **kwargs
     ) -> None:
@@ -47,7 +47,7 @@ class LLCompiler(llcompiler.core.Importer):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
-        do_compile(self._mlir_module.__str__(), 1, 1)
+        do_compile(self._mlir_module.__str__(), self.log_path, self.log_level)
         return model
 
     def _compiler_torch_module():

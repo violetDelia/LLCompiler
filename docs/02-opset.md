@@ -11,29 +11,29 @@
 - quantify: 量化
 - aot: 是否支持aot
 
-| op name           | xdsl | verify  | shape infer | fold   | canonicalization | fusion type | decomposition | quantify | aot |     |     |
-| ----------------- | ---- | ------- | ----------- | ------ | ---------------- | ----------- | ------------- | -------- | --- | --- | --- |
-| AdaptiveAvgPoolOp | Yes  | default | [need]      | [need] | [need]           | [need]      | [need]        | [need]   |     |     |     |
-| AddOp             | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| AOTOp             | Yes  | default | None        | None   | None             | None        | None          | None     |     |     |     |
-| BatchNormOp       | Yes  | default | [need]      | [need] | [need]           | [need]      | [need]        | [need]   |     |     |     |
-| CatOp             | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| ConstantOp        | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| ConvBiasOp        | Yes  | default | [need]      | [need] | [need]           | [need]      | [need]        | [need]   |     |     |     |
-| ConvOp            | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| DimOp             | Yes  | default | None        | None   | None             | None        | None          | None     |     |     |     |
-| DivOp             | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| DropOp            | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| ExpandOp          | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| FlattenOp         | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| LayerNormOp       | Yes  | default | [need]      | [need] | [need]           | [need]      | [need]        | [need]   |     |     |     |
-| MatmulOp          | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| MaxPoolOp         | Yes  | default | [need]      | [need] | [need]           | [need]      | [need]        | [need]   |     |     |     |
-| MulOp             | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| ReluOp            | Yes  | default | [need]      | [need] | [need]           | [need]      | [need]        | [need]   |     |     |     |
-| ReshapeOp         | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| shapeOfOp         | Yes  | default | None        | None   | None             | None        | None          | None     |     |     |     |
-| SymbolicBindOp    | Yes  | default | None        | None   | None             | None        | None          | None     |     |     |     |
-| SymbolicIntOp     | Yes  | default | None        | None   | None             | None        | None          | None     |     |     |     |
-| TransposeOp       | Yes  | default | [need]      | [need] | [need]           | [need]      | None          | [need]   |     |     |     |
-| WeightOp          | Yes  | default | None        | None   | [need]           | None        | None          | None     |     |     |     |
+| op name           | xdsl | verify | shape infer | fold   | canonicalization | fusion type | decomposition | quantify | aot    |     |     |
+| ----------------- | ---- | ------ | ----------- | ------ | ---------------- | ----------- | ------------- | -------- | ------ | --- | --- |
+| AdaptiveAvgPoolOp | Yes  | [need] | [need]      | [need] | [need]           | [need]      | [need]        | [need]   | [need] |     |     |
+| AddOp             | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| AOTOp             | Yes  | [need] | None        | None   | None             | None        | None          | None     | [need] |     |     |
+| BatchNormOp       | Yes  | [need] | [need]      | [need] | [need]           | [need]      | [need]        | [need]   | [need] |     |     |
+| CatOp             | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| ConstantOp        | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| ConvBiasOp        | Yes  | [need] | [need]      | [need] | [need]           | [need]      | [need]        | [need]   | [need] |     |     |
+| ConvOp            | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| DimOp             | Yes  | [need] | None        | None   | None             | None        | None          | None     | [need] |     |     |
+| DivOp             | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| DropOp            | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| ExpandOp          | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| FlattenOp         | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| LayerNormOp       | Yes  | [need] | [need]      | [need] | [need]           | [need]      | [need]        | [need]   | [need] |     |     |
+| MatmulOp          | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| MaxPoolOp         | Yes  | [need] | [need]      | [need] | [need]           | [need]      | [need]        | [need]   | [need] |     |     |
+| MulOp             | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| ReluOp            | Yes  | [need] | [need]      | [need] | [need]           | [need]      | [need]        | [need]   | [need] |     |     |
+| ReshapeOp         | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| shapeOfOp         | Yes  | [need] | None        | None   | None             | None        | None          | None     | None   |     |     |
+| SymbolicBindOp    | Yes  | [need] | None        | None   | None             | None        | None          | None     | None   |     |     |
+| SymbolicIntOp     | Yes  | [need] | None        | None   | None             | None        | None          | None     | None   |     |     |
+| TransposeOp       | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| WeightOp          | Yes  | [need] | None        | None   | [need]           | None        | None          | None     | None   |     |     |

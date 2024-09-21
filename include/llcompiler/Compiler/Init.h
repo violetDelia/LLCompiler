@@ -24,12 +24,17 @@
  */
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Support/Logger.h"
+#include "mlir/IR/DialectRegistry.h"
+#include "mlir/IR/MLIRContext.h"
 
 #ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 #define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
 namespace llc::compiler {
+void load_dialect(mlir::MLIRContext& context);
 
-void init_global(const logger::LoggerOption& logger_option);
+void add_extension_and_interface(mlir::DialectRegistry&registry);
+
+void init_logger(const logger::LoggerOption& logger_option);
 void init_frontend(const front::FrontEndOption& front_option,
                    const logger::LoggerOption& logger_option);
 

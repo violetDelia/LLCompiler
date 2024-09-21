@@ -14,6 +14,7 @@
 #ifndef LLH_CONSTRAINTS
 #define LLH_CONSTRAINTS
 include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
+include "mlir/IR/CommonTypeConstraints.td"
 include "mlir/IR/CommonAttrConstraints.td"
 
 
@@ -85,7 +86,8 @@ class DenseElementsAttrBase<Pred condition, string summary> :
   let convertFromStorage = "$_self";
 }
 
-def DenseElementsAttr : DenseElementsAttrBase<CPred<"::llvm::isa<::mlir::DenseElementsAttr>($_self)">,
+def LLH_DenseElementsAttr : DenseElementsAttrBase<CPred<"::llvm::isa<::mlir::DenseElementsAttr>($_self)">,
                                     "constant vector/tensor attribute">;
 
+def LLH_ConstantAttr   : AnyAttrOf<[LLH_DenseElementsAttr, APIntAttr, F32Attr, F64Attr]>;
 #endif // LLH_CONSTRAINTS

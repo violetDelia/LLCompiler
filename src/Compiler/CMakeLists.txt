@@ -5,15 +5,16 @@ llcompiler_add_library(LLCompiler
     #Utility.cpp
 
     ADDITIONAL_INCLUDE_DIRS
-    ${ONNX_INCLUDE_DIR}
-    ${ONNX_INCLUDE_GENERATE_DIR}
-    ${PROTOBUF_INCLUDE_DIR}
-    ${ABSL_INCLUDE_DIR}
+    # ${ONNX_INCLUDE_DIR}
+    # ${ONNX_INCLUDE_GENERATE_DIR}
+    # ${PROTOBUF_INCLUDE_DIR}
+    # ${ABSL_INCLUDE_DIR}
 
     LINKS PUBLIC
     MLIRIR
     LLCSupport
     LLCFrontendCore
+    LLCMLIRUtility
 
 )
 

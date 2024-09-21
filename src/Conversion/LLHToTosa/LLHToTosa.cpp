@@ -209,7 +209,7 @@ struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
     auto types = ::mlir::TypeRange{out};
     auto new_op = rewriter.create<mlir::tosa::ConstOp>(
         loc, types, ::mlir::ValueRange{}, attrs);
-    new_op.setValueAttr(adaptor.getValueAttr());
+    new_op.setValueAttr(cast<mlir::DenseElementsAttr>(adaptor.getValueAttr()));
     rewriter.replaceOp(op, new_op);
     LLC_RUN_OUT_PATTERN
   }

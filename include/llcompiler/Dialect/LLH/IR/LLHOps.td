@@ -41,7 +41,7 @@ class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandT
         LLH_UnaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank, Elementwise], OperandType, ResultType, attributes>;
 
 class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_BinaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank, Elementwise], OperandType, ResultType, attributes>;
+        LLH_BinaryOp<mnemonic,traits# [Elementwise], OperandType, ResultType, attributes>;
 
 
 def LLH_SymbolicIntOp : LLH_Op<"symbolic_int">{
@@ -66,10 +66,20 @@ def LLH_AotOp : LLH_Op<"aot", [Pure]>{
 
 def LLH_ConstantOp : LLH_Op<"constant", [Pure]>{
     let arguments = (ins 
-       DenseElementsAttr:$value);
-    let results = (outs LLH_Tensor);
+      LLH_ConstantAttr:$value);
+    let results = (outs LLH_Computable_Type);
     let builders = [
         OpBuilder<(ins "DenseElementsAttr":$value),
+        [{
+            $_state.getOrAddProperties<Properties>().value = value;
+            $_state.addTypes(value.getType());
+        }]>,
+        OpBuilder<(ins "IntegerAttr":$value),
+        [{
+            $_state.getOrAddProperties<Properties>().value = value;
+            $_state.addTypes(value.getType());
+        }]>,
+        OpBuilder<(ins "FloatAttr":$value),
         [{
             $_state.getOrAddProperties<Properties>().value = value;
             $_state.addTypes(value.getType());
@@ -79,7 +89,7 @@ def LLH_ConstantOp : LLH_Op<"constant", [Pure]>{
     //let hasCanonicalizer = 1;
 }
 
-def LLH_WeightOp : LLH_Op<"matmal">{
+def LLH_WeightOp : LLH_Op<"weight">{
     let description = [{
         WeightOp is the constant weight only contain weight file;
     }];
@@ -129,9 +139,9 @@ def LLH_ExpandOp : LLH_Op<"expand">{
         LLH_Tensor);
 }
 
-def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
+def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
 def LLH_DropOp : LLH_UnaryOp<"drop", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
-def LLH_FlattenOp : LLH_UnaryOp<"flatten", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins LLH_Int64:$dim)>;
+def LLH_FlattenOp : LLH_UnaryOp<"flatten", [], LLH_Tensor, LLH_Tensor, (ins LLH_Int64:$dim)>;
 def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor, LLH_Tensor>;
 
 
@@ -139,6 +149,8 @@ def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
 def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [], LLH_Computable_Type>;
 def LLH_MulOp          : LLH_BinaryElementwiseOp<"mul", [], LLH_Computable_Type>;
+def LLH_DivOp          : LLH_BinaryElementwiseOp<"div", [], LLH_Computable_Type>;
+
 
 def LLH_ConvBiasOp : LLH_Op<"conv_bias",[InferShapedTypeOpInterface]>{
     let arguments = (ins 
@@ -165,7 +177,7 @@ def LLH_ConvOp : LLH_Op<"conv",[InferShapedTypeOpInterface]>{
     let results = (outs LLH_FloatTensor);
 }
 
-def LLH_MatMulOp          : LLH_Op<"matmal",[SameOperandsAndResultRank]>{
+def LLH_MatMulOp          : LLH_Op<"matmul",[SameOperandsAndResultRank]>{
     let arguments = (ins
         LLH_Tensor:$lhs,
         LLH_Tensor:$rhs);

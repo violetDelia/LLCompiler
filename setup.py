@@ -39,7 +39,7 @@ CMAKE = shutil.which("cmake3") or shutil.which("cmake")
 BUILDER = shutil.which("ninja")
 BUILD_SHARED_LIBS = True
 BUILD_TYPE = "Release"
-PYBIND_DIR = "/home/lfr/LLCompiler/src/Pybind"
+PYBIND_DIR = os.path.join(TOP_DIR, "src", "Pybind")
 
 BUILD_LLCOMPILER_TEST = True
 STATIC_WINDOWS_RUNTIME = True

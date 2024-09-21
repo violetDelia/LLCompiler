@@ -9,4 +9,7 @@ llcompiler_add_library(LLCMLIRUtility
     DEPENDS
     MLIRIR
     LLCSupport
+
+    LINKS PUBLIC
+    MLIRParser
 )

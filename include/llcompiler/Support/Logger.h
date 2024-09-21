@@ -46,6 +46,7 @@ enum class LOG_LEVEL {
   FATAL_ = 5,
 };
 const char *log_level_to_str(const LOG_LEVEL level);
+LOG_LEVEL str_to_log_level(const char *str);
 
 struct LoggerOption {
   std::string path;

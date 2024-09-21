@@ -23,16 +23,18 @@
 
 namespace llc::compiler {
 
-void load_dialect(mlir::MLIRContext* context) {
-  context->loadDialect<mlir::llh::LLHDialect>();
-  context->loadDialect<mlir::func::FuncDialect>();
+void load_dialect(mlir::MLIRContext& context) {
+  context.getOrLoadDialect<mlir::llh::LLHDialect>();
+  context.getOrLoadDialect<mlir::func::FuncDialect>();
 }
 
-void add_extension_and_interface(mlir::DialectRegistry* registry) {}
+void add_extension_and_interface(mlir::DialectRegistry& registry) {}
 
-void init_global(const logger::LoggerOption& logger_option) {
+void init_logger(const logger::LoggerOption& logger_option) {
   logger::register_logger(GLOBAL, logger_option);
   logger::register_logger(UTILITY, logger_option);
+  logger::register_logger(IMPORTER, logger_option);
+  logger::register_logger(MLIR, logger_option);
   INFO(GLOBAL) << "log root is: " << logger_option.path;
   INFO(GLOBAL) << "log level is: "
                << logger::log_level_to_str(logger_option.level);

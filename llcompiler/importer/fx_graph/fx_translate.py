@@ -10,14 +10,13 @@ import sympy.core
 import torch._ops as op
 import torch.fx.experimental
 import torch.fx.experimental.sym_node
-from xdsl.ir import SSAValue, Block, Operation, Mapping, Attribute
+from xdsl.ir import SSAValue, Block, Operation, Mapping, Attribute, Region
 from xdsl.ir.affine.affine_expr import (
     AffineSymExpr,
     AffineConstantExpr,
     AffineBinaryOpExpr,
     AffineBinaryOpKind,
 )
-from xdsl.ir.affine.affine_map import AffineMap
 from xdsl.dialects.builtin import (
     TensorType,
     i64,
@@ -28,12 +27,15 @@ from xdsl.dialects.builtin import (
     f32,
     f64,
     DYNAMIC_INDEX,
+    DenseArrayBase,
+    FloatAttr,
+    Float64Type,
+    IntegerAttr,
+    BoolAttr,
     StringAttr,
-    i64,
-    SymbolRefAttr,
     AffineMapAttr,
-    DenseIntOrFPElementsAttr,
 )
+from xdsl.ir.affine.affine_map import AffineMap
 from ...dialect.llh_utility import build_llh_constant
 from ...core.utility import Dict_Registry
 from datetime import datetime
@@ -389,8 +391,8 @@ def torch_build_func(
         else:
             raise NotImplementedError(node.op, type(node.op))
     block.add_op(Return(*return_values))
-    func = FuncOp(name, (input_types, output_types))
-    func.regions[0].add_block(block)
+    region: Region = Region(block)
+    func = FuncOp(name, (input_types, output_types), region=region)
     return func
 
 

@@ -14,6 +14,8 @@
 #include "llcompiler/Compiler/Entrance.h"
 
 #include <cassert>
+#include <fstream>
+#include <ios>
 #include <iostream>
 #include <memory>
 #include <string>
@@ -21,6 +23,8 @@
 #include <utility>
 
 #include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Dialect/Utility/File.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h"
 #include "llvm/IR/Module.h"
@@ -49,13 +53,19 @@
 #include "mlir/Target/LLVMIR/Export.h"
 #include "mlir/Transforms/Passes.h"
 namespace llc::compiler {
-void do_compile(const char* module, int ex, int options) {
+void do_compile(const char* xdsl_module, const char* log_root,
+                const char* log_level) {
+  logger::LoggerOption logger_option;
+  logger_option.level = logger::str_to_log_level(log_level);
+  logger_option.path = log_root;
+  init_logger(logger_option);
   mlir::DialectRegistry registry;
   mlir::MLIRContext context(registry);
-  load_dialect(&context);
-  add_extension_and_interface(&registry);
-
-  std::cout << module << std::endl;
+  load_dialect(context);
+  mlir::OwningOpRef<mlir::ModuleOp> module;
+  add_extension_and_interface(registry);
+  file::str_to_mlir_module(context, module, xdsl_module);
+  module->dump();
   return;
 }
 
