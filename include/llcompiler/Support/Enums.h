@@ -11,25 +11,28 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Pipeline/Enums.h"
-namespace llc::pipleline {
 
-const char* run_mode_to_str(const RUN_MODE mode) {
-  switch (mode) {
-    case RUN_MODE::INFERENCE:
-      return "inference";
-    case RUN_MODE::TRAINING:
-      return "training";
-  }
-  return "unimplemented";
-}
-const char* target_to_str(const TARGET target) {
-  switch (target) {
-    case TARGET::LLVM:
-      return "llvm";
-    case TARGET::SPIRV:
-      return "spirv";
-  }
-  return "unimplemented";
-}
-}  // namespace llc::pipleline
+#ifndef INCLUDE_LLCOMPILER_SUPPORT_ENUMS_H_
+#define INCLUDE_LLCOMPILER_SUPPORT_ENUMS_H_
+#include <cstdint>
+#include <string>
+
+namespace llc {
+enum MODE : int64_t { Training = 1, Inference = 2 };
+const char *mode_to_str(const MODE level);
+MODE str_to_mode(const char *);
+
+enum TARGET : std::int64_t {
+  CPU = 0,
+};
+const char *target_to_str(const TARGET target);
+TARGET str_to_target(const char *str);
+
+enum FRONT : std::int64_t {
+  Torch = 0,
+  Onnx = 1,
+};
+const char *front_to_str(const FRONT front);
+FRONT str_to_front(const char *str);
+}  // namespace llc
+#endif  // INCLUDE_LLCOMPILER_SUPPORT_ENUMS_H_

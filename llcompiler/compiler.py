@@ -29,6 +29,7 @@ class LLCompiler(llcompiler.core.Importer):
         vebose_first_ir=False,
         log_path: str = "",
         log_level: str = "debug",
+        target: str = "cpu",
         **kwargs
     ) -> None:
         """
@@ -42,12 +43,21 @@ class LLCompiler(llcompiler.core.Importer):
         self.log_path = log_path
         assert log_level in ["debug", "info", "warn", "error", "fatal"]
         self.log_level = log_level
+        assert target in ["cpu"]
+        self.target = target
 
     def compiler(self, model: Any, inputs: List[torch.Tensor]):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
-        do_compile(self._mlir_module.__str__(), self.log_path, self.log_level)
+        print(self.log_level)
+        do_compile(
+            self._mlir_module.__str__(),
+            self.mode,
+            self.target,
+            self.log_path,
+            self.log_level,
+        )
         return model
 
     def _compiler_torch_module():

@@ -11,24 +11,21 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include "llcompiler/Pipeline/BasicPipeline.h"
 
-#ifndef INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_
-#define INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_
-#include <cstdint>
-#include <string>
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Pass/PassRegistry.h"
+#include "mlir/Transforms/Passes.h"
 
-#include "llcompiler/Support/Logger.h"
+namespace llc::pipleline {
 
-namespace llc::compiler {
-enum MODE : int64_t { Trainning, Inference };
-const char *mode_to_str(const MODE level);
-MODE str_to_mode(const char *);
+void buildBasicPipeline(::mlir::OpPassManager &pm,
+                        const BasicPipelineOptions &options) {
+  pm.addPass(::mlir::createInlinerPass());  // 内联
+}
+void registerBasicPipeline() {
+  ::mlir::PassPipelineRegistration<BasicPipelineOptions>(
+      "basic-pipeline", "basic pipeline", buildBasicPipeline);
+}
 
-struct CompilerOptions {
-  MODE mode;
-  std::string log_root;
-  llc::logger::LOG_LEVEL log_level;
-};
-
-}  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_OPTIONS_H_
+}  // namespace llc::pipleline

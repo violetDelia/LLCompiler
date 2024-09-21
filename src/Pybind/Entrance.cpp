@@ -16,7 +16,6 @@
 #include <iostream>
 
 #include "pybind11/pybind11.h"
-#include "pybind11/stl.h"
 namespace llc::compiler {
 
 PYBIND11_MODULE(llcompiler_, llcompiler_) {

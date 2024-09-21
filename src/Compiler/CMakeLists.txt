@@ -1,3 +1,4 @@
+get_property(pipeline_depends GLOBAL PROPERTY LLCOMPILER_PIPELINE_DEPENDS)
 llcompiler_add_library(LLCompiler
     SRC_FILES
     Init.cpp
@@ -15,9 +16,11 @@ llcompiler_add_library(LLCompiler
     LLCSupport
     LLCFrontendCore
     LLCMLIRUtility
+    LLCPipelines
+    ${pipeline_depends}
 
 )
-
-if(LLCOMPILER_BUILD_WITH_ONNX_ML)
-    target_compile_definitions(LLCompiler PRIVATE ONNX_ML)
-endif()
+# Note: discard 
+# if(LLCOMPILER_BUILD_WITH_ONNX_ML)
+#     target_compile_definitions(LLCompiler PRIVATE ONNX_ML)
+# endif()

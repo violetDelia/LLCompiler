@@ -24,47 +24,36 @@
 
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Dialect/Utility/File.h"
+#include "llcompiler/Pipeline/BasicPipeline.h"
+#include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"
-#include "llvm/ADT/StringRef.h"
-#include "llvm/ExecutionEngine/Orc/JITTargetMachineBuilder.h"
-#include "llvm/IR/Module.h"
 #include "llvm/Support/CommandLine.h"
-#include "llvm/Support/ErrorOr.h"
-#include "llvm/Support/MemoryBuffer.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Support/raw_ostream.h"
-#include "mlir/Dialect/Affine/Passes.h"
-#include "mlir/Dialect/Func/Extensions/AllExtensions.h"
-#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
-#include "mlir/Dialect/LLVMIR/Transforms/InlinerInterfaceImpl.h"
-#include "mlir/Dialect/LLVMIR/Transforms/Passes.h"
-#include "mlir/ExecutionEngine/ExecutionEngine.h"
-#include "mlir/ExecutionEngine/OptUtils.h"
-#include "mlir/IR/AsmState.h"
-#include "mlir/IR/BuiltinOps.h"
-#include "mlir/IR/MLIRContext.h"
-#include "mlir/IR/Verifier.h"
-#include "mlir/InitAllDialects.h"
-#include "mlir/Parser/Parser.h"
-#include "mlir/Pass/PassManager.h"
-#include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
-#include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
-#include "mlir/Target/LLVMIR/Export.h"
-#include "mlir/Transforms/Passes.h"
 namespace llc::compiler {
-void do_compile(const char* xdsl_module, const char* log_root,
-                const char* log_level) {
+void do_compile(const char* xdsl_module, const char* mode, const char* target,
+                const char* log_root, const char* log_level) {
+  // ********* init logger *********//
   logger::LoggerOption logger_option;
   logger_option.level = logger::str_to_log_level(log_level);
   logger_option.path = log_root;
   init_logger(logger_option);
+  // ********* init mlir context *********//
   mlir::DialectRegistry registry;
   mlir::MLIRContext context(registry);
   load_dialect(context);
-  mlir::OwningOpRef<mlir::ModuleOp> module;
   add_extension_and_interface(registry);
+  // ********* load to mlir *********//
+  mlir::OwningOpRef<mlir::ModuleOp> module;
   file::str_to_mlir_module(context, module, xdsl_module);
+
+  // ********* init pipeline options *********//
+  pipleline::BasicPipelineOptions pipleline_options;
+  pipleline_options.runMode = str_to_mode(mode);
+  pipleline_options.target = str_to_target(mode);
+  pipleline_options.onlyCompiler = false;
+  // ********* process in mlir *********//
+  mlir::PassManager pm(module.get()->getName());
+  pipleline::buildBasicPipeline(pm, pipleline_options);
+  CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
   module->dump();
   return;
 }

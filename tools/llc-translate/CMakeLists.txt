@@ -8,7 +8,7 @@ llcompiler_add_executable(llc-translate
 
     LINKS
     LLCSupport
-    LLCCommonPipeline
+    LLCPipelines
     MLIROptLib
     MLIRFuncInlinerExtension
     ${translation_libs}

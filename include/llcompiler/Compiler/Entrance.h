@@ -27,10 +27,9 @@
 #define INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
 namespace llc::compiler {
 
-extern "C" void do_compile(const char* module, const char* log_root,
+extern "C" void do_compile(const char* xdsl_module, const char* mode,
+                           const char* target, const char* log_root,
                            const char* log_level);
-
-void real_do_compiler(const char* module, int ex, int options);
 
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_

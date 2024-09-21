@@ -16,7 +16,6 @@
 
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
-#include "llcompiler/Pipeline/Enums.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
@@ -53,67 +52,16 @@
 
 namespace llc::pipleline {
 
-struct CommonPipelineOptions
-    : public mlir::PassPipelineOptions<CommonPipelineOptions> {
-  Option<bool> printOpGraph{*this, "print-op-graph",
-                            llvm::cl::desc("use PrintOpGraphPass."),
-                            llvm::cl::init(false)};
-  Option<bool> ReduceConstant{*this, "reduce-const",
-                              llvm::cl::desc("Reduce constant aggressive"),
-                              llvm::cl::init(true)};
-  Option<RUN_MODE> runMode{
-      *this, "mode", llvm::cl::desc("run mode"),
-      llvm::cl::init(RUN_MODE::INFERENCE),
-      llvm::cl::values(clEnumValN(RUN_MODE::INFERENCE,
-                                  run_mode_to_str(RUN_MODE::INFERENCE), ""),
-                       clEnumValN(RUN_MODE::TRAINING,
-                                  run_mode_to_str(RUN_MODE::TRAINING), ""))};
-  Option<bool> onlyCompiler{*this, "only-compiler",
-                            llvm::cl::desc("only compiler ther model"),
-                            llvm::cl::init(false)};
-  Option<bool> optInTosa{*this, "opt-tosa",
-                         llvm::cl::desc("optimization in tosa dialcet"),
-                         llvm::cl::init(true)};
-  Option<bool> optInTensor{*this, "opt-tensor",
-                           llvm::cl::desc("optimization in tensor dialcet"),
-                           llvm::cl::init(true)};
-  Option<bool> optInLinalg{*this, "opt-linalg",
-                           llvm::cl::desc("optimization in linalg dialcet"),
-                           llvm::cl::init(true)};
-  Option<bool> optInMemref{*this, "opt-memref",
-                           llvm::cl::desc("optimization in memref dialcet"),
-                           llvm::cl::init(true)};
-  Option<bool> usingAffine{*this, "use-affine",
-                           llvm::cl::desc("optimization in affine dialcet"),
-                           llvm::cl::init(true)};
-  Option<bool> optInSCF{*this, "opt-scf",
-                        llvm::cl::desc("optimization in scf dialcet"),
-                        llvm::cl::init(true)};
-  Option<bool> optInArith{*this, "opt-arith",
-                          llvm::cl::desc("optimization in arith dialcet"),
-                          llvm::cl::init(true)};
-  Option<bool> optInLLVM{*this, "opt-llvm",
-                         llvm::cl::desc("optimization in llvm dialcet"),
-                         llvm::cl::init(true)};
-  Option<TARGET> target{
-      *this, "target", llvm::cl::desc("target ir"),
-      llvm::cl::init(TARGET::LLVM),
-      llvm::cl::values(
-          clEnumValN(TARGET::LLVM, target_to_str(TARGET::LLVM), "llvm ir"))};
-  Option<unsigned> indexBitWidth{
-      *this, "index-width", llvm::cl::desc("index-width"), llvm::cl::init(32)};
-};
-
 void buildCommonPipeline(::mlir::OpPassManager &pm,
                          const CommonPipelineOptions &options) {
   //===----------------------------------------------------------------------===//
   // options
   //===----------------------------------------------------------------------===//
   mlir::tosa::TosaValidationOptions ValidationOption;
-  if (options.runMode == RUN_MODE::INFERENCE) {
+  if (options.runMode == MODE::Inference) {
     ValidationOption.profile = mlir::tosa::TosaProfileEnum::MainInference;
   }
-  if (options.runMode == RUN_MODE::TRAINING) {
+  if (options.runMode == MODE::Training) {
     ValidationOption.profile = mlir::tosa::TosaProfileEnum::MainTraining;
   }
   mlir::TosaToLinalgOptions TosaToLinalgOption{
@@ -318,10 +266,8 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(
       mlir::func::createDuplicateFunctionEliminationPass());  // 去重重复的func
-  if (options.target == TARGET::SPIRV) {
-    pm.addPass(mlir::createConvertControlFlowToSPIRVPass());
-  }
-  if (options.target == TARGET::LLVM) {
+  pm.addPass(mlir::createConvertControlFlowToSPIRVPass());
+  if (options.target == TARGET::CPU) {
     pm.addPass(mlir::createConvertFuncToLLVMPass(
         {.useBarePtrCallConv = false, .indexBitwidth = options.indexBitWidth}));
     pm.addPass(mlir::createConvertControlFlowToLLVMPass(

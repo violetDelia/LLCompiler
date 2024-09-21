@@ -74,6 +74,6 @@ void str_to_mlir_module(mlir::MLIRContext& context,
     return;
   }
   return;
-};
+}
 
 }  // namespace llc::file
