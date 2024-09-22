@@ -13,8 +13,13 @@
 //    limitations under the License.
 //
 
+<<<<<<< HEAD
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_SYMBOLANALYSIS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_SYMBOLANALYSIS_H_
+=======
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
+>>>>>>> 8fe2f5bdd14ef4c1965ed4ad268635f26fa325ce
 
 #include <map>
 #include <memory>
@@ -55,3 +60,4 @@ class SymbolAnalysis {
 
 }  // namespace mlir::llh
 #endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_SYMBOLANALYSIS_H_
+

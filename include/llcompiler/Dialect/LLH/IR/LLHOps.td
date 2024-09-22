@@ -28,7 +28,7 @@ class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type R
 }
 
 class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface]>{
+        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface,SameOperandsAndResultElementType]>{
         let arguments = !con((ins
             OperandType:$lhs,
             OperandType:$rhs),
@@ -71,7 +71,7 @@ def LLH_AotOp : LLH_Op<"aot", [Pure]>{
     let results = (outs Variadic<LLH_Computable_Type>:$outputs);
 }
 
-def LLH_ConstantOp : LLH_Op<"constant", [Pure,Pure,FirstAttrDerivedResultType]>{
+def LLH_ConstantOp : LLH_Op<"constant", [Pure,ConstantLike,FirstAttrDerivedResultType]>{
     let arguments = (ins 
       LLH_ConstantAttr:$value);
     let results = (outs LLH_Computable_Type);
@@ -92,7 +92,7 @@ def LLH_ConstantOp : LLH_Op<"constant", [Pure,Pure,FirstAttrDerivedResultType]>{
             $_state.addTypes(value.getType());
         }]>
     ];
-    //let hasFolder = 1;
+    let hasFolder = 1;
     //let hasCanonicalizer = 1;
 }
 
