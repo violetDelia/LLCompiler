@@ -34,6 +34,8 @@ extern const char *GLOBAL;
 extern const char *IMPORTER;
 extern const char *UTILITY;
 extern const char *MLIR;
+extern const char *MLIR_PASS;
+extern const char *DEBUG;
 };  // namespace llc
 
 namespace llc::logger {
@@ -118,6 +120,7 @@ NullStream &NullStream::operator<<(const Ty val) {
   ::llc::logger::NullStream()
 #endif  // LLCOMPILER_HAS_LOG
 
+#define DINFO LLCOMPILER_LOG(llc::DEBUG, ::llc::logger::LOG_LEVEL::INFO_)
 #define DEBUG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::DEBUG_)
 #define INFO(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::INFO_)
 #define WARN(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::WARN_)
@@ -132,21 +135,21 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define CHECK(module, condition)                                            \
   LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVEL::ERROR_) \
       << #condition << " : " << __FILE__ << "<" << __LINE__ << "> \n\t"
-#define CHECK_EQ(module, val1, val2) CHECK(module, val1 == val2)
-#define CHECK_NE(module, val1, val2) CHECK(module, val1 != val2)
-#define CHECK_LT(module, val1, val2) CHECK(module, val1 < val2)
-#define CHECK_LE(module, val1, val2) CHECK(module, val1 <= val2)
-#define CHECK_GT(module, val1, val2) CHECK(module, val1 > val2)
-#define CHECK_GE(module, val1, val2) CHECK(module, val1 >= val2)
+#define CHECK_EQ(module, val1, val2) CHECK(module, (val1 == val2))
+#define CHECK_NE(module, val1, val2) CHECK(module, (val1 != val2))
+#define CHECK_LT(module, val1, val2) CHECK(module, (val1 < val2))
+#define CHECK_LE(module, val1, val2) CHECK(module, (val1 <= val2))
+#define CHECK_GT(module, val1, val2) CHECK(module, (val1 > val2))
+#define CHECK_GE(module, val1, val2) CHECK(module, (val1 >= val2))
 
 #define DCHECK(module, condition) \
   LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVEL::DEBUG_)
-#define DCHECK_EQ(module, val1, val2) DCHECK(module, val1 == val2)
-#define DCHECK_NE(module, val1, val2) DCHECK(module, val1 != val2)
-#define DCHECK_LT(module, val1, val2) DCHECK(module, val1 < val2)
-#define DCHECK_LE(module, val1, val2) DCHECK(module, val1 <= val2)
-#define DCHECK_GT(module, val1, val2) DCHECK(module, val1 > val2)
-#define DCHECK_GE(module, val1, val2) DCHECK(module, val1 >= val2)
+#define DCHECK_EQ(module, val1, val2) DCHECK(module, (val1 == val2))
+#define DCHECK_NE(module, val1, val2) DCHECK(module, (val1 != val2))
+#define DCHECK_LT(module, val1, val2) DCHECK(module, (val1 < val2))
+#define DCHECK_LE(module, val1, val2) DCHECK(module, (val1 <= val2))
+#define DCHECK_GT(module, val1, val2) DCHECK(module, (val1 > val2))
+#define DCHECK_GE(module, val1, val2) DCHECK(module, (val1 >= val2))
 
 #define LOG(module, condition, lever) \
   LLCOMPILER_CHECK_LOG(module, condition, lever)
@@ -163,19 +166,20 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define LOG_GE(module, val1, val2, lever) \
   LLCOMPILER_CHECK_LOG(module, val1 >= val2, lever)
 
-#define UNIMPLEMENTED(module) \
-  WRONG(module) << "function [" << __func__ << "] Unimplemented!"
+#define UNIMPLEMENTED(module)                               \
+  WRONG(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" \
+                << "function [" << __func__ << "] Unimplemented!"
 
 #define WARN_UNIMPLEMENTED(module)                         \
   WARN(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" \
                << "function [" << __func__ << "] Unimplemented!"
 
-#define LLC_RUN_IN_PASS                                                 \
-  INFO(llc::MLIR) << "----- run in pass: " << this->getPassName().str() \
-                  << " -----";
-#define LLC_RUN_OUT_PASS                                                 \
-  INFO(llc::MLIR) << "----- run out pass: " << this->getPassName().str() \
-                  << " -----";
+#define LLC_RUN_IN_PASS                                                      \
+  INFO(llc::MLIR_PASS) << "----- run in pass: " << this->getPassName().str() \
+                       << " -----";
+#define LLC_RUN_OUT_PASS                                                      \
+  INFO(llc::MLIR_PASS) << "----- run out pass: " << this->getPassName().str() \
+                       << " -----";
 #define LLC_RUN_IN_PATTERN \
   DEBUG(llc::MLIR) << "run in pattern " << this->getDebugName().str();
 #define LLC_RUN_OUT_PATTERN                                     \

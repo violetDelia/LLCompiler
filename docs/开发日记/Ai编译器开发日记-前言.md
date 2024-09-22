@@ -5,12 +5,35 @@
 
 ## 项目概述
 
-    这个项目是的前端是python，理论上可以接torch、onnx、tf、飞浆等神经网络框架，当然也可以支持自定义自定义DSL，但是笔者精力有限，目前只专注于对接torch。
+    这个项目的前端是python，理论上可以接torch、onnx、tf、飞浆等神经网络框架，当然也可以支持自定义自定义DSL，但是笔者精力有限，目前只专注于对接torch。
     整体实现已先实现编译后进行优化的思路进行，主要内容在MLIR框架进行图优化、模型的量化、混精、算子融合、代码生成，不太会涉及后端指令集、寄存器等与硬件信息绑定的优化。
-    当然这款编译器是支持Aot、Jit混跑的，因此笔者在未来会实现一些Aot的简易算子实现。
+    当然这款编译器是支持Aot、Jit混跑的，因此笔者在未来会实现一些Aot的简易算子实现。而且只考虑运行在cpu生nv的gpu上，其他平台不会考虑。
     这个项目我会持续更新，开源地址在：https://github.com/violetDelia/LLCompiler。
 
 ## 开发记录
 
-## 相关链接
+先画个饼吧，有时间再补吧~
 
+- 项目构建-cmake与setup.py：
+- xdsl
+- 对接fx-graph
+- 对接onnx
+- 从xdsl接入mlir
+- 动态shape与符号表达：
+- 合法化Op：
+- 数据布局优化
+- 常量折叠与mlir
+- 算子分解与图变换
+- 算子融合
+- 形状推导与tosa dialcet
+- 模型量化与quant dialect
+- 混合精度
+- Aot算子
+- 代码生成与linalg dialect
+- 缓存分块与auto tilling
+- prefetch
+- gpu dialect 与 kernel优化
+- 三级缓存与dma融合
+- llvm与编译工具链
+
+## 相关链接

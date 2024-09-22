@@ -41,4 +41,9 @@
                                              std::forward<Args>(args)...)) { \
     return Original_Func(std::forward<Args>(args)...);                       \
   }
+
+#define LLC_COMPARE_AND_RETURN(str, com_str, result) \
+  if (!strcmp(str, com_str)) {                   \
+    return result;                               \
+  }
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_CORE_H_

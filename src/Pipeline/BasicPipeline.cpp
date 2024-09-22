@@ -13,15 +13,32 @@
 //    limitations under the License.
 #include "llcompiler/Pipeline/BasicPipeline.h"
 
-#include "mlir/Pass/PassManager.h"
-#include "mlir/Pass/PassRegistry.h"
-#include "mlir/Transforms/Passes.h"
+#include <filesystem>
 
+#include "filesystem"
+#include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Pipeline/BasicPipeline.h"
+#include "llcompiler/Support/Logger.h"
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Support/LLVM.h"
+#include "mlir/Transforms/Passes.h"
 namespace llc::pipleline {
 
 void buildBasicPipeline(::mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options) {
-  pm.addPass(::mlir::createInlinerPass());  // 内联
+  if (std::filesystem::exists(options.irTreeDir.getValue())) {
+    INFO(GLOBAL) << "mlir ir tree dir is: " << options.irTreeDir.getValue();
+    mlir::cast<mlir::PassManager>(pm).getContext()->disableMultithreading();
+    mlir::cast<mlir::PassManager>(pm).enableIRPrintingToFileTree(
+        [](mlir::Pass *, mlir::Operation *) { return true; },
+        [](mlir::Pass *, mlir::Operation *) { return true; }, false, false,
+        false, options.irTreeDir, mlir::OpPrintingFlags());
+  }
+  pm.addPass(::mlir::createInlinerPass());                  // 内联
+  pm.addPass(mlir::llh::createGenerateSymbolPass());  // 符号表达
+  pm.addPass(mlir::llh::createLoadWeightPass());  //将WeightOp转换为constant
+  pm.addPass(mlir::createCanonicalizerPass());    //规范化
 }
 void registerBasicPipeline() {
   ::mlir::PassPipelineRegistration<BasicPipelineOptions>(

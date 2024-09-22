@@ -40,6 +40,10 @@ BUILDER = shutil.which("ninja")
 BUILD_SHARED_LIBS = True
 BUILD_TYPE = "Release"
 PYBIND_DIR = os.path.join(TOP_DIR, "src", "Pybind")
+INSTALL_DIR = os.path.join(TOP_DIR, "install")
+INCLUDE_DIRS = [os.path.join(INSTALL_DIR, "include")]
+LIBRARY_DIRS = [os.path.join(INSTALL_DIR, "lib")]
+RUNTIME_LIBRARY_DIRS = [os.path.join(INSTALL_DIR, "lib")]
 
 BUILD_LLCOMPILER_TEST = True
 STATIC_WINDOWS_RUNTIME = True
@@ -108,6 +112,7 @@ class CmakeBuild(setuptools.Command):
         with cd(CMAKE_BUILD_DIR):
             # configure
             cmake_args = [CMAKE, "-G Ninja"]
+            cmake_args.append(f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR}")
             cmake_args.append(f"-DCMAKE_BUILD_TYPE={BUILD_TYPE}")
             if BUILD_SHARED_LIBS:
                 cmake_args.append("-DBUILD_SHARED_LIBS=ON")
@@ -149,14 +154,6 @@ class BuildPy(setuptools.command.build_py.build_py):
 
 
 ################################################################################
-# Develop
-################################################################################
-# class Develop(setuptools.command.develop.develop):
-#     def run(self):
-#         return super().run()
-
-
-################################################################################
 # BuildExt
 ################################################################################
 
@@ -172,18 +169,15 @@ class BuildExt(setuptools.command.build_ext.build_ext):
 ################################################################################
 ext_modules = []
 source_files = glob.glob("{}/*.cpp".format(PYBIND_DIR), recursive=True)
-include_dirs = ["/home/lfr/LLCompiler/install/include"]
-library_dirs = ["/home/lfr/LLCompiler/install/lib"]
-runtime_library_dirs = ["/home/lfr/LLCompiler/install/lib"]
 libraries = ["LLCompiler"]
 ext_modules = [
     Pybind11Extension(
         "llcompiler_",  # depends on the structure of your package
         source_files,
         # Example: passing in the version to the compiled code
-        include_dirs=include_dirs,
-        library_dirs=library_dirs,
-        runtime_library_dirs=runtime_library_dirs,
+        include_dirs=INCLUDE_DIRS,
+        library_dirs=LIBRARY_DIRS,
+        runtime_library_dirs=RUNTIME_LIBRARY_DIRS,
         libraries=libraries,
         language="C++",
         define_macros=[("VERSION_INFO", VERSION)],
@@ -202,7 +196,6 @@ setuptools.setup(
         "cmake_build": CmakeBuild,
         "build_py": BuildPy,
         "build_ext": BuildExt,
-        # "develop": Develop,
     },
     ext_modules=ext_modules,
 )

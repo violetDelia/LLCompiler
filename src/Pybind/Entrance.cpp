@@ -21,6 +21,6 @@ namespace llc::compiler {
 PYBIND11_MODULE(llcompiler_, llcompiler_) {
   auto entrance = llcompiler_.def_submodule("entrance");
   entrance.doc() = "entrance for compiler";  // optional module docstring
-  entrance.def("do_compile", &do_compile, "A function which adds two numbers");
+  entrance.def("do_compile", &do_compile, "");
 }
 }  // namespace llc::compiler

@@ -28,9 +28,15 @@
 #include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/CommandLine.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Support/FileUtilities.h"
+#include "mlir/Transforms/InliningUtils.h"
+
 namespace llc::compiler {
 void do_compile(const char* xdsl_module, const char* mode, const char* target,
-                const char* log_root, const char* log_level) {
+                const char* ir_tree_dir, const char* log_root,
+                const char* log_level) {
   // ********* init logger *********//
   logger::LoggerOption logger_option;
   logger_option.level = logger::str_to_log_level(log_level);
@@ -38,23 +44,22 @@ void do_compile(const char* xdsl_module, const char* mode, const char* target,
   init_logger(logger_option);
   // ********* init mlir context *********//
   mlir::DialectRegistry registry;
+  add_extension_and_interface(registry);
   mlir::MLIRContext context(registry);
   load_dialect(context);
-  add_extension_and_interface(registry);
   // ********* load to mlir *********//
   mlir::OwningOpRef<mlir::ModuleOp> module;
   file::str_to_mlir_module(context, module, xdsl_module);
-
   // ********* init pipeline options *********//
   pipleline::BasicPipelineOptions pipleline_options;
   pipleline_options.runMode = str_to_mode(mode);
-  pipleline_options.target = str_to_target(mode);
+  pipleline_options.target = str_to_target(target);
   pipleline_options.onlyCompiler = false;
+  pipleline_options.irTreeDir = ir_tree_dir;
   // ********* process in mlir *********//
   mlir::PassManager pm(module.get()->getName());
   pipleline::buildBasicPipeline(pm, pipleline_options);
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
-  module->dump();
   return;
 }
 

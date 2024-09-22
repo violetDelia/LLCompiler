@@ -14,6 +14,8 @@
 
 #ifndef INCLUDE_LLCOMPILER_PIPELINE_BASICPIPELINE_H_
 #define INCLUDE_LLCOMPILER_PIPELINE_BASICPIPELINE_H_
+#include <string>
+
 #include "llcompiler/Support/Enums.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/Pass/PassManager.h"
@@ -26,24 +28,22 @@ struct BasicPipelineOptions
       *this, "mode", llvm::cl::desc("run mode"),
       llvm::cl::init(MODE::Inference),
       llvm::cl::values(
-          clEnumValN(MODE::Inference,
-                     mode_to_str(MODE::Inference), ""),
-          clEnumValN(MODE::Training,
-                     mode_to_str(MODE::Training), ""))};
+          clEnumValN(MODE::Inference, mode_to_str(MODE::Inference), ""),
+          clEnumValN(MODE::Training, mode_to_str(MODE::Training), ""))};
   Option<bool> onlyCompiler{*this, "only-compiler",
                             llvm::cl::desc("only compiler ther model"),
                             llvm::cl::init(false)};
-  Option<TARGET> target{
-      *this, "target", llvm::cl::desc("target ir"),
-      llvm::cl::init(TARGET::CPU),
-      llvm::cl::values(clEnumValN(TARGET::CPU,
-                                  target_to_str(TARGET::CPU),
-                                  "cpu"))};
+  Option<TARGET> target{*this, "target", llvm::cl::desc("target ir"),
+                        llvm::cl::init(TARGET::CPU),
+                        llvm::cl::values(clEnumValN(
+                            TARGET::CPU, target_to_str(TARGET::CPU), "cpu"))};
+
+  Option<std::string> irTreeDir{
+      *this, "ir_tree_dir", llvm::cl::desc("ir tree dir"), llvm::cl::init("")};
 };
-void buildBasicPipeline(::mlir::OpPassManager &pm,
+void buildBasicPipeline(mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options);
 void registerBasicPipeline();
 
 }  // namespace llc::pipleline
 #endif  // INCLUDE_LLCOMPILER_PIPELINE_BASICPIPELINE_H_
-

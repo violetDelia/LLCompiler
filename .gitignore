@@ -13,4 +13,5 @@ LLcompiler_weight_temp
 .setuptools-cmake-build
 dist
 llcompiler.egg-info
+builtin_module_no-symbol-name
 
