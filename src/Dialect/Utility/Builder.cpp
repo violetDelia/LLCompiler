@@ -28,7 +28,7 @@
 #include "mlir/IR/Location.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Types.h"
-using namespace mlir;
+using namespace ::mlir;
 namespace llc {
 
 #define BUILD_CONST_OP(judge, Ty, Op, loc)                                 \

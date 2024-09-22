@@ -1,4 +1,5 @@
 import llcompiler.compiler as LLC
+import os.path
 import torch
 import torchvision
 import torch.nn as nn
@@ -9,6 +10,7 @@ from llcompiler.core.utility import run_time
 import onnx
 import torchgen
 import torch._dynamo
+import os
 
 torch._dynamo.config.suppress_errors = True
 torch.nn.Transformer
@@ -27,18 +29,22 @@ class Net(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = self.conv_layer1(x)
-        x = x + x
+        x1 = x + x
         c = 2 + 2 * 5 / 3
         x = x / c
-        x = x + x + x * x
-        x = self.conv_layer2(x)
-        # x = self.cf(x)
+        x2 = x + x1 + x * x
+        x = self.conv_layer2(x2 + x1)
+        x = self.cf(x + x*x+x/2)
         return x
 
 
 @run_time
 def compiler_model(model, inputs):
-    compiler = LLC.LLCompiler(mode="inference")
+    compiler = LLC.LLCompiler(
+        mode="inference",
+        ir_tree_dir=os.getcwd(),
+        log_path=os.path.join(os.getcwd(), "log"),
+    )
     model = torch.compile(
         model=model,
         backend=compiler,
@@ -63,7 +69,7 @@ def torch_compiler(model, inputs):
 if __name__ == "__main__":
 
     model = Net()
-    #model = torchvision.models.resnet18()
+    #model = torchvision.models.alexnet()
     # input = (torch.rand((10, 32, 512)), torch.rand((20, 32, 512)))
     # model = Net()
     input = torch.randn((2, 3, 224, 224))
@@ -73,4 +79,7 @@ if __name__ == "__main__":
     # )
 
     compiler_model(model, input)
-    #torch_compiler(model, input)
+    print(model.cf.bias)
+    print(model.conv_layer2.bias)
+    print(model.conv_layer1.bias)
+    # torch_compiler(model, input)

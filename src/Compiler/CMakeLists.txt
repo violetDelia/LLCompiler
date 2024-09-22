@@ -1,5 +1,5 @@
 get_property(pipeline_depends GLOBAL PROPERTY LLCOMPILER_PIPELINE_DEPENDS)
-llcompiler_add_library(LLCompiler
+llcompiler_add_library(LLCompiler 
     SRC_FILES
     Init.cpp
     Entrance.cpp

@@ -6,10 +6,8 @@ llcompiler_add_library(LLCMLIRUtility
     File.cpp
     Tool.cpp
 
-    DEPENDS
-    MLIRIR
-    LLCSupport
-
     LINKS PUBLIC
     MLIRParser
+    MLIRIR
+    LLCSupport
 )

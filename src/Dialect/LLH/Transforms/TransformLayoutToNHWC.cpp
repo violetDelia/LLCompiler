@@ -31,8 +31,8 @@ namespace mlir::llh {
 #define GEN_PASS_DEF_TRANSFORMLAYOUTTONHWC
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
-using namespace mlir;
-using namespace mlir::llh;
+using namespace ::mlir;
+using namespace ::mlir::llh;
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//

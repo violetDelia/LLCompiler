@@ -18,7 +18,7 @@
 | AOTOp             | Yes  | [need] | None        | None   | None             | None        | None          | None     | [need] |     |     |
 | BatchNormOp       | Yes  | [need] | [need]      | [need] | [need]           | [need]      | [need]        | [need]   | [need] |     |     |
 | CatOp             | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
-| ConstantOp        | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
+| ConstantOp        | Yes  | [need] | [need]      | Yes    | [need]           | [need]      | None          | [need]   | [need] |     |     |
 | ConvBiasOp        | Yes  | [need] | [need]      | [need] | [need]           | [need]      | [need]        | [need]   | [need] |     |     |
 | ConvOp            | Yes  | [need] | [need]      | [need] | [need]           | [need]      | None          | [need]   | [need] |     |     |
 | DimOp             | Yes  | [need] | None        | None   | None             | None        | None          | None     | [need] |     |     |

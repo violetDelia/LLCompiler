@@ -11,25 +11,10 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 
-/**
- * @file Init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
+namespace mlir::llh {
 
-#ifndef INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
-#define INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
-namespace llc::compiler {
+// OpFoldResult ConstantOp::fold(FoldAdaptor adaptor) { return {}; }
 
-extern "C" void do_compile(const char* xdsl_module, const char* mode,
-                           const char* target, const char* ir_tree_dir,
-                           const char* log_root, const char* log_level);
-
-}  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+}  // namespace mlir::llh

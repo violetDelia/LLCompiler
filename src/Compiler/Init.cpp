@@ -19,6 +19,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Support/Logger.h"
+#include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 
 namespace llc::compiler {
@@ -28,13 +29,17 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::func::FuncDialect>();
 }
 
-void add_extension_and_interface(mlir::DialectRegistry& registry) {}
+void add_extension_and_interface(mlir::DialectRegistry& registry) {
+  mlir::func::registerInlinerExtension(registry);
+}
 
 void init_logger(const logger::LoggerOption& logger_option) {
   logger::register_logger(GLOBAL, logger_option);
   logger::register_logger(UTILITY, logger_option);
   logger::register_logger(IMPORTER, logger_option);
   logger::register_logger(MLIR, logger_option);
+  logger::register_logger(MLIR_PASS, logger_option);
+  logger::register_logger(DEBUG, logger_option);
   INFO(GLOBAL) << "log root is: " << logger_option.path;
   INFO(GLOBAL) << "log level is: "
                << logger::log_level_to_str(logger_option.level);

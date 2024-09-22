@@ -19,7 +19,7 @@ include "llcompiler/Dialect/LLH/IR/LLHInterface.td"
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface]>{
+        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface,SameOperandsAndResultElementType]>{
         let arguments = !con((ins
             OperandType:$input),
             attributes);
@@ -38,10 +38,10 @@ class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type 
 }
 
 class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_UnaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank, Elementwise], OperandType, ResultType, attributes>;
+        LLH_UnaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank], OperandType, ResultType, attributes>;
 
 class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_BinaryOp<mnemonic,traits# [Elementwise], OperandType, ResultType, attributes>;
+        LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
 
 
 def LLH_SymbolicIntOp : LLH_Op<"symbolic_int">{
@@ -57,6 +57,13 @@ def LLH_SymbolicBindOp: LLH_Op<"symbolic_bind">{
        AffineMapAttr:$expressions);
 }
 
+def LLH_SymbolicRelateOp: LLH_Op<"symbolic_relate">{
+    let arguments = (ins 
+       LLH_Int64:$operand ,
+       Variadic<LLH_Int64>:$bind_symbols,
+       AffineMapAttr:$expressions);
+}
+
 def LLH_AotOp : LLH_Op<"aot", [Pure]>{
     let arguments = (ins 
        LLH_String:$name,
@@ -64,7 +71,7 @@ def LLH_AotOp : LLH_Op<"aot", [Pure]>{
     let results = (outs Variadic<LLH_Computable_Type>:$outputs);
 }
 
-def LLH_ConstantOp : LLH_Op<"constant", [Pure]>{
+def LLH_ConstantOp : LLH_Op<"constant", [Pure,Pure,FirstAttrDerivedResultType]>{
     let arguments = (ins 
       LLH_ConstantAttr:$value);
     let results = (outs LLH_Computable_Type);
@@ -148,8 +155,8 @@ def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor,
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
 def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [], LLH_Computable_Type>;
-def LLH_MulOp          : LLH_BinaryElementwiseOp<"mul", [], LLH_Computable_Type>;
-def LLH_DivOp          : LLH_BinaryElementwiseOp<"div", [], LLH_Computable_Type>;
+def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [], LLH_Computable_Type>;
+def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [], LLH_Computable_Type>;
 
 
 def LLH_ConvBiasOp : LLH_Op<"conv_bias",[InferShapedTypeOpInterface]>{
@@ -177,7 +184,7 @@ def LLH_ConvOp : LLH_Op<"conv",[InferShapedTypeOpInterface]>{
     let results = (outs LLH_FloatTensor);
 }
 
-def LLH_MatMulOp          : LLH_Op<"matmul",[SameOperandsAndResultRank]>{
+def LLH_MatMulOp          : LLH_Op<"matmul",[]>{
     let arguments = (ins
         LLH_Tensor:$lhs,
         LLH_Tensor:$rhs);

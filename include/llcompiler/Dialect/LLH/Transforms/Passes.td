@@ -25,4 +25,22 @@ def TransformLayoutToNHWC : Pass<"transform-layout-to-nhwc","ModuleOp"> {
   let dependentDialects = [ "mlir::ex::IRExtensionDialect"];
 }
 
+def LoadWeight : Pass<"load-weight","ModuleOp"> {
+  let summary = "load weight to const";
+  let description = [{
+  }];
+  let constructor = "mlir::llh::createLoadWeightPass()";
+}
+
+def StoreConstToWeight : Pass<"store-const-to-weight","ModuleOp"> {
+  let summary = "store constant to weight";
+  let constructor = "mlir::llh::createStoreConstToWeightPass()";
+}
+
+def GenerateSymbol : Pass<"generate-symbol","ModuleOp"> {
+  let summary = "initialization of the analysis and remove shape bind";
+  let constructor = "mlir::llh::createGenerateSymbolPass()";
+
+}
+
 #endif // LLH_PASS

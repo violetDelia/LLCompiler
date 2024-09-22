@@ -3,6 +3,7 @@ llcompiler_add_library(MLIRLLHDialect
     LLHTypes.cpp
     LLHDialect.cpp
     LLHOps.cpp
+    LLHFolder.cpp
 
     DEPENDS
     MLIRLLHDialectIncGen

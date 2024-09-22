@@ -13,7 +13,7 @@
 //    limitations under the License.
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 
-// using namespace mlir;
+// using namespace ::mlir;
 
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
 

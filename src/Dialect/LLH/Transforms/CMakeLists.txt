@@ -1,6 +1,9 @@
 llcompiler_add_library(MLIRLLHTransforms
   SRC_FILES
   TransformLayoutToNHWC.cpp
+  LoadWeight.cpp
+  SymbolAnalysis.cpp
+  GenerateSymbol.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen

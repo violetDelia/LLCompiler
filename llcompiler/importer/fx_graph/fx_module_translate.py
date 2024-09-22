@@ -112,8 +112,9 @@ def torch_linear_convert(
     )
     block.add_op(rhs)
     matmul = MatmulOp.build(operands=[lhs, rhs], result_types=[result_type])
-    if module.bias != None:
+    if module.bias == None:
         return matmul
+    block.add_op(matmul)
     bias = value_map[node.target + ".bias"][0]
     return AddOp.build(operands=[matmul.result, bias], result_types=[result_type])
 

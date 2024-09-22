@@ -54,8 +54,8 @@ namespace mlir {
 
 }  // namespace mlir
 
-using namespace mlir;
-using namespace mlir::llh;
+using namespace ::mlir;
+using namespace ::mlir::llh;
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//

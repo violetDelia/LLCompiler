@@ -29,6 +29,8 @@
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/spdlog.h"
+#include "llcompiler/Support/Core.h"
+
 
 namespace llc {
 
@@ -37,6 +39,8 @@ const char *GLOBAL = "global";
 const char *IMPORTER = "importer";
 const char *UTILITY = "utility";
 const char *MLIR = "mlir";
+const char *MLIR_PASS = "mlir_pass";
+const char *DEBUG = "debug";
 }  // namespace llc
 
 namespace llc::logger {
@@ -57,20 +61,15 @@ const char *log_level_to_str(const LOG_LEVEL lever) {
   UNIMPLEMENTED(UTILITY);
 }
 
-#define COMPARE_AND_RETURN(str, com_str, result) \
-  if (strcmp(str, com_str)) {                    \
-    return result;                               \
-  }
 LOG_LEVEL str_to_log_level(const char *str) {
-  COMPARE_AND_RETURN(str, "debug", LOG_LEVEL::DEBUG_)
-  COMPARE_AND_RETURN(str, "info", LOG_LEVEL::INFO_)
-  COMPARE_AND_RETURN(str, "warn", LOG_LEVEL::WARN_)
-  COMPARE_AND_RETURN(str, "error", LOG_LEVEL::ERROR_)
-  COMPARE_AND_RETURN(str, "fatal", LOG_LEVEL::FATAL_)
+  LLC_COMPARE_AND_RETURN(str, "debug", LOG_LEVEL::DEBUG_)
+  LLC_COMPARE_AND_RETURN(str, "info", LOG_LEVEL::INFO_)
+  LLC_COMPARE_AND_RETURN(str, "warn", LOG_LEVEL::WARN_)
+  LLC_COMPARE_AND_RETURN(str, "error", LOG_LEVEL::ERROR_)
+  LLC_COMPARE_AND_RETURN(str, "fatal", LOG_LEVEL::FATAL_)
   UNIMPLEMENTED(UTILITY) << " convert:" << str;
 }
 
-#undef COMPARE_AND_RETURN
 void register_logger(const char *module, const LoggerOption &option) {
   using console_sink = spdlog::sinks::stdout_sink_st;
   using file_sink = spdlog::sinks::basic_file_sink_st;

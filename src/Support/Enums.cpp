@@ -17,30 +17,26 @@
 #include <exception>
 
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Core.h"
 namespace llc {
 
-#define COMPARE_AND_RETURN(str, com_str, result) \
-  if (!strcmp(str, com_str)) {                   \
-    return result;                               \
-  }
 
 MODE str_to_mode(const char* str) {
-  COMPARE_AND_RETURN(str, "inference", MODE::Inference)
-  COMPARE_AND_RETURN(str, "training", MODE::Training)
+  LLC_COMPARE_AND_RETURN(str, "inference", MODE::Inference)
+  LLC_COMPARE_AND_RETURN(str, "training", MODE::Training)
   UNIMPLEMENTED(UTILITY) << " convert:" << str;
 }
 
 TARGET str_to_target(const char* str) {
-  COMPARE_AND_RETURN(str, "cpu", TARGET::CPU)
+  LLC_COMPARE_AND_RETURN(str, "cpu", TARGET::CPU)
   UNIMPLEMENTED(UTILITY) << " convert:" << str;
 }
 
 FRONT str_to_front(const char* str) {
-  COMPARE_AND_RETURN(str, "torch", FRONT::Torch)
-  COMPARE_AND_RETURN(str, "onnx", FRONT::Onnx)
+  LLC_COMPARE_AND_RETURN(str, "torch", FRONT::Torch)
+  LLC_COMPARE_AND_RETURN(str, "onnx", FRONT::Onnx)
   UNIMPLEMENTED(UTILITY) << " convert:" << str;
 }
-#undef COMPARE_AND_RETURN
 const char* front_to_str(const FRONT front) {
   switch (front) {
     case FRONT::Torch:

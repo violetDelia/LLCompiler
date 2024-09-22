@@ -38,7 +38,7 @@ namespace mlir::tosa_ex {
 #define GEN_PASS_DEF_TRANSFORMLAYOUTTONHWC
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h.inc"
 }  // namespace mlir::tosa_ex
-using namespace mlir;
+using namespace ::mlir;
 using namespace mlir::tosa;
 using namespace mlir::tosa_ex;
 //===----------------------------------------------------------------------===//
