@@ -28,7 +28,7 @@ class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type R
 }
 
 class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface,SameOperandsAndResultElementType]>{
+        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface]>{
         let arguments = !con((ins
             OperandType:$lhs,
             OperandType:$rhs),

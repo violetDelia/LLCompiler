@@ -147,7 +147,8 @@ struct LoadWeightOp : public LLCOpRewritePattern<WeightOp> {
     auto tensor = mlir::cast_or_null<ShapedType>(type);
     CHECK(llc::MLIR, tensor);
     auto value = loadWeightFile(tensor, weight_file, &rewriter);
-    rewriter.replaceOpWithNewOp<llh::ConstantOp>(op, value);
+    auto const_op =rewriter.createOrFold<llh::ConstantOp>(op->getLoc(),value);
+    rewriter.replaceOp(op,const_op);
   }
 };
 //===----------------------------------------------------------------------===//

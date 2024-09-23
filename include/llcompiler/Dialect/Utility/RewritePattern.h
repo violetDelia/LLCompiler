@@ -14,49 +14,59 @@
 //
 #ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_REWRITEPATTERN_H_
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_REWRITEPATTERN_H_
+#include <utility>
+
 #include "llcompiler/Support/Logger.h"
+#include "mlir/IR/Dialect.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/Visitors.h"
 
 namespace mlir {
 
-class LLHPatternRewriter : public PatternRewriter {
-  using PatternRewriter::create;
+class LLHPatternRewriter : public RewriterBase {
+ public:
+  explicit LLHPatternRewriter(MLIRContext *ctx) : RewriterBase(ctx) {}
+  using RewriterBase::RewriterBase;
+
+  virtual void processWileBuildOperation(Operation *op) {
+    DINFO << "build: " << op->getName().getStringRef().str();
+  }
+
+  virtual bool canRecoverFromRewriteFailure() const { return false; }
 
  public:
-  explicit LLHPatternRewriter(MLIRContext *ctx) : PatternRewriter(ctx) {}
-  using PatternRewriter::PatternRewriter;
-
   template <typename OpTy, typename... Args>
   OpTy create(Location location, Args &&...args) {
-    OperationState state(location,
-                         getCheckRegisteredInfo<OpTy>(location.getContext()));
-    OpTy::build(*this, state, std::forward<Args>(args)...);
-    auto *op = create(state);
-    auto result = dyn_cast<OpTy>(op);
-    assert(result && "builder didn't return the right type");
-    DINFO << "symbol not supported";
-    return result;
+    auto op = RewriterBase::create<OpTy>(location, std::forward<Args>(args)...);
+    processWileBuildOperation(op);
+    return op;
   }
 
   template <typename OpTy, typename... Args>
-  void createOrFold(SmallVectorImpl<Value> &results, Location location,
-                    Args &&...args) {
-    OperationState state(location,
-                         getCheckRegisteredInfo<OpTy>(location.getContext()));
-    OpTy::build(*this, state, std::forward<Args>(args)...);
-    Operation *op = Operation::create(state);
-    DINFO << "symbol not supported";
-    auto block = this->getBlock();
-    auto insertPoint = this->getInsertionPoint();
-    if (block) block->getOperations().insert(insertPoint, op);
-    if (succeeded(tryFold(op, results)) && !results.empty()) {
-      op->erase();
-      return;
-    }
-    ResultRange opResults = op->getResults();
-    results.assign(opResults.begin(), opResults.end());
-    if (block && listener)
-      listener->notifyOperationInserted(op, /*previous=*/{});
+  std::enable_if_t<OpTy::template hasTrait<OpTrait::OneResult>(), Value>
+  createOrFold(Location location, Args &&...args) {
+    SmallVector<Value, 1> results;
+    RewriterBase::createOrFold<OpTy>(results, location,
+                                     std::forward<Args>(args)...);
+    auto op = results.front().getDefiningOp();
+    processWileBuildOperation(op);
+    return results.front();
+  }
+
+  template <typename OpTy, typename... Args>
+  std::enable_if_t<OpTy::template hasTrait<OpTrait::ZeroResults>(), OpTy>
+  createOrFold(Location location, Args &&...args) {
+    auto op = create<OpTy>(location, std::forward<Args>(args)...);
+    SmallVector<Value, 0> unused;
+    (void)tryFold(op.getOperation(), unused);
+    return op;
+  }
+
+  template <typename OpTy, typename... Args>
+  OpTy replaceOpWithNewOp(Operation *op, Args &&...args) {
+    auto newOp = create<OpTy>(op->getLoc(), std::forward<Args>(args)...);
+    replaceOp(op, newOp.getOperation());
+    return newOp;
   }
 };
 
@@ -80,6 +90,8 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const final {
     auto llh_rewriter = LLHPatternRewriter(rewriter.getContext());
+    llh_rewriter.setInsertionPoint(rewriter.getBlock(),
+                                   rewriter.getInsertionPoint());
     return matchAndRewrite(cast<SourceOp>(op), llh_rewriter);
   }
 
