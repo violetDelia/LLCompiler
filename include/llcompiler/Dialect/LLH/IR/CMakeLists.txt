@@ -11,6 +11,7 @@ mlir_tablegen(LLHDialect.h.inc -gen-dialect-decls -dialect=llh)
 mlir_tablegen(LLHDialect.cpp.inc -gen-dialect-defs -dialect=llh)
 add_public_tablegen_target(MLIRLLHDialectIncGen)
 add_dependencies(mlir-headers MLIRLLHDialectIncGen)
+add_dependencies(MLIRLLHDialectIncGen MLIRSymbolShapeOpInterfacesIncGen)
 
 add_mlir_doc(LLHDialect LLHDialect LLH/ -gen-dialect-doc)
 add_mlir_doc(LLHOps LLHOps LLH/ -gen-op-doc)

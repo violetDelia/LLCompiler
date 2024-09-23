@@ -27,6 +27,7 @@ from xdsl.dialects.builtin import (
     AffineMapAttr,
     ContainerOf,
     BoolAttr,
+    SymbolNameAttr,
 )
 from xdsl.ir.affine.affine_expr import AffineExpr
 from xdsl.ir import Dialect
@@ -126,7 +127,7 @@ class AOTOp(IRDLOperation):
 @irdl_op_definition
 class SymbolicIntOp(IRDLOperation):
     name = "llh.symbolic_int"
-    value = attr_def(StringAttr)
+    sym_name = attr_def(SymbolRefAttr)
     result = result_def(IntegerType)
 
 

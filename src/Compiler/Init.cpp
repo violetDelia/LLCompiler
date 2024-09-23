@@ -21,12 +21,15 @@
 #include "llcompiler/Support/Logger.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinDialect.h"
 
 namespace llc::compiler {
 
 void load_dialect(mlir::MLIRContext& context) {
+  context.getLoadedDialect<mlir::BuiltinDialect>();
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
   context.getOrLoadDialect<mlir::func::FuncDialect>();
+  
 }
 
 void add_extension_and_interface(mlir::DialectRegistry& registry) {

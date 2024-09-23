@@ -34,6 +34,7 @@ from xdsl.dialects.builtin import (
     BoolAttr,
     StringAttr,
     AffineMapAttr,
+    SymbolNameAttr,SymbolRefAttr
 )
 from xdsl.ir.affine.affine_map import AffineMap
 from ...dialect.llh_utility import build_llh_constant
@@ -53,7 +54,7 @@ import sympy
 
 def torch_symbol_translate(symbol: torch.SymInt, symbol_map: dict[str, SymbolicIntOp]):
     name: str = symbol.node.expr.name
-    atts = {"value": StringAttr(name)}
+    atts = {"sym_name": SymbolRefAttr(name)}
     op = SymbolicIntOp(attributes=atts, result_types=[i64])
     symbol_map[name] = op
     return op

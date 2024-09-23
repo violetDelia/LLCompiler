@@ -15,11 +15,26 @@
 #define LLH_OPS
 include "llcompiler/Dialect/LLH/IR/LLHAttrs.td"
 include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
-include "llcompiler/Dialect/LLH/IR/LLHInterface.td"
+include "mlir/Interfaces/InferTypeOpInterface.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
+include "llcompiler/Interfaces/SymbolShapeOpInterfaces.td"
+include "mlir/IR/SymbolInterfaces.td"
+
+
+class LLH_Op<string mnemonic, list<Trait> traits = [Pure]> :
+        Op<LLH_Dialect, mnemonic, traits>{
+    let summary = cppNamespace#opName#" op";
+    let description = [{
+        $_name op;
+    }];
+}
+
+class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
+        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface]>{}
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface,SameOperandsAndResultElementType]>{
+        LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultElementType]>{
         let arguments = !con((ins
             OperandType:$input),
             attributes);
@@ -28,7 +43,7 @@ class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type R
 }
 
 class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface]>{
+        LLH_SymbolOp<mnemonic,traits#[]>{
         let arguments = !con((ins
             OperandType:$lhs,
             OperandType:$rhs),
@@ -44,9 +59,9 @@ class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type Operand
         LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
 
 
-def LLH_SymbolicIntOp : LLH_Op<"symbolic_int">{
+def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
     let arguments = (ins 
-       LLH_String:$value);
+       LLH_String:$sym_name);
     let results = (outs LLH_Int64);
 }
 
@@ -64,14 +79,14 @@ def LLH_SymbolicRelateOp: LLH_Op<"symbolic_relate">{
        AffineMapAttr:$expressions);
 }
 
-def LLH_AotOp : LLH_Op<"aot", [Pure]>{
+def LLH_AotOp : LLH_SymbolOp<"aot", []>{
     let arguments = (ins 
        LLH_String:$name,
        Variadic<LLH_Computable_Type>:$inputs);
     let results = (outs Variadic<LLH_Computable_Type>:$outputs);
 }
 
-def LLH_ConstantOp : LLH_Op<"constant", [Pure,ConstantLike,FirstAttrDerivedResultType]>{
+def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike,FirstAttrDerivedResultType]>{
     let arguments = (ins 
       LLH_ConstantAttr:$value);
     let results = (outs LLH_Computable_Type);
@@ -96,7 +111,7 @@ def LLH_ConstantOp : LLH_Op<"constant", [Pure,ConstantLike,FirstAttrDerivedResul
     //let hasCanonicalizer = 1;
 }
 
-def LLH_WeightOp : LLH_Op<"weight">{
+def LLH_WeightOp : LLH_SymbolOp<"weight">{
     let description = [{
         WeightOp is the constant weight only contain weight file;
     }];
@@ -114,7 +129,7 @@ def LLH_DimOp : LLH_Op<"dim">{
         LLH_Int64);
 }
 
-def LLH_ReshapeOp : LLH_Op<"reshape">{
+def LLH_ReshapeOp : LLH_SymbolOp<"reshape",[]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         Variadic<LLH_Int64>:$shapes);
@@ -130,7 +145,7 @@ def LLH_ShapeOfOp : LLH_Op<"shape_of">{
         Variadic<LLH_Int64>);
 }
 
-def LLH_CatOp : LLH_Op<"cat">{
+def LLH_CatOp : LLH_SymbolOp<"cat",[]>{
     let arguments = (ins 
         Variadic<LLH_Tensor>:$inputs,
         I64Attr:$dim);
@@ -138,7 +153,7 @@ def LLH_CatOp : LLH_Op<"cat">{
         LLH_Tensor);
 }
 
-def LLH_ExpandOp : LLH_Op<"expand">{
+def LLH_ExpandOp : LLH_SymbolOp<"expand",[]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         Variadic<LLH_Int64>:$shapes);
@@ -146,7 +161,7 @@ def LLH_ExpandOp : LLH_Op<"expand">{
         LLH_Tensor);
 }
 
-def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
+def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank,], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
 def LLH_DropOp : LLH_UnaryOp<"drop", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
 def LLH_FlattenOp : LLH_UnaryOp<"flatten", [], LLH_Tensor, LLH_Tensor, (ins LLH_Int64:$dim)>;
 def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor, LLH_Tensor>;
@@ -154,12 +169,12 @@ def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor,
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [], LLH_Computable_Type>;
-def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [], LLH_Computable_Type>;
-def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [], LLH_Computable_Type>;
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type>;
+def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type>;
+def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type>;
 
 
-def LLH_ConvBiasOp : LLH_Op<"conv_bias",[InferShapedTypeOpInterface]>{
+def LLH_ConvBiasOp : LLH_SymbolOp<"conv_bias">{
     let arguments = (ins 
         LLH_FloatTensor:$X,
         LLH_FloatTensor:$W,
@@ -172,7 +187,7 @@ def LLH_ConvBiasOp : LLH_Op<"conv_bias",[InferShapedTypeOpInterface]>{
     let results = (outs LLH_FloatTensor);
 }
 
-def LLH_ConvOp : LLH_Op<"conv",[InferShapedTypeOpInterface]>{
+def LLH_ConvOp : LLH_SymbolOp<"conv">{
     let arguments = (ins 
         LLH_FloatTensor:$X,
         LLH_FloatTensor:$W,
@@ -184,7 +199,7 @@ def LLH_ConvOp : LLH_Op<"conv",[InferShapedTypeOpInterface]>{
     let results = (outs LLH_FloatTensor);
 }
 
-def LLH_MatMulOp          : LLH_Op<"matmul",[]>{
+def LLH_MatMulOp          : LLH_SymbolOp<"matmul">{
     let arguments = (ins
         LLH_Tensor:$lhs,
         LLH_Tensor:$rhs);
@@ -192,7 +207,7 @@ def LLH_MatMulOp          : LLH_Op<"matmul",[]>{
         LLH_Tensor:$result);
 }
 
-def LLH_LayerNormOp     : LLH_Op<"layer_norm",[]>{
+def LLH_LayerNormOp     : LLH_SymbolOp<"layer_norm">{
     let arguments = (ins
         LLH_Tensor:$input,
         LLH_Tensor:$scale,
@@ -203,7 +218,7 @@ def LLH_LayerNormOp     : LLH_Op<"layer_norm",[]>{
         LLH_Tensor:$result);
 }
 
-def LLH_BatchNormOp     : LLH_Op<"batch_norm",[]>{
+def LLH_BatchNormOp     : LLH_SymbolOp<"batch_norm">{
     let arguments = (ins
         LLH_Tensor:$input,
         LLH_Tensor:$scale,
@@ -216,7 +231,7 @@ def LLH_BatchNormOp     : LLH_Op<"batch_norm",[]>{
         LLH_Tensor:$result);
 }
 
-def LLH_MaxPoolOp       : LLH_Op<"max_pool",[]>{
+def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{
     let arguments = (ins
         LLH_Tensor:$input,
         I1Attr:$ceil_mode,

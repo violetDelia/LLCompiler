@@ -1,16 +1,8 @@
 import torch.fx
 from xdsl.context import MLContext
 from xdsl.dialects.func import Func, FuncOp, Return
-from xdsl.dialects.builtin import (
-    Builtin,
-    ModuleOp,
-    Block,
-    DenseIntOrFPElementsAttr,
-    StringAttr,
-    TensorType,
-)
-from xdsl.ir import SSAValue, BlockArgument
-from xdsl.ir import Region
+from xdsl.dialects.builtin import SymbolRefAttr, SymbolNameAttr, Builtin,ModuleOp
+from xdsl.ir import SSAValue, BlockArgument, Region, Block
 import torch.utils._pytree as pytree
 from xdsl.printer import Printer
 from ..dialect.llh import ConvBiasOp, LLH, WeightOp
@@ -18,6 +10,26 @@ from .onnx.onnx_translate import (
     onnx_weight_translate,
     onnx_value_translate,
     onnx_node_translate,
+)
+from xdsl.dialects.builtin import (
+    TensorType,
+    i64,
+    i32,
+    i16,
+    i1,
+    f16,
+    f32,
+    f64,
+    DYNAMIC_INDEX,
+    DenseArrayBase,
+    FloatAttr,
+    Float64Type,
+    IntegerAttr,
+    BoolAttr,
+    StringAttr,
+    AffineMapAttr,
+    SymbolNameAttr,
+    SymbolRefAttr,
 )
 from ..dialect.llh import SymbolicIntOp
 import tempfile
@@ -83,7 +95,10 @@ class MLIR_Builder:
         func = torch_build_func(model.graph, "main", block, value_map, symbol_map)
         module = ModuleOp(
             [func],
-            attributes={"builtin.gloabal_layout": StringAttr("NCHW")},
+            attributes={
+                "sym_name": SymbolRefAttr(model._get_name()),
+                "builtin.gloabal_layout": StringAttr("NCHW"),
+            },
         )
         return module
 

@@ -37,7 +37,7 @@ def StoreConstToWeight : Pass<"store-const-to-weight","ModuleOp"> {
   let constructor = "mlir::llh::createStoreConstToWeightPass()";
 }
 
-def GenerateSymbol : Pass<"generate-symbol","ModuleOp"> {
+def SymbolCanonicalization : Pass<"symbol-canonicalization","ModuleOp"> {
   let summary = "initialization of the analysis and remove shape bind";
   let constructor = "mlir::llh::createGenerateSymbolPass()";
 

@@ -29,6 +29,7 @@
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/BuiltinDialect.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Support/FileUtilities.h"
 #include "mlir/Transforms/InliningUtils.h"
@@ -44,6 +45,7 @@ void do_compile(const char* xdsl_module, const char* mode, const char* target,
   init_logger(logger_option);
   // ********* init mlir context *********//
   mlir::DialectRegistry registry;
+  registry.insert<mlir::BuiltinDialect>();
   add_extension_and_interface(registry);
   mlir::MLIRContext context(registry);
   load_dialect(context);

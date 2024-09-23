@@ -37,7 +37,7 @@ void SymbolAnalysis::deleteInstance() {
 
 void SymbolAnalysis::addSymbolInt(SymbolicIntOp op) {
   std::lock_guard<std::mutex> lock(mutex_);
-  auto name = op.getValue();
+  auto name = op.getSymName();
   CHECK(llc::MLIR, !symbols_.count(name));
   symbols_[name] = op.getOperation();
 }

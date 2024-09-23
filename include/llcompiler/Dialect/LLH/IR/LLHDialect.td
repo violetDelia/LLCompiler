@@ -36,17 +36,6 @@ def LLH_Dialect : Dialect{
     
 }
 
-//===----------------------------------------------------------------------===//
-// Base LLH operation definition.
-//===----------------------------------------------------------------------===//
-
-class LLH_Op<string mnemonic, list<Trait> traits = []> :
-        Op<LLH_Dialect, mnemonic, traits>{
-    let summary = cppNamespace#opName#" op";
-    let description = [{
-        $_name op;
-    }];
-}
 
 //===----------------------------------------------------------------------===//
 // Base LLH operation trait definition.

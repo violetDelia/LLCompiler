@@ -43,7 +43,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 namespace mlir::llh {
-#define GEN_PASS_DEF_GENERATESYMBOL
+#define GEN_PASS_DEF_SYMBOLCANONICALIZATION
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -68,7 +68,7 @@ void populateLoadWeightBasePatterns(RewritePatternSet& patterns) {
 // pass defination
 //===----------------------------------------------------------------------===//
 
-struct GenerateSymbolPass : llh::impl::GenerateSymbolBase<GenerateSymbolPass> {
+struct SymbolCanonicalizationPass : llh::impl::SymbolCanonicalizationBase<SymbolCanonicalizationPass> {
   void runOnOperation() override;
 };
 }  // namespace
@@ -76,14 +76,14 @@ struct GenerateSymbolPass : llh::impl::GenerateSymbolBase<GenerateSymbolPass> {
 // pass implement
 //===----------------------------------------------------------------------===//
 
-void GenerateSymbolPass::runOnOperation() {
+void SymbolCanonicalizationPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto symbol_analysis = ::mlir::llh::SymbolAnalysis::getInstance();
   auto op = getOperation();
   op->walk([&symbol_analysis](SymbolicIntOp op) {
     symbol_analysis->addSymbolInt(op);
   });
-  symbol_analysis->debugPrintSymbols();
+  
   // auto* context = &getContext();
   // RewritePatternSet patterns(context);
   // populateLoadWeightBasePatterns(patterns);
@@ -97,5 +97,5 @@ void GenerateSymbolPass::runOnOperation() {
 // pass create
 //===----------------------------------------------------------------------===//
 std::unique_ptr<Pass> mlir::llh::createGenerateSymbolPass() {
-  return std::make_unique<GenerateSymbolPass>();
+  return std::make_unique<SymbolCanonicalizationPass>();
 }

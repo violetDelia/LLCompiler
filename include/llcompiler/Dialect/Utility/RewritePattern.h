@@ -75,7 +75,6 @@ template <typename SourceOp>
 struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
   using RewritePattern::RewritePattern;
 
-  /// Wrappers around the RewritePattern methods that pass the derived op type.
   void rewrite(Operation *op, PatternRewriter &rewriter) const final {
     rewrite(cast<SourceOp>(op), rewriter);
     DEBUG(llc::MLIR_PASS) << "rewrite "
@@ -95,8 +94,6 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
     return matchAndRewrite(cast<SourceOp>(op), llh_rewriter);
   }
 
-  /// Rewrite and Match methods that operate on the SourceOp type. These must be
-  /// overridden by the derived pattern class.
   virtual void rewrite(SourceOp op, LLHPatternRewriter &rewriter) const {
     llvm_unreachable("must override rewrite or matchAndRewrite");
   }
