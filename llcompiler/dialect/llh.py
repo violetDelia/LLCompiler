@@ -36,6 +36,7 @@ from xdsl.irdl import (
     ConstraintVar,
     result_def,
     attr_def,
+    opt_attr_def,
     OpResult,
     var_operand_def,
     irdl_attr_definition,
@@ -127,7 +128,7 @@ class AOTOp(IRDLOperation):
 @irdl_op_definition
 class SymbolicIntOp(IRDLOperation):
     name = "llh.symbolic_int"
-    sym_name = attr_def(SymbolRefAttr)
+    sym_name = attr_def(StringAttr)
     result = result_def(IntegerType)
 
 

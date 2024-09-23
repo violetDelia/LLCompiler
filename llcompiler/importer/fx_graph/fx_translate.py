@@ -54,7 +54,7 @@ import sympy
 
 def torch_symbol_translate(symbol: torch.SymInt, symbol_map: dict[str, SymbolicIntOp]):
     name: str = symbol.node.expr.name
-    atts = {"sym_name": SymbolRefAttr(name)}
+    atts = {"value": StringAttr(name)}
     op = SymbolicIntOp(attributes=atts, result_types=[i64])
     symbol_map[name] = op
     return op

@@ -59,9 +59,9 @@ class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type Operand
         LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
 
 
-def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
+def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[]>{
     let arguments = (ins 
-       LLH_String:$sym_name);
+       LLH_StringAttr:$value);
     let results = (outs LLH_Int64);
 }
 
@@ -81,7 +81,7 @@ def LLH_SymbolicRelateOp: LLH_Op<"symbolic_relate">{
 
 def LLH_AotOp : LLH_SymbolOp<"aot", []>{
     let arguments = (ins 
-       LLH_String:$name,
+       LLH_StringAttr:$name,
        Variadic<LLH_Computable_Type>:$inputs);
     let results = (outs Variadic<LLH_Computable_Type>:$outputs);
 }
@@ -116,7 +116,7 @@ def LLH_WeightOp : LLH_SymbolOp<"weight">{
         WeightOp is the constant weight only contain weight file;
     }];
     let arguments = (ins 
-        LLH_String:$weight_file);
+        LLH_StringAttr:$weight_file);
     let results = (outs 
         LLH_Tensor);
 }
@@ -169,9 +169,9 @@ def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor,
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type>;
-def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type>;
-def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type>;
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [], LLH_Computable_Type>;
+def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [], LLH_Computable_Type>;
+def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [], LLH_Computable_Type>;
 
 
 def LLH_ConvBiasOp : LLH_SymbolOp<"conv_bias">{

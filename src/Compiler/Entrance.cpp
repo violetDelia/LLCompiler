@@ -45,13 +45,13 @@ void do_compile(const char* xdsl_module, const char* mode, const char* target,
   init_logger(logger_option);
   // ********* init mlir context *********//
   mlir::DialectRegistry registry;
-  registry.insert<mlir::BuiltinDialect>();
   add_extension_and_interface(registry);
   mlir::MLIRContext context(registry);
   load_dialect(context);
   // ********* load to mlir *********//
   mlir::OwningOpRef<mlir::ModuleOp> module;
   file::str_to_mlir_module(context, module, xdsl_module);
+  module->dump();
   // ********* init pipeline options *********//
   pipleline::BasicPipelineOptions pipleline_options;
   pipleline_options.runMode = str_to_mode(mode);

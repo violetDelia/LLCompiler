@@ -76,7 +76,7 @@ def LLH_Computable_Type    : AnyTypeOf<[LLH_Tensor, LLH_Float, LLH_Int]>;
 
 def LLH_Symbolic_Type     : AnyTypeOf<[LLH_Tensor, LLH_Int64]>;
 
-def LLH_String : StringBasedAttr<CPred<"::llvm::isa<::mlir::StringAttr>($_self)">,
+def LLH_StringAttr : StringBasedAttr<CPred<"::llvm::isa<::mlir::StringAttr>($_self)">,
                               "string attribute">;
 
 class DenseElementsAttrBase<Pred condition, string summary> :

@@ -1,7 +1,7 @@
 import torch.fx
 from xdsl.context import MLContext
 from xdsl.dialects.func import Func, FuncOp, Return
-from xdsl.dialects.builtin import SymbolRefAttr, SymbolNameAttr, Builtin,ModuleOp
+from xdsl.dialects.builtin import SymbolRefAttr, SymbolNameAttr, Builtin, ModuleOp
 from xdsl.ir import SSAValue, BlockArgument, Region, Block
 import torch.utils._pytree as pytree
 from xdsl.printer import Printer
@@ -95,10 +95,7 @@ class MLIR_Builder:
         func = torch_build_func(model.graph, "main", block, value_map, symbol_map)
         module = ModuleOp(
             [func],
-            attributes={
-                "sym_name": SymbolRefAttr(model._get_name()),
-                "builtin.gloabal_layout": StringAttr("NCHW"),
-            },
+            attributes={"builtin.gloabal_layout": StringAttr("NCHW")},
         )
         return module
 
