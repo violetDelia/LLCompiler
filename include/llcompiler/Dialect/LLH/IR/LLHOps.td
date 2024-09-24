@@ -34,7 +34,7 @@ class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultElementType]>{
+        LLH_SymbolOp<mnemonic,traits#[]>{
         let arguments = !con((ins
             OperandType:$input),
             attributes);

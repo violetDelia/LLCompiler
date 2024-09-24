@@ -111,6 +111,7 @@ Type npyTypeInfoToType(const char* type_info, Builder* build) {
 mlir::DenseElementsAttr loadNpyFile(mlir::ShapedType type,
                                     const llvm::StringRef& file,
                                     Builder* build) {
+  DINFO << file.str();
   FILE* fp = fopen(file.str().c_str(), "rb");
   CHECK(llc::MLIR, fp) << "read file error: " << file.str();
   mlir::SmallVector<int64_t> shape;
@@ -118,11 +119,13 @@ mlir::DenseElementsAttr loadNpyFile(mlir::ShapedType type,
   size_t data_bytes;
   bool fortran_order;
   parseNpyInfo(fp, shape, type_info, fortran_order, data_bytes);
-  char data[data_bytes];
+  char* data = (char*)malloc(data_bytes);
   size_t nread = fread(data, 1, data_bytes, fp);
+  fclose(fp);
   CHECK_EQ(llc::MLIR, nread, data_bytes) << "read failed";
   LLC_COMPARE_AND_RETURN(type_info.c_str(), "f4", DENSE_ATTR(float))
-  UNIMPLEMENTED(llc::MLIR);
+  LLC_COMPARE_AND_RETURN(type_info.c_str(), "i8", DENSE_ATTR(int64_t))
+  UNIMPLEMENTED(llc::MLIR) << type_info.c_str();
 }
 #undef DENSE_ATTR
 
@@ -147,6 +150,7 @@ struct LoadWeightOp : public LLCOpRewritePattern<WeightOp> {
     auto tensor = mlir::cast_or_null<ShapedType>(type);
     CHECK(llc::MLIR, tensor);
     auto value = loadWeightFile(tensor, weight_file, &rewriter);
+    DINFO << "out";
     auto const_op = rewriter.createOrFold<llh::ConstantOp>(op->getLoc(), value);
     rewriter.replaceOp(op, const_op);
   }

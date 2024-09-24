@@ -63,11 +63,13 @@ struct BraodcastableScalarToTensor : public LLCOpRewritePattern<ConstantOp> {
     if (op.use_empty()) return llvm::failure();
     if (!op->getResult(0).getType().isIntOrFloat()) return llvm::failure();
     for (auto user : op->getUsers()) {
+      user->dump();
       if (user->hasTrait<OpTrait::ResultsBroadcastableShape>()) {
         return llvm::success();
       }
+      user->dump();
     }
-    llvm::failure();
+    return llvm::failure();
   }
   void rewrite(ConstantOp op, LLHPatternRewriter& rewriter) const final {
     auto loc = op->getLoc();
