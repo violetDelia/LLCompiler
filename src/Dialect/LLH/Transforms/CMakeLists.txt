@@ -4,11 +4,13 @@ llcompiler_add_library(MLIRLLHTransforms
   LoadWeight.cpp
   SymbolAnalysis.cpp
   GenerateSymbol.cpp
+  Operationlegalization.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen
   MLIRLLHPassIncGen
   LLHTransformLayoutToNHWCIncGen
+  
 
   LINKS PUBLIC
   MLIRLLHDialect

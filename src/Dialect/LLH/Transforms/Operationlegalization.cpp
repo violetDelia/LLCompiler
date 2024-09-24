@@ -29,21 +29,22 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/Dialect/Traits.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
-#include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 namespace mlir::llh {
-#define GEN_PASS_DEF_SYMBOLCANONICALIZATION
+#define GEN_PASS_DEF_OPERATIONLEGALIZATION
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -56,35 +57,52 @@ namespace {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct replaceTorchSymbolicIntOp
-    : public LLCOpRewritePattern<TorchSymbolicIntOp> {
+struct BraodcastableScalarToTensor : public LLCOpRewritePattern<ConstantOp> {
   using LLCOpRewritePattern::LLCOpRewritePattern;
-  LogicalResult match(TorchSymbolicIntOp op) const final {
-    if (op->hasAttr("symbol_generate")) return llvm::failure();
-    return llvm::success();
+  LogicalResult match(ConstantOp op) const final {
+    if (op.use_empty()) return llvm::failure();
+    if (!op->getResult(0).getType().isIntOrFloat()) return llvm::failure();
+    for (auto user : op->getUsers()) {
+      if (user->hasTrait<OpTrait::ResultsBroadcastableShape>()) {
+        return llvm::success();
+      }
+    }
+    llvm::failure();
   }
-  void rewrite(TorchSymbolicIntOp op,
-               LLHPatternRewriter& rewriter) const final {
-    auto module = op->getParentOfType<ModuleOp>();
-    auto main_func = module.lookupSymbol("main");
-    auto symbol_analysis = SymbolAnalysis::getInstance();
-    symbol_analysis->buildSymbolInt(&rewriter, op);
-    op->setAttr("symbol_generate", rewriter.getBoolAttr(true));
+  void rewrite(ConstantOp op, LLHPatternRewriter& rewriter) const final {
+    auto loc = op->getLoc();
+    auto type = op->getResult(0).getType();
+    auto tensor_type = RankedTensorType::get({1}, type);
+    auto const_tensor = rewriter.create<ConstantOp>(
+        loc, tensor_type,
+        DenseElementsAttr::get(tensor_type, op.getValueAttr()));
+    for (auto user : op->getUsers()) {
+      if (user->hasTrait<OpTrait::ResultsBroadcastableShape>()) {
+        auto operand_num = user->getNumOperands();
+        for (int i = 0; i < operand_num; i++) {
+          auto operand = user->getOperand(i);
+          if (operand.getDefiningOp() == op) {
+            user->setOperand(i, const_tensor);
+          }
+        }
+      }
+    }
   }
 };
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateLoadWeightBasePatterns(RewritePatternSet& patterns) {
+void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<replaceTorchSymbolicIntOp>(context);
+  patterns.add<BraodcastableScalarToTensor>(context);
 }
-
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
 
-struct SymbolCanonicalizationPass : llh::impl::SymbolCanonicalizationBase<SymbolCanonicalizationPass> {
+struct OperationlegalizatioPass
+    : llh::impl::OperationlegalizationBase<OperationlegalizatioPass> {
   void runOnOperation() override;
 };
 }  // namespace
@@ -92,22 +110,20 @@ struct SymbolCanonicalizationPass : llh::impl::SymbolCanonicalizationBase<Symbol
 // pass implement
 //===----------------------------------------------------------------------===//
 
-void SymbolCanonicalizationPass::runOnOperation() {
+void OperationlegalizatioPass::runOnOperation() {
   LLC_RUN_IN_PASS
-  auto symbol_analysis = ::mlir::llh::SymbolAnalysis::getInstance();
+  auto* context = &getContext();
+  RewritePatternSet patterns(context);
+  populateOperationlegalizatioPassPatterns(patterns);
   auto op = getOperation();
-  // auto* context = &getContext();
-  // RewritePatternSet patterns(context);
-  // populateLoadWeightBasePatterns(patterns);
-  // auto op = getOperation();
-  // if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
-  //   signalPassFailure();
+  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
+    signalPassFailure();
   LLC_RUN_OUT_PASS
 }
 
 //===----------------------------------------------------------------------===//
 // pass create
 //===----------------------------------------------------------------------===//
-std::unique_ptr<Pass> mlir::llh::createGenerateSymbolPass() {
-  return std::make_unique<SymbolCanonicalizationPass>();
+std::unique_ptr<Pass> mlir::llh::createOperationlegalizationPass() {
+  return std::make_unique<OperationlegalizatioPass>();
 }

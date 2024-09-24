@@ -31,7 +31,7 @@ from xdsl.dialects.builtin import (
     SymbolNameAttr,
     SymbolRefAttr,
 )
-from ..dialect.llh import SymbolicIntOp
+from ..dialect.llh import TorchSymbolicIntOp
 import tempfile
 import numpy as np
 import os
@@ -72,7 +72,7 @@ class MLIR_Builder:
         }
         model.graph.print_tabular()
         value_map: dict[str, list[SSAValue]] = dict()
-        symbol_map: dict[str, SymbolicIntOp] = dict()
+        symbol_map: dict[str, TorchSymbolicIntOp] = dict()
         block = Block()
         weight_dir = os.path.join(
             os.path.dirname(__file__),

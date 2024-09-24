@@ -154,7 +154,7 @@ struct LoadWeightOp : public LLCOpRewritePattern<WeightOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateLoadWeightBasePatterns(RewritePatternSet& patterns) {
+void populateLoadWeightPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.insert<LoadWeightOp>(context);
 }
@@ -163,7 +163,7 @@ void populateLoadWeightBasePatterns(RewritePatternSet& patterns) {
 // pass defination
 //===----------------------------------------------------------------------===//
 
-struct LoadWeightBase : llh::impl::LoadWeightBase<LoadWeightBase> {
+struct LoadWeightPass : llh::impl::LoadWeightBase<LoadWeightPass> {
   void runOnOperation() override;
 };
 }  // namespace
@@ -171,11 +171,11 @@ struct LoadWeightBase : llh::impl::LoadWeightBase<LoadWeightBase> {
 // pass implement
 //===----------------------------------------------------------------------===//
 
-void LoadWeightBase::runOnOperation() {
+void LoadWeightPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   RewritePatternSet patterns(context);
-  populateLoadWeightBasePatterns(patterns);
+  populateLoadWeightPatterns(patterns);
   auto op = getOperation();
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
     signalPassFailure();
@@ -186,5 +186,5 @@ void LoadWeightBase::runOnOperation() {
 // pass create
 //===----------------------------------------------------------------------===//
 std::unique_ptr<Pass> mlir::llh::createLoadWeightPass() {
-  return std::make_unique<LoadWeightBase>();
+  return std::make_unique<LoadWeightPass>();
 }

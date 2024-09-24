@@ -24,6 +24,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/Casting.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/Pass/Pass.h"
@@ -36,7 +37,7 @@ class SymbolAnalysis {
   static SymbolAnalysis *getInstance();
   static void deleteInstance();
 
-  void addSymbolInt(SymbolicIntOp op);
+  SymbolicIntOp buildSymbolInt(OpBuilder *builder, Operation *op);
 
   void debugPrintSymbols();
 

@@ -16,6 +16,13 @@
 #include "llcompiler/Dialect/LLH/Transforms/SymbolAnalysis.h"
 
 #include <cstdint>
+#include <string>
+
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
+#include "mlir/IR/Operation.h"
 
 namespace mlir::llh {
 
@@ -35,8 +42,13 @@ void SymbolAnalysis::deleteInstance() {
   }
 }
 
-void SymbolAnalysis::addSymbolInt(SymbolicIntOp op) {
+SymbolicIntOp SymbolAnalysis::buildSymbolInt(OpBuilder* builder,Operation* op) {
   // std::lock_guard<std::mutex> lock(mutex_);
+  std::string name = "s" + std::to_string(symbols_.size());
+  DINFO << "symbol: " << name;
+  auto symbol = builder->create<SymbolicIntOp>(builder->getUnknownLoc(), name);
+  symbols_[symbol.getSymName()] = op;
+  return symbol;
   // auto name = op.getSymName();
   // CHECK(llc::MLIR,name.has_value());
   // CHECK(llc::MLIR, !symbols_.count(name));

@@ -31,12 +31,16 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
     INFO(GLOBAL) << "mlir ir tree dir is: " << options.irTreeDir.getValue();
     mlir::cast<mlir::PassManager>(pm).getContext()->disableMultithreading();
     mlir::cast<mlir::PassManager>(pm).enableIRPrintingToFileTree(
-        [](mlir::Pass *, mlir::Operation *) { return true; },
-        [](mlir::Pass *, mlir::Operation *) { return true; }, false, false,
+        [](mlir::Pass *pass, mlir::Operation *) {
+          if (pass->getName() == "Operationlegalization") return true;
+          return false;
+        },
+        [](mlir::Pass *pass, mlir::Operation *) { return true; }, false, false,
         false, options.irTreeDir, mlir::OpPrintingFlags());
   }
-  pm.addPass(::mlir::createInlinerPass());            // 内联
-  pm.addPass(mlir::llh::createGenerateSymbolPass());  // 符号表达
+  pm.addPass(mlir::llh::createOperationlegalizationPass());  //合法化非法的Op
+  pm.addPass(::mlir::createInlinerPass());                   // 内联
+  pm.addPass(mlir::llh::createGenerateSymbolPass());         // 符号表达
   pm.addPass(mlir::llh::createLoadWeightPass());  //将WeightOp转换为constant
   pm.addPass(mlir::createCanonicalizerPass());    //规范化
 }

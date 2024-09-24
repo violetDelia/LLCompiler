@@ -30,7 +30,7 @@ class LLH_Op<string mnemonic, list<Trait> traits = [Pure]> :
 }
 
 class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
-        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface]>{}
+        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface,SymbolShapeOpInterface]>{}
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
@@ -59,10 +59,15 @@ class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type Operand
         LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
 
 
-def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[]>{
+def LLH_TorchSymbolicIntOp : LLH_Op<"torch_symbolic_int",[]>{
     let arguments = (ins 
-       LLH_StringAttr:$value);
+       LLH_StringAttr:$sym_name);
     let results = (outs LLH_Int64);
+}
+
+def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[SymbolTable, Symbol]>{
+    let arguments = (ins 
+       SymbolNameAttr:$sym_name);
 }
 
 def LLH_SymbolicBindOp: LLH_Op<"symbolic_bind">{
@@ -169,9 +174,9 @@ def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor,
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [], LLH_Computable_Type>;
-def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [], LLH_Computable_Type>;
-def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [], LLH_Computable_Type>;
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type>;
+def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type>;
+def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type>;
 
 
 def LLH_ConvBiasOp : LLH_SymbolOp<"conv_bias">{

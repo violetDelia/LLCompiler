@@ -18,8 +18,8 @@
 
 #include <memory>
 
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "mlir/Pass/Pass.h"
 
 namespace mlir::llh {
@@ -28,6 +28,8 @@ std::unique_ptr<::mlir::Pass> createTransformLayoutToNHWCPass();
 std::unique_ptr<::mlir::Pass> createLoadWeightPass();
 std::unique_ptr<::mlir::Pass> createStoreConstToWeightPass();
 std::unique_ptr<::mlir::Pass> createGenerateSymbolPass();
+std::unique_ptr<::mlir::Pass> createOperationlegalizationPass();
+
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"

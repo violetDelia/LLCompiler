@@ -27,7 +27,17 @@ from xdsl.dialects.builtin import (
     DenseArrayBase,
 )
 
-from .llh import SymbolicIntOp, SymbolicBindOp, ConstantOp, TransposeOp
+from .llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp, TransposeOp
+
+
+def build_llh_scalar_tensor(val: int | float):
+    if isinstance(val, int):
+        type = TensorType([1], i64)
+        value = DenseIntOrFPElementsAttr.create_dense_int(type, [val])
+    if isinstance(val, float):
+        type = TensorType([1], f32)
+        value = DenseIntOrFPElementsAttr.create_dense_float(type, [val])
+    return ConstantOp.build(attributes={"value": value}, result_types=[type])
 
 
 def build_llh_constant(val: int | float):

@@ -53,7 +53,7 @@ from typing import TypeAlias, Annotated
 from xdsl.parser import Parser
 from xdsl.printer import Printer
 from xdsl.utils.exceptions import VerifyException
-
+from xdsl.traits import SymbolTable
 
 # python 验证速度比较慢
 i8 = IntegerType(8)
@@ -126,8 +126,8 @@ class AOTOp(IRDLOperation):
 
 
 @irdl_op_definition
-class SymbolicIntOp(IRDLOperation):
-    name = "llh.symbolic_int"
+class TorchSymbolicIntOp(IRDLOperation):
+    name = "llh.torch_symbolic_int"
     sym_name = attr_def(StringAttr)
     result = result_def(IntegerType)
 

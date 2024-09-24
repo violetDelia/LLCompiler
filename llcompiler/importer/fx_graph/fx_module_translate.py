@@ -31,7 +31,7 @@ from ...dialect.llh import (
     ConvOp,
     MatmulOp,
     AddOp,
-    SymbolicIntOp,
+    TorchSymbolicIntOp,
     DropOp,
     LayerNormOp,
     ReluOp,
@@ -51,7 +51,7 @@ from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 def torch_Transformer_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.transformer.Transformer,
     block: Block,
 ):
@@ -62,7 +62,7 @@ def torch_Transformer_convert(
 def torch_conv_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.conv._ConvNd,
     block: Block,
 ):
@@ -99,7 +99,7 @@ def torch_conv_convert(
 def torch_linear_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.conv._ConvNd,
     block: Block,
 ):
@@ -123,7 +123,7 @@ def torch_linear_convert(
 def torch_drop_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.dropout.Dropout,
     block: Block,
 ):
@@ -137,7 +137,7 @@ def torch_drop_convert(
 def torch_layernorm_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.normalization.LayerNorm,
     block: Block,
 ):
@@ -158,7 +158,7 @@ def torch_layernorm_convert(
 def torch_multiheadattention_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.activation.MultiheadAttention,
     block: Block,
 ):
@@ -169,7 +169,7 @@ def torch_multiheadattention_convert(
 def torch_relu_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.activation.ReLU,
     block: Block,
 ):
@@ -180,7 +180,7 @@ def torch_relu_convert(
 def torch_maxpool_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.pooling.MaxPool2d,
     block: Block,
 ):
@@ -207,7 +207,7 @@ def torch_maxpool_convert(
 def torch_adaptive_avgpool_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.pooling.AdaptiveAvgPool2d,
     block: Block,
 ):
@@ -219,7 +219,7 @@ def torch_adaptive_avgpool_convert(
 def torch_adaptive_avgpool_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.modules.batchnorm.BatchNorm2d,
     block: Block,
 ):

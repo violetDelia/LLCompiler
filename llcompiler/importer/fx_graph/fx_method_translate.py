@@ -28,7 +28,7 @@ from ...dialect.llh import (
     ConvOp,
     MatmulOp,
     AddOp,
-    SymbolicIntOp,
+    TorchSymbolicIntOp,
     ReshapeOp,
     TransposeOp,
     ExpandOp,
@@ -41,7 +41,7 @@ from xdsl.ir import SSAValue, Operation, Block
 def torch_reshape_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     print(node.args)
@@ -57,7 +57,7 @@ def torch_reshape_convert(
 def torch_reshape_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     result_type = torch_fake_tensor_translate(get_result_type(node))
@@ -72,7 +72,7 @@ def torch_reshape_convert(
 def torch_permute_convert(
     node: torch.fx.node.Node,
     value_map: dict,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     result_type = torch_fake_tensor_translate(get_result_type(node))
@@ -90,7 +90,7 @@ def torch_permute_convert(
 def aten_view_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     result_type = torch_fake_tensor_translate(get_result_type(node))

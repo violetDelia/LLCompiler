@@ -18,6 +18,7 @@
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
+#include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Option.h"
@@ -83,6 +84,7 @@ int main(int argc, char **argv) {
   mlir::func::registerInlinerExtension(registry);
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
   llc::pipleline::registerCommonPipeline();
+  llc::pipleline::registerBasicPipeline();
   mlir::transform::registerInterpreterPass();
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));

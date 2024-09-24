@@ -37,7 +37,7 @@ from ...dialect.llh import (
     DimOp,
     ReshapeOp,
     ConstantOp,
-    SymbolicIntOp,
+    TorchSymbolicIntOp,
     CatOp,
     FlattenOp,
     ReluOp,
@@ -52,7 +52,7 @@ from torch._subclasses.fake_tensor import FakeTensor
 def builtin_mul_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(MulOp.build, 2, node, value_map, block)
@@ -62,7 +62,7 @@ def builtin_mul_convert(
 def builtin_add_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(AddOp.build, 2, node, value_map, block)
@@ -72,7 +72,7 @@ def builtin_add_convert(
 def builtin_truediv_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(DivOp.build, 2, node, value_map, block)
@@ -82,7 +82,7 @@ def builtin_truediv_convert(
 def aten_sym_size_int_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(DimOp.build, 2, node, value_map, block)
@@ -92,7 +92,7 @@ def aten_sym_size_int_convert(
 def aten_sym_size_int_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(ReluOp.build, 1, node, value_map, block)
@@ -102,7 +102,7 @@ def aten_sym_size_int_convert(
 def builtin_getitem_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     inputs = value_map[node.args[0].name]
@@ -118,7 +118,7 @@ def builtin_getitem_convert(
 def aten_view_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     result_type = torch_fake_tensor_translate(get_result_type(node))
@@ -133,7 +133,7 @@ def aten_view_convert(
 def aten_view_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     arg_len = len(node.args)
@@ -164,7 +164,7 @@ def aten_view_convert(
 def flatten_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(FlattenOp.build, 2, node, value_map, block)
@@ -174,7 +174,7 @@ def flatten_convert(
 def aten_t_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     input = get_arg_value(node.args[0], value_map, block)
@@ -187,7 +187,7 @@ def aten_t_convert(
 def cat_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     result_type = torch_fake_tensor_translate(get_result_type(node))
@@ -202,7 +202,7 @@ def cat_convert(
 def aten_convolution_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     result_type = torch_fake_tensor_translate(get_result_type(node))
@@ -236,7 +236,7 @@ def aten_convolution_convert(
 def torch_function_translate(
     node: torch.fx.node.Node,
     value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ) -> Operation:
     target: op.OpOverload = node.target

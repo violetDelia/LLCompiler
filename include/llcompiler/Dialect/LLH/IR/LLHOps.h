@@ -27,6 +27,7 @@
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/LoopLikeInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 
 #define PLACEHOLD_FOR_FIX_HEADER
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h.inc"

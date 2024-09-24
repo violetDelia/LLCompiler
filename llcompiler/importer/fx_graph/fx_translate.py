@@ -34,10 +34,11 @@ from xdsl.dialects.builtin import (
     BoolAttr,
     StringAttr,
     AffineMapAttr,
-    SymbolNameAttr,SymbolRefAttr
+    SymbolNameAttr,
+    SymbolRefAttr,
 )
 from xdsl.ir.affine.affine_map import AffineMap
-from ...dialect.llh_utility import build_llh_constant
+from ...dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
 from ...core.utility import Dict_Registry
 from datetime import datetime
 import torch.nn
@@ -47,22 +48,24 @@ import os
 import numpy as np
 import torch.fx
 from torch.fx.experimental.sym_node import SymNode
-from ...dialect.llh import SymbolicIntOp, SymbolicBindOp, ConstantOp
+from ...dialect.llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp
 from xdsl.dialects.func import Return, FuncOp
 import sympy
 
 
-def torch_symbol_translate(symbol: torch.SymInt, symbol_map: dict[str, SymbolicIntOp]):
+def torch_symbol_translate(
+    symbol: torch.SymInt, symbol_map: dict[str, TorchSymbolicIntOp]
+):
     name: str = symbol.node.expr.name
-    atts = {"value": StringAttr(name)}
-    op = SymbolicIntOp(attributes=atts, result_types=[i64])
+    atts = {"sym_name": StringAttr(name)}
+    op = TorchSymbolicIntOp(attributes=atts, result_types=[i64])
     symbol_map[name] = op
     return op
 
 
 def _generate_affine_symbolic(
     arg,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     affine_expr_map: dict[str, AffineSymExpr],
     bind_symbols: list[SSAValue],
 ):
@@ -126,7 +129,7 @@ def _generate_affine_symbolic(
 
 
 def torch_symbol_bind(
-    operand: SSAValue, tensor: FakeTensor, symbol_map: dict[str, SymbolicIntOp]
+    operand: SSAValue, tensor: FakeTensor, symbol_map: dict[str, TorchSymbolicIntOp]
 ):
 
     bind_symbols: list[SSAValue] = []
@@ -194,11 +197,15 @@ def get_arg_value(
     value_map: dict[str:[SSAValue]],
     block: Block,
     index: int = 0,
+    make_tensor: bool = False,
 ):
     if isinstance(arg, torch.fx.node.Node):
         return value_map[arg.name][index]
     elif isinstance(arg, int) or isinstance(arg, float):
-        const = build_llh_constant(arg)
+        if make_tensor:
+            const = build_llh_constant(arg)
+        else:
+            const = build_llh_constant(arg)
         block.add_op(const)
         return const.result
     else:
@@ -211,7 +218,7 @@ TORCH_FUNCTION_TRANSLATE = Dict_Registry()
 def torch_function_translate(
     node: torch.fx.node.Node,
     value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ) -> Operation:
     target: op.OpOverload = node.target
@@ -230,7 +237,7 @@ TORCH_MODULE_TRANSLATE = Dict_Registry()
 def torch_module_translate(
     node: torch.fx.node.Node,
     value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     module: torch.nn.Module,
     block: Block,
 ) -> Operation:
@@ -246,7 +253,7 @@ TORCH_METHOD_TRANSLATE = Dict_Registry()
 def torch_method_translate(
     node: torch.fx.node.Node,
     value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ) -> Operation:
     target = node.target
@@ -296,7 +303,7 @@ def torch_build_func(
     name: str,
     block: Block,
     value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
 ):
     # 输入输出
     input_types = []
@@ -326,7 +333,7 @@ def torch_build_func(
                     block.add_op(shape_bind)
                 # 符号输入
                 elif isinstance(val, torch.SymInt):
-                    op: SymbolicIntOp = torch_symbol_translate(
+                    op: TorchSymbolicIntOp = torch_symbol_translate(
                         node.meta["val"], symbol_map
                     )
                     value_map[node.name] = [
@@ -342,7 +349,7 @@ def torch_build_func(
                 if isinstance(symbol.node.expr, sympy.core.numbers.Integer):
                     op = build_llh_constant(int(symbol))
                 elif isinstance(symbol.node.expr, sympy.core.symbol.Symbol):
-                    op: SymbolicIntOp = torch_symbol_translate(symbol, symbol_map)
+                    op: TorchSymbolicIntOp = torch_symbol_translate(symbol, symbol_map)
                 else:
                     raise NotImplementedError
                 value_map[node.name] = [
@@ -400,7 +407,7 @@ def torch_build_func(
 def _updata_torch_symbol_bind(
     op: Operation,
     block: Block,
-    symbol_map: dict[str, SymbolicIntOp],
+    symbol_map: dict[str, TorchSymbolicIntOp],
     node: torch.fx.node.Node,
 ):
     for i in range(len(op.results)):
