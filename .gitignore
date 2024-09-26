@@ -15,4 +15,7 @@ dist
 llcompiler.egg-info
 builtin_module_no-symbol-name
 it_tree
+out.mlir
+doc
+
 

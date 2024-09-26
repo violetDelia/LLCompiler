@@ -33,10 +33,10 @@ def LoadWeight : Pass<"load-weight","ModuleOp"> {
 }
 
 //暂时不做
-def StoreConstToWeight : Pass<"store-const-to-weight","ModuleOp"> {
-  let summary = "将权重储存到文件中";
-  let constructor = "mlir::llh::createStoreConstToWeightPass()";
-}
+// def StoreConstToWeight : Pass<"store-const-to-weight","ModuleOp"> {
+//   let summary = "将权重储存到文件中";
+//   let constructor = "mlir::llh::createStoreConstToWeightPass()";
+// }
 
 def SymbolCanonicalization : Pass<"symbol-canonicalization","ModuleOp"> {
   let summary = "规范以及初始化符号表达系统";

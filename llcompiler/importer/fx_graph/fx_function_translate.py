@@ -108,6 +108,7 @@ def builtin_getitem_convert(
     inputs = value_map[node.args[0].name]
     if (len(inputs) == 1) and isinstance(inputs[0].type, TensorType):
         dim: ConstantOp = build_llh_constant(node.args[1])
+        block.add_op(dim)
         return DimOp(operands=[inputs[0], dim.result], result_types=[i64])
 
     else:

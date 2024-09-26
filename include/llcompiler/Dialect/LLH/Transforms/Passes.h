@@ -26,7 +26,7 @@ namespace mlir::llh {
 
 std::unique_ptr<::mlir::Pass> createTransformLayoutToNHWCPass();
 std::unique_ptr<::mlir::Pass> createLoadWeightPass();
-std::unique_ptr<::mlir::Pass> createStoreConstToWeightPass();
+//std::unique_ptr<::mlir::Pass> createStoreConstToWeightPass();
 std::unique_ptr<::mlir::Pass> createGenerateSymbolPass();
 std::unique_ptr<::mlir::Pass> createOperationlegalizationPass();
 

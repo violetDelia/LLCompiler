@@ -51,6 +51,7 @@
 #include "mlir/InitAllPasses.h"
 #include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
+#include "mlir/Transforms/Passes.h"
 
 //  -pass-pipeline=
 //    "builtin.module(  inline,
@@ -85,6 +86,8 @@ int main(int argc, char **argv) {
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
   llc::pipleline::registerCommonPipeline();
   llc::pipleline::registerBasicPipeline();
+  mlir::llh::registerLLHOptPasses();
+  mlir::registerTransformsPasses();
   mlir::transform::registerInterpreterPass();
   return mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));

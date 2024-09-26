@@ -16,8 +16,24 @@
 // using namespace ::mlir;
 
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
+#include "mlir/Transforms/InliningUtils.h"
 
 namespace mlir::llh {
+//===----------------------------------------------------------------------===//
+// LLHDialect InlinerInterface.
+//===----------------------------------------------------------------------===//
+namespace {
+/// This class defines the interface for handling inlining with gpu
+/// operations.
+struct LLHInlinerInterface : public DialectInlinerInterface {
+  using DialectInlinerInterface::DialectInlinerInterface;
+
+  bool isLegalToInline(Operation *, Region *, bool, IRMapping &) const final {
+    return true;
+  }
+};
+}  // namespace
+
 //===----------------------------------------------------------------------===//
 // LLHDialect initialize method.
 //===----------------------------------------------------------------------===//
@@ -27,6 +43,7 @@ void LLHDialect::initialize() {
 #include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
       >();
   registerTypes();
+  addInterfaces<LLHInlinerInterface>();
 }
 
 }  // namespace mlir::llh

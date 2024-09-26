@@ -41,8 +41,8 @@
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
+#include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-
 namespace mlir::llh {
 #define GEN_PASS_DEF_OPERATIONLEGALIZATION
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
@@ -63,11 +63,9 @@ struct BraodcastableScalarToTensor : public LLCOpRewritePattern<ConstantOp> {
     if (op.use_empty()) return llvm::failure();
     if (!op->getResult(0).getType().isIntOrFloat()) return llvm::failure();
     for (auto user : op->getUsers()) {
-      user->dump();
       if (user->hasTrait<OpTrait::ResultsBroadcastableShape>()) {
         return llvm::success();
       }
-      user->dump();
     }
     return llvm::failure();
   }
@@ -100,6 +98,12 @@ void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   patterns.add<BraodcastableScalarToTensor>(context);
 }
 //===----------------------------------------------------------------------===//
+// config target
+//===----------------------------------------------------------------------===//
+void configOperationlegalizatioConversionTarget(ConversionTarget& target) {
+  target.addLegalOp<llh::SymbolicBindOp>();
+}
+//===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
 
@@ -116,9 +120,11 @@ void OperationlegalizatioPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   RewritePatternSet patterns(context);
+
   populateOperationlegalizatioPassPatterns(patterns);
   auto op = getOperation();
-  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
+  if (failed(applyPartialConversion(op, ConversionTarget(getContext()),
+                                    std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

@@ -1,9 +1,8 @@
 import torch
+import torch.fx.experimental
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
+model = torchvision.models.resnet18()
+from torch.fx.experimental import get_isolated_graphmodule
 
-x = torch.randn(3, 7, 7)
-out = F.max_pool2d_with_indices(x, [3, 3])
-import sys
-from  llcompiler_.entrance import do_compile
-do_compile("aaa",1,1)
