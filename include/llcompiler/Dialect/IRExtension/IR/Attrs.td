@@ -27,18 +27,17 @@ class IRExtension_Attr<string name, string attrMnemonic, list<Trait> traits = []
   
 }
 
-
-def IRExtension_Encoding : IRExtension_Attr<"Encoding", "encoding", []> {
-  let description = [{
-  "tensor encoding"
-  }];
-  let parameters = (ins "::mlir::ex::Layout":$layout);
-  //let hasCustomAssemblyFormat = 1;
-  let assemblyFormat = [{
-    `<`
-      `layout` `=` $layout
-    `>`
-  }];
-}
+// def IRExtension_Encoding : IRExtension_Attr<"Encoding", "encoding", []> {
+//   let description = [{
+//   "tensor encoding"
+//   }];
+//   let parameters = (ins "mlir::ArrayAttr":$shapes);
+//   let hasCustomAssemblyFormat = 1;
+//   // let assemblyFormat = [{
+//   //   `<`
+//   //     `layout` `=` $layout
+//   //   `>`
+//   // }];
+// }
 
 #endif // LLC_IREX_ATTRIBUTES

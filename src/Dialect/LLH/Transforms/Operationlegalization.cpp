@@ -69,7 +69,7 @@ struct BraodcastableScalarToTensor : public LLCOpRewritePattern<ConstantOp> {
     }
     return llvm::failure();
   }
-  void rewrite(ConstantOp op, LLHPatternRewriter& rewriter) const final {
+  void rewrite(ConstantOp op, LLCPatternRewriter& rewriter) const final {
     auto loc = op->getLoc();
     auto type = op->getResult(0).getType();
     auto tensor_type = RankedTensorType::get({1}, type);
@@ -90,18 +90,22 @@ struct BraodcastableScalarToTensor : public LLCOpRewritePattern<ConstantOp> {
   }
 };
 
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<BraodcastableScalarToTensor>(context);
+  //patterns.add<replaceTorchSymbolicIntOp>(context);
+  //patterns.add<replaceSymbolicBindOp>(context);
 }
+
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
 void configOperationlegalizatioConversionTarget(ConversionTarget& target) {
-  target.addLegalOp<llh::SymbolicBindOp>();
+  // target.addIllegalOp<llh::SymbolicBindOp>();
 }
 //===----------------------------------------------------------------------===//
 // pass defination
@@ -120,11 +124,9 @@ void OperationlegalizatioPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   RewritePatternSet patterns(context);
-
   populateOperationlegalizatioPassPatterns(patterns);
   auto op = getOperation();
-  if (failed(applyPartialConversion(op, ConversionTarget(getContext()),
-                                    std::move(patterns))))
+  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

@@ -31,6 +31,8 @@ const char* GroupAttr = "group";
 const char* KernelShapeAttr = "kernel_shape";
 const char* IsWeightAttr = "is_weight";
 const char* PadAttr = "pad";
+const char* SymbolGeneratedAttr = "symbol_generated";
+const char* StopRun = "stop_run";
 }  // namespace llc
 
 namespace llc {
@@ -48,6 +50,9 @@ ADD_ATTR_FUNC(bool, bool, mlir::BoolAttr)
 ADD_ATTR_FUNC(string, llvm::StringRef, mlir::StringAttr)
 ADD_ATTR_FUNC(string, const char*, mlir::StringAttr)
 #undef ADD_ATTR_FUNC
+void add_unit_attr(mlir::Operation* op, llvm::StringRef attr_name) {
+  op->setAttr(attr_name, mlir::UnitAttr::get(op->getContext()));
+}
 
 const char* layout_to_str(LAYOUT layout) {
   switch (layout) {
@@ -78,4 +83,12 @@ void add_is_weight_attr(mlir::Operation* op, bool value) {
   add_bool_attr(op, IsWeightAttr, value);
 }
 
+void add_symbol_generate_attr(mlir::Operation* op) {
+  add_unit_attr(op, SymbolGeneratedAttr);
+};
+
+
+void add_stop_run_attr(mlir::Operation* op) {
+  add_unit_attr(op, StopRun);
+};
 }  // namespace llc

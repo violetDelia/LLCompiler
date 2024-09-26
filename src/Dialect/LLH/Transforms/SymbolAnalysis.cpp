@@ -42,17 +42,13 @@ void SymbolAnalysis::deleteInstance() {
   }
 }
 
-SymbolicIntOp SymbolAnalysis::buildSymbolInt(OpBuilder* builder,Operation* op) {
+SymbolicIntOp SymbolAnalysis::buildSymbolInt(OpBuilder* builder,
+                                             Operation* op) {
   // std::lock_guard<std::mutex> lock(mutex_);
   std::string name = "s" + std::to_string(symbols_.size());
-  DINFO << "symbol: " << name;
   auto symbol = builder->create<SymbolicIntOp>(builder->getUnknownLoc(), name);
   symbols_[symbol.getSymName()] = op;
   return symbol;
-  // auto name = op.getSymName();
-  // CHECK(llc::MLIR,name.has_value());
-  // CHECK(llc::MLIR, !symbols_.count(name));
-  // symbols_[name] = op.getOperation();
 }
 
 void SymbolAnalysis::debugPrintSymbols() {

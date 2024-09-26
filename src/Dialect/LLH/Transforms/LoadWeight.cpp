@@ -111,7 +111,6 @@ Type npyTypeInfoToType(const char* type_info, Builder* build) {
 mlir::DenseElementsAttr loadNpyFile(mlir::ShapedType type,
                                     const llvm::StringRef& file,
                                     Builder* build) {
-  DINFO << file.str();
   FILE* fp = fopen(file.str().c_str(), "rb");
   CHECK(llc::MLIR, fp) << "read file error: " << file.str();
   mlir::SmallVector<int64_t> shape;
@@ -144,13 +143,12 @@ mlir::DenseElementsAttr loadWeightFile(mlir::ShapedType type,
 struct LoadWeightOp : public LLCOpRewritePattern<WeightOp> {
   using LLCOpRewritePattern::LLCOpRewritePattern;
   LogicalResult match(WeightOp op) const final { return llvm::success(); }
-  void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {
+  void rewrite(WeightOp op, LLCPatternRewriter& rewriter) const final {
     auto weight_file = op.getWeightFile();
     auto type = op->getResult(0).getType();
     auto tensor = mlir::cast_or_null<ShapedType>(type);
     CHECK(llc::MLIR, tensor);
     auto value = loadWeightFile(tensor, weight_file, &rewriter);
-    DINFO << "out";
     auto const_op = rewriter.createOrFold<llh::ConstantOp>(op->getLoc(), value);
     rewriter.replaceOp(op, const_op);
   }

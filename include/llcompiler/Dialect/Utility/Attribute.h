@@ -18,11 +18,11 @@
 #include <initializer_list>
 #include <utility>
 
-#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/IR/Attributes.h"
+#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/Support/LLVM.h"
 
@@ -38,6 +38,8 @@ extern const char* GroupAttr;
 extern const char* KernelShapeAttr;
 extern const char* IsWeightAttr;
 extern const char* PadAttr;
+extern const char* SymbolGeneratedAttr;
+extern const char* StopRun;
 
 void add_op_name_attr(mlir::Operation* op, llvm::StringRef value);
 void add_gloabal_layout_attr(mlir::Operation* op, LAYOUT value);
@@ -45,6 +47,7 @@ void add_group_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
 void add_kernal_shape_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
 void add_is_weight_attr(mlir::Operation* op, bool value);
 void add_layout_attr(mlir::Operation* op, LAYOUT value);
-
+void add_symbol_generate_attr(mlir::Operation* op);
+void add_stop_run_attr(mlir::Operation* op);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_

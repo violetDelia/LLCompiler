@@ -14,6 +14,33 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 
+#include "llcompiler/Dialect/Utility/Macro.h"
+#include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/LogicalResult.h"
+#include "mlir/IR/BuiltinAttributes.h"
 
 #define GET_OP_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
+
+namespace mlir::llh {
+LogicalResult SymbolRelationsOp::verifySymbolUses(
+    SymbolTableCollection &symbolTable) {
+  auto symbol = (*this)->getAttrOfType<SymbolRefAttr>("symbol");
+  LLC_EMITERROR(symbol);
+  SymbolicIntOp symbol_root =
+      symbolTable.lookupNearestSymbolFrom<SymbolicIntOp>(*this, symbol);
+  LLC_EMITERROR(symbol_root);
+  auto relations = (*this)->getAttrOfType<ArrayAttr>("relations");
+  for (auto attr : relations) {
+    auto relation_symbol = llvm::cast<StringAttr>(attr);
+    LLC_EMITERROR(relation_symbol);
+    SymbolicIntOp relation_root =
+        symbolTable.lookupNearestSymbolFrom<SymbolicIntOp>(*this,
+                                                           relation_symbol);
+    LLC_EMITERROR(relation_root);
+  }
+  return llvm::success();
+}
+}  // namespace mlir::llh

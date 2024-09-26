@@ -29,6 +29,8 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/IR/AffineExpr.h"
+#include "mlir/IR/AffineExprVisitor.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -60,31 +62,69 @@ struct replaceTorchSymbolicIntOp
     : public LLCOpRewritePattern<TorchSymbolicIntOp> {
   using LLCOpRewritePattern::LLCOpRewritePattern;
   LogicalResult match(TorchSymbolicIntOp op) const final {
-    if (op->hasAttr("symbol_generate")) return llvm::failure();
+    if (op->hasAttr(llc::SymbolGeneratedAttr)) return llvm::failure();
     return llvm::success();
   }
   void rewrite(TorchSymbolicIntOp op,
-               LLHPatternRewriter& rewriter) const final {
+               LLCPatternRewriter& rewriter) const final {
     auto module = op->getParentOfType<ModuleOp>();
     auto main_func = module.lookupSymbol("main");
     auto symbol_analysis = SymbolAnalysis::getInstance();
-    symbol_analysis->buildSymbolInt(&rewriter, op);
-    op->setAttr("symbol_generate", rewriter.getBoolAttr(true));
+    auto symbol = symbol_analysis->buildSymbolInt(&rewriter, op);
+    rewriter.moveOpBefore(symbol, main_func);
+    llc::add_symbol_generate_attr(op);
+  }
+};
+
+struct replaceSymbolicBindOp : public LLCOpRewritePattern<SymbolicBindOp> {
+  using LLCOpRewritePattern::LLCOpRewritePattern;
+  LogicalResult match(SymbolicBindOp op) const final {
+    if (op->hasAttr(llc::StopRun)) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(SymbolicBindOp op, LLCPatternRewriter& rewriter) const final {
+    auto operand = op.getOperand();
+    auto bind_shape = op.getBindSymbols();
+    auto bind_type = llvm::cast_or_null<RankedTensorType>(operand.getType());
+    CHECK(llc::MLIR_PASS, bind_type);
+    bind_type.dump();
+    auto rank = bind_type.getRank();
+    auto exps = op.getExpressions();
+    exps.dump();
+    DINFO << exps.getNumDims();
+    DINFO << exps.getNumInputs();
+    DINFO << exps.getNumResults();
+    DINFO << exps.getNumSymbols();
+    auto x0 = exps.getResult(0);
+    if(auto ccc =  cast<AffineDimExpr>(x0)) {
+      DINFO << "dim"<<ccc.getPosition();;
+      x0.dump();
+    }
+    auto dim = exps.getResultPosition(x0);
+    if(dim.has_value())DINFO<<dim.value();
+    // s.dump();
+    DINFO << static_cast<int>(x0.getKind());
+
+    // bind_shape.dump();
+    op->dump();
+    llc::add_stop_run_attr(op);
   }
 };
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateLoadWeightBasePatterns(RewritePatternSet& patterns) {
+void populateSymbolCanonicalizationPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<replaceTorchSymbolicIntOp>(context);
+  patterns.add<replaceSymbolicBindOp>(context);
 }
 
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
 
-struct SymbolCanonicalizationPass : llh::impl::SymbolCanonicalizationBase<SymbolCanonicalizationPass> {
+struct SymbolCanonicalizationPass
+    : llh::impl::SymbolCanonicalizationBase<SymbolCanonicalizationPass> {
   void runOnOperation() override;
 };
 }  // namespace
@@ -96,12 +136,12 @@ void SymbolCanonicalizationPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto symbol_analysis = ::mlir::llh::SymbolAnalysis::getInstance();
   auto op = getOperation();
-  // auto* context = &getContext();
-  // RewritePatternSet patterns(context);
-  // populateLoadWeightBasePatterns(patterns);
-  // auto op = getOperation();
-  // if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
-  //   signalPassFailure();
+  auto* context = &getContext();
+  RewritePatternSet patterns(context);
+  populateSymbolCanonicalizationPatterns(patterns);
+  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
+    signalPassFailure();
+  symbol_analysis->debugPrintSymbols();
   LLC_RUN_OUT_PASS
 }
 

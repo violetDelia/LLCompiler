@@ -16,6 +16,10 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_MACRO_H_
 
+#define LLC_EMITERROR(condistion) \
+  CHECK(llc::MLIR, condistion);   \
+  if (condistion) return emitOpError()
+
 #define DEBUG_BUILDED_OP(module, op) \
   DEBUG(module) << "create a " << op.getOperationName().str() << "op.";
 

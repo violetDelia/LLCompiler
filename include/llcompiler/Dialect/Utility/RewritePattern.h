@@ -23,13 +23,13 @@
 
 namespace mlir {
 
-class LLHPatternRewriter : public RewriterBase {
+class LLCPatternRewriter : public RewriterBase {
  public:
-  explicit LLHPatternRewriter(MLIRContext *ctx) : RewriterBase(ctx) {}
+  explicit LLCPatternRewriter(MLIRContext *ctx) : RewriterBase(ctx) {}
   using RewriterBase::RewriterBase;
 
   virtual void processWileBuildOperation(Operation *op) {
-    DINFO << "build: " << op->getName().getStringRef().str();
+    //DINFO << "build: " << op->getName().getStringRef().str();
   }
 
   virtual bool canRecoverFromRewriteFailure() const { return false; }
@@ -88,20 +88,20 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
   }
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const final {
-    auto llh_rewriter = LLHPatternRewriter(rewriter.getContext());
+    auto llh_rewriter = LLCPatternRewriter(rewriter.getContext());
     llh_rewriter.setInsertionPoint(rewriter.getBlock(),
                                    rewriter.getInsertionPoint());
     return matchAndRewrite(cast<SourceOp>(op), llh_rewriter);
   }
 
-  virtual void rewrite(SourceOp op, LLHPatternRewriter &rewriter) const {
+  virtual void rewrite(SourceOp op, LLCPatternRewriter &rewriter) const {
     llvm_unreachable("must override rewrite or matchAndRewrite");
   }
   virtual LogicalResult match(SourceOp op) const {
     llvm_unreachable("must override match or matchAndRewrite");
   }
   virtual LogicalResult matchAndRewrite(SourceOp op,
-                                        LLHPatternRewriter &rewriter) const {
+                                        LLCPatternRewriter &rewriter) const {
     if (succeeded(match(op))) {
       rewrite(op, rewriter);
       return success();

@@ -26,4 +26,16 @@ class LLH_Attr<string name, string attrMnemonic, list<Trait> traits = [],
   
 }
 
+def LLH_Encoding : LLH_Attr<"Encoding", "encoding", []> {
+  let description = [{
+  "tensor encoding"
+  }];
+  let parameters = (ins "mlir::ArrayAttr":$shapes);
+  let assemblyFormat = [{
+    `<`
+      `shapes` `=` $shapes
+    `>`
+  }];
+}
+
 #endif // LLH_ATTRIBUTES

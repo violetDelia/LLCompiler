@@ -65,28 +65,28 @@ def LLH_TorchSymbolicIntOp : LLH_Op<"torch_symbolic_int",[]>{
     let results = (outs LLH_Int64);
 }
 
-def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[SymbolTable, Symbol]>{
+def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
     let arguments = (ins 
        SymbolNameAttr:$sym_name);
 }
 
-def LLH_SymbolicBindOp: LLH_Op<"symbolic_bind">{
+def LLH_SymbolicBindOp: Op<LLH_Dialect,"symbolic_bind">{
     let arguments = (ins 
        LLH_Symbolic_Type:$operand ,
        Variadic<LLH_Int64>:$bind_symbols,
        AffineMapAttr:$expressions);
 }
 
-def LLH_SymbolicRelateOp: LLH_Op<"symbolic_relate">{
+def LLH_SymbolRelationsOp: LLH_Op<"symbol_relations",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
     let arguments = (ins 
-       LLH_Int64:$operand ,
-       Variadic<LLH_Int64>:$bind_symbols,
+       SymbolRefAttr:$symbol,
+       SymbolRefArrayAttr:$relations,
        AffineMapAttr:$expressions);
 }
 
-def LLH_AotOp : LLH_SymbolOp<"aot", []>{
+def LLH_AotOp : LLH_Op<"aot", []>{
     let arguments = (ins 
-       LLH_StringAttr:$name,
+       SymbolNameAttr:$name,
        Variadic<LLH_Computable_Type>:$inputs);
     let results = (outs Variadic<LLH_Computable_Type>:$outputs);
 }

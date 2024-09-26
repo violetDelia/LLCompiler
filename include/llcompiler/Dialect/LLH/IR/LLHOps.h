@@ -17,6 +17,7 @@
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
 #include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "mlir/Bytecode/BytecodeOpInterface.h"
 #include "mlir/Dialect/Traits.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -27,7 +28,6 @@
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/LoopLikeInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
-#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 
 #define PLACEHOLD_FOR_FIX_HEADER
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h.inc"

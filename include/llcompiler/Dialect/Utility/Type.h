@@ -27,9 +27,9 @@ namespace llc {
 std::vector<int64_t> getShapeFrom(const mlir::Type& shapeType);
 std::vector<int64_t> getRankTensorFrom(const mlir::Type& type);
 int64_t getElementSizeFrom(const mlir::ShapedType& shapeType);
-mlir::ex::Layout getLayoutFrom(const mlir::RankedTensorType& value);
-mlir::RankedTensorType cloneTensorWithEncoding(
-    const mlir::RankedTensorType& value, mlir::ex::Layout layout);
+// mlir::ex::Layout getLayoutFrom(const mlir::RankedTensorType& value);
+// mlir::RankedTensorType cloneTensorWithEncoding(
+//     const mlir::RankedTensorType& value, mlir::ex::Layout layout);
 std::vector<int64_t> getUnsqueezeShape(const mlir::ShapedType& shapeType,
                                        int dim = 0);
 std::vector<int64_t> getSqueezeShape(const mlir::ShapedType& shapeType,

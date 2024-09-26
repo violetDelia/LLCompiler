@@ -71,7 +71,7 @@ DenseElementsAttr genZoreElementAttr(Value value) {
   auto val = cast<mlir::RankedTensorType>(value.getType());
   val.getRank();
   CHECK(llc::MLIR, val);
-  auto tensor = llc::cloneTensorWithEncoding(val, mlir::ex::Layout::Any);
+  auto tensor = val;
   auto type = tensor.getElementType();
   BUILD_ATTR(type.isInteger(1), bool, tensor)
   BUILD_ATTR(type.isSignedInteger(8), int8_t, tensor)
@@ -91,7 +91,7 @@ DenseElementsAttr genZoreElementAttr(Value value) {
 RankedTensorType cloneTensorWithLayoutAny(Value value) {
   auto val = cast<mlir::RankedTensorType>(value.getType());
   CHECK(llc::MLIR, val);
-  return llc::cloneTensorWithEncoding(val, mlir::ex::Layout::Any);
+  return val;
 }
 
 mlir::DenseI64ArrayAttr UnsqueezeShape(Value value, int dim = 0) {
