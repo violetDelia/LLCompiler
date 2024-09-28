@@ -19,7 +19,7 @@
 
 namespace mlir::llh {
 
-llh::DimOp buildTensorDim(mlir::Value operand, LLCPatternRewriter* rewrite,
+llh::DimOp buildTensorDim(mlir::Value operand, RewriterBase* rewrite,
                           size_t dim) {
   auto loc = operand.getLoc();
   auto dim_const = rewrite->create<ConstantOp>(
@@ -28,7 +28,7 @@ llh::DimOp buildTensorDim(mlir::Value operand, LLCPatternRewriter* rewrite,
 }
 
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
-                                         LLCPatternRewriter* rewrite) {
+                                         RewriterBase* rewrite) {
   auto tensor = llvm::dyn_cast_or_null<ShapedType>(operand.getType());
   CHECK(llc::MLIR_PASS, tensor);
   auto rank = tensor.getRank();
@@ -39,7 +39,40 @@ llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
   return ranks;
 }
 
-bool isConstIntegerValue(Value value){}
-size_t getConstIntegerValue(Value value){}
+bool isConstIntegerValue(Value value) {
+  auto type = value.getType();
+  if (!llvm::isa<IntegerType>(type)) return false;
+  auto op = value.getDefiningOp();
+  if (llvm::isa<DimOp>(op)) {
+    auto dim_op = cast<DimOp>(op);
+    auto dim_type = llvm::cast<RankedTensorType>(dim_op.getInput().getType());
+    CHECK(llc::MLIR, isConstIntegerValue(dim_op.getDim()));
+    return !dim_type.isDynamicDim(getConstIntegerValue(dim_op.getDim()));
+  }
+  if (llvm::isa<ConstantOp>(op)) {
+    auto constant_op = llvm::cast<ConstantOp>(op);
+    return llvm::isa<IntegerAttr>(constant_op.getValueAttr());
+  }
+  DINFO << "need fold operator: " << op->getName().getStringRef().str();
+  return false;
+};
+
+size_t getConstIntegerValue(Value value) {
+  auto type = value.getType();
+  if (!llvm::isa<IntegerType>(type)) FATAL(llc::MLIR);
+  auto op = value.getDefiningOp();
+  if (llvm::isa<DimOp>(op)) {
+    auto dim_op = cast<DimOp>(op);
+    auto dim_type = llvm::cast<RankedTensorType>(dim_op.getInput().getType());
+    CHECK(llc::MLIR, isConstIntegerValue(dim_op));
+    return dim_type.getDimSize(getConstIntegerValue(dim_op.getDim()));
+  }
+  if (llvm::isa<ConstantOp>(op)) {
+    auto constant_op = llvm::cast<ConstantOp>(op);
+    if (!llvm::isa<IntegerAttr>(constant_op.getValueAttr())) FATAL(llc::MLIR);
+    return llvm::cast<IntegerAttr>(constant_op.getValueAttr()).getInt();
+  }
+  UNIMPLEMENTED(llc::MLIR);
+}
 
 }  // namespace mlir::llh

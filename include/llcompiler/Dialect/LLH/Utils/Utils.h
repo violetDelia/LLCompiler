@@ -30,12 +30,14 @@
 #include "mlir/IR/Value.h"
 
 namespace mlir::llh {
-llh::DimOp buildTensorDim(mlir::Value operand, LLCPatternRewriter* rewrite,
+llh::DimOp buildTensorDim(mlir::Value operand, RewriterBase* rewrite,
                           size_t dim);
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
-                                         LLCPatternRewriter* rewrite);
+                                         RewriterBase* rewrite);
 RankedTensorType cloneTensorWithEncoding(RankedTensorType type,
                                          EncodingAttr encoding);
+size_t getConstIntegerValue(Value value);
+bool isConstIntegerValue(Value value);
 }  // namespace mlir::llh
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_UTILS_H_

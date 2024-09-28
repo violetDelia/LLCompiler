@@ -16,11 +16,14 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/Utils/StaticValueUtils.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -33,49 +36,28 @@
 namespace mlir::llh {
 
 namespace {
-size_t getConstIntegerValue(Value value);
-bool isConstIntegerValue(Value value) {
-  auto type = value.getType();
-  if (!llvm::isa<IntegerType>(type)) return false;
-  auto op = value.getDefiningOp();
-  if (llvm::isa<DimOp>(op)) {
-    auto dim_op = cast<DimOp>(op);
-    auto dim_type = llvm::cast<RankedTensorType>(dim_op.getInput().getType());
-    CHECK(llc::MLIR, isConstIntegerValue(dim_op.getDim()));
-    return !dim_type.isDynamicDim(getConstIntegerValue(dim_op.getDim()));
-  }
-  if (llvm::isa<ConstantOp>(op)) {
-    auto constant_op = llvm::cast<ConstantOp>(op);
-    return llvm::isa<IntegerAttr>(constant_op.getValueAttr());
-  }
-  DINFO << "need fold operator: " << op->getName().getStringRef().str();
-  return false;
-};
 
-size_t getConstIntegerValue(Value value) {
-  auto type = value.getType();
-  if (!llvm::isa<IntegerType>(type)) FATAL(llc::MLIR);
-  auto op = value.getDefiningOp();
-  if (llvm::isa<DimOp>(op)) {
-    auto dim_op = cast<DimOp>(op);
-    auto dim_type = llvm::cast<RankedTensorType>(dim_op.getInput().getType());
-    CHECK(llc::MLIR, isConstIntegerValue(dim_op));
-    return dim_type.getDimSize(getConstIntegerValue(dim_op.getDim()));
+void checkIsReturnOperand(Value value) {
+  for (auto user : value.getUsers()) {
+    if (llvm::isa<mlir::func::ReturnOp>(user)) {
+      UNIMPLEMENTED(llc::MLIR);
+    }
   }
-  if (llvm::isa<ConstantOp>(op)) {
-    auto constant_op = llvm::cast<ConstantOp>(op);
-    if (!llvm::isa<IntegerAttr>(constant_op.getValueAttr())) FATAL(llc::MLIR);
-    return llvm::cast<IntegerAttr>(constant_op.getValueAttr()).getInt();
-  }
-  UNIMPLEMENTED(llc::MLIR);
 }
+void checkIsIfOperand(Value value) { UNIMPLEMENTED(llc::MLIR); }
+void checkIsWhileOperand(Value value) { UNIMPLEMENTED(llc::MLIR); }
 
 void simplyUnarySymbolInfer(Value& value) {
   auto operand_type = value.getDefiningOp()->getOperand(0).getType();
   value.setType(operand_type);
 }
 }  // namespace
-
+#define COMMON_CHECK                              \
+  for (auto res : getOperation()->getResults()) { \
+    checkIsIfOperand(res);                        \
+    checkIsReturnOperand(res);                    \
+    checkIsWhileOperand(res);                     \
+  }  // namespace mlir::llh
 #define UNIMPLEMENTED_INFER_FUNCTION(OP)                                      \
   llvm::LogicalResult OP::inferSymbolicShape() {                              \
     WARN_UNIMPLEMENTED(llc::MLIR) << " op name:" << getOperationName().str(); \
@@ -87,11 +69,12 @@ void simplyUnarySymbolInfer(Value& value) {
   INFER_FUNCTION(OP) {           \
     auto res = getResult();      \
     simplyUnarySymbolInfer(res); \
+    COMMON_CHECK                 \
     return llvm::success();      \
   }
 UNIMPLEMENTED_INFER_FUNCTION(MatMulOp)
 UNIMPLEMENTED_INFER_FUNCTION(LayerNormOp)
-UNIMPLEMENTED_INFER_FUNCTION(BatchNormOp)
+INFER_UNARY_OP(BatchNormOp)
 UNIMPLEMENTED_INFER_FUNCTION(DivOp)
 UNIMPLEMENTED_INFER_FUNCTION(CatOp)
 INFER_UNARY_OP(DropOp)
@@ -112,6 +95,7 @@ INFER_FUNCTION(WeightOp) {
   auto res = getResult();
   auto new_res = symbol_analsis->addEncoding(res);
   res.setType(new_res.getType());
+  COMMON_CHECK
   return llvm::success();
 }
 INFER_FUNCTION(ConstantOp) {
@@ -120,6 +104,7 @@ INFER_FUNCTION(ConstantOp) {
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto res = getResult();
   symbol_analsis->addEncoding(res);
+  COMMON_CHECK
   return llvm::success();
 }
 
@@ -147,6 +132,7 @@ INFER_FUNCTION(ReshapeOp) {
       RankedTensorType::get(new_shape, result_type.getElementType(),
                             EncodingAttr::get(getContext(), symbols));
   res.setType(new_res_type);
+  COMMON_CHECK
   return llvm::success();
 }
 

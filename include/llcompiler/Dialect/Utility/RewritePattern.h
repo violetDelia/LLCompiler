@@ -16,6 +16,7 @@
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_REWRITEPATTERN_H_
 #include <utility>
 
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/PatternMatch.h"
@@ -29,7 +30,10 @@ class LLCPatternRewriter : public RewriterBase {
   using RewriterBase::RewriterBase;
 
   virtual void processWileBuildOperation(Operation *op) {
-    // DINFO << "build: " << op->getName().getStringRef().str();
+    if (auto symbol_op =
+            llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op)) {
+      symbol_op.inferSymbolicShape();
+    }
   }
 
   virtual bool canRecoverFromRewriteFailure() const { return false; }
@@ -119,9 +123,9 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
 template <typename SourceOp>
 struct LLCOpRewritePattern
     : public detail::LLCOpOrInterfaceRewritePatternBase<SourceOp> {
-  /// Patterns must specify the root operation name they match against, and can
-  /// also specify the benefit of the pattern matching and a list of generated
-  /// ops.
+  /// Patterns must specify the root operation name they match against, and
+  /// can also specify the benefit of the pattern matching and a list of
+  /// generated ops.
   LLCOpRewritePattern(MLIRContext *context, PatternBenefit benefit = 1,
                       ArrayRef<StringRef> generatedNames = {})
       : detail::LLCOpOrInterfaceRewritePatternBase<SourceOp>(
