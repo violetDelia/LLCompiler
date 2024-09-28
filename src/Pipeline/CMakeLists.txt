@@ -10,6 +10,7 @@ llcompiler_add_library(LLCPipelines
     LINKS PUBLIC
     MLIRPass
     MLIRTransforms
+    MLIRLLHUtils
     MLIRLLHTransforms
     MLIRLLHToTosa
     MLIRTosaTransforms

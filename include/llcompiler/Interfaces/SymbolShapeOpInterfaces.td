@@ -16,14 +16,16 @@
 
 include "mlir/IR/OpBase.td"
 
-def SymbolShapeOpInterface: OpInterface<"LLHSymbolShapeOpInterface"> {
+def SymbolicInferShapeOpInterface: OpInterface<"SymbolicInferShapeOpInterface"> {
   let description = [{
-    SymbolShapeInterface.
+    SymbolInferShapeOpInterface.
   }];
 
   let cppNamespace = "::mlir";
 
   let methods = [
+    InterfaceMethod<"Infer and set the output shape for the current operation.",
+                    /*retTy=*/"::llvm::LogicalResult",/*methodName=*/ "inferSymbolicShape">
   ];
 }
 

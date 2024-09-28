@@ -16,24 +16,33 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
 #include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
+#include "llvm/ADT/APFloat.h"
+#include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSwitch.h"
+#include "llvm/ADT/TypeSwitch.h"
+#include "llvm/Support/raw_ostream.h"
 #include "mlir/Bytecode/BytecodeOpInterface.h"
 #include "mlir/Dialect/Traits.h"
+#include "mlir/Dialect/Utils/IndexingUtils.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/DialectImplementation.h"
+#include "mlir/IR/Matchers.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
+#include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/TypeUtilities.h"
+#include "mlir/Interfaces/CastInterfaces.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/LoopLikeInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
-
 #define PLACEHOLD_FOR_FIX_HEADER
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.h.inc"
-#include "llcompiler/Dialect/LLH/IR/LLHEunms.h.inc"
-#define GET_ATTRDEF_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h.inc"
 #define GET_TYPEDEF_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.h.inc"
 #define GET_OP_CLASSES

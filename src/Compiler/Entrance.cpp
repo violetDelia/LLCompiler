@@ -51,7 +51,6 @@ void do_compile(const char* xdsl_module, const char* mode, const char* target,
   // ********* load to mlir *********//
   mlir::OwningOpRef<mlir::ModuleOp> module;
   file::str_to_mlir_module(context, module, xdsl_module);
-  module->dump();
   // ********* init pipeline options *********//
   pipleline::BasicPipelineOptions pipleline_options;
   pipleline_options.runMode = str_to_mode(mode);

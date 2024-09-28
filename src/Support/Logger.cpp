@@ -25,12 +25,12 @@
 #include <sstream>
 #include <string>
 
+#include "llcompiler/Support/Core.h"
 #include "spdlog/common.h"
+#include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
 #include "spdlog/sinks/stdout_sinks.h"
 #include "spdlog/spdlog.h"
-#include "llcompiler/Support/Core.h"
-
 
 namespace llc {
 
@@ -92,14 +92,24 @@ void register_logger(const char *module, const LoggerOption &option) {
     auto sink_f = std::make_shared<file_sink>(log_file.c_str(), true);
     sinks.push_back(sink_f);
   }
-  auto log =
-      std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
-  log->set_pattern("[%T] [%n] [%^%l%$] %v");
-  log->set_level(static_cast<spdlog::level>(option.level));
-  spdlog::register_logger(log);
-  INFO(GLOBAL) << "regist log module: " << module
-               << "(lever:" << logger::log_level_to_str(option.level) << ")"
-               << " -> " << log_file;
+  auto logger = spdlog::get(module);
+  if (logger) {
+    logger->set_level(static_cast<spdlog::level>(option.level));
+    logger->sinks().clear();
+    logger->sinks().insert(logger->sinks().end(), sinks.begin(), sinks.end());
+    INFO(GLOBAL) << "replace log module: " << module
+                 << "(lever:" << logger::log_level_to_str(option.level) << ")"
+                 << " -> " << log_file;
+  } else {
+    auto log =
+        std::make_shared<spdlog::logger>(module, sinks.begin(), sinks.end());
+    log->set_pattern("[%T] [%n] [%^%l%$] %v");
+    log->set_level(static_cast<spdlog::level>(option.level));
+    spdlog::register_logger(log);
+    INFO(GLOBAL) << "regist log module: " << module
+                 << "(lever:" << logger::log_level_to_str(option.level) << ")"
+                 << " -> " << log_file;
+  }
 }
 
 Logger::Logger(const char *module, const LOG_LEVEL level)

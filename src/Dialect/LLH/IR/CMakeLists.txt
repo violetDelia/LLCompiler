@@ -4,6 +4,10 @@ llcompiler_add_library(MLIRLLHDialect
     LLHDialect.cpp
     LLHOps.cpp
     LLHFolder.cpp
+    LLHCast.cpp
+    LLHAttrs.cpp
+    LLHinfersymbolShape.cpp
+    LLHEnums.cpp
 
     DEPENDS
     MLIRLLHDialectIncGen

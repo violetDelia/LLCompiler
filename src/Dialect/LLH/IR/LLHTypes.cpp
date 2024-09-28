@@ -141,8 +141,5 @@ llvm::ParseResult parseDynamicDim(
 }
 }  // namespace mlir::llh
 
-#include "llcompiler/Dialect/LLH/IR/LLHEunms.cpp.inc"
-#define GET_ATTRDEF_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.cpp.inc"
 #define GET_TYPEDEF_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHTypes.cpp.inc"

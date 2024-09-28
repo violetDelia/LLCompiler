@@ -51,7 +51,7 @@ class LLCompiler(llcompiler.core.Importer):
             os.makedirs(ir_tree_dir,exist_ok = True)
         self.ir_tree_dir = ir_tree_dir
 
-    def compiler(self, model: Any, inputs: List[torch.Tensor]):
+    def compiler(self, model: Any):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
@@ -82,4 +82,4 @@ class LLCompiler(llcompiler.core.Importer):
                 fw_compiler=self.compiler,
             )
         if self.mode in ["inference"]:
-            return self.compiler(model, inputs)
+            return self.compiler(model)

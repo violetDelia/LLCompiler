@@ -1,3 +1,4 @@
+
 import torch.fx
 from xdsl.context import MLContext
 from xdsl.dialects.func import Func, FuncOp, Return
@@ -30,6 +31,7 @@ from xdsl.dialects.builtin import (
     AffineMapAttr,
     SymbolNameAttr,
     SymbolRefAttr,
+    UnitAttr,
 )
 from ..dialect.llh import TorchSymbolicIntOp
 import tempfile
@@ -70,7 +72,7 @@ class MLIR_Builder:
             **dict(model.named_parameters(remove_duplicate=False)),
             **dict(model.named_buffers(remove_duplicate=False)),
         }
-        model.graph.print_tabular()
+        # model.graph.print_tabular()
         value_map: dict[str, list[SSAValue]] = dict()
         symbol_map: dict[str, TorchSymbolicIntOp] = dict()
         block = Block()
@@ -93,6 +95,7 @@ class MLIR_Builder:
             value_map[name] = op.results
             block.add_op(op)
         func = torch_build_func(model.graph, "main", block, value_map, symbol_map)
+        func.attributes.update({"entrance": UnitAttr()})
         module = ModuleOp(
             [func],
             attributes={"builtin.gloabal_layout": StringAttr("NCHW")},

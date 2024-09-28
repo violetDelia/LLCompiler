@@ -26,7 +26,7 @@ def TransformLayoutToNHWC : Pass<"transform-layout-to-nhwc","ModuleOp"> {
 }
 
 def LoadWeight : Pass<"load-weight","ModuleOp"> {
-  let summary = "将weightOp 转为 constOp 进行优化";
+  let summary = "convert weight to constant";
   let description = [{
   }];
   let constructor = "mlir::llh::createLoadWeightPass()";
@@ -38,13 +38,14 @@ def LoadWeight : Pass<"load-weight","ModuleOp"> {
 //   let constructor = "mlir::llh::createStoreConstToWeightPass()";
 // }
 
-def SymbolCanonicalization : Pass<"symbol-canonicalization","ModuleOp"> {
-  let summary = "规范以及初始化符号表达系统";
-  let constructor = "mlir::llh::createGenerateSymbolPass()";
+def InferSymbolShape : Pass<"infer-symbol-shape","ModuleOp"> {
+  let summary = "generate symbol";
+  let constructor = "mlir::llh::createInferSymbolShapePass()";
+  let dependentDialects = ["mlir::llh::LLHDialect"];
 }
 
 def Operationlegalization : Pass<"operation-legalization","ModuleOp"> {
-  let summary = "合法化op";
+  let summary = "legalization for the operation";
   let constructor = "mlir::llh::createOperationlegalizationPass()";
 }
 

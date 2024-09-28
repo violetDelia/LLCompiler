@@ -17,9 +17,15 @@
 #include "llcompiler/Dialect/Utility/Macro.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/IR/Attributes.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/DialectImplementation.h"
+#include "mlir/IR/OpDefinition.h"
+#include "mlir/IR/OpImplementation.h"
 
 #define GET_OP_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"

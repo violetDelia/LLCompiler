@@ -32,7 +32,9 @@ def LLH_Dialect : Dialect{
     let useDefaultTypePrinterParser = 1;
     let extraClassDeclaration = [{
         void registerTypes();
+        void registerAttributes();
     }];
+    let dependentDialects = ["mlir::ex::IRExtensionDialect"];
     
 }
 

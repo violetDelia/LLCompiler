@@ -161,6 +161,16 @@ def aten_view_convert(
     )
 
 
+
+@TORCH_FUNCTION_TRANSLATE(F.adaptive_avg_pool2d)
+def flatten_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):  
+    return commond_build_op(AdaptiveAvgPoolOp.build, 1, node, value_map, block)
+
 @TORCH_FUNCTION_TRANSLATE("flatten")
 def flatten_convert(
     node: torch.fx.node.Node,
@@ -195,7 +205,7 @@ def cat_convert(
     operands = []
     for arg in node.args[0]:
         operands.append(get_arg_value(arg, value_map, block))
-    attrs = {"dim": IntegerAttr(node.kwargs["dim"], i64)}
+    attrs = {"dim": IntegerAttr(node.args[1], i64)}
     return CatOp(operands=[operands], attributes=attrs, result_types=[result_type])
 
 

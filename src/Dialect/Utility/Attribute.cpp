@@ -33,6 +33,7 @@ const char* IsWeightAttr = "is_weight";
 const char* PadAttr = "pad";
 const char* SymbolGeneratedAttr = "symbol_generated";
 const char* StopRun = "stop_run";
+const char* Entrance = "entrance";
 }  // namespace llc
 
 namespace llc {
@@ -87,8 +88,5 @@ void add_symbol_generate_attr(mlir::Operation* op) {
   add_unit_attr(op, SymbolGeneratedAttr);
 };
 
-
-void add_stop_run_attr(mlir::Operation* op) {
-  add_unit_attr(op, StopRun);
-};
+void add_stop_run_attr(mlir::Operation* op) { add_unit_attr(op, StopRun); };
 }  // namespace llc

@@ -56,7 +56,7 @@ def onnx_weight_translate(weight: onnx.onnx_ml_pb2.TensorProto):
     weight_file = os.path.join(
         os.path.dirname(__file__),
         "LLcompiler_weight_temp",
-        datetime.now().astimezone().isoformat(),
+        datetime.now().astimezone().isoformat(),weight.name
     )
     os.makedirs(os.path.dirname(weight_file), exist_ok=True)
     onnx._save_bytes(weight.raw_data, weight_file)

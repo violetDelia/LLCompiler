@@ -23,6 +23,8 @@
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
+#include "mlir/IR/Attributes.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "mlir/Support/LLVM.h"
 #define GET_ATTRDEF_CLASSES
 #include "llcompiler/Dialect/IRExtension/IR/Attrs.cpp.inc"

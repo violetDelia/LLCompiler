@@ -15,7 +15,7 @@
 #define LLH_ATTRIBUTES
 
 include "llcompiler/Dialect/LLH/IR/LLHEnums.td"
-include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
+include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
 
 class LLH_Attr<string name, string attrMnemonic, list<Trait> traits = [],
                    string baseCppClass = "::mlir::Attribute">
@@ -30,10 +30,21 @@ def LLH_Encoding : LLH_Attr<"Encoding", "encoding", []> {
   let description = [{
   "tensor encoding"
   }];
-  let parameters = (ins "mlir::ArrayAttr":$shapes);
+  let parameters = (ins ArrayRefParameter<"mlir::SymbolRefAttr", "">:$shape_symbols);
+  let builders = [
+    AttrBuilder<(ins "mlir::ArrayRef<mlir::StringRef>":$shape_symbols), [{
+      mlir::SmallVector<mlir::SymbolRefAttr> symbols;
+      for (auto sym : shape_symbols) {
+        symbols.push_back(
+            SymbolRefAttr::get($_ctxt, StringAttr::get($_ctxt, sym)));
+      }
+      return $_get($_ctxt, symbols);
+    }]>,
+  ];
+  //let hasCustomAssemblyFormat = 1;
   let assemblyFormat = [{
     `<`
-      `shapes` `=` $shapes
+      `shapes` `=` $shape_symbols
     `>`
   }];
 }

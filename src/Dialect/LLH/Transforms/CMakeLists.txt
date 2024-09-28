@@ -2,8 +2,7 @@ llcompiler_add_library(MLIRLLHTransforms
   SRC_FILES
   TransformLayoutToNHWC.cpp
   LoadWeight.cpp
-  SymbolAnalysis.cpp
-  GenerateSymbol.cpp
+  InferSymbolShape.cpp
   Operationlegalization.cpp
 
   DEPENDS
@@ -17,6 +16,8 @@ llcompiler_add_library(MLIRLLHTransforms
   MLIRPass
   MLIRIRExtension
   LLCMLIRUtility
+  MLIRLLHUtils
+  MLIRSymbolShapeOpInterfaces
 )
 
 # add_mlir_library(MLIRLLHTransforms

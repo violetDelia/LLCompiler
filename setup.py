@@ -33,7 +33,7 @@ import setuptools.command.develop
 
 VERSION = "0.0.1"
 TOP_DIR = os.path.realpath(os.path.dirname(__file__))
-CMAKE_BUILD_DIR = os.path.join(TOP_DIR, ".setuptools-cmake-build")
+CMAKE_BUILD_DIR = os.path.join(TOP_DIR, "build")
 WINDOWS = os.name == "nt"
 CMAKE = shutil.which("cmake3") or shutil.which("cmake")
 BUILDER = shutil.which("ninja")

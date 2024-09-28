@@ -40,7 +40,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   }
   pm.addPass(mlir::llh::createOperationlegalizationPass());  //合法化非法的Op
   pm.addPass(::mlir::createInlinerPass());                   // 内联
-  pm.addPass(mlir::llh::createGenerateSymbolPass());         // 符号表达
+  pm.addPass(mlir::llh::createInferSymbolShapePass());         // 符号推导和shapeinfer
+  pm.addPass(mlir::createCanonicalizerPass());    //规范化
   pm.addPass(mlir::llh::createLoadWeightPass());  //将WeightOp转换为constant
   pm.addPass(mlir::createCanonicalizerPass());    //规范化
 }

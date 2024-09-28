@@ -20,7 +20,7 @@ include "mlir/Interfaces/SideEffectInterfaces.td"
 include "llcompiler/Interfaces/SymbolShapeOpInterfaces.td"
 include "mlir/IR/SymbolInterfaces.td"
 
-
+include "mlir/Interfaces/CastInterfaces.td"
 class LLH_Op<string mnemonic, list<Trait> traits = [Pure]> :
         Op<LLH_Dialect, mnemonic, traits>{
     let summary = cppNamespace#opName#" op";
@@ -30,7 +30,7 @@ class LLH_Op<string mnemonic, list<Trait> traits = [Pure]> :
 }
 
 class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
-        LLH_Op<mnemonic,traits#[InferShapedTypeOpInterface,SymbolShapeOpInterface]>{}
+        LLH_Op<mnemonic,traits#[DeclareOpInterfaceMethods<InferShapedTypeOpInterface>,DeclareOpInterfaceMethods<SymbolicInferShapeOpInterface>]>{}
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
@@ -60,24 +60,43 @@ class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type Operand
 
 
 def LLH_TorchSymbolicIntOp : LLH_Op<"torch_symbolic_int",[]>{
+    let description = [{
+        torch 框架的symbol信息, 已弃用
+    }];
     let arguments = (ins 
        LLH_StringAttr:$sym_name);
     let results = (outs LLH_Int64);
 }
 
-def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
-    let arguments = (ins 
-       SymbolNameAttr:$sym_name);
-}
-
 def LLH_SymbolicBindOp: Op<LLH_Dialect,"symbolic_bind">{
+    let description = [{
+        torch 框架的symbol信息, 已弃用
+    }];
     let arguments = (ins 
        LLH_Symbolic_Type:$operand ,
        Variadic<LLH_Int64>:$bind_symbols,
        AffineMapAttr:$expressions);
 }
 
+def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
+    let description = [{
+        symbol 信息
+    }];
+    let arguments = (ins 
+       SymbolNameAttr:$sym_name);
+}
+
+def LLH_SymbolicCastOp: Op<LLH_Dialect,"symbolic_cast",[DeclareOpInterfaceMethods<CastOpInterface>]>{
+    let arguments = (ins 
+       LLH_Symbolic_Type:$operand);
+    let results = (outs 
+        LLH_Tensor);
+}
+
 def LLH_SymbolRelationsOp: LLH_Op<"symbol_relations",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
+    let description = [{
+        描述符号关系的op
+    }];
     let arguments = (ins 
        SymbolRefAttr:$symbol,
        SymbolRefArrayAttr:$relations,
@@ -91,7 +110,7 @@ def LLH_AotOp : LLH_Op<"aot", []>{
     let results = (outs Variadic<LLH_Computable_Type>:$outputs);
 }
 
-def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike,FirstAttrDerivedResultType]>{
+def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike]>{
     let arguments = (ins 
       LLH_ConstantAttr:$value);
     let results = (outs LLH_Computable_Type);

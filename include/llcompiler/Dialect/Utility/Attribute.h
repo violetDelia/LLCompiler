@@ -40,6 +40,7 @@ extern const char* IsWeightAttr;
 extern const char* PadAttr;
 extern const char* SymbolGeneratedAttr;
 extern const char* StopRun;
+extern const char* Entrance;
 
 void add_op_name_attr(mlir::Operation* op, llvm::StringRef value);
 void add_gloabal_layout_attr(mlir::Operation* op, LAYOUT value);

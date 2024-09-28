@@ -289,7 +289,7 @@ def commond_build_op(
             result_types=[i64],
             attributes=attrs,
         )
-    raise NotImplementedError
+    raise NotImplementedError(out,type(out))
 
 
 def _expand_to_2_if_int(value):
@@ -402,7 +402,6 @@ def torch_build_func(
             raise NotImplementedError(node.op, type(node.op))
     block.add_op(Return(*return_values))
     region: Region = Region(block)
-    print(input_types)
     func = FuncOp(name, (input_types, output_types), region=region)
     return func
 

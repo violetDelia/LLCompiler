@@ -30,4 +30,19 @@ def IRExtension_LayoutAttr : EnumAttr<IRExtension_Dialect, IRExtension_Layout, "
   let assemblyFormat = "`<` $value `>`";
 }
 
+
+// def LLH_AUTO_PAD_NOTSET         : I32EnumAttrCase<"DEFAULT", 0>;
+// def LLH_AUTO_PAD_SAME_UPPER     : I32EnumAttrCase<"SAME_UPPER", 1>;
+// def LLH_AUTO_PAD_SAME_LOWER     : I32EnumAttrCase<"SAME_LOWER", 2>;
+// def LLH_AUTO_PAD_VALID          : I32EnumAttrCase<"VALID", 3>;
+// def LLH_AutoPad : I32EnumAttr<"AutoPad",
+//     "auto pad must be either NOTSET, SAME_UPPER, SAME_LOWER or VALID. Where default value is NOTSET, which means explicit padding is used. SAME_UPPER or SAME_LOWER mean pad the input so that output_shape[i] = ceil(input_shape[i] / strides[i]) for each axis i. The padding is split between the two sides equally or almost equally (depending on whether it is even or odd). In case the padding is an odd number, the extra padding is added at the end for SAME_UPPER and at the beginning for SAME_LOWER.",
+//     [LLH_AUTO_PAD_NOTSET, LLH_AUTO_PAD_SAME_UPPER, LLH_AUTO_PAD_SAME_LOWER, LLH_AUTO_PAD_VALID]> {
+//   let genSpecializedAttr = 0;
+//   let cppNamespace = "::mlir::llh";
+// }
+// def LLH_AutoPadAttr : EnumAttr<IRExtension_Dialect, LLH_AutoPad, "AutoPad">{
+//   let assemblyFormat = "`<` $value `>`";
+// }
+
 #endif //LLC_IREX_EUNMS

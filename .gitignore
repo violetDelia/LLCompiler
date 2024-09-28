@@ -14,8 +14,9 @@ LLcompiler_weight_temp
 dist
 llcompiler.egg-info
 builtin_module_no-symbol-name
-it_tree
+ir_tree
 out.mlir
-doc
+doc/开发日记
+llcompiler_.cpython-310-x86_64-linux-gnu.so
 
 

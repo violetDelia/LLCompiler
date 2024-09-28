@@ -1,0 +1,80 @@
+{
+ "runs":[
+  {
+   "tool":{
+    "driver":{
+     "name":"torch.onnx.dynamo_export",
+     "contents":[
+      "localizedData",
+      "nonLocalizedData"
+     ],
+     "language":"en-US",
+     "rules":[
+      {
+       "id":"FXE0010",
+       "fullDescription":{
+        "text":"FX graph transformation during ONNX export before converting from FX IR to ONNX IR.",
+        "markdown":"This diagnostic tracks the FX passes executed during the ONNX export process prior\nto converting from FX IR (Intermediate Representation) to ONNX IR.\n\nUnder the scope of ONNX export, an FX pass refers to a specific transformation applied to the FX GraphModule.\nThe primary aim of these passes is to streamline the graph into a format that aligns more with the ONNX IR.\nMoreover, these passes work to substitute unsupported FX IR features with those recognized and endorsed by\nONNX IR. Common transformations include, but aren't limited to, decomposition, functionalization and\ntype promotion.\n\nFor those who are interested in a comprehensive log detailing the modifications made during these passes,\nthere are a couple of options:\n\n- Set DiagnosticOptions.verbosity_level to logging.DEBUG.\n- Activate the environment variable TORCH_LOGS='onnx_diagnostics'.\n\nHowever, it's noteworthy that by default, such detailed logging is turned off. The primary reason being\nits considerable impact on performance.\n\nFor an in-depth understanding of each specific pass, please refer to the directory: torch/onnx/_internal/fx/passes.\n"
+       },
+       "name":"fx-pass",
+       "shortDescription":{
+        "text":"FX graph transformation during ONNX export before converting from FX IR to ONNX IR."
+       }
+      }
+     ],
+     "version":"2.4.1+cu124"
+    }
+   },
+   "language":"en-US",
+   "newlineSequences":[
+    "\r\n",
+    "\n"
+   ],
+   "results":[
+    {
+     "message":{
+      "markdown":"Running Decompose pass. \n\n## Additional Message:\n\n## Function Signature\n### Function Signature Transform.run\n- self: <class 'torch.onnx._internal.fx.passes.decomp.Decompose'>\n- args: Tuple[length=1](\nTensor(f32[2, 3, 224, 224]),\n)\nFor detailed logging of graph modifications by this pass, either set `DiagnosticOptions.verbosity_level` to `logging.DEBUG` or use the environment variable `TORCH_LOGS='onnx_diagnostics'`.\n## Exception log\n```\nTraceback (most recent call last):\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/onnx/_internal/diagnostics/infra/decorator.py\", line 136, in wrapper\n    return_values = fn(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/onnx/_internal/fx/_pass.py\", line 278, in run\n    module = self._run(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/onnx/_internal/fx/passes/decomp.py\", line 72, in _run\n    decomposed_module = proxy_tensor.make_fx(\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 1421, in wrapped\n    return make_fx_tracer.trace(f, *args)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 1367, in trace\n    return self._trace_inner(f, *args)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 1354, in _trace_inner\n    t = dispatch_trace(\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_compile.py\", line 31, in inner\n    return disable_fn(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_dynamo/eval_frame.py\", line 600, in _fn\n    return fn(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 642, in dispatch_trace\n    graph = tracer.trace(root, concrete_args)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_dynamo/eval_frame.py\", line 600, in _fn\n    return fn(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/_symbolic_trace.py\", line 822, in trace\n    (self.create_arg(fn(*args)),),\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 660, in wrapped\n    out = f(*tensors)\n\n  File \"<string>\", line 1, in <lambda>\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/onnx/_internal/fx/passes/_utils.py\", line 31, in wrapped\n    return torch.fx.Interpreter(graph_module).run(*args)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/interpreter.py\", line 146, in run\n    self.env[node] = self.run_node(node)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/interpreter.py\", line 203, in run_node\n    return getattr(self, n.op)(n.target, args, kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/interpreter.py\", line 320, in call_module\n    return submod(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/_symbolic_trace.py\", line 800, in module_call_wrapper\n    return self.call_module(mod, forward, args, kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 569, in call_module\n    return forward(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/_symbolic_trace.py\", line 793, in forward\n    return _orig_module_call(mod, *args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/nn/modules/module.py\", line 1553, in _wrapped_call_impl\n    return self._call_impl(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/nn/modules/module.py\", line 1562, in _call_impl\n    return forward_call(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/nn/modules/batchnorm.py\", line 176, in forward\n    return F.batch_norm(\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/nn/functional.py\", line 2497, in batch_norm\n    return handle_torch_function(\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/overrides.py\", line 1630, in handle_torch_function\n    result = mode.__torch_function__(public_api, types, args, kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 705, in __torch_function__\n    return func(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/nn/functional.py\", line 2512, in batch_norm\n    return torch.batch_norm(\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_decomp/decompositions.py\", line 1852, in native_batch_norm_decomposition\n    return aten._native_batch_norm_legit(\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_ops.py\", line 1061, in __call__\n    return self_._op(*args, **(kwargs or {}))\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/utils/_stats.py\", line 21, in wrapper\n    return fn(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 755, in __torch_dispatch__\n    return self.inner_torch_dispatch(func, types, args, kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 790, in inner_torch_dispatch\n    return proxy_call(self, func, self.pre_dispatch, args, kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/fx/experimental/proxy_tensor.py\", line 467, in proxy_call\n    out = func(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_ops.py\", line 667, in __call__\n    return self_._op(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/utils/_stats.py\", line 21, in wrapper\n    return fn(*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_subclasses/fake_tensor.py\", line 1061, in __torch_dispatch__\n    return self.dispatch(func, types, args, kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_subclasses/fake_tensor.py\", line 1450, in dispatch\n    return self._cached_dispatch_impl(func, types, args, kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_subclasses/fake_tensor.py\", line 1153, in _cached_dispatch_impl\n    output = self._dispatch_impl(func, types, args, kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_subclasses/fake_tensor.py\", line 1690, in _dispatch_impl\n    return decomposition_table[func](*args, **kwargs)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_decomp/decompositions.py\", line 1906, in _native_batch_norm_legit\n    output, save_mean, save_rstd, _, _ = native_batch_norm_helper(\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_decomp/decompositions.py\", line 1776, in native_batch_norm_helper\n    weight = _unsqueeze_to_dim(weight, input.dim() - 1)\n\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/_decomp/decompositions.py\", line 103, in _unsqueeze_to_dim\n    for _ in range(dim - x.dim()):\n\nAttributeError: 'NoneType' object has no attribute 'dim'\n\nWhile executing %x_18 : [num_users=1] = call_module[target=getattr_L__self___inception3a_branch3___0___bn](args = (%x_17,), kwargs = {})\nOriginal traceback:\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torchvision/models/googlenet.py\", line 174, in forward\n    x, aux1, aux2 = self._forward(x)\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torchvision/models/googlenet.py\", line 123, in _forward\n    x = self.inception3a(x)\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/nn/modules/module.py\", line 1562, in _call_impl\n    return forward_call(*args, **kwargs)\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torchvision/models/googlenet.py\", line 227, in forward\n    outputs = self._forward(x)\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torchvision/models/googlenet.py\", line 220, in _forward\n    branch3 = self.branch3(x)\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torch/nn/modules/module.py\", line 1562, in _call_impl\n    return forward_call(*args, **kwargs)\n  File \"/home/lfr/.local/lib/python3.10/site-packages/torchvision/models/googlenet.py\", line 274, in forward\n    x = self.bn(x)\n\n\n```",
+      "text":"Running Decompose pass. "
+     },
+     "codeFlows":[
+      {
+       "threadFlows":[
+        {
+         "locations":[]
+        }
+       ]
+      }
+     ],
+     "graphs":[],
+     "kind":"fail",
+     "level":"error",
+     "locations":[
+      {
+       "message":{
+        "text":"Transform.run"
+       },
+       "physicalLocation":{
+        "artifactLocation":{
+         "uri":"/home/lfr/.local/lib/python3.10/site-packages/torch/onnx/_internal/fx/_pass.py"
+        },
+        "region":{
+         "snippet":{
+          "text":"@diagnostics.diagnose_call("
+         },
+         "startLine":243
+        }
+       }
+      }
+     ],
+     "properties":{
+      "tags":[]
+     },
+     "ruleId":"FXE0010",
+     "stacks":[]
+    }
+   ]
+  }
+ ],
+ "version":"2.1.0",
+ "schemaUri":"https://docs.oasis-open.org/sarif/sarif/v2.1.0/cs01/schemas/sarif-schema-2.1.0.json"
+}

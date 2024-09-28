@@ -1,5 +1,6 @@
 import llcompiler.compiler as LLC
 import os.path
+import subprocess
 import torch
 import torchvision
 import torch.nn as nn
@@ -11,39 +12,18 @@ import onnx
 import torchgen
 import torch._dynamo
 import os
-
+from llcompiler.test_models import *
 torch._dynamo.config.suppress_errors = True
 torch.nn.Transformer
 from transformers import BertTokenizer, BertModel, BertForMaskedLM
+import typing
 
-
-class Net(nn.Module):
-    def __init__(self):
-        super(Net, self).__init__()
-        self.conv_layer1 = nn.Conv2d(
-            3, 10, stride=2, kernel_size=5, padding=2, dilation=5
-        )
-        self.conv_layer2 = nn.Conv2d(10, 3, kernel_size=5, padding=5, bias=True)
-        self.batch = nn.BatchNorm2d(100)
-        self.cf = nn.Linear(int((224 - 17) / 2 + 7), 2)
-
-    def forward(self, x: torch.Tensor):
-        x = x.reshape(1, 6, x.shape[2], x.shape[3])
-        x = x.reshape(2, 3, 224, 224)
-        x = self.conv_layer1(x)
-        x1 = x + x
-        c = 2 + 2 * 5 / 3
-        x = x / c
-        x2 = x + x1 + x * x
-        x = self.conv_layer2(x2 + x1)
-        x = self.cf(x + x * x + x / 2)
-        return x
 
 
 @run_time
-def compiler_fx(model, inputs):
+def compiler_fx(model, inputs, name):
     compiler = LLC.LLCompiler(
-        mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx")
+        mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", name)
     )
     model = torch.compile(
         model=model,
@@ -59,6 +39,8 @@ def compiler_onnx(model, inputs):
     compiler = LLC.LLCompiler(
         mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "onnx")
     )
+    onnx_model = torch.onnx.export(model, inputs, dynamo=True).model_proto
+    compiler.compiler(onnx_model)
     return model(inputs)
 
 
@@ -74,19 +56,44 @@ def torch_compiler(model, inputs):
     return model(inputs)
 
 
+module_dict = {
+    Base:torch.randn((2, 3, 224, 224), device="cpu"),
+    torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
+    torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
+    torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
+    # torchvision.models.convnext_tiny: torch.randn((2, 3, 224, 224), device="cpu"),
+    # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
+}
+
+
+def run_model_dict(dict):
+    for func, inputs in dict.items():
+        compiler = LLC.LLCompiler(
+            mode="inference",
+            ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", func.__name__),
+        )
+        model = torch.compile(
+            model=func(),
+            backend=compiler,
+            dynamic=True,
+            fullgraph=True,
+        )
+        model(inputs)
+
+
 if __name__ == "__main__":
+    run_model_dict(module_dict)
 
     # model = Net()
-    model = torchvision.models.resnet18()
+    # model = torchvision.models.googlenet()
     # input = (torch.rand((10, 32, 512)), torch.rand((20, 32, 512)))
     # model = Net()
-    input = torch.randn((2, 3, 224, 224))
+    # input = torch.randn((2, 3, 224, 224), device="cpu")
 
     # onnx_model = torch.onnx.dynamo_export(
     #     model, input, export_options=torch.onnx.ExportOptions(dynamic_shapes=True)
     # )
 
-    compiler_fx(model, input)
-    compiler_onnx(model, input)
+    # compiler_fx(model, input)
 
     # torch_compiler(model, input)

@@ -26,6 +26,7 @@
 namespace llc::compiler {
 
 void load_dialect(mlir::MLIRContext& context) {
+  context.getOrLoadDialect<mlir::BuiltinDialect>();
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
   context.getOrLoadDialect<mlir::func::FuncDialect>();
   
