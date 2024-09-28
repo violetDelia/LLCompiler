@@ -13,11 +13,11 @@ import torchgen
 import torch._dynamo
 import os
 from llcompiler.test_models import *
+
 torch._dynamo.config.suppress_errors = True
 torch.nn.Transformer
 from transformers import BertTokenizer, BertModel, BertForMaskedLM
 import typing
-
 
 
 @run_time
@@ -57,10 +57,12 @@ def torch_compiler(model, inputs):
 
 
 module_dict = {
-    Base:torch.randn((2, 3, 224, 224), device="cpu"),
+    Base: torch.randn((2, 3, 224, 224), device="cpu"),
     torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
     torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
     torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
+    # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
+    # torchvision.models.vit_b_16: torch.randn((2, 3, 224, 224), device="cpu")
     # torchvision.models.convnext_tiny: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
 }

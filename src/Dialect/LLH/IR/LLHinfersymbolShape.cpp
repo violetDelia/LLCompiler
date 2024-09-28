@@ -138,5 +138,6 @@ INFER_FUNCTION(ReshapeOp) {
 
 #undef INFER_FUNCTION
 #undef INFER_UNARY_OP
+#undef COMMON_CHECK
 #undef UNIMPLEMENTED_INFER_FUNCTION
 }  // namespace mlir::llh

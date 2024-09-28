@@ -185,7 +185,7 @@ def LLH_ExpandOp : LLH_SymbolOp<"expand",[]>{
         LLH_Tensor);
 }
 
-def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank,], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
+def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
 def LLH_DropOp : LLH_UnaryOp<"drop", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
 def LLH_FlattenOp : LLH_UnaryOp<"flatten", [], LLH_Tensor, LLH_Tensor, (ins LLH_Int64:$dim)>;
 def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor, LLH_Tensor>;

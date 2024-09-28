@@ -58,7 +58,7 @@ def builtin_mul_convert(
     return commond_build_op(MulOp.build, 2, node, value_map, block)
 
 
-@TORCH_FUNCTION_TRANSLATE("aten::add.Tensor", "add","iadd")
+@TORCH_FUNCTION_TRANSLATE("aten::add.Tensor", "add", "iadd")
 def builtin_add_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
@@ -88,7 +88,7 @@ def aten_sym_size_int_convert(
     return commond_build_op(DimOp.build, 2, node, value_map, block)
 
 
-@TORCH_FUNCTION_TRANSLATE("aten::relu",F.relu)
+@TORCH_FUNCTION_TRANSLATE("aten::relu", F.relu)
 def aten_sym_size_int_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
@@ -142,7 +142,7 @@ def aten_view_convert(
     stride = node.args[2] if (arg_len > 2) else [1, 1]
     padding = node.args[3] if (arg_len > 3) else [0, 0]
     dilation = node.args[4] if (arg_len > 4) else [1, 1]
-    ceil_mode = node.args[5] if (arg_len > 5) else 0    
+    ceil_mode = node.args[5] if (arg_len > 5) else 0
     result_type = torch_fake_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     attrs = {
@@ -161,15 +161,15 @@ def aten_view_convert(
     )
 
 
-
 @TORCH_FUNCTION_TRANSLATE(F.adaptive_avg_pool2d)
 def flatten_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
-):  
+):
     return commond_build_op(AdaptiveAvgPoolOp.build, 1, node, value_map, block)
+
 
 @TORCH_FUNCTION_TRANSLATE("flatten")
 def flatten_convert(
@@ -205,7 +205,13 @@ def cat_convert(
     operands = []
     for arg in node.args[0]:
         operands.append(get_arg_value(arg, value_map, block))
-    attrs = {"dim": IntegerAttr(node.args[1], i64)}
+    attrs = {
+        "dim": (
+            IntegerAttr(node.kwargs["dim"], i64)
+            if "dim" in node.kwargs
+            else IntegerAttr(node.args[1], i64)
+        )
+    }
     return CatOp(operands=[operands], attributes=attrs, result_types=[result_type])
 
 
