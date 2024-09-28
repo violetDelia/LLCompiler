@@ -101,7 +101,7 @@ ConstantOp buildConstTensorFromScalar(ConstantOp op,
   }
 
   return rewriter->create<ConstantOp>(loc, tensor_type, new_value);
-};
+}
 
 //===----------------------------------------------------------------------===//
 // transform patterns

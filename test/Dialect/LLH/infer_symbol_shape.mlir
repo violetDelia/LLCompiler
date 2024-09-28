@@ -37,6 +37,8 @@ func.func @reshape(%arg0: tensor<?x?x224x226xf32, #llh.encoding<shapes = @s0, @s
   %5 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %14 = "llh.dim"(%arg0, %7) : (tensor<?x?x224x226xf32, #llh.encoding<shapes = @s0, @s1, @c224, @c226>>, i64) -> i64
   %15 = "llh.dim"(%arg0, %5) : (tensor<?x?x224x226xf32, #llh.encoding<shapes = @s0, @s1, @c224, @c226>>, i64) -> i64
+  // CHECK: llh.reshape
+  // CHECK-SAME:-> tensor<1x6x224x226xf32, #llh.encoding<shapes = @c1, @c6, @c224, @c226>>
   %16 = "llh.reshape"(%arg0, %4, %3, %14, %15) : (tensor<?x?x224x226xf32, #llh.encoding<shapes = @s0, @s1, @c224, @c226>>, i64, i64, i64, i64) -> tensor<1x?x224x226xf32>
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   return 

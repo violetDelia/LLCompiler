@@ -37,4 +37,5 @@ void LLHDialect::registerAttributes() {
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.cpp.inc"
       >();
 }
-}  // namespace mlir::ex
+}  // namespace mlir::llh
+

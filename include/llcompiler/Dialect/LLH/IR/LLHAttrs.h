@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_cN_IR_ATTRS_H_
-#define INCLUDE_LLCOMPILER_DIALECT_cN_IR_ATTRS_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_
 
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "mlir/IR/Attributes.h"
@@ -22,4 +22,5 @@
 #define GET_ATTRDEF_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h.inc"
 
-#endif  // INCLUDE_LLCOMPILER_DIALECT_IREXTENSION_IR_ATTRS_H_
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_
+

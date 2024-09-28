@@ -18,5 +18,6 @@ ir_tree
 out.mlir
 doc/开发日记
 llcompiler_.cpython-310-x86_64-linux-gnu.so
+build
 
 

@@ -118,7 +118,7 @@ mlir::DenseElementsAttr loadNpyFile(mlir::ShapedType type,
   size_t data_bytes;
   bool fortran_order;
   parseNpyInfo(fp, shape, type_info, fortran_order, data_bytes);
-  char* data = (char*)malloc(data_bytes);
+  char* data = reinterpret_cast<char*>(malloc(data_bytes));
   size_t nread = fread(data, 1, data_bytes, fp);
   fclose(fp);
   CHECK_EQ(llc::MLIR, nread, data_bytes) << "read failed";

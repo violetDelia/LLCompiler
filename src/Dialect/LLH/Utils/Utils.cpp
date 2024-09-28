@@ -25,7 +25,7 @@ llh::DimOp buildTensorDim(mlir::Value operand, LLCPatternRewriter* rewrite,
   auto dim_const = rewrite->create<ConstantOp>(
       loc, IntegerAttr::get(rewrite->getI64Type(), dim));
   return rewrite->create<DimOp>(loc, operand, dim_const);
-};
+}
 
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
                                          LLCPatternRewriter* rewrite) {
@@ -37,9 +37,9 @@ llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
     ranks.push_back(buildTensorDim(operand, rewrite, i));
   }
   return ranks;
-};
+}
 
-bool isConstIntegerValue(Value value){};
-size_t getConstIntegerValue(Value value){};
+bool isConstIntegerValue(Value value){}
+size_t getConstIntegerValue(Value value){}
 
 }  // namespace mlir::llh

@@ -19,6 +19,7 @@
 #include <cstdint>
 #include <string>
 
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
@@ -42,7 +43,21 @@ SymbolAnalysisManager* SymbolAnalysisManager::instance_ =
 std::mutex SymbolAnalysisManager::mutex_;
 
 std::mutex SymbolAnalysis::mutex_;
-
+SymbolAnalysis::SymbolAnalysis(Operation* op) {
+  ModuleOp module;
+  if (llvm::isa<ModuleOp>(op)) {
+    module = llvm::cast<ModuleOp>(op);
+  } else {
+    module = op->getParentOfType<ModuleOp>();
+  }
+  CHECK(llc::MLIR, llvm::isa<ModuleOp>(module))
+      << "must build an instance for a module";
+  auto symbol_ints = module.getOps<SymbolicIntOp>();
+  for (auto symbol_int : symbol_ints) {
+    auto symbol = symbol_int.getSymName();
+    symbols_table_[symbol.str()] = symbol_int;
+  }
+}
 SymbolAnalysis::~SymbolAnalysis() {}
 
 SymbolAnalysis* SymbolAnalysis::getInstance(Operation* op) {
@@ -57,10 +72,11 @@ SymbolAnalysis* SymbolAnalysis::getInstance(Operation* op) {
   std::lock_guard<std::mutex> lock(mutex_);
   if (!SymbolAnalysisManager::instance_->analysis_map_.contains(module)) {
     SymbolAnalysisManager::instance_->analysis_map_[module] =
-        new SymbolAnalysis;
+        new SymbolAnalysis(module);
   }
   return SymbolAnalysisManager::instance_->analysis_map_[module];
-};
+}
+
 SymbolAnalysis* SymbolAnalysis::getInstance(Value value) {
   auto module = value.getParentRegion()->getParentOfType<ModuleOp>();
   CHECK(llc::MLIR, llvm::isa<ModuleOp>(module))
@@ -68,10 +84,10 @@ SymbolAnalysis* SymbolAnalysis::getInstance(Value value) {
   std::lock_guard<std::mutex> lock(SymbolAnalysisManager::mutex_);
   if (!SymbolAnalysisManager::instance_->analysis_map_.contains(module)) {
     SymbolAnalysisManager::instance_->analysis_map_[module] =
-        new SymbolAnalysis;
+        new SymbolAnalysis(module);
   }
   return SymbolAnalysisManager::instance_->analysis_map_[module];
-};
+}
 
 void SymbolAnalysis::_insertOp(RewriterBase* builder, Operation* op,
                                Value& value) const {
@@ -93,10 +109,10 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbolFrom(Value& value) {
   CHECK(llc::MLIR, llvm::isa<ModuleOp>(module));
   std::string symbol = "s" + std::to_string(next_symbol_id_);
   next_symbol_id_++;
-  while (SymbolTable::lookupSymbolIn(module, symbol)) {
+  while (symbols_table_.count(symbol)) {
     symbol = "s" + std::to_string(next_symbol_id_);
     next_symbol_id_++;
-  };
+  }
   IRRewriter builder(value.getContext());
   auto symbol_op =
       builder.create<SymbolicIntOp>(builder.getUnknownLoc(), symbol);
@@ -117,7 +133,7 @@ SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbolFrom(Value& value,
   _insertOp(&builder, symbol_op, value);
   symbols_table_[symbol_op.getSymName().str()] = symbol_op;
   return symbol_op;
-};
+}
 
 SymbolRelationsOp SymbolAnalysis::buildRelations(
     RewriterBase* builder, llvm::StringRef symbol,
@@ -148,7 +164,8 @@ Value& SymbolAnalysis::addEncoding(Value& value, size_t result_pos) {
                             unencoding_tensor.getElementType(), encoding);
   value.setType(new_tensor_type);
   return value;
-};
+}
+
 Value& SymbolAnalysis::addEncoding(Value& value,
                                    llvm::ArrayRef<llvm::StringRef> symbols,
                                    llvm::ArrayRef<size_t> skip_dim,

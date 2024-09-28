@@ -17,9 +17,9 @@
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_UTILS_H_
 
 #include <cstddef>
+
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
-
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
@@ -30,9 +30,12 @@
 #include "mlir/IR/Value.h"
 
 namespace mlir::llh {
-llh::DimOp buildTensorDim(mlir::Value operand,LLCPatternRewriter* rewrite, size_t dim);
-llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,LLCPatternRewriter* rewrite);
-RankedTensorType cloneTensorWithEncoding(RankedTensorType type, EncodingAttr encoding);
+llh::DimOp buildTensorDim(mlir::Value operand, LLCPatternRewriter* rewrite,
+                          size_t dim);
+llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
+                                         LLCPatternRewriter* rewrite);
+RankedTensorType cloneTensorWithEncoding(RankedTensorType type,
+                                         EncodingAttr encoding);
 }  // namespace mlir::llh
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_UTILS_H_

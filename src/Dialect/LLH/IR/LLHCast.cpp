@@ -25,7 +25,7 @@ bool SymbolicCastOp::areCastCompatible(TypeRange inputs, TypeRange outputs) {
     return false;
   // auto output_encoding =
   //     llvm::dyn_cast_or_null<EncodingAttr>(output.getEncoding());
-  //if (!output_encoding) return false;
+  // if (!output_encoding) return false;
   return true;
 }
 

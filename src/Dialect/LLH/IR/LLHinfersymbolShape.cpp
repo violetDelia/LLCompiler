@@ -68,7 +68,7 @@ size_t getConstIntegerValue(Value value) {
     return llvm::cast<IntegerAttr>(constant_op.getValueAttr()).getInt();
   }
   UNIMPLEMENTED(llc::MLIR);
-};
+}
 
 void simplyUnarySymbolInfer(Value& value) {
   auto operand_type = value.getDefiningOp()->getOperand(0).getType();

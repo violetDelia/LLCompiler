@@ -29,7 +29,7 @@ class LLCPatternRewriter : public RewriterBase {
   using RewriterBase::RewriterBase;
 
   virtual void processWileBuildOperation(Operation *op) {
-    //DINFO << "build: " << op->getName().getStringRef().str();
+    // DINFO << "build: " << op->getName().getStringRef().str();
   }
 
   virtual bool canRecoverFromRewriteFailure() const { return false; }

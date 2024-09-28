@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_SYMBOLANALYSIS_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_SYMBOLANALYSIS_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_SYMBOLANALYSIS_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_SYMBOLANALYSIS_H_
 
 #include <cstddef>
 #include <map>
@@ -41,7 +41,7 @@ namespace mlir::llh {
 
 class SymbolAnalysis {
  public:
-  SymbolAnalysis() = default;
+  explicit SymbolAnalysis(Operation *op);
   virtual ~SymbolAnalysis();
   static SymbolAnalysis *getInstance(Operation *op);
   static SymbolAnalysis *getInstance(Value value);
@@ -74,8 +74,8 @@ class SymbolAnalysis {
 class SymbolAnalysisManager {
   friend SymbolAnalysis;
   static SymbolAnalysisManager *instance_;
-  std::map<ModuleOp, SymbolAnalysis*> analysis_map_;
+  std::map<ModuleOp, SymbolAnalysis *> analysis_map_;
   static std::mutex mutex_;
 };
 }  // namespace mlir::llh
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_SYMBOLANALYSIS_H_
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_SYMBOLANALYSIS_H_

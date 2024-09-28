@@ -86,7 +86,7 @@ void add_is_weight_attr(mlir::Operation* op, bool value) {
 
 void add_symbol_generate_attr(mlir::Operation* op) {
   add_unit_attr(op, SymbolGeneratedAttr);
-};
+}
 
-void add_stop_run_attr(mlir::Operation* op) { add_unit_attr(op, StopRun); };
+void add_stop_run_attr(mlir::Operation* op) { add_unit_attr(op, StopRun); }
 }  // namespace llc

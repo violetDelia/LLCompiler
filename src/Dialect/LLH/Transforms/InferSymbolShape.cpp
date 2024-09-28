@@ -93,7 +93,7 @@ void generateEntranceSymbol(ModuleOp module) {
     }
   }
   symbol_analysis->debugPrintSymbols();
-};
+}
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
