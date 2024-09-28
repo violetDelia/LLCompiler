@@ -14,6 +14,7 @@ config.name = 'LLC_MLIR'
 # suffixes: A list of file extensions to treat as test files.
 config.suffixes = ['.mlir',".py"]
 
+config.test_format = lit.formats.ShTest(not llvm_config.use_lit_shell)
 # test_source_root: The root path where tests are located.
 config.test_source_root = os.path.dirname(__file__)
 
@@ -25,6 +26,15 @@ llvm_config.use_default_substitutions()
 # Tweak the PATH to include the tools dir.
 #llvm_config.with_environment("PATH", config.mlir_tools_dir, append_path=True)
 llvm_config.with_environment("PATH", config.llvm_tools_dir, append_path=True)
+
+config.excludes = [
+    "CMakeLists.txt",
+    "README.txt",
+    "LICENSE.txt",
+    "lit.cfg.py",
+    "lit.site.cfg.py",
+    "model_ir"
+]
 
 tool_dirs = [
     config.mlir_binary_dir,

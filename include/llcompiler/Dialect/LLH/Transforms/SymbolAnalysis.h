@@ -23,7 +23,10 @@
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Operation.h"
@@ -37,8 +40,13 @@ class SymbolAnalysis {
   static SymbolAnalysis *getInstance();
   static void deleteInstance();
 
-  SymbolicIntOp buildSymbolInt(OpBuilder *builder, Operation *op);
-
+  SymbolicIntOp buildNewSymbol(RewriterBase *builder, Operation *op);
+  SymbolicIntOp getOrBuildConstSymbol(RewriterBase *builder, Operation *op,
+                                      int val);
+  SymbolRelationsOp buildRelations(RewriterBase *builder, Operation *base,
+                                   llvm::StringRef symbol,
+                                   llvm::ArrayRef<llvm::StringRef> relations,
+                                   AffineExpr expr);
   void debugPrintSymbols();
 
  private:
@@ -48,10 +56,14 @@ class SymbolAnalysis {
   SymbolAnalysis(const SymbolAnalysis &signal);
   const SymbolAnalysis &operator=(const SymbolAnalysis &signal);
 
+  Operation *_getMainFunc(Operation *op);
+  void _insertOp(RewriterBase *builder, Operation *op, Operation *base) const;
+
  private:
   static SymbolAnalysis *instance_;
-  static std::mutex mutex_;
-  std::map<mlir::StringRef, Operation *> symbols_;
+  std::mutex mutex_;
+  std::map<std::string, Operation *> symbols_table_;
+  int next_symbol_id_ = 0;
 };
 
 }  // namespace mlir::llh

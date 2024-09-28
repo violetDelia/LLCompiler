@@ -44,7 +44,7 @@ def SymbolCanonicalization : Pass<"symbol-canonicalization","ModuleOp"> {
 }
 
 def Operationlegalization : Pass<"operation-legalization","ModuleOp"> {
-  let summary = "规范以及初始化符号表达系统";
+  let summary = "合法化op";
   let constructor = "mlir::llh::createOperationlegalizationPass()";
 }
 

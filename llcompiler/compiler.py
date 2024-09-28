@@ -53,7 +53,6 @@ class LLCompiler(llcompiler.core.Importer):
 
     def compiler(self, model: Any, inputs: List[torch.Tensor]):
         self._mlir_module = self.importer(model)
-        print(self._mlir_module)
         if self.vebose_first_ir:
             print(self._mlir_module)
         do_compile(

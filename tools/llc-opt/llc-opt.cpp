@@ -60,9 +60,6 @@
 //
 int main(int argc, char **argv) {
   mlir::DialectRegistry registry;
-  auto logger_option = llc::option::get_logger_option();
-  llc::logger::register_logger(llc::MLIR, logger_option);
-  llc::logger::register_logger(llc::UTILITY, logger_option);
   registry.insert<mlir::llh::LLHDialect>();
   registry.insert<mlir::ex::IRExtensionDialect>();
   registry.insert<mlir::tosa_ex::TosaExDialect>();

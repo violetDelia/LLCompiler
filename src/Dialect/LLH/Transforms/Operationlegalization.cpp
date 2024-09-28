@@ -24,11 +24,13 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Traits.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
@@ -36,6 +38,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Types.h"
@@ -53,6 +56,51 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+// op type only int/float
+
+#define CONVERT_CONST_TO
+ConstantOp buildConstTensorFromScalar(ConstantOp op,
+                                      LLCPatternRewriter* rewriter,
+                                      Operation* user) {
+  auto user_type =
+      llvm::dyn_cast_or_null<ShapedType>(user->getResult(0).getType());
+  CHECK(llc::MLIR_PASS, user_type);
+  auto user_ele_type = user_type.getElementType();
+  auto tensor_type = RankedTensorType::get({1}, user_ele_type);
+  auto const_type = op->getResult(0).getType();
+  auto loc = op->getLoc();
+  DenseElementsAttr new_value;
+  if (user_ele_type.isInteger()) {
+    if (const_type.isInteger()) {
+      auto data_attr = llvm::dyn_cast_or_null<IntegerAttr>(op.getValueAttr());
+      CHECK(llc::MLIR_PASS, data_attr);
+      auto data = data_attr.getValue();
+      new_value = DenseElementsAttr::get(tensor_type, {data});
+    } else {
+      auto data_attr = llvm::dyn_cast_or_null<FloatAttr>(op.getValueAttr());
+      CHECK(llc::MLIR_PASS, data_attr);
+      auto data = data_attr.getValue();
+      auto int_attr = IntegerAttr::get(user_ele_type, data.convertToFloat());
+      new_value = DenseElementsAttr::get(tensor_type, {int_attr.getValue()});
+    }
+  } else {
+    if (const_type.isInteger()) {
+      auto data_attr = llvm::dyn_cast_or_null<IntegerAttr>(op.getValueAttr());
+      CHECK(llc::MLIR_PASS, data_attr);
+      auto data = data_attr.getValue();
+      auto float_attr = FloatAttr::get(user_ele_type, data.bitsToDouble());
+      new_value = DenseElementsAttr::get(tensor_type, {float_attr.getValue()});
+    } else {
+      auto data_attr = llvm::dyn_cast_or_null<FloatAttr>(op.getValueAttr());
+      CHECK(llc::MLIR_PASS, data_attr);
+      auto data = data_attr.getValue();
+      auto float_attr = FloatAttr::get(user_ele_type, data.convertToFloat());
+      new_value = DenseElementsAttr::get(tensor_type, {float_attr.getValue()});
+    }
+  }
+
+  return rewriter->create<ConstantOp>(loc, tensor_type, new_value);
+}
 
 //===----------------------------------------------------------------------===//
 // transform patterns
@@ -71,14 +119,10 @@ struct BraodcastableScalarToTensor : public LLCOpRewritePattern<ConstantOp> {
   }
   void rewrite(ConstantOp op, LLCPatternRewriter& rewriter) const final {
     auto loc = op->getLoc();
-    auto type = op->getResult(0).getType();
-    auto tensor_type = RankedTensorType::get({1}, type);
-    auto const_tensor = rewriter.create<ConstantOp>(
-        loc, tensor_type,
-        DenseElementsAttr::get(tensor_type, op.getValueAttr()));
     for (auto user : op->getUsers()) {
       if (user->hasTrait<OpTrait::ResultsBroadcastableShape>()) {
         auto operand_num = user->getNumOperands();
+        auto const_tensor = buildConstTensorFromScalar(op, &rewriter, user);
         for (int i = 0; i < operand_num; i++) {
           auto operand = user->getOperand(i);
           if (operand.getDefiningOp() == op) {
@@ -90,15 +134,14 @@ struct BraodcastableScalarToTensor : public LLCOpRewritePattern<ConstantOp> {
   }
 };
 
-
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<BraodcastableScalarToTensor>(context);
-  //patterns.add<replaceTorchSymbolicIntOp>(context);
-  //patterns.add<replaceSymbolicBindOp>(context);
+  // patterns.add<replaceTorchSymbolicIntOp>(context);
+  // patterns.add<replaceSymbolicBindOp>(context);
 }
 
 //===----------------------------------------------------------------------===//

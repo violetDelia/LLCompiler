@@ -42,7 +42,7 @@ def LLH_F64       : F<64>;
 def LLH_BF16      : Type<CPred<"$_self.isBF16()">, "bfloat16 type">,
                     BuildableType<"$_builder.getBF16Type()">;
 
-def LLH_Float     : Type<CPred<"::llvm::isa<::mlir::FloatType>($_self)">, "floating-point","::mlir::FloatType">;
+def LLH_Float     : AnyTypeOf<[LLH_F16, LLH_F32, LLH_BF16, LLH_F64]>;
 
 def LLH_BoolTensor    : TensorOf<[LLH_Bool]>;
 

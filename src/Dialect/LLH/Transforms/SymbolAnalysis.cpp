@@ -22,12 +22,16 @@
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "mlir/IR/AffineMap.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/Operation.h"
+#include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/SymbolTable.h"
 
 namespace mlir::llh {
 
 SymbolAnalysis* SymbolAnalysis::instance_ = new (std::nothrow) SymbolAnalysis;
-std::mutex SymbolAnalysis::mutex_;
 
 SymbolAnalysis::SymbolAnalysis() {}
 
@@ -42,18 +46,56 @@ void SymbolAnalysis::deleteInstance() {
   }
 }
 
-SymbolicIntOp SymbolAnalysis::buildSymbolInt(OpBuilder* builder,
-                                             Operation* op) {
+void SymbolAnalysis::_insertOp(RewriterBase* builder, Operation* op,
+                               Operation* base) const {
+  auto module = op->getParentOfType<ModuleOp>();
+  CHECK(llc::MLIR, module);
+  auto& block = module->getRegion(0).getBlocks().front();
+  op->remove();
+  block.push_front(op);
+};
+
+SymbolicIntOp SymbolAnalysis::buildNewSymbol(RewriterBase* builder,
+                                             Operation* base) {
   // std::lock_guard<std::mutex> lock(mutex_);
-  std::string name = "s" + std::to_string(symbols_.size());
-  auto symbol = builder->create<SymbolicIntOp>(builder->getUnknownLoc(), name);
-  symbols_[symbol.getSymName()] = op;
-  return symbol;
+  std::string symbol = "s" + std::to_string(next_symbol_id_);
+  next_symbol_id_++;
+  auto symbol_op =
+      builder->create<SymbolicIntOp>(builder->getUnknownLoc(), symbol);
+  _insertOp(builder, symbol_op, base);
+  symbols_table_[symbol_op.getSymName().str()] = symbol_op;
+  return symbol_op;
+}
+
+SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(RewriterBase* builder,
+                                                    Operation* base, int val) {
+  std::string symbol = "c" + std::to_string(val);
+  if (symbols_table_.count(symbol)) {
+    return llvm::cast<SymbolicIntOp>(symbols_table_[symbol]);
+  }
+  auto symbol_op =
+      builder->create<SymbolicIntOp>(builder->getUnknownLoc(), symbol);
+  _insertOp(builder, symbol_op, base);
+  symbols_table_[symbol_op.getSymName().str()] = symbol_op;
+  return symbol_op;
+};
+
+SymbolRelationsOp SymbolAnalysis::buildRelations(
+    RewriterBase* builder, Operation* base, llvm::StringRef symbol,
+    llvm::ArrayRef<llvm::StringRef> relations, AffineExpr expr) {
+  auto affin_map = AffineMap::get(1, relations.size(), expr);
+  auto relations_op = builder->create<SymbolRelationsOp>(
+      builder->getUnknownLoc(),
+      SymbolRefAttr::get(builder->getStringAttr(symbol)),
+      builder->getStrArrayAttr(relations), AffineMapAttr::get(affin_map));
+      relations_op->dump();
+  _insertOp(builder, relations_op, base);
+  return relations_op;
 }
 
 void SymbolAnalysis::debugPrintSymbols() {
-  for (auto pair : symbols_) {
-    DINFO << pair.first.str();
+  for (auto pair : symbols_table_) {
+    DINFO << pair.first;
     pair.second->dump();
   }
 }

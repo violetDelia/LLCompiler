@@ -336,10 +336,11 @@ def torch_build_func(
                     op: TorchSymbolicIntOp = torch_symbol_translate(
                         node.meta["val"], symbol_map
                     )
-                    value_map[node.name] = [
-                        block.insert_arg(op.result.type, len(input_types))
-                    ]
-                    input_types.append(op.result.type)
+                    value_map[node.name] = op.results
+                    # value_map[node.name] = [
+                    #     block.insert_arg(op.result.type, len(input_types))
+                    # ]
+                    #input_types.append(op.result.type)
                     block.add_op(op)
                 else:
                     print("unimplemented placeholder type: ", type(val))
@@ -352,10 +353,11 @@ def torch_build_func(
                     op: TorchSymbolicIntOp = torch_symbol_translate(symbol, symbol_map)
                 else:
                     raise NotImplementedError
-                value_map[node.name] = [
-                    block.insert_arg(op.result.type, len(input_types))
-                ]
-                input_types.append(op.result.type)
+                value_map[node.name] = op.results
+                # value_map[node.name] = [
+                #     block.insert_arg(op.result.type, len(input_types))
+                # ]
+                #input_types.append(op.result.type)
                 block.add_op(op)
             else:
                 print("unimplemented placeholder type: ", node.type)
@@ -400,6 +402,7 @@ def torch_build_func(
             raise NotImplementedError(node.op, type(node.op))
     block.add_op(Return(*return_values))
     region: Region = Region(block)
+    print(input_types)
     func = FuncOp(name, (input_types, output_types), region=region)
     return func
 

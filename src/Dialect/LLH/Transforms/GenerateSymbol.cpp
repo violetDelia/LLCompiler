@@ -16,7 +16,10 @@
 #include <cstddef>
 #include <cstdint>
 #include <regex>
+#include <set>
 #include <string>
+#include <utility>
+#include <vector>
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
@@ -27,6 +30,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/AffineExpr.h"
@@ -37,8 +41,10 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Diagnostics.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
@@ -54,7 +60,44 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+void traverseExpressionSymbolPos(AffineBinaryOpExpr& exp,
+                                 SmallVector<size_t>& symbol_pos) {
+  auto lhs = exp.getLHS();
+  if (auto symbol = llvm::dyn_cast_or_null<AffineSymbolExpr>(lhs)) {
+    auto dim_pos = symbol.getPosition();
+    exp.shiftSymbols(dim_pos, symbol_pos.size());
+    symbol_pos.push_back(dim_pos);
+  }
+  if (auto dim = llvm::dyn_cast_or_null<AffineDimExpr>(lhs)) {
+    auto dim_pos = dim.getPosition();
+    symbol_pos.push_back(dim_pos);
+  }
+  if (auto binary_exp = llvm::dyn_cast_or_null<AffineBinaryOpExpr>(lhs)) {
+    traverseExpressionSymbolPos(binary_exp, symbol_pos);
+  }
+  auto rhs = exp.getRHS();
+  if (auto dim = llvm::dyn_cast_or_null<AffineDimExpr>(rhs)) {
+    auto dim_pos = dim.getPosition();
+    symbol_pos.push_back(dim_pos);
+  }
+  if (auto binary_exp = llvm::dyn_cast_or_null<AffineBinaryOpExpr>(rhs)) {
+    traverseExpressionSymbolPos(binary_exp, symbol_pos);
+  }
+}
 
+std::pair<std::vector<std::string>, mlir::AffineExpr*> generateBindShapeMapKey(
+    AffineBinaryOpExpr& exp, SmallVector<size_t>& symbol_pos,
+    SymbolicBindOp& op) {
+  std::vector<std::string> symbols;
+  auto bind_symbols = op.getBindSymbols();
+  for (auto pos : symbol_pos) {
+    auto symbol = llvm::dyn_cast_or_null<TorchSymbolicIntOp>(
+        bind_symbols[pos].getDefiningOp());
+    CHECK(llc::MLIR_PASS, symbol);
+    symbols.push_back(symbol.getSymName().str());
+  }
+  return std::make_pair(symbols, &exp);
+}
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
@@ -67,11 +110,10 @@ struct replaceTorchSymbolicIntOp
   }
   void rewrite(TorchSymbolicIntOp op,
                LLCPatternRewriter& rewriter) const final {
-    auto module = op->getParentOfType<ModuleOp>();
-    auto main_func = module.lookupSymbol("main");
     auto symbol_analysis = SymbolAnalysis::getInstance();
-    auto symbol = symbol_analysis->buildSymbolInt(&rewriter, op);
-    rewriter.moveOpBefore(symbol, main_func);
+    auto symbol = symbol_analysis->buildNewSymbol(&rewriter, op);
+    auto new_name = symbol.getSymNameAttr();
+    op.setSymNameAttr(new_name);
     llc::add_symbol_generate_attr(op);
   }
 };
@@ -82,33 +124,71 @@ struct replaceSymbolicBindOp : public LLCOpRewritePattern<SymbolicBindOp> {
     if (op->hasAttr(llc::StopRun)) return llvm::failure();
     return llvm::success();
   }
+
   void rewrite(SymbolicBindOp op, LLCPatternRewriter& rewriter) const final {
     auto operand = op.getOperand();
     auto bind_shape = op.getBindSymbols();
     auto bind_type = llvm::cast_or_null<RankedTensorType>(operand.getType());
     CHECK(llc::MLIR_PASS, bind_type);
-    bind_type.dump();
+    auto symbol_analysis = SymbolAnalysis::getInstance();
     auto rank = bind_type.getRank();
-    auto exps = op.getExpressions();
-    exps.dump();
-    DINFO << exps.getNumDims();
-    DINFO << exps.getNumInputs();
-    DINFO << exps.getNumResults();
-    DINFO << exps.getNumSymbols();
-    auto x0 = exps.getResult(0);
-    if(auto ccc =  cast<AffineDimExpr>(x0)) {
-      DINFO << "dim"<<ccc.getPosition();;
-      x0.dump();
+    auto exps_map = op.getExpressions();
+    auto symbol_num = exps_map.getNumSymbols();
+    llvm::SmallVector<StringRef> shapes;
+    for (int i = 0; i < rank; ++i) {
+      auto exp = exps_map.getResult(i);
+      if (auto dim = llvm::dyn_cast_or_null<AffineDimExpr>(exp)) {
+        auto pos = dim.getPosition();
+        auto symbol_op = llvm::cast_or_null<TorchSymbolicIntOp>(
+            op.getBindSymbols()[i].getDefiningOp());
+        CHECK(llc::MLIR_PASS, symbol_op);
+        auto dim_name = symbol_op.getSymName();
+        shapes.push_back(dim_name);
+      } else if (auto const_exp =
+                     llvm::dyn_cast_or_null<AffineConstantExpr>(exp)) {
+        auto val = const_exp.getValue();
+        auto symbol_op =
+            symbol_analysis->getOrBuildConstSymbol(&rewriter, op, val);
+        auto dim_name = symbol_op.getSymName();
+        shapes.push_back(dim_name);
+      } else if (auto binary_exp =
+                     llvm::dyn_cast_or_null<AffineBinaryOpExpr>(exp)) {
+        SmallVector<size_t> symbol_pos;
+        exps_map.dump();
+        binary_exp.dump();
+        traverseExpressionSymbolPos(binary_exp, symbol_pos);
+        DINFO<<"1";
+        auto key = generateBindShapeMapKey(binary_exp, symbol_pos, op);
+        if (!bind_shape_map.count(key)) {
+          DINFO<<"1";
+          llvm::SmallVector<AffineExpr> symReplacements(
+              symbol_num, rewriter.getAffineSymbolExpr(0));
+          for(auto sy: symReplacements){
+            sy.dump();
+          }
+          for (int i = 0; i < symbol_num; i++) {
+            symReplacements[symbol_pos[i]] = rewriter.getAffineSymbolExpr(i);
+          }
+          for(auto sy: symReplacements){
+            sy.dump();
+          }
+          DINFO<<"1";
+          auto new_exp = binary_exp.replaceDimsAndSymbols({}, symReplacements);
+          new_exp.dump();
+          auto symbol_op = symbol_analysis->buildNewSymbol(&rewriter, op);
+          bind_shape_map[key] = symbol_op.getSymName().str();
+        }
+        shapes.push_back(bind_shape_map[key]);
+      }
     }
-    auto dim = exps.getResultPosition(x0);
-    if(dim.has_value())DINFO<<dim.value();
-    // s.dump();
-    DINFO << static_cast<int>(x0.getKind());
-
-    // bind_shape.dump();
-    op->dump();
     llc::add_stop_run_attr(op);
   }
+
+  static inline std::map<std::pair<std::vector<std::string>, mlir::AffineExpr*>,
+                  std::string>
+      bind_shape_map;
+
+  static void initBindShapeMap() { bind_shape_map.clear(); };
 };
 //===----------------------------------------------------------------------===//
 // pattern population
@@ -138,10 +218,11 @@ void SymbolCanonicalizationPass::runOnOperation() {
   auto op = getOperation();
   auto* context = &getContext();
   RewritePatternSet patterns(context);
+  replaceSymbolicBindOp::initBindShapeMap();
   populateSymbolCanonicalizationPatterns(patterns);
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
     signalPassFailure();
-  symbol_analysis->debugPrintSymbols();
+  // symbol_analysis->debugPrintSymbols();
   LLC_RUN_OUT_PASS
 }
 

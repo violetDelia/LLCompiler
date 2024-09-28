@@ -28,7 +28,7 @@ class Net(nn.Module):
         self.cf = nn.Linear(int((224 - 17) / 2 + 7), 2)
 
     def forward(self, x: torch.Tensor):
-        x = x.reshape(1, 6, x.shape[2],x.shape[3])
+        x = x.reshape(1, 6, x.shape[2], x.shape[3])
         x = x.reshape(2, 3, 224, 224)
         x = self.conv_layer1(x)
         x1 = x + x
@@ -41,11 +41,9 @@ class Net(nn.Module):
 
 
 @run_time
-def compiler_model(model, inputs):
+def compiler_fx(model, inputs):
     compiler = LLC.LLCompiler(
-        mode="inference",
-        ir_tree_dir=os.getcwd(),
-        log_path=os.path.join(os.getcwd(), "log"),
+        mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx")
     )
     model = torch.compile(
         model=model,
@@ -57,21 +55,29 @@ def compiler_model(model, inputs):
 
 
 @run_time
+def compiler_onnx(model, inputs):
+    compiler = LLC.LLCompiler(
+        mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "onnx")
+    )
+    return model(inputs)
+
+
+@run_time
 def torch_compiler(model, inputs):
 
     model = torch.compile(
         model=model,
         backend="inductor",
         dynamic=True,
-        fullgraph=True,
+        fullgraph=False,
     )
     return model(inputs)
 
 
 if __name__ == "__main__":
 
-    model = Net()
-    #model = torchvision.models.resnet18()
+    # model = Net()
+    model = torchvision.models.resnet18()
     # input = (torch.rand((10, 32, 512)), torch.rand((20, 32, 512)))
     # model = Net()
     input = torch.randn((2, 3, 224, 224))
@@ -80,6 +86,7 @@ if __name__ == "__main__":
     #     model, input, export_options=torch.onnx.ExportOptions(dynamic_shapes=True)
     # )
 
-    compiler_model(model, input)
+    compiler_fx(model, input)
+    compiler_onnx(model, input)
 
     # torch_compiler(model, input)
