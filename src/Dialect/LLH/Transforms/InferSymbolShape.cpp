@@ -20,9 +20,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"

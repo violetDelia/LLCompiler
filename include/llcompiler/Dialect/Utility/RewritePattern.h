@@ -16,8 +16,11 @@
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_REWRITEPATTERN_H_
 #include <utility>
 
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/Support/Casting.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/Visitors.h"
@@ -32,7 +35,23 @@ class LLCPatternRewriter : public RewriterBase {
   virtual void processWileBuildOperation(Operation *op) {
     if (auto symbol_op =
             llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op)) {
-      symbol_op.inferSymbolicShape();
+      bool need_infer_symbol = true;
+      for (auto type : symbol_op->getOperandTypes()) {
+        if (llvm::isa<UnrankedTensorType>(type)) {
+          need_infer_symbol = false;
+          break;
+        }
+        if (!llvm::isa<RankedTensorType>(type)) continue;
+        auto ranked_type = llvm::cast<RankedTensorType>(type);
+        auto encodeing = ranked_type.getEncoding();
+        if (!llvm::isa<mlir::EncodingAttr>(encodeing)) {
+          need_infer_symbol = false;
+          break;
+        }
+      }
+      if (need_infer_symbol) {
+        symbol_op.inferSymbolicShape();
+      }
     }
   }
 
