@@ -31,24 +31,42 @@ namespace llc {
 enum LAYOUT : int64_t { NCHW = 0, NHWC = 1 };
 const char* layout_to_str(LAYOUT layout);
 
-extern const char* OperationNmaeAttr;
-extern const char* GloabalLayoutAttr;
-extern const char* LayoutAttr;
-extern const char* GroupAttr;
-extern const char* KernelShapeAttr;
-extern const char* IsWeightAttr;
-extern const char* PadAttr;
-extern const char* SymbolGeneratedAttr;
-extern const char* StopRun;
-extern const char* Entrance;
+#define DEF_ATTR(name, Key) extern const char* Key;
 
-void add_op_name_attr(mlir::Operation* op, llvm::StringRef value);
-void add_gloabal_layout_attr(mlir::Operation* op, LAYOUT value);
-void add_group_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
-void add_kernal_shape_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
-void add_is_weight_attr(mlir::Operation* op, bool value);
-void add_layout_attr(mlir::Operation* op, LAYOUT value);
-void add_symbol_generate_attr(mlir::Operation* op);
-void add_stop_run_attr(mlir::Operation* op);
+#define ADD_STRING_ATTR(name, Key)                                    \
+  DEF_ATTR(name, Key)                                                 \
+  void add_##name##_attr(mlir::Operation* op, llvm::StringRef value); \
+  void add_##name##_attr(mlir::Operation* op, const char* value);
+
+#define ADD_DENSE_I64_ATTR(name, Key) \
+  DEF_ATTR(name, Key)                 \
+  void add_##name##_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value);
+
+#define ADD_UNIT_ATTR(name, Key) \
+  DEF_ATTR(name, Key)            \
+  void add_##name##_attr(mlir::Operation* op);
+
+#define ADD_LAYOUT_ATTR(name, Key) \
+  DEF_ATTR(name, Key)              \
+  void add_##name##_attr(mlir::Operation* op, LAYOUT value);
+
+ADD_LAYOUT_ATTR(gloabal_layout, GloabalLayoutAttr)
+ADD_LAYOUT_ATTR(layout, LayoutAttr)
+ADD_STRING_ATTR(op_name, OperationNameAttr)
+ADD_DENSE_I64_ATTR(group, GroupAttr)
+ADD_DENSE_I64_ATTR(kernal_shape, KernelShapeAttr)
+ADD_DENSE_I64_ATTR(stride, StrideAtt)
+ADD_DENSE_I64_ATTR(pad, PadAttr)
+ADD_UNIT_ATTR(is_weight, IsWeightAttr)
+ADD_UNIT_ATTR(symbol_generate, SymbolGeneratedAttr)
+ADD_UNIT_ATTR(stop_run, StopRun)
+ADD_UNIT_ATTR(entrance, Entrance)
+
+#undef ADD_LAYOUT_ATTR
+#undef ADD_STRING_ATTR
+#undef ADD_DENSE_I64_ATTR
+#undef ADD_UNIT_ATTR
+#undef DEF_ATTR
+
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_

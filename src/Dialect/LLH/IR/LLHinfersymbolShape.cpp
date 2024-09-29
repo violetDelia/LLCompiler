@@ -17,6 +17,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -29,6 +30,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Operation.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
@@ -40,23 +42,43 @@ namespace {
 void checkIsReturnOperand(Value value) {
   for (auto user : value.getUsers()) {
     if (llvm::isa<mlir::func::ReturnOp>(user)) {
-      UNIMPLEMENTED(llc::MLIR);
+      UNIMPLEMENTED(llc::SymbolInfer);
     }
   }
 }
-void checkIsIfOperand(Value value) { UNIMPLEMENTED(llc::MLIR); }
-void checkIsWhileOperand(Value value) { UNIMPLEMENTED(llc::MLIR); }
+void checkIsIfOperand(Value value) { UNIMPLEMENTED(llc::SymbolInfer); }
+void checkIsWhileOperand(Value value) { UNIMPLEMENTED(llc::SymbolInfer); }
 
 void simplyUnarySymbolInfer(Value& value) {
   auto operand_type = value.getDefiningOp()->getOperand(0).getType();
   value.setType(operand_type);
 }
+
+void ConvSymbolInfer(Operation* op) {
+  auto input = op->getOperand(0);
+  auto input_type = llvm::cast_or_null<RankedTensorType>(input.getType());
+  CHECK(llc::SymbolInfer, input_type);
+  input.dump();
+  auto kernel_shape_attr =
+      llvm::cast_or_null<DenseI64ArrayAttr>(op->getAttr(llc::KernelShapeAttr));
+  CHECK(llc::SymbolInfer, kernel_shape_attr);
+  kernel_shape_attr.dump();
+  auto kernel_shape = kernel_shape_attr.asArrayRef();
+  auto pad_attr =
+      llvm::cast_or_null<DenseI64ArrayAttr>(op->getAttr(llc::PadAttr));
+  CHECK(llc::SymbolInfer, pad_attr);
+  pad_attr.dump();
+  auto pad = pad_attr.asArrayRef();
+  auto stride_attr = op->getAttr(llc::SymbolGeneratedAttr);
+}
+
 }  // namespace
 #define COMMON_CHECK                              \
   for (auto res : getOperation()->getResults()) { \
-    checkIsIfOperand(res);                        \
     checkIsReturnOperand(res);                    \
-    checkIsWhileOperand(res);                     \
+  }                                               \
+  // checkIsIfOperand(res);                    \
+  // checkIsWhileOperand(res);                     \
   }  // namespace mlir::llh
 #define UNIMPLEMENTED_INFER_FUNCTION(OP)                                      \
   llvm::LogicalResult OP::inferSymbolicShape() {                              \
@@ -81,16 +103,23 @@ INFER_UNARY_OP(DropOp)
 UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
 UNIMPLEMENTED_INFER_FUNCTION(TransposeOp)
 UNIMPLEMENTED_INFER_FUNCTION(AddOp)
-UNIMPLEMENTED_INFER_FUNCTION(ConvBiasOp)
 UNIMPLEMENTED_INFER_FUNCTION(MulOp)
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
 UNIMPLEMENTED_INFER_FUNCTION(MaxPoolOp)
 UNIMPLEMENTED_INFER_FUNCTION(AdaptiveAvgPoolOp)
-UNIMPLEMENTED_INFER_FUNCTION(ConvOp)
+INFER_FUNCTION(ConvBiasOp) {
+  ConvSymbolInfer(getOperation());
+  return llvm::success();
+}
+
+INFER_FUNCTION(ConvOp) {
+  ConvSymbolInfer(getOperation());
+  return llvm::success();
+}
 INFER_UNARY_OP(ReluOp)
 INFER_FUNCTION(WeightOp) {
   auto type = getResult().getType();
-  if (!isa<RankedTensorType>(type)) return llvm::success();
+  if (!isa<RankedTensorType>(type)) return llvm::failure();
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto res = getResult();
   auto new_res = symbol_analsis->addEncoding(res);
@@ -120,7 +149,6 @@ INFER_FUNCTION(ReshapeOp) {
       auto val = getConstIntegerValue(dim);
       new_shape.push_back(val);
       auto symbol_op = symbol_analsis->getOrBuildConstSymbolFrom(res, val);
-      symbol_op->dump();
       symbols.push_back(symbol_op.getSymName());
     } else {
       new_shape.push_back(ShapedType::kDynamic);

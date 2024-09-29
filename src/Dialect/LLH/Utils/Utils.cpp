@@ -17,7 +17,45 @@
 
 #include <cstddef>
 
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Support/Logger.h"
+#include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Operation.h"
+#include "mlir/IR/PatternMatch.h"
+
 namespace mlir::llh {
+
+void checkAndInferSymbol(Operation* op) {
+  auto symbol_op = llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op);
+  if (!symbol_op) return;
+  bool need_infer_symbol = true;
+  for (auto type : symbol_op->getOperandTypes()) {
+    if (!llvm::isa<RankedTensorType>(type)) continue;
+    if (llvm::isa<UnrankedTensorType>(type)) {
+      need_infer_symbol = false;
+      break;
+    }
+    auto ranked_type = llvm::cast<RankedTensorType>(type);
+    auto encodeing = ranked_type.getEncoding();
+    encodeing.dump();
+    if (!encodeing) {
+      need_infer_symbol = false;
+      break;
+    }
+    if (!llvm::isa<mlir::llh::EncodingAttr>(encodeing)) {
+      need_infer_symbol = false;
+      break;
+    }
+  }
+  if (need_infer_symbol) {
+    symbol_op.inferSymbolicShape();
+    INFO(llc::SymbolInfer) << "Inferred symbolic shape"
+                    << op->getName().getStringRef().str();
+  } else {
+    WRONG(llc::SymbolInfer) << "Invalid operand to infer symbol"
+                     << op->getName().getStringRef().str();
+  }
+}
 
 llh::DimOp buildTensorDim(mlir::Value operand, RewriterBase* rewrite,
                           size_t dim) {

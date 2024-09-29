@@ -24,19 +24,6 @@
 #include "mlir/Support/LLVM.h"
 
 namespace llc {
-const char* OperationNmaeAttr = "op_name";
-const char* GloabalLayoutAttr = "builtin.gloabal_layout";
-const char* LayoutAttr = "layout";
-const char* GroupAttr = "group";
-const char* KernelShapeAttr = "kernel_shape";
-const char* IsWeightAttr = "is_weight";
-const char* PadAttr = "pad";
-const char* SymbolGeneratedAttr = "symbol_generated";
-const char* StopRun = "stop_run";
-const char* Entrance = "entrance";
-}  // namespace llc
-
-namespace llc {
 #define ADD_ATTR_FUNC(name, input_type, attr_type)                       \
   void add_##name##_attr(mlir::Operation* op, llvm::StringRef attr_name, \
                          input_type value) {                             \
@@ -65,28 +52,48 @@ const char* layout_to_str(LAYOUT layout) {
   UNIMPLEMENTED(UTILITY);
 }
 
-void add_op_name_attr(mlir::Operation* op, llvm::StringRef value) {
-  add_string_attr(op, OperationNmaeAttr, value);
-}
-void add_gloabal_layout_attr(mlir::Operation* op, LAYOUT value) {
-  add_string_attr(op, GloabalLayoutAttr, layout_to_str(value));
-}
-void add_layout_attr(mlir::Operation* op, LAYOUT value) {
-  add_string_attr(op, GloabalLayoutAttr, layout_to_str(value));
-}
-void add_group_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value) {
-  add_array_i64_attr(op, GroupAttr, value);
-}
-void add_kernal_shape_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value) {
-  add_array_i64_attr(op, KernelShapeAttr, value);
-}
-void add_is_weight_attr(mlir::Operation* op, bool value) {
-  add_bool_attr(op, IsWeightAttr, value);
-}
+#define DEF_ATTR(name, Key) const char* Key = #name;
 
-void add_symbol_generate_attr(mlir::Operation* op) {
-  add_unit_attr(op, SymbolGeneratedAttr);
-}
+#define ADD_STRING_ATTR(name, Key)                                     \
+  DEF_ATTR(name, Key)                                                  \
+  void add_##name##_attr(mlir::Operation* op, llvm::StringRef value) { \
+    add_string_attr(op, Key, value);                                   \
+  }                                                                    \
+  void add_##name##_attr(mlir::Operation* op, const char* value) {     \
+    add_string_attr(op, Key, value);                                   \
+  }
 
-void add_stop_run_attr(mlir::Operation* op) { add_unit_attr(op, StopRun); }
+#define ADD_DENSE_I64_ATTR(name, Key)                                          \
+  DEF_ATTR(name, Key)                                                          \
+  void add_##name##_attr(mlir::Operation* op, mlir::ArrayRef<int64_t> value) { \
+    add_array_i64_attr(op, Key, value);                                        \
+  }
+
+#define ADD_UNIT_ATTR(name, Key) \
+  DEF_ATTR(name, Key)            \
+  void add_##name##_attr(mlir::Operation* op) { add_unit_attr(op, Key); }
+
+#define ADD_LAYOUT_ATTR(name, Key)                            \
+  DEF_ATTR(name, Key)                                         \
+  void add_##name##_attr(mlir::Operation* op, LAYOUT value) { \
+    add_string_attr(op, Key, layout_to_str(value));           \
+  }
+
+ADD_LAYOUT_ATTR(gloabal_layout, GloabalLayoutAttr)
+ADD_LAYOUT_ATTR(layout, LayoutAttr)
+ADD_STRING_ATTR(op_name, OperationNameAttr)
+ADD_DENSE_I64_ATTR(group, GroupAttr)
+ADD_DENSE_I64_ATTR(kernal_shape, KernelShapeAttr)
+ADD_DENSE_I64_ATTR(stride, StrideAtt)
+ADD_DENSE_I64_ATTR(pad, PadAttr)
+ADD_UNIT_ATTR(is_weight, IsWeightAttr)
+ADD_UNIT_ATTR(symbol_generate, SymbolGeneratedAttr)
+ADD_UNIT_ATTR(stop_run, StopRun)
+ADD_UNIT_ATTR(entrance, Entrance)
+
+#undef ADD_LAYOUT_ATTR
+#undef ADD_STRING_ATTR
+#undef ADD_DENSE_I64_ATTR
+#undef ADD_UNIT_ATTR
+#undef DEF_ATTR
 }  // namespace llc

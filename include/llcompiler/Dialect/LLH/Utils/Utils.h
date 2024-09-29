@@ -19,17 +19,12 @@
 #include <cstddef>
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/Utility/RewritePattern.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
-#include "mlir/Dialect/Arith/IR/Arith.h"
-#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinTypes.h"
-#include "mlir/IR/Matchers.h"
-#include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/Value.h"
 
 namespace mlir::llh {
+void checkAndInferSymbol(Operation* op);
 llh::DimOp buildTensorDim(mlir::Value operand, RewriterBase* rewrite,
                           size_t dim);
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,

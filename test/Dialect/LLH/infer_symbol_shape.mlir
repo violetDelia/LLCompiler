@@ -44,3 +44,17 @@ func.func @reshape(%arg0: tensor<?x?x224x226xf32, #llh.encoding<shapes = @s0, @s
   return 
 }
 
+// -----
+"llh.symbolic_int"() <{sym_name = "c64"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c7"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+// CHECK-LABEL: constant
+func.func @conv(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>) ->() attributes {entrance}{
+  %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:46.139597+08:00/L__self___conv1.weight.npy"}> : () -> tensor<64x3x7x7xf32, #llh.encoding<shapes = @c64, @c3, @c7, @c7>>
+  %126 = "llh.conv"(%arg0, %4) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 7, 7>, pad = array<i64: 3, 3, 3, 3>, stride = array<i64: 2, 2>}> : (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, tensor<64x3x7x7xf32, #llh.encoding<shapes = @c64, @c3, @c7, @c7>>) -> tensor<?x64x?x?xf32>
+  return 
+}
+

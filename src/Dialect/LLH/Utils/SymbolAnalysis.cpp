@@ -145,6 +145,7 @@ Value& SymbolAnalysis::addEncoding(Value& value, size_t result_pos) {
   IRRewriter builder(value.getContext());
   auto type = value.getType();
   if (!isa<RankedTensorType>(type)) return value;
+  // TODO: if value has EndocingAttr, not gen new EndocingAttr
   auto unencoding_tensor = llvm::cast<RankedTensorType>(type);
   auto symbols_analysis = SymbolAnalysis::getInstance(value);
   auto symbols = llvm::SmallVector<StringRef>();

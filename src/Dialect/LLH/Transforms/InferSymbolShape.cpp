@@ -20,9 +20,11 @@
 #include <string>
 #include <utility>
 #include <vector>
+
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
@@ -89,7 +91,6 @@ void generateEntranceSymbol(ModuleOp module) {
       }
     }
   }
-  symbol_analysis->debugPrintSymbols();
 }
 //===----------------------------------------------------------------------===//
 // transform patterns
@@ -121,10 +122,7 @@ void InferSymbolShapePass::runOnOperation() {
   auto module = getOperation();
   generateEntranceSymbol(module);
   module.walk([](Operation* op) {
-    if (auto symbol_op =
-            llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op)) {
-      symbol_op.inferSymbolicShape();
-    }
+    checkAndInferSymbol(op);
   });
   LLC_RUN_OUT_PASS
 }
