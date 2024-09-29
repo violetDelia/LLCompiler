@@ -17,7 +17,7 @@
 
 #include <cstdint>
 
-#include "llcompiler/Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -42,16 +42,6 @@ void add_unit_attr(mlir::Operation* op, llvm::StringRef attr_name) {
   op->setAttr(attr_name, mlir::UnitAttr::get(op->getContext()));
 }
 
-const char* layout_to_str(LAYOUT layout) {
-  switch (layout) {
-    case llc::LAYOUT::NCHW:
-      return "NCHW";
-    case llc::LAYOUT::NHWC:
-      return "NHWC";
-  }
-  UNIMPLEMENTED(UTILITY);
-}
-
 #define DEF_ATTR(name, Key) const char* Key = #name;
 
 #define ADD_STRING_ATTR(name, Key)                                     \
@@ -73,19 +63,20 @@ const char* layout_to_str(LAYOUT layout) {
   DEF_ATTR(name, Key)            \
   void add_##name##_attr(mlir::Operation* op) { add_unit_attr(op, Key); }
 
-#define ADD_LAYOUT_ATTR(name, Key)                            \
-  DEF_ATTR(name, Key)                                         \
-  void add_##name##_attr(mlir::Operation* op, LAYOUT value) { \
-    add_string_attr(op, Key, layout_to_str(value));           \
+#define ADD_LAYOUT_ATTR(name, Key)                                           \
+  DEF_ATTR(name, Key)                                                        \
+  void add_##name##_attr(mlir::Operation* op, ::mlir::llh::Layout value) {   \
+    op->setAttr(Key, ::mlir::llh::LayoutAttr::get(op->getContext(), value)); \
   }
 
-ADD_LAYOUT_ATTR(gloabal_layout, GloabalLayoutAttr)
+const char* GloabalLayoutAttr = "builtin.gloabal_layout";
 ADD_LAYOUT_ATTR(layout, LayoutAttr)
 ADD_STRING_ATTR(op_name, OperationNameAttr)
 ADD_DENSE_I64_ATTR(group, GroupAttr)
-ADD_DENSE_I64_ATTR(kernal_shape, KernelShapeAttr)
+ADD_DENSE_I64_ATTR(kernel_shape, KernelShapeAttr)
 ADD_DENSE_I64_ATTR(stride, StrideAtt)
 ADD_DENSE_I64_ATTR(pad, PadAttr)
+ADD_DENSE_I64_ATTR(dilation, DilationAttr)
 ADD_UNIT_ATTR(is_weight, IsWeightAttr)
 ADD_UNIT_ATTR(symbol_generate, SymbolGeneratedAttr)
 ADD_UNIT_ATTR(stop_run, StopRun)

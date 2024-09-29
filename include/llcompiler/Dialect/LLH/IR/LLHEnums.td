@@ -33,29 +33,42 @@ def LLH_AutoPadAttr : EnumAttr<LLH_Dialect, LLH_AutoPad, "AutoPad">{
 }
 
 
-// def LLH_CEIL_MODE_CEIL        : I32EnumAttrCase<"CEIL", 0>;
-// def LLH_CEIL_MODE_FLOOR       : I32EnumAttrCase<"FLOOR", 1>;
-// def LLH_CeilMode : I32EnumAttr<"CeilMode",
-//     "Whether to use ceil or floor (default) to compute the output shape.",
-//     [LLH_CEIL_MODE_CEIL, LLH_CEIL_MODE_FLOOR]> {
-//   let genSpecializedAttr = 0;
-//   let cppNamespace = "::mlir::llh";
-// }
-// def LLH_CeilModeAttr : EnumAttr<LLH_Dialect, LLH_CeilMode, "CeilMode">{
-//   let assemblyFormat = "`<` $value `>`";
-// }
+def LLH_CEIL_MODE_CEIL        : I32EnumAttrCase<"CEIL", 0>;
+def LLH_CEIL_MODE_FLOOR       : I32EnumAttrCase<"FLOOR", 1>;
+def LLH_CeilMode : I32EnumAttr<"CeilMode",
+    "Whether to use ceil or floor (default) to compute the output shape.",
+    [LLH_CEIL_MODE_CEIL, LLH_CEIL_MODE_FLOOR]> {
+  let genSpecializedAttr = 0;
+  let cppNamespace = "::mlir::llh";
+}
+def LLH_CeilModeAttr : EnumAttr<LLH_Dialect, LLH_CeilMode, "CeilMode">{
+  let assemblyFormat = "`<` $value `>`";
+}
 
 
-// def LLH_Shift_Right         : I32EnumAttrCase<"Right", 0>;
-// def LLH_Shift_Left          : I32EnumAttrCase<"Left", 1>;
-// def LLH_ShiftDirection : I32EnumAttr<"ShiftDirection",
-//     "Direction of moving bits. It can be either “RIGHT” (for right shift) or “LEFT” (for left shift)..",
-//     [LLH_Shift_Right, LLH_Shift_Left]> {
-//   let genSpecializedAttr = 0;
-//   let cppNamespace = "::mlir::llh";
-// }
-// def LLH_ShiftDirectionAttr : EnumAttr<LLH_Dialect, LLH_ShiftDirection, "ShiftDirection">{
-//   let assemblyFormat = "`<` $value `>`";
-// }
+def LLH_Shift_Right         : I32EnumAttrCase<"Right", 0>;
+def LLH_Shift_Left          : I32EnumAttrCase<"Left", 1>;
+def LLH_ShiftDirection : I32EnumAttr<"ShiftDirection",
+    "Direction of moving bits. It can be either “RIGHT” (for right shift) or “LEFT” (for left shift)..",
+    [LLH_Shift_Right, LLH_Shift_Left]> {
+  let genSpecializedAttr = 0;
+  let cppNamespace = "::mlir::llh";
+}
+def LLH_ShiftDirectionAttr : EnumAttr<LLH_Dialect, LLH_ShiftDirection, "ShiftDirection">{
+  let assemblyFormat = "`<` $value `>`";
+}
+
+def LLH_LAYOUT_NCHW         : I32EnumAttrCase<"NCHW", 0>; 
+def LLH_LAYOUT_NHWC         : I32EnumAttrCase<"NHWC", 1>;//C last
+def LLH_Layout : I32EnumAttr<"Layout",
+    "Layout of tensor",
+    [LLH_LAYOUT_NCHW, LLH_LAYOUT_NHWC]> {
+  let genSpecializedAttr = 0;
+  let cppNamespace = "::mlir::llh";
+}
+
+def LLH_LayoutAttr : EnumAttr<LLH_Dialect, LLH_Layout, "Layout">{
+  let assemblyFormat = "`<` $value `>`";
+}
 
 #endif //

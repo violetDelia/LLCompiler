@@ -19,11 +19,16 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/Support/Casting.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 
 namespace mlir::llh {
+
+bool isLayoutSensitive(Operation* op) {
+  return llvm::isa<llh::ConvOp, ConvBiasOp>(op);
+}
 
 void checkAndInferSymbol(Operation* op) {
   auto symbol_op = llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op);
@@ -37,7 +42,6 @@ void checkAndInferSymbol(Operation* op) {
     }
     auto ranked_type = llvm::cast<RankedTensorType>(type);
     auto encodeing = ranked_type.getEncoding();
-    encodeing.dump();
     if (!encodeing) {
       need_infer_symbol = false;
       break;
@@ -49,11 +53,11 @@ void checkAndInferSymbol(Operation* op) {
   }
   if (need_infer_symbol) {
     symbol_op.inferSymbolicShape();
-    INFO(llc::SymbolInfer) << "Inferred symbolic shape"
-                    << op->getName().getStringRef().str();
+    DEBUG(llc::SymbolInfer)
+        << "Inferred symbolic shape " << op->getName().getStringRef().str();
   } else {
-    WRONG(llc::SymbolInfer) << "Invalid operand to infer symbol"
-                     << op->getName().getStringRef().str();
+    WRONG(llc::SymbolInfer) << "Invalid operand to infer symbol "
+                            << op->getName().getStringRef().str();
   }
 }
 

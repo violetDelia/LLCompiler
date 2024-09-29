@@ -207,7 +207,8 @@ def LLH_ConvBiasOp : LLH_SymbolOp<"conv_bias">{
         DenseI64ArrayAttr:$kernel_shape,
         DenseI64ArrayAttr:$pad,
         DenseI64ArrayAttr:$stride,
-        DefaultValuedAttr<I64Attr, "1">:$group);
+        DefaultValuedAttr<I64Attr, "1">:$group,
+        OptionalAttr<LLH_LayoutAttr>:$layout);
     let results = (outs LLH_FloatTensor);
 }
 
@@ -219,7 +220,8 @@ def LLH_ConvOp : LLH_SymbolOp<"conv">{
         DenseI64ArrayAttr:$kernel_shape,
         DenseI64ArrayAttr:$pad,
         DenseI64ArrayAttr:$stride,
-        DefaultValuedAttr<I64Attr, "1">:$group);
+        DefaultValuedAttr<I64Attr, "1">:$group,
+        OptionalAttr<LLH_LayoutAttr>:$layout);
     let results = (outs LLH_FloatTensor);
 }
 

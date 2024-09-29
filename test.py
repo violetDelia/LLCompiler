@@ -3,6 +3,11 @@ import torch.fx.experimental
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
-model = torchvision.models.resnet18()
-from torch.fx.experimental import get_isolated_graphmodule
+filters = torch.randn(64,3,7,7)
+inputs = torch.randn(1, 3,224 , 224)
+print(F.conv2d(inputs, filters, padding=1).shape)
+filters = filters.permute(0,2,3,1)
+inputs = inputs.permute(0,2,3,1)
+print(F.conv2d(inputs, filters, padding=1).shape)
+
 

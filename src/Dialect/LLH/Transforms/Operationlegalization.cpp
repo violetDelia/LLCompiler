@@ -18,6 +18,7 @@
 #include <regex>
 #include <string>
 
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
@@ -36,6 +37,7 @@
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -59,7 +61,6 @@ namespace {
 //===----------------------------------------------------------------------===//
 
 // op type only int/float
-#define CONVERT_CONST_TO
 ConstantOp buildConstTensorFromScalar(ConstantOp op, PatternRewriter* rewriter,
                                       Operation* user) {
   auto user_type =
@@ -98,7 +99,6 @@ ConstantOp buildConstTensorFromScalar(ConstantOp op, PatternRewriter* rewriter,
       new_value = DenseElementsAttr::get(tensor_type, {float_attr.getValue()});
     }
   }
-
   return rewriter->create<ConstantOp>(loc, tensor_type, new_value);
 }
 
@@ -295,6 +295,7 @@ struct replaceSymbolicBindOp : public OpRewritePattern<SymbolicBindOp> {
     // llc::add_stop_run_attr(op);
   }
 };
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -331,8 +332,18 @@ void OperationlegalizatioPass::runOnOperation() {
   auto* context = &getContext();
   RewritePatternSet patterns(context);
   populateOperationlegalizatioPassPatterns(patterns);
-  auto op = getOperation();
-  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
+  auto module = getOperation();
+  module->dump();
+  auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
+  CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
+  auto layout = symbolizeLayout(dyn_cast<StringAttr>(global_layout).getValue());
+  CHECK(llc::MLIR_PASS, layout.has_value());
+  auto add_layout_attr = [&layout](Operation* op) {
+    if (!isLayoutSensitive(op)) return;
+    llc::add_layout_attr(op, layout.value());
+  };
+  module->walk(add_layout_attr);
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

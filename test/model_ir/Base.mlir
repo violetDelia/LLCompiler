@@ -1,3 +1,4 @@
+// -----// IR Dump Before Operationlegalization (operation-legalization) //----- //
 #map = affine_map<()[s0, s1] -> (s0, s1, 224, 224)>
 #map1 = affine_map<()[s0, s1] -> (1, s0 * s1, 224, 224)>
 #map2 = affine_map<()[s0, s1] -> (2, (s0 * s1) floordiv 2, 224, 224)>
@@ -5,13 +6,13 @@
 #map4 = affine_map<()[s0, s1] -> (2, 3, 110, 110)>
 #map5 = affine_map<()[s0, s1] -> (2, 3, 110, 2)>
 module attributes {builtin.gloabal_layout = "NCHW"} {
-  func.func @main(%arg0: tensor<?x?x224x224xf32>, %arg1: i64, %arg2: i64) -> tensor<2x3x110x2xf32> {
-    %0 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-27T23:20:33.415740+08:00/L__self___conv_layer1.weight.npy"}> : () -> tensor<10x3x5x5xf32>
-    %1 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-27T23:20:33.415740+08:00/L__self___conv_layer1.bias.npy"}> : () -> tensor<10xf32>
-    %2 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-27T23:20:33.415740+08:00/L__self___conv_layer2.weight.npy"}> : () -> tensor<3x10x5x5xf32>
-    %3 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-27T23:20:33.415740+08:00/L__self___conv_layer2.bias.npy"}> : () -> tensor<3xf32>
-    %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-27T23:20:33.415740+08:00/L__self___cf.weight.npy"}> : () -> tensor<2x110xf32>
-    %5 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-27T23:20:33.415740+08:00/L__self___cf.bias.npy"}> : () -> tensor<2xf32>
+  func.func @main(%arg0: tensor<?x?x224x224xf32>) -> tensor<2x3x110x2xf32> attributes {entrance} {
+    %0 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:45.486700+08:00/L__self___conv_layer1.weight.npy"}> : () -> tensor<10x3x5x5xf32>
+    %1 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:45.486700+08:00/L__self___conv_layer1.bias.npy"}> : () -> tensor<10xf32>
+    %2 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:45.486700+08:00/L__self___conv_layer2.weight.npy"}> : () -> tensor<3x10x5x5xf32>
+    %3 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:45.486700+08:00/L__self___conv_layer2.bias.npy"}> : () -> tensor<3xf32>
+    %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:45.486700+08:00/L__self___cf.weight.npy"}> : () -> tensor<2x110xf32>
+    %5 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:45.486700+08:00/L__self___cf.bias.npy"}> : () -> tensor<2xf32>
     %6 = "llh.torch_symbolic_int"() <{sym_name = "s0"}> : () -> i64
     %7 = "llh.torch_symbolic_int"() <{sym_name = "s1"}> : () -> i64
     "llh.symbolic_bind"(%arg0, %6, %7) <{expressions = #map}> : (tensor<?x?x224x224xf32>, i64, i64) -> ()
@@ -62,3 +63,5 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
     return %36 : tensor<2x3x110x2xf32>
   }
 }
+
+

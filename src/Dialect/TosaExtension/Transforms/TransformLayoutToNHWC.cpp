@@ -48,144 +48,144 @@ using namespace mlir::tosa_ex;
   UNIMPLEMENTED(llc::MLIR) << " layout from " << from.str() << " to " \
                            << to.str();
 
-mlir::tosa::ConstOp genTransposeConstOpFromTo(OpBuilder* builder,
-                                              StringRef from, StringRef to,
-                                              Location& loc) {
-  mlir::SmallVector<double> value;
-  if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
-    if (to == llc::layout_to_str(llc::LAYOUT::NHWC)) {
-      value.append({0, 2, 3, 1});
-    } else {
-      UNIMPLEMENTED(llc::MLIR);
-    }
-  } else if (from == llc::layout_to_str(llc::LAYOUT::NHWC)) {
-    if (to == llc::layout_to_str(llc::LAYOUT::NCHW)) {
-      value.append({0, 3, 1, 2});
-    } else {
-      UNIMPLEMENTED(llc::MLIR);
-    }
-  } else {
-    UNIMPLEMENTED(llc::MLIR);
-  }
-  auto out = RankedTensorType::get({4}, builder->getI64Type());
-  auto const_op =
-      llc::create_tosa_const(builder, {4}, value, builder->getI64Type(), loc);
-  return const_op;
-}
+// mlir::tosa::ConstOp genTransposeConstOpFromTo(OpBuilder* builder,
+//                                               StringRef from, StringRef to,
+//                                               Location& loc) {
+//   mlir::SmallVector<double> value;
+//   if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
+//     if (to == llc::layout_to_str(llc::LAYOUT::NHWC)) {
+//       value.append({0, 2, 3, 1});
+//     } else {
+//       UNIMPLEMENTED(llc::MLIR);
+//     }
+//   } else if (from == llc::layout_to_str(llc::LAYOUT::NHWC)) {
+//     if (to == llc::layout_to_str(llc::LAYOUT::NCHW)) {
+//       value.append({0, 3, 1, 2});
+//     } else {
+//       UNIMPLEMENTED(llc::MLIR);
+//     }
+//   } else {
+//     UNIMPLEMENTED(llc::MLIR);
+//   }
+//   auto out = RankedTensorType::get({4}, builder->getI64Type());
+//   auto const_op =
+//       llc::create_tosa_const(builder, {4}, value, builder->getI64Type(), loc);
+//   return const_op;
+// }
 
-mlir::RankedTensorType genReturnTensorFromTo(mlir::Value value, StringRef from,
-                                             StringRef to) {
-  auto context = value.getContext();
-  auto tensor = cast<RankedTensorType>(value.getType());
-  CHECK(llc::MLIR, tensor);
-  auto shape = tensor.getShape();
-  llvm::SmallVector<int64_t> new_shape;
-  if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
-    if (to == llc::layout_to_str(llc::LAYOUT::NHWC)) {
-      new_shape.push_back(shape[0]);
-      new_shape.push_back(shape[2]);
-      new_shape.push_back(shape[3]);
-      new_shape.push_back(shape[1]);
-    } else {
-      UNIMPLEMENTED(llc::MLIR);
-    }
-  } else if (from == llc::layout_to_str(llc::LAYOUT::NHWC)) {
-    if (to == llc::layout_to_str(llc::LAYOUT::NCHW)) {
-      new_shape.push_back(shape[0]);
-      new_shape.push_back(shape[3]);
-      new_shape.push_back(shape[1]);
-      new_shape.push_back(shape[2]);
-    } else {
-      UNIMPLEMENTED(llc::MLIR);
-    }
-  } else {
-    UNIMPLEMENTED(llc::MLIR);
-  }
-  return RankedTensorType::get(new_shape, tensor.getElementType());
-}
+// mlir::RankedTensorType genReturnTensorFromTo(mlir::Value value, StringRef from,
+//                                              StringRef to) {
+//   auto context = value.getContext();
+//   auto tensor = cast<RankedTensorType>(value.getType());
+//   CHECK(llc::MLIR, tensor);
+//   auto shape = tensor.getShape();
+//   llvm::SmallVector<int64_t> new_shape;
+//   if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
+//     if (to == llc::layout_to_str(llc::LAYOUT::NHWC)) {
+//       new_shape.push_back(shape[0]);
+//       new_shape.push_back(shape[2]);
+//       new_shape.push_back(shape[3]);
+//       new_shape.push_back(shape[1]);
+//     } else {
+//       UNIMPLEMENTED(llc::MLIR);
+//     }
+//   } else if (from == llc::layout_to_str(llc::LAYOUT::NHWC)) {
+//     if (to == llc::layout_to_str(llc::LAYOUT::NCHW)) {
+//       new_shape.push_back(shape[0]);
+//       new_shape.push_back(shape[3]);
+//       new_shape.push_back(shape[1]);
+//       new_shape.push_back(shape[2]);
+//     } else {
+//       UNIMPLEMENTED(llc::MLIR);
+//     }
+//   } else {
+//     UNIMPLEMENTED(llc::MLIR);
+//   }
+//   return RankedTensorType::get(new_shape, tensor.getElementType());
+// }
 
-bool HaslLayoutAttr(Operation* op, llc::LAYOUT layout) {
-  if (!op->hasAttr(llc::LayoutAttr)) return false;
-  auto attr = cast<StringAttr>(op->getAttr(llc::LayoutAttr));
-  return attr == llc::layout_to_str(layout);
-}
+// bool HaslLayoutAttr(Operation* op, llc::LAYOUT layout) {
+//   if (!op->hasAttr(llc::LayoutAttr)) return false;
+//   auto attr = cast<StringAttr>(op->getAttr(llc::LayoutAttr));
+//   return attr == llc::layout_to_str(layout);
+// }
 
-mlir::tosa::TransposeOp buildTansposeFromTo(OpBuilder* builder, Value value,
-                                            StringRef from, StringRef to,
-                                            Location& loc) {
-  auto perms = genTransposeConstOpFromTo(builder, from, to, loc);
-  auto out = genReturnTensorFromTo(value, from, to);
-  auto tranpose = builder->create<tosa::TransposeOp>(loc, out, value, perms);
-  return tranpose;
-}
+// mlir::tosa::TransposeOp buildTansposeFromTo(OpBuilder* builder, Value value,
+//                                             StringRef from, StringRef to,
+//                                             Location& loc) {
+//   auto perms = genTransposeConstOpFromTo(builder, from, to, loc);
+//   auto out = genReturnTensorFromTo(value, from, to);
+//   auto tranpose = builder->create<tosa::TransposeOp>(loc, out, value, perms);
+//   return tranpose;
+// }
 
-DenseI64ArrayAttr genNewPadFrom(DenseI64ArrayAttr pad, StringRef from) {
-  auto context = pad.getContext();
-  auto pad_value = pad.asArrayRef().vec();
-  SmallVector<int64_t> new_pad_value;
-  if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
-    new_pad_value.push_back(pad_value[0]);
-    new_pad_value.push_back(pad_value[2]);
-    new_pad_value.push_back(pad_value[3]);
-    new_pad_value.push_back(pad_value[1]);
-  } else {
-    UNIMPLEMENTED(llc::MLIR);
-  }
-  return DenseI64ArrayAttr::get(context, new_pad_value);
-}
+// DenseI64ArrayAttr genNewPadFrom(DenseI64ArrayAttr pad, StringRef from) {
+//   auto context = pad.getContext();
+//   auto pad_value = pad.asArrayRef().vec();
+//   SmallVector<int64_t> new_pad_value;
+//   if (from == llc::layout_to_str(llc::LAYOUT::NCHW)) {
+//     new_pad_value.push_back(pad_value[0]);
+//     new_pad_value.push_back(pad_value[2]);
+//     new_pad_value.push_back(pad_value[3]);
+//     new_pad_value.push_back(pad_value[1]);
+//   } else {
+//     UNIMPLEMENTED(llc::MLIR);
+//   }
+//   return DenseI64ArrayAttr::get(context, new_pad_value);
+// }
 
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
 namespace {
-template <class SourceOp, int N>
-struct ConvToNHWCWithOperands : public OpRewritePattern<SourceOp> {
-  using OpRewritePattern<SourceOp>::OpRewritePattern;
+// template <class SourceOp, int N>
+// struct ConvToNHWCWithOperands : public OpRewritePattern<SourceOp> {
+//   using OpRewritePattern<SourceOp>::OpRewritePattern;
 
-  LogicalResult match(SourceOp op) const final {
-    if (!op->hasAttr(llc::LayoutAttr)) return failure();
-    return success();
-  }
+//   LogicalResult match(SourceOp op) const final {
+//     if (!op->hasAttr(llc::LayoutAttr)) return failure();
+//     return success();
+//   }
 
-  void rewrite(SourceOp op, PatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
-    auto loc = op->getLoc();
-    auto attrs = op->getAttrs();
-    auto out = op->getResult(0);
-    auto operand_nums = op->getNumOperands();
-    auto layout = cast<StringAttr>(op->getAttr(llc::LayoutAttr)).getValue();
-    SmallVector<Value> new_operands;
-    for (int i = 0; i < N; i++) {
-      auto operand = op->getOperand(i);
-      auto new_operand =
-          buildTansposeFromTo(&rewriter, operand, layout,
-                              llc::layout_to_str(llc::LAYOUT::NHWC), loc);
-      new_operands.push_back(new_operand);
-    }
-    for (int i = N; i < operand_nums; i++) {
-      new_operands.push_back(op->getOperand(i));
-    }
-    auto new_out = genReturnTensorFromTo(out, layout,
-                                         llc::layout_to_str(llc::LAYOUT::NHWC));
-    auto new_op = rewriter.create<SourceOp>(loc, ::mlir::TypeRange{new_out},
-                                            new_operands);
-    for (auto attr : attrs) {
-      if (attr.getName() == llc::LayoutAttr) {
-        continue;
-      } else if (attr.getName() == llc::PadAttr) {
-        auto pad = cast<DenseI64ArrayAttr>(attr.getValue());
-        auto new_pad = genNewPadFrom(pad, layout);
-        new_op->setAttr(llc::PadAttr, new_pad);
-      } else {
-        new_op->setAttr(attr.getName(), attr.getValue());
-      }
-    }
-    auto out_transpose = buildTansposeFromTo(
-        &rewriter, new_op, llc::layout_to_str(llc::LAYOUT::NHWC), layout, loc);
-    rewriter.replaceOp(op, out_transpose);
-    LLC_RUN_OUT_PATTERN
-  }
-};
+//   void rewrite(SourceOp op, PatternRewriter& rewriter) const final {
+//     LLC_RUN_IN_PATTERN
+//     auto loc = op->getLoc();
+//     auto attrs = op->getAttrs();
+//     auto out = op->getResult(0);
+//     auto operand_nums = op->getNumOperands();
+//     auto layout = cast<StringAttr>(op->getAttr(llc::LayoutAttr)).getValue();
+//     SmallVector<Value> new_operands;
+//     for (int i = 0; i < N; i++) {
+//       auto operand = op->getOperand(i);
+//       auto new_operand =
+//           buildTansposeFromTo(&rewriter, operand, layout,
+//                               llc::layout_to_str(llc::LAYOUT::NHWC), loc);
+//       new_operands.push_back(new_operand);
+//     }
+//     for (int i = N; i < operand_nums; i++) {
+//       new_operands.push_back(op->getOperand(i));
+//     }
+//     auto new_out = genReturnTensorFromTo(out, layout,
+//                                          llc::layout_to_str(llc::LAYOUT::NHWC));
+//     auto new_op = rewriter.create<SourceOp>(loc, ::mlir::TypeRange{new_out},
+//                                             new_operands);
+//     for (auto attr : attrs) {
+//       if (attr.getName() == llc::LayoutAttr) {
+//         continue;
+//       } else if (attr.getName() == llc::PadAttr) {
+//         auto pad = cast<DenseI64ArrayAttr>(attr.getValue());
+//         auto new_pad = genNewPadFrom(pad, layout);
+//         new_op->setAttr(llc::PadAttr, new_pad);
+//       } else {
+//         new_op->setAttr(attr.getName(), attr.getValue());
+//       }
+//     }
+//     auto out_transpose = buildTansposeFromTo(
+//         &rewriter, new_op, llc::layout_to_str(llc::LAYOUT::NHWC), layout, loc);
+//     rewriter.replaceOp(op, out_transpose);
+//     LLC_RUN_OUT_PATTERN
+//   }
+// };
 
 }  // namespace
 //===----------------------------------------------------------------------===//
@@ -193,8 +193,8 @@ struct ConvToNHWCWithOperands : public OpRewritePattern<SourceOp> {
 //===----------------------------------------------------------------------===//
 void populateTransformLayoutToNHWCPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<ConvToNHWCWithOperands<Conv2DOp, 2>>(context);
-  patterns.add<ConvToNHWCWithOperands<MaxPool2dOp, 1>>(context);
+  // patterns.add<ConvToNHWCWithOperands<Conv2DOp, 2>>(context);
+  // patterns.add<ConvToNHWCWithOperands<MaxPool2dOp, 1>>(context);
 }
 //===----------------------------------------------------------------------===//
 // pass defination
@@ -210,20 +210,20 @@ struct TransformLayoutToNHWC
 // pass implement
 //===----------------------------------------------------------------------===//
 void markOpsNeedTranspose(ModuleOp module) {
-  if (!module->hasAttr(llc::GloabalLayoutAttr)) {
-    WRONG(llc::MLIR) << "not has " << llc::GloabalLayoutAttr;
-    return;
-  }
-  auto layout = cast<StringAttr>(module->getAttr(llc::GloabalLayoutAttr));
-  CHECK(llc::MLIR, layout);
-  if (layout == llc::layout_to_str(llc::LAYOUT::NHWC)) return;
-  auto mark_op = [layout](Operation* op) {
-    if (isa<tosa::Conv2DOp, tosa::MaxPool2dOp>(op)) {
-      op->setAttr(llc::LayoutAttr, layout);
-      DEBUG(llc::MLIR) << "add " << op->getName().getStringRef().str();
-    }
-  };
-  module->walk(mark_op);
+  // if (!module->hasAttr(llc::GloabalLayoutAttr)) {
+  //   WRONG(llc::MLIR) << "not has " << llc::GloabalLayoutAttr;
+  //   return;
+  // }
+  // auto layout = cast<StringAttr>(module->getAttr(llc::GloabalLayoutAttr));
+  // CHECK(llc::MLIR, layout);
+  // if (layout == llc::layout_to_str(llc::LAYOUT::NHWC)) return;
+  // auto mark_op = [layout](Operation* op) {
+  //   if (isa<tosa::Conv2DOp, tosa::MaxPool2dOp>(op)) {
+  //     op->setAttr(llc::LayoutAttr, layout);
+  //     DEBUG(llc::MLIR) << "add " << op->getName().getStringRef().str();
+  //   }
+  // };
+  // module->walk(mark_op);
 }
 
 void TransformLayoutToNHWC::runOnOperation() {

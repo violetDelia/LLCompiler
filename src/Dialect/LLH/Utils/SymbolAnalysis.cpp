@@ -34,6 +34,7 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Value.h"
+#include "mlir/Support/LLVM.h"
 
 namespace mlir::llh {
 
@@ -43,6 +44,9 @@ SymbolAnalysisManager* SymbolAnalysisManager::instance_ =
 std::mutex SymbolAnalysisManager::mutex_;
 
 std::mutex SymbolAnalysis::mutex_;
+
+StringRef SymbolAnalysis::UNKOW_SYMBOL = "UNKOW";
+
 SymbolAnalysis::SymbolAnalysis(Operation* op) {
   ModuleOp module;
   if (llvm::isa<ModuleOp>(op)) {
@@ -145,8 +149,12 @@ Value& SymbolAnalysis::addEncoding(Value& value, size_t result_pos) {
   IRRewriter builder(value.getContext());
   auto type = value.getType();
   if (!isa<RankedTensorType>(type)) return value;
-  // TODO: if value has EndocingAttr, not gen new EndocingAttr
   auto unencoding_tensor = llvm::cast<RankedTensorType>(type);
+  auto try_get_encoding = unencoding_tensor.getEncoding();
+  if (try_get_encoding) {
+    auto has_encoding_attr = isa<EncodingAttr>(try_get_encoding);
+    if (has_encoding_attr) return value;
+  }
   auto symbols_analysis = SymbolAnalysis::getInstance(value);
   auto symbols = llvm::SmallVector<StringRef>();
   for (auto dim : unencoding_tensor.getShape()) {
@@ -169,9 +177,42 @@ Value& SymbolAnalysis::addEncoding(Value& value, size_t result_pos) {
 
 Value& SymbolAnalysis::addEncoding(Value& value,
                                    llvm::ArrayRef<llvm::StringRef> symbols,
-                                   llvm::ArrayRef<size_t> skip_dim,
                                    size_t result_pos) {
-  UNIMPLEMENTED(llc::MLIR);
+  IRRewriter builder(value.getContext());
+  auto type = value.getType();
+  if (!isa<RankedTensorType>(type)) return value;
+  auto unencoding_tensor = llvm::cast<RankedTensorType>(type);
+  auto try_get_encoding = unencoding_tensor.getEncoding();
+  if (try_get_encoding) {
+    auto has_encoding_attr = isa<EncodingAttr>(try_get_encoding);
+    if (has_encoding_attr) return value;
+  }
+  auto symbols_analysis = SymbolAnalysis::getInstance(value);
+  auto rank = unencoding_tensor.getRank();
+  auto shape = unencoding_tensor.getShape();
+  auto new_symbols = SmallVector<StringRef>();
+  for (int i = 0; i < rank; i++) {
+    if (UNKOW_SYMBOL.str() != symbols[i].str()) {
+      CHECK(llc::SymbolInfer, symbols_table_.contains(symbols[i].str()));
+      new_symbols.push_back(symbols[i]);
+      continue;
+    }
+    auto dim = shape[i];
+    if (dim == ShapedType::kDynamic) {
+      auto new_symbol = symbols_analysis->buildNewSymbolFrom(value);
+      new_symbols.push_back(new_symbol.getSymName());
+    } else {
+      auto const_symbol =
+          symbols_analysis->getOrBuildConstSymbolFrom(value, dim);
+      new_symbols.push_back(const_symbol.getSymName());
+    }
+  }
+  auto encoding = EncodingAttr::get(builder.getContext(), new_symbols);
+  auto new_tensor_type =
+      RankedTensorType::get(unencoding_tensor.getShape(),
+                            unencoding_tensor.getElementType(), encoding);
+  value.setType(new_tensor_type);
+  return value;
 }
 
 void SymbolAnalysis::debugPrintSymbols() {

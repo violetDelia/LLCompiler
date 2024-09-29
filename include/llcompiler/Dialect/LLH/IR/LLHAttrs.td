@@ -30,13 +30,13 @@ def LLH_Encoding : LLH_Attr<"Encoding", "encoding", []> {
   let description = [{
   "tensor encoding"
   }];
-  let parameters = (ins ArrayRefParameter<"mlir::SymbolRefAttr", "">:$shape_symbols);
+  let parameters = (ins ArrayRefParameter<"mlir::FlatSymbolRefAttr", "">:$shape_symbols);
   let builders = [
     AttrBuilder<(ins "mlir::ArrayRef<mlir::StringRef>":$shape_symbols), [{
-      mlir::SmallVector<mlir::SymbolRefAttr> symbols;
+      mlir::SmallVector<mlir::FlatSymbolRefAttr> symbols;
       for (auto sym : shape_symbols) {
         symbols.push_back(
-            SymbolRefAttr::get($_ctxt, StringAttr::get($_ctxt, sym)));
+            FlatSymbolRefAttr::get($_ctxt, StringAttr::get($_ctxt, sym)));
       }
       return $_get($_ctxt, symbols);
     }]>,

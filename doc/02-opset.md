@@ -21,7 +21,7 @@
 | CatOp              | Yes  | [need]  | [need] | [need] | [need] | [need] | None   | [need] | [need] | [need] |     |
 | ConstantOp         | Yes  | default | Yes    | Yes    | [need] | [need] | None   | [need] | [need] | [need] |     |
 | ConvBiasOp         | Yes  | [need]  | [need] | [need] | [need] | [need] | [need] | [need] | [need] | [need] |     |
-| ConvOp             | Yes  | [need]  | [need] | [need] | [need] | [need] | None   | [need] | [need] | [need] |     |
+| ConvOp             | Yes  | [need]  | Yes | [need] | [need] | [need] | None   | [need] | [need] | [need] |     |
 | DimOp              | Yes  | default | None   | [need]   | None   | None   | None   | None   | [need] | [need] |     |
 | DivOp              | Yes  | default | [need] | [need] | [need] | [need] | None   | [need] | [need] | [need] |     |
 | DropOp             | Yes  | default | Yes    | [need] | [need] | [need] | None   | [need] | [need] | [need] |     |

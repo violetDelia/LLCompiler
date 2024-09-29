@@ -25,11 +25,9 @@
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/Support/LLVM.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 
 namespace llc {
-
-enum LAYOUT : int64_t { NCHW = 0, NHWC = 1 };
-const char* layout_to_str(LAYOUT layout);
 
 #define DEF_ATTR(name, Key) extern const char* Key;
 
@@ -48,20 +46,20 @@ const char* layout_to_str(LAYOUT layout);
 
 #define ADD_LAYOUT_ATTR(name, Key) \
   DEF_ATTR(name, Key)              \
-  void add_##name##_attr(mlir::Operation* op, LAYOUT value);
+  void add_##name##_attr(mlir::Operation* op, ::mlir::llh::Layout value);
 
-ADD_LAYOUT_ATTR(gloabal_layout, GloabalLayoutAttr)
+extern const char* GloabalLayoutAttr;
 ADD_LAYOUT_ATTR(layout, LayoutAttr)
 ADD_STRING_ATTR(op_name, OperationNameAttr)
 ADD_DENSE_I64_ATTR(group, GroupAttr)
-ADD_DENSE_I64_ATTR(kernal_shape, KernelShapeAttr)
+ADD_DENSE_I64_ATTR(kernel_shape, KernelShapeAttr)
 ADD_DENSE_I64_ATTR(stride, StrideAtt)
 ADD_DENSE_I64_ATTR(pad, PadAttr)
+ADD_DENSE_I64_ATTR(dilation, DilationAttr)
 ADD_UNIT_ATTR(is_weight, IsWeightAttr)
 ADD_UNIT_ATTR(symbol_generate, SymbolGeneratedAttr)
 ADD_UNIT_ATTR(stop_run, StopRun)
 ADD_UNIT_ATTR(entrance, Entrance)
-
 #undef ADD_LAYOUT_ATTR
 #undef ADD_STRING_ATTR
 #undef ADD_DENSE_I64_ATTR

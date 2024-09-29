@@ -113,7 +113,6 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define LLCOMPILER_CHECK_LOG(module, condition, lever)                        \
   ::llc::logger::Logger(module, static_cast<::llc::logger::LOG_LEVEL>(lever)) \
       .stream(!condition)
-
 #else
 #define LLCOMPILER_INIT_LOGGER(module, root, lever)
 #define LLCOMPILER_LOG(module, lever) ::llc::logger::NullStream()
@@ -124,8 +123,12 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define DINFO LLCOMPILER_LOG(llc::DEBUG, ::llc::logger::LOG_LEVEL::INFO_)
 #define DEBUG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::DEBUG_)
 #define INFO(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::INFO_)
-#define WARN(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::WARN_)
-#define WRONG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::ERROR_)
+#define WARN(module)                                      \
+  LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::WARN_) \
+      << __FILE__ << "<" << __LINE__ << ">: \n\t"
+#define WRONG(module)                                      \
+  LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::ERROR_) \
+      << __FILE__ << "<" << __LINE__ << ">: \n\t"
 #define FATAL(module)                                      \
   LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::FATAL_) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
@@ -167,13 +170,11 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define LOG_GE(module, val1, val2, lever) \
   LLCOMPILER_CHECK_LOG(module, val1 >= val2, lever)
 
-#define UNIMPLEMENTED(module)                               \
-  WRONG(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" \
-                << "function [" << __func__ << "] Unimplemented!"
+#define UNIMPLEMENTED(module) \
+  WRONG(module) << "function [" << __func__ << "] Unimplemented!"
 
-#define WARN_UNIMPLEMENTED(module)                         \
-  WARN(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" \
-               << "function [" << __func__ << "] Unimplemented!"
+#define WARN_UNIMPLEMENTED(module) \
+  WARN(module) << "function [" << __func__ << "] Unimplemented!"
 
 #define LLC_RUN_IN_PASS                                                      \
   INFO(llc::MLIR_PASS) << "----- run in pass: " << this->getPassName().str() \

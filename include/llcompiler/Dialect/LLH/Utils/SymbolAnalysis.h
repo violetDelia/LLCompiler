@@ -50,7 +50,6 @@ class SymbolAnalysis {
   SymbolicIntOp getOrBuildConstSymbolFrom(Value &value, size_t val);
   Value &addEncoding(Value &value, size_t result_pos = 0);
   Value &addEncoding(Value &value, llvm::ArrayRef<llvm::StringRef> symbols,
-                     llvm::ArrayRef<size_t> skip_dim = {},
                      size_t result_pos = 0);
 
   SymbolRelationsOp buildRelations(RewriterBase *builder,
@@ -63,8 +62,12 @@ class SymbolAnalysis {
   Operation *_getMainFunc(Operation *op);
   void _insertOp(RewriterBase *builder, Operation *op, Value &value) const;
 
+ public:
+  static llvm::StringRef UNKOW_SYMBOL;
+
  private:
   static std::mutex mutex_;
+
   std::map<Operation *, size_t> module_map_;
   std::map<std::string, Operation *> symbols_table_;
   int next_symbol_id_ = 0;
