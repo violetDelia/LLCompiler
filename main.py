@@ -47,7 +47,7 @@ module_dict = {
     # torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
-    Braodcast:torch.randn((2, 3, 224, 224), device="cpu"),
+    Braodcast: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.vit_b_16: torch.randn((2, 3, 224, 224), device="cpu")
     # torchvision.models.convnext_tiny: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -61,7 +61,7 @@ def run_model_dict(dict):
             mode="inference",
             ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", func.__name__),
             log_path=os.path.join(
-                os.path.dirname(__file__), "ir_tree", "fx", "log", func.__name__
+                os.path.dirname(__file__), "ir_tree", "fx", func.__name__, "log"
             ),
             log_level="debug",
         )

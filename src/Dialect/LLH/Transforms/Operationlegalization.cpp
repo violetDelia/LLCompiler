@@ -30,6 +30,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -52,7 +53,8 @@ namespace {
 //===----------------------------------------------------------------------===//
 
 // op type only int/float
-ConstantOp buildConstTensorFromScalar(ConstantOp op, LLHPatternRewriter* rewriter,
+ConstantOp buildConstTensorFromScalar(ConstantOp op,
+                                      LLHPatternRewriter* rewriter,
                                       Operation* user) {
   auto user_type =
       llvm::dyn_cast_or_null<ShapedType>(user->getResult(0).getType());
@@ -153,8 +155,8 @@ struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
       bool is_dynamic = false;
       index++;
       while (index < dims.size()) {
-        rear_dim_sum = rewriter.create<DivOp>(loc, rewriter.getI64Type(),
-                                              rear_dim_sum, dims[index]);
+        rear_dim_sum = rewriter.create<MulOp>(
+            loc, rewriter.getI64Type(), rear_dim_sum, dims[index]);
         index++;
       }
       reshape_operands.push_back(rear_dim_sum);
@@ -203,13 +205,15 @@ std::pair<std::vector<std::string>, mlir::AffineExpr*> generateBindShapeMapKey(
   return std::make_pair(symbols, &exp);
 }
 
-struct replaceTorchSymbolicIntOp : public LLHOpRewritePattern<TorchSymbolicIntOp> {
+struct replaceTorchSymbolicIntOp
+    : public LLHOpRewritePattern<TorchSymbolicIntOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(TorchSymbolicIntOp op) const final {
     if (op->hasAttr(llc::SymbolGeneratedAttr)) return llvm::failure();
     return llvm::success();
   }
-  void rewrite(TorchSymbolicIntOp op, LLHPatternRewriter& rewriter) const final {
+  void rewrite(TorchSymbolicIntOp op,
+               LLHPatternRewriter& rewriter) const final {
     rewriter.eraseOp(op);
     // auto symbol_analysis = SymbolAnalysis::getInstance();
     // auto symbol = symbol_analysis->buildNewSymbol(&rewriter, op);

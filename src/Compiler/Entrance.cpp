@@ -41,7 +41,7 @@ void do_compile(const char* xdsl_module, const char* mode, const char* target,
   logger_option.level = logger::str_to_log_level(log_level);
   logger_option.path = log_root;
   init_logger(logger_option);
-  INFO(llc::Entrance_Module) << xdsl_module;
+  INFO(llc::Entrance_Module) << "\n" << xdsl_module;
   // ********* init mlir context *********//
   mlir::DialectRegistry registry;
   add_extension_and_interface(registry);

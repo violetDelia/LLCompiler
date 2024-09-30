@@ -8,6 +8,7 @@ llcompiler_add_library(MLIRLLHDialect
     LLHAttrs.cpp
     LLHinfersymbolShape.cpp
     LLHEnums.cpp
+    LLHVerfy.cpp
 
     DEPENDS
     MLIRLLHDialectIncGen

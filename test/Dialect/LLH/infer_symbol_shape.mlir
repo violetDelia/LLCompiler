@@ -60,3 +60,19 @@ func.func @conv(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1,
   return 
 }
 
+
+// -----
+"llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+// CHECK-LABEL: binary
+func.func @binary(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>) ->() attributes {entrance}{
+  %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:46.139597+08:00/L__self___conv1.weight.npy"}> : () -> tensor<1xf32, #llh.encoding<shapes = @c1>>
+  // CHECK: llh.add
+  // CHECK-SAME:-> tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>
+  %126 = "llh.add"(%arg0, %4): (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, tensor<1xf32, #llh.encoding<shapes = @c1>>) -> tensor<?x3x?x?xf32>
+  return 
+}
+
