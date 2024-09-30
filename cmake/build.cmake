@@ -82,7 +82,6 @@ function(llcompiler_add_library name)
         target_compile_definitions(${name} PRIVATE ${ARG_DEFINITIONS})
     endif()
 
-    set_target_properties(${name} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_ALL_TARGETS ${name})
 
     if(NOT DISABLE_INSTALL)

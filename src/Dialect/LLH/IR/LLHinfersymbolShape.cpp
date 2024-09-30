@@ -99,8 +99,8 @@ void ConvSymbolInfer(Operation* op) {
   auto space_rank = kernel_shape.size();
   auto input_shape = input_type.getShape();
   for (int i = 0; i < space_rank; ++i) {
-    auto in = input_shape[i];
     if (!input_type.isDynamicDim(i + space_index)) {
+      auto in = input_shape[i + space_rank];
       auto pad_h = pad[i];
       auto pad_l = pad[i + space_rank];
       auto dilation = dilations[i];
@@ -151,6 +151,9 @@ void ConvSymbolInfer(Operation* op) {
   new_shape_symbol.insert(new_shape_symbol.begin() + channel_out_index,
                           channel_out_symbol);
   auto symbol_analsis = SymbolAnalysis::getInstance(op);
+  for (auto dim : new_shape) {
+    DINFO << dim;
+  }
   auto new_tensor =
       RankedTensorType::get(new_shape, input_type.getElementType());
   op->getResult(0).setType(new_tensor);

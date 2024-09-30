@@ -333,7 +333,6 @@ void OperationlegalizatioPass::runOnOperation() {
   RewritePatternSet patterns(context);
   populateOperationlegalizatioPassPatterns(patterns);
   auto module = getOperation();
-  module->dump();
   auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
   CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
   auto layout = symbolizeLayout(dyn_cast<StringAttr>(global_layout).getValue());
