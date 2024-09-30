@@ -21,10 +21,8 @@
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
-#include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -32,18 +30,11 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/Traits.h"
-#include "mlir/IR/Attributes.h"
-#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/BuiltinOps.h"
-#include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
-#include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
@@ -61,7 +52,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 
 // op type only int/float
-ConstantOp buildConstTensorFromScalar(ConstantOp op, PatternRewriter* rewriter,
+ConstantOp buildConstTensorFromScalar(ConstantOp op, LLHPatternRewriter* rewriter,
                                       Operation* user) {
   auto user_type =
       llvm::dyn_cast_or_null<ShapedType>(user->getResult(0).getType());
@@ -105,8 +96,8 @@ ConstantOp buildConstTensorFromScalar(ConstantOp op, PatternRewriter* rewriter,
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct BraodcastableScalarToTensor : public OpRewritePattern<ConstantOp> {
-  using OpRewritePattern::OpRewritePattern;
+struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(ConstantOp op) const final {
     if (op.use_empty()) return llvm::failure();
     if (!op->getResult(0).getType().isIntOrFloat()) return llvm::failure();
@@ -117,7 +108,7 @@ struct BraodcastableScalarToTensor : public OpRewritePattern<ConstantOp> {
     }
     return llvm::failure();
   }
-  void rewrite(ConstantOp op, PatternRewriter& rewriter) const final {
+  void rewrite(ConstantOp op, LLHPatternRewriter& rewriter) const final {
     auto loc = op->getLoc();
     for (auto user : op->getUsers()) {
       if (user->hasTrait<OpTrait::ResultsBroadcastableShape>()) {
@@ -134,10 +125,10 @@ struct BraodcastableScalarToTensor : public OpRewritePattern<ConstantOp> {
   }
 };
 
-struct replaceFlattenOp : public OpRewritePattern<FlattenOp> {
-  using OpRewritePattern::OpRewritePattern;
+struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(FlattenOp op) const final { return llvm::success(); }
-  void rewrite(FlattenOp op, PatternRewriter& rewriter) const final {
+  void rewrite(FlattenOp op, LLHPatternRewriter& rewriter) const final {
     auto loc = op->getLoc();
     auto operand = op->getOperand(0);
     auto result_type = op->getResult(0).getType();
@@ -212,13 +203,13 @@ std::pair<std::vector<std::string>, mlir::AffineExpr*> generateBindShapeMapKey(
   return std::make_pair(symbols, &exp);
 }
 
-struct replaceTorchSymbolicIntOp : public OpRewritePattern<TorchSymbolicIntOp> {
-  using OpRewritePattern::OpRewritePattern;
+struct replaceTorchSymbolicIntOp : public LLHOpRewritePattern<TorchSymbolicIntOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(TorchSymbolicIntOp op) const final {
     if (op->hasAttr(llc::SymbolGeneratedAttr)) return llvm::failure();
     return llvm::success();
   }
-  void rewrite(TorchSymbolicIntOp op, PatternRewriter& rewriter) const final {
+  void rewrite(TorchSymbolicIntOp op, LLHPatternRewriter& rewriter) const final {
     rewriter.eraseOp(op);
     // auto symbol_analysis = SymbolAnalysis::getInstance();
     // auto symbol = symbol_analysis->buildNewSymbol(&rewriter, op);
@@ -228,14 +219,14 @@ struct replaceTorchSymbolicIntOp : public OpRewritePattern<TorchSymbolicIntOp> {
   }
 };
 
-struct replaceSymbolicBindOp : public OpRewritePattern<SymbolicBindOp> {
-  using OpRewritePattern::OpRewritePattern;
+struct replaceSymbolicBindOp : public LLHOpRewritePattern<SymbolicBindOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(SymbolicBindOp op) const final {
     if (op->hasAttr(llc::StopRun)) return llvm::failure();
     return llvm::success();
   }
 
-  void rewrite(SymbolicBindOp op, PatternRewriter& rewriter) const final {
+  void rewrite(SymbolicBindOp op, LLHPatternRewriter& rewriter) const final {
     rewriter.eraseOp(op);
     // auto operand = op.getOperand();
     // auto bind_shape = op.getBindSymbols();

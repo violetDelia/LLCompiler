@@ -20,28 +20,16 @@ from transformers import BertTokenizer, BertModel, BertForMaskedLM
 import typing
 
 
-@run_time
-def compiler_fx(model, inputs, name):
-    compiler = LLC.LLCompiler(
-        mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", name)
-    )
-    model = torch.compile(
-        model=model,
-        backend=compiler,
-        dynamic=True,
-        fullgraph=True,
-    )
-    return model(inputs)
 
 
-@run_time
-def compiler_onnx(model, inputs):
-    compiler = LLC.LLCompiler(
-        mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "onnx")
-    )
-    onnx_model = torch.onnx.export(model, inputs, dynamo=True).model_proto
-    compiler.compiler(onnx_model)
-    return model(inputs)
+# @run_time
+# def compiler_onnx(model, inputs):
+#     compiler = LLC.LLCompiler(
+#         mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "onnx")
+#     )
+#     onnx_model = torch.onnx.export(model, inputs, dynamo=True).model_proto
+#     compiler.compiler(onnx_model)
+#     return model(inputs)
 
 
 @run_time
@@ -73,6 +61,10 @@ def run_model_dict(dict):
         compiler = LLC.LLCompiler(
             mode="inference",
             ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", func.__name__),
+            log_path=os.path.join(
+                os.path.dirname(__file__), "ir_tree", "fx", "log", func.__name__
+            ),
+            log_level="debug",
         )
         model = torch.compile(
             model=func(),

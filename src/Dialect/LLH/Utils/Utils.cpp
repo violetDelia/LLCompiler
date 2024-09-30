@@ -18,6 +18,7 @@
 #include <cstddef>
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -56,12 +57,13 @@ void checkAndInferSymbol(Operation* op) {
     DEBUG(llc::SymbolInfer)
         << "Inferred symbolic shape " << op->getName().getStringRef().str();
   } else {
-    WRONG(llc::SymbolInfer) << "Invalid operand to infer symbol "
+    DEBUG(llc::SymbolInfer) << "Invalid operand to infer symbol "
                             << op->getName().getStringRef().str();
   }
 }
 
-llh::DimOp buildTensorDim(mlir::Value operand, RewriterBase* rewrite,
+
+llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
                           size_t dim) {
   auto loc = operand.getLoc();
   auto dim_const = rewrite->create<ConstantOp>(
@@ -70,7 +72,7 @@ llh::DimOp buildTensorDim(mlir::Value operand, RewriterBase* rewrite,
 }
 
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
-                                         RewriterBase* rewrite) {
+                                         LLHPatternRewriter* rewrite) {
   auto tensor = llvm::dyn_cast_or_null<ShapedType>(operand.getType());
   CHECK(llc::MLIR_PASS, tensor);
   auto rank = tensor.getRank();

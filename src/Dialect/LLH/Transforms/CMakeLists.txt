@@ -18,6 +18,7 @@ llcompiler_add_library(MLIRLLHTransforms
   LLCMLIRUtility
   MLIRLLHUtils
   MLIRSymbolShapeOpInterfaces
+  LLCPatternRewriter
 )
 
 # add_mlir_library(MLIRLLHTransforms

@@ -14,8 +14,14 @@
 //
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Support/Logger.h"
 
 namespace mlir {
+void LLHPatternRewriter::processWileBuildOperation(Operation *op) {
+  llh::checkAndInferSymbol(op);
+}
+
+bool LLHPatternRewriter::canRecoverFromRewriteFailure()const { return false; }
 
 }  // namespace mlir

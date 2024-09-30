@@ -140,10 +140,10 @@ mlir::DenseElementsAttr loadWeightFile(mlir::ShapedType type,
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct LoadWeightOp : public LLCOpRewritePattern<WeightOp> {
-  using LLCOpRewritePattern::LLCOpRewritePattern;
+struct LoadWeightOp : public LLHOpRewritePattern<WeightOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(WeightOp op) const final { return llvm::success(); }
-  void rewrite(WeightOp op, LLCPatternRewriter& rewriter) const final {
+  void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {
     auto weight_file = op.getWeightFile();
     auto type = op->getResult(0).getType();
     auto tensor = mlir::cast_or_null<ShapedType>(type);

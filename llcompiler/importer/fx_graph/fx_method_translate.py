@@ -44,7 +44,6 @@ def torch_reshape_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    print(node.args)
     result_type = torch_fake_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     dims = []

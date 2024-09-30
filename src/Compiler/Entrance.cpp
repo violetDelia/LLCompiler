@@ -14,6 +14,7 @@
 #include "llcompiler/Compiler/Entrance.h"
 
 #include <cassert>
+#include <filesystem>
 #include <fstream>
 #include <ios>
 #include <iostream>
@@ -28,11 +29,8 @@
 #include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/CommandLine.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/IR/BuiltinDialect.h"
+#include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
-#include "mlir/Support/FileUtilities.h"
-#include "mlir/Transforms/InliningUtils.h"
 
 namespace llc::compiler {
 void do_compile(const char* xdsl_module, const char* mode, const char* target,
@@ -43,6 +41,7 @@ void do_compile(const char* xdsl_module, const char* mode, const char* target,
   logger_option.level = logger::str_to_log_level(log_level);
   logger_option.path = log_root;
   init_logger(logger_option);
+  DINFO << log_root;
   // ********* init mlir context *********//
   mlir::DialectRegistry registry;
   add_extension_and_interface(registry);
@@ -59,6 +58,18 @@ void do_compile(const char* xdsl_module, const char* mode, const char* target,
   pipleline_options.irTreeDir = ir_tree_dir;
   // ********* process in mlir *********//
   mlir::PassManager pm(module.get()->getName());
+  if (std::filesystem::exists(pipleline_options.irTreeDir.getValue())) {
+    INFO(GLOBAL) << "mlir ir tree dir is: "
+                 << pipleline_options.irTreeDir.getValue();
+    pm.getContext()->disableMultithreading();
+    pm.enableIRPrintingToFileTree(
+        [](mlir::Pass* pass, mlir::Operation*) {
+          if (pass->getName() == "Operationlegalization") return true;
+          return false;
+        },
+        [](mlir::Pass* pass, mlir::Operation*) { return true; }, false, false,
+        false, pipleline_options.irTreeDir, mlir::OpPrintingFlags());
+  }
   pipleline::buildBasicPipeline(pm, pipleline_options);
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
   return;

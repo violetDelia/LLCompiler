@@ -19,19 +19,19 @@
 #include <cstddef>
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llvm/ADT/SmallVector.h"
-#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
-
 namespace mlir::llh {
 bool isLayoutSensitive(Operation* op);
 
 void checkAndInferSymbol(Operation* op);
-llh::DimOp buildTensorDim(mlir::Value operand, RewriterBase* rewrite,
+
+llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
                           size_t dim);
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
-                                         RewriterBase* rewrite);
+                                         LLHPatternRewriter* rewrite);
 RankedTensorType cloneTensorWithEncoding(RankedTensorType type,
                                          EncodingAttr encoding);
 size_t getConstIntegerValue(Value value);

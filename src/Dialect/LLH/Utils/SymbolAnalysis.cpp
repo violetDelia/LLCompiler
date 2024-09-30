@@ -21,6 +21,7 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -93,7 +94,7 @@ SymbolAnalysis* SymbolAnalysis::getInstance(Value value) {
   return SymbolAnalysisManager::instance_->analysis_map_[module];
 }
 
-void SymbolAnalysis::_insertOp(RewriterBase* builder, Operation* op,
+void SymbolAnalysis::_insertOp(LLHPatternRewriter* builder, Operation* op,
                                Value& value) const {
   ModuleOp module;
   if (llvm::isa<BlockArgument>(value)) {
@@ -117,7 +118,7 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbolFrom(Value& value) {
     symbol = "s" + std::to_string(next_symbol_id_);
     next_symbol_id_++;
   }
-  IRRewriter builder(value.getContext());
+  LLHPatternRewriter builder(value.getContext());
   auto symbol_op =
       builder.create<SymbolicIntOp>(builder.getUnknownLoc(), symbol);
   _insertOp(&builder, symbol_op, value);
@@ -128,7 +129,7 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbolFrom(Value& value) {
 SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbolFrom(Value& value,
                                                         size_t val) {
   std::string symbol = "c" + std::to_string(val);
-  IRRewriter builder(value.getContext());
+  LLHPatternRewriter builder(value.getContext());
   if (symbols_table_.count(symbol)) {
     return llvm::cast<SymbolicIntOp>(symbols_table_[symbol]);
   }
@@ -140,7 +141,7 @@ SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbolFrom(Value& value,
 }
 
 SymbolRelationsOp SymbolAnalysis::buildRelations(
-    RewriterBase* builder, llvm::StringRef symbol,
+    LLHPatternRewriter* builder, llvm::StringRef symbol,
     llvm::ArrayRef<llvm::StringRef> relations, AffineExpr expr) {
   UNIMPLEMENTED(llc::MLIR);
 }

@@ -23,6 +23,7 @@
 
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/StringRef.h"
@@ -52,7 +53,7 @@ class SymbolAnalysis {
   Value &addEncoding(Value &value, llvm::ArrayRef<llvm::StringRef> symbols,
                      size_t result_pos = 0);
 
-  SymbolRelationsOp buildRelations(RewriterBase *builder,
+  SymbolRelationsOp buildRelations(LLHPatternRewriter *builder,
                                    llvm::StringRef symbol,
                                    llvm::ArrayRef<llvm::StringRef> relations,
                                    AffineExpr expr);
@@ -60,7 +61,7 @@ class SymbolAnalysis {
 
  private:
   Operation *_getMainFunc(Operation *op);
-  void _insertOp(RewriterBase *builder, Operation *op, Value &value) const;
+  void _insertOp(LLHPatternRewriter *builder, Operation *op, Value &value) const;
 
  public:
   static llvm::StringRef UNKOW_SYMBOL;

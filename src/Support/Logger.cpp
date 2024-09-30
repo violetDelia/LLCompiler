@@ -75,6 +75,7 @@ void register_logger(const char *module, const LoggerOption &option) {
   using console_sink = spdlog::sinks::stdout_sink_st;
   using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
+  sink_c->set_level(static_cast<spdlog::level>(option.level));
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
   std::string log_file;
@@ -85,7 +86,8 @@ void register_logger(const char *module, const LoggerOption &option) {
     auto time_now = std::chrono::system_clock::to_time_t(now);
     std::stringstream time_ss;
     time_ss << std::put_time(std::localtime(&time_now), "%Y_%m_%d_%H_%M");
-    auto log_dir = fmt::format("{}/log_{}", path, time_ss.str().c_str());
+    // auto log_dir = fmt::format("{}/log_{}", path, time_ss.str().c_str());
+    auto log_dir = fmt::format("{}", path);
     if (!std::filesystem::exists(log_dir)) {
       std::filesystem::create_directories(log_dir);
     }

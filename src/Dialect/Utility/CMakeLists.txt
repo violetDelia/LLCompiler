@@ -10,4 +10,16 @@ llcompiler_add_library(LLCMLIRUtility
     MLIRParser
     MLIRIR
     LLCSupport
+
 )
+
+llcompiler_add_library(LLCPatternRewriter
+    SRC_FILES
+    RewritePattern.cpp
+
+    LINKS PUBLIC
+    MLIRParser
+    MLIRIR
+    LLCSupport
+)
+

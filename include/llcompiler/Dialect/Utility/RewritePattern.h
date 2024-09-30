@@ -16,28 +16,19 @@
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_REWRITEPATTERN_H_
 #include <utility>
 
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
-#include "llcompiler/Dialect/LLH/Utils/Utils.h"
-#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
-#include "llvm/Support/Casting.h"
-#include "mlir/IR/BuiltinTypes.h"
-#include "mlir/IR/Dialect.h"
 #include "mlir/IR/PatternMatch.h"
-#include "mlir/IR/Visitors.h"
 
 namespace mlir {
 
-class LLCPatternRewriter : public RewriterBase {
+class LLHPatternRewriter : public RewriterBase {
  public:
-  explicit LLCPatternRewriter(MLIRContext *ctx) : RewriterBase(ctx) {}
+  explicit LLHPatternRewriter(MLIRContext *ctx) : RewriterBase(ctx) {}
   using RewriterBase::RewriterBase;
 
-  virtual void processWileBuildOperation(Operation *op) {
-    llh::checkAndInferSymbol(op);
-  }
+  virtual void processWileBuildOperation(Operation *op);
 
-  virtual bool canRecoverFromRewriteFailure() const { return false; }
+  virtual bool canRecoverFromRewriteFailure() const;
 
  public:
   template <typename OpTy, typename... Args>
@@ -93,20 +84,20 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
   }
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const final {
-    auto llh_rewriter = LLCPatternRewriter(rewriter.getContext());
+    auto llh_rewriter = LLHPatternRewriter(rewriter.getContext());
     llh_rewriter.setInsertionPoint(rewriter.getBlock(),
                                    rewriter.getInsertionPoint());
     return matchAndRewrite(cast<SourceOp>(op), llh_rewriter);
   }
 
-  virtual void rewrite(SourceOp op, LLCPatternRewriter &rewriter) const {
+  virtual void rewrite(SourceOp op, LLHPatternRewriter &rewriter) const {
     llvm_unreachable("must override rewrite or matchAndRewrite");
   }
   virtual LogicalResult match(SourceOp op) const {
     llvm_unreachable("must override match or matchAndRewrite");
   }
   virtual LogicalResult matchAndRewrite(SourceOp op,
-                                        LLCPatternRewriter &rewriter) const {
+                                        LLHPatternRewriter &rewriter) const {
     if (succeeded(match(op))) {
       rewrite(op, rewriter);
       return success();
@@ -122,12 +113,12 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
 /// matching and rewriting against an instance of a derived operation class as
 /// opposed to a raw Operation.
 template <typename SourceOp>
-struct LLCOpRewritePattern
+struct LLHOpRewritePattern
     : public detail::LLCOpOrInterfaceRewritePatternBase<SourceOp> {
   /// Patterns must specify the root operation name they match against, and
   /// can also specify the benefit of the pattern matching and a list of
   /// generated ops.
-  LLCOpRewritePattern(MLIRContext *context, PatternBenefit benefit = 1,
+  LLHOpRewritePattern(MLIRContext *context, PatternBenefit benefit = 1,
                       ArrayRef<StringRef> generatedNames = {})
       : detail::LLCOpOrInterfaceRewritePatternBase<SourceOp>(
             SourceOp::getOperationName(), benefit, context, generatedNames) {}
