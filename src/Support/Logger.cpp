@@ -42,6 +42,7 @@ const char *MLIR = "mlir";
 const char *MLIR_PASS = "mlir_pass";
 const char *DEBUG = "debug";
 const char *SymbolInfer = "symbol_infer";
+const char *Entrance_Module = "entrance_module";
 }  // namespace llc
 
 namespace llc::logger {

@@ -37,6 +37,7 @@ extern const char *MLIR;
 extern const char *MLIR_PASS;
 extern const char *DEBUG;
 extern const char *SymbolInfer;
+extern const char *Entrance_Module ;
 };  // namespace llc
 
 namespace llc::logger {

@@ -193,9 +193,10 @@ def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor,
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type>;
-def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type>;
-def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type>;
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Tensor>;
+def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Tensor>;
+def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Tensor>;
+def LLH_SubOp           : LLH_BinaryElementwiseOp<"sub", [ResultsBroadcastableShape], LLH_Tensor>;
 
 
 def LLH_ConvBiasOp : LLH_SymbolOp<"conv_bias">{

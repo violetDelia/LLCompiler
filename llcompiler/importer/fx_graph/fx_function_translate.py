@@ -1,4 +1,4 @@
-import torch.nn.functional
+from xdsl.dialects.bufferization import AllocTensorOp
 from ...core.utility import Dict_Registry
 from .fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
@@ -43,6 +43,7 @@ from ...dialect.llh import (
     ReluOp,
     AdaptiveAvgPoolOp,
     MaxPoolOp,
+    SubOp,
 )
 from ...dialect.llh_utility import build_llh_transpose, build_llh_constant
 from torch._subclasses.fake_tensor import FakeTensor
@@ -66,6 +67,16 @@ def builtin_add_convert(
     block: Block,
 ):
     return commond_build_op(AddOp.build, 2, node, value_map, block)
+
+
+@TORCH_FUNCTION_TRANSLATE("sub")
+def builtin_add_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(SubOp.build, 2, node, value_map, block)
 
 
 @TORCH_FUNCTION_TRANSLATE("truediv", "aten::div.Tensor", "floordiv")
@@ -106,7 +117,11 @@ def builtin_getitem_convert(
     block: Block,
 ):
     inputs = value_map[node.args[0].name]
+    print(node.args)
+    print(node.meta)
     if (len(inputs) == 1) and isinstance(inputs[0].type, TensorType):
+        if isinstance(node.args[1], slice):
+            raise NotImplementedError("do not support slice current")
         dim: ConstantOp = build_llh_constant(node.args[1])
         block.add_op(dim)
         return DimOp(operands=[inputs[0], dim.result], result_types=[i64])
@@ -248,6 +263,22 @@ def aten_convolution_convert(
             result_types=[result_type],
             attributes=attrs,
         )
+
+
+@TORCH_FUNCTION_TRANSLATE("empty")
+def builtin_mul_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+
+    result_type = torch_fake_tensor_translate(get_result_type(node))
+    dims = [
+        get_arg_value(node.args[i], value_map, block) for i in range(len(node.args))
+    ]
+    op = AllocTensorOp.build(operands=[dims, None, None], result_types=[result_type])
+    return op
 
 
 def torch_function_translate(

@@ -44,7 +44,7 @@ def build_llh_constant(val: int | float):
     if isinstance(val, int):
         type = i64
         value = IntegerAttr(val, i64)
-    if isinstance(val, float):
+    elif isinstance(val, float):
         type = f32
         value = FloatAttr(val, f32)
     return ConstantOp.build(attributes={"value": value}, result_types=[type])

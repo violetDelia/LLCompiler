@@ -11,9 +11,11 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
@@ -58,6 +60,57 @@ void simplyUnarySymbolInfer(Value& value) {
   value.setType(operand_type);
 }
 
+void simplyBinarySymbolInfer(Value& value) {
+  auto input1 = value.getDefiningOp()->getOperand(0);
+  auto input2 = value.getDefiningOp()->getOperand(1);
+  auto input1_type = dyn_cast<RankedTensorType>(input1.getType());
+  auto input2_type = dyn_cast<RankedTensorType>(input2.getType());
+  if (!input1_type || !input2_type) {
+    WRONG(llc::SymbolInfer) << "UnrankTensor!";
+    return;
+  }
+  if (input1_type.getRank() != input2_type.getRank()) {
+    RankedTensorType base_type;
+    if (input1_type.getRank() > input2_type.getRank()) {
+      base_type = input1_type;
+    } else {
+      base_type = input2_type;
+    }
+    value.setType(base_type);
+    return;
+  }
+  auto rank = input1_type.getRank();
+  auto new_shape = llvm::SmallVector<int64_t>();
+  auto new_shape_symbol = llvm::SmallVector<StringRef>();
+  for (size_t i = 0; i < rank; i++) {
+    auto encoding1 = dyn_cast<EncodingAttr>(input1_type.getEncoding());
+    auto encoding2 = dyn_cast<EncodingAttr>(input1_type.getEncoding());
+    if (!encoding1 || !encoding2) {
+      WRONG(llc::SymbolInfer) << "Unmatched Encoding!";
+      return;
+    }
+    auto dim1 = input1_type.getDimSize(i);
+    auto dim2 = input2_type.getDimSize(i);
+    if (!input1_type.isDynamicDim(i) && !input2_type.isDynamicDim(i)) {
+      new_shape.push_back(std::max({dim1, dim2}));
+      new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+      continue;
+    }
+    if (dim1 == 1) {
+      new_shape.push_back(dim2);
+      new_shape_symbol.push_back(encoding2.getShapeSymbols()[i].getValue());
+      continue;
+    }
+    if (dim2 == 1) {
+      new_shape.push_back(dim1);
+      new_shape_symbol.push_back(encoding1.getShapeSymbols()[i].getValue());
+      continue;
+    }
+    new_shape.push_back(ShapedType::kDynamic);
+    new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+  }
+}
+
 void ConvSymbolInfer(Operation* op) {
   auto input_type =
       llvm::cast_or_null<RankedTensorType>(op->getOperand(0).getType());
@@ -84,7 +137,6 @@ void ConvSymbolInfer(Operation* op) {
       llvm::cast_or_null<DenseI64ArrayAttr>(op->getAttr(llc::DilationAttr));
   CHECK(llc::SymbolInfer, dilation_attr);
   auto dilations = dilation_attr.asArrayRef();
-
   auto rank = input_type.getRank();
   auto new_shape = llvm::SmallVector<int64_t>();
   auto new_shape_symbol = llvm::SmallVector<StringRef>();
@@ -173,6 +225,8 @@ void ConvSymbolInfer(Operation* op) {
   }
 
 #define INFER_FUNCTION(OP) llvm::LogicalResult OP::inferSymbolicShape()
+
+// 一元op
 #define INFER_UNARY_OP(OP)       \
   INFER_FUNCTION(OP) {           \
     auto res = getResult();      \
@@ -180,50 +234,58 @@ void ConvSymbolInfer(Operation* op) {
     COMMON_CHECK                 \
     return llvm::success();      \
   }
+// binary op
+#define INFER_BINARY(OP)          \
+  INFER_FUNCTION(OP) {            \
+    auto res = getResult();       \
+    simplyBinarySymbolInfer(res); \
+    COMMON_CHECK                  \
+    return llvm::success();       \
+  }
+
+// conv类op
+#define INFER_CONV(OP)               \
+  INFER_FUNCTION(OP) {               \
+    ConvSymbolInfer(getOperation()); \
+    COMMON_CHECK                     \
+    return llvm::success();          \
+  }
+// 没有操作数的op
+#define INFER_NO_OPERAND(OP)                                           \
+  INFER_FUNCTION(OP) {                                                 \
+    auto symbol_analsis = SymbolAnalysis::getInstance(getOperation()); \
+    for (auto res : getOperation()->getResults()) {                    \
+      if (!isa<RankedTensorType>(res.getType())) continue;             \
+      auto new_res = symbol_analsis->addEncoding(res);                 \
+      res.setType(new_res.getType());                                  \
+    }                                                                  \
+    COMMON_CHECK                                                       \
+    return llvm::success();                                            \
+  }
+
+INFER_UNARY_OP(BatchNormOp)
+INFER_UNARY_OP(DropOp)
+INFER_UNARY_OP(ReluOp)
+
+INFER_BINARY(AddOp)
+INFER_BINARY(MulOp)
+INFER_BINARY(DivOp)
+INFER_BINARY(SubOp)
+
+INFER_CONV(ConvBiasOp)
+INFER_CONV(ConvOp)
+
+INFER_NO_OPERAND(WeightOp)
+INFER_NO_OPERAND(ConstantOp)
+
 UNIMPLEMENTED_INFER_FUNCTION(MatMulOp)
 UNIMPLEMENTED_INFER_FUNCTION(LayerNormOp)
-INFER_UNARY_OP(BatchNormOp)
-UNIMPLEMENTED_INFER_FUNCTION(DivOp)
 UNIMPLEMENTED_INFER_FUNCTION(CatOp)
-INFER_UNARY_OP(DropOp)
 UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
 UNIMPLEMENTED_INFER_FUNCTION(TransposeOp)
-UNIMPLEMENTED_INFER_FUNCTION(AddOp)
-UNIMPLEMENTED_INFER_FUNCTION(MulOp)
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
 UNIMPLEMENTED_INFER_FUNCTION(MaxPoolOp)
 UNIMPLEMENTED_INFER_FUNCTION(AdaptiveAvgPoolOp)
-INFER_FUNCTION(ConvBiasOp) {
-  ConvSymbolInfer(getOperation());
-  COMMON_CHECK
-  return llvm::success();
-}
-
-INFER_FUNCTION(ConvOp) {
-  ConvSymbolInfer(getOperation());
-  COMMON_CHECK
-  return llvm::success();
-}
-INFER_UNARY_OP(ReluOp)
-INFER_FUNCTION(WeightOp) {
-  auto type = getResult().getType();
-  if (!isa<RankedTensorType>(type)) return llvm::failure();
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
-  auto res = getResult();
-  auto new_res = symbol_analsis->addEncoding(res);
-  res.setType(new_res.getType());
-  COMMON_CHECK
-  return llvm::success();
-}
-INFER_FUNCTION(ConstantOp) {
-  auto type = getResult().getType();
-  if (!isa<RankedTensorType>(type)) return llvm::failure();
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
-  auto res = getResult();
-  symbol_analsis->addEncoding(res);
-  COMMON_CHECK
-  return llvm::success();
-}
 
 INFER_FUNCTION(ReshapeOp) {
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
@@ -254,6 +316,10 @@ INFER_FUNCTION(ReshapeOp) {
 
 #undef INFER_FUNCTION
 #undef INFER_UNARY_OP
+#undef INFER_BINARY
+#undef INFER_NO_OPERAND
+
+#undef INFER_CONV
 #undef COMMON_CHECK
 #undef UNIMPLEMENTED_INFER_FUNCTION
 }  // namespace mlir::llh
