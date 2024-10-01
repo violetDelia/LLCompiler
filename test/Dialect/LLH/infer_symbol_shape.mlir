@@ -85,7 +85,6 @@ func.func @binary(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s
   return 
 }
 
-
 // -----
 // CHECK: func.func
 // CHECK-SAME: -> (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64) 
@@ -94,6 +93,20 @@ func.func @checkIsReturnOperand(%arg0: tensor<?x?x?x?xf32>, %arg1: i64) -> (tens
   // CHECK: return
   // CHECK-SAME: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64
   return %0, %arg1 : tensor<?x?x?x?xf32>, i64
+}
+
+
+// -----
+"llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+// CHECK-LABEL: transpose
+func.func @transpose(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>) -> () attributes {entrance} {
+  // CHECK: llh.transpose
+  // CHECK-SAME: tensor<?x?x3x?xf32, #llh.encoding<shapes = @s2, @s1, @c3, @s0>>
+  %30 = "llh.transpose"(%arg0) <{perms = array<i64: 3, 2, 1, 0>}> : (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>) -> tensor<?x?x3x?xf32>
+  return 
 }
 
 

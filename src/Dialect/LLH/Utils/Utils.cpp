@@ -17,6 +17,7 @@
 
 #include <cstddef>
 
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
@@ -36,8 +37,24 @@ void checkAndInferSymbol(Operation* op) {
   if (!symbol_op) return;
   bool need_infer_symbol = false;
   for (auto res_type : op->getResultTypes()) {
-    if (llvm::isa<RankedTensorType>(res_type)) need_infer_symbol = true;
+    if (llvm::isa<UnrankedTensorType>(res_type)) {
+      need_infer_symbol = true;
+      continue;
+    }
+    if (isa<RankedTensorType>(res_type)) {
+      auto tensor = llvm::dyn_cast<RankedTensorType>(res_type);
+      auto has_encodeing = tensor.getEncoding();
+      if (!has_encodeing) {
+        need_infer_symbol = true;
+        continue;
+      }
+      if (!isa<EncodingAttr>(has_encodeing)) {
+        need_infer_symbol = true;
+        continue;
+      }
+    }
   }
+
   if (!need_infer_symbol) return;
   for (auto type : symbol_op->getOperandTypes()) {
     if (!llvm::isa<RankedTensorType>(type)) continue;

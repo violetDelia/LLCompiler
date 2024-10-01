@@ -300,7 +300,7 @@ UNIMPLEMENTED_INFER_FUNCTION(MatMulOp)
 UNIMPLEMENTED_INFER_FUNCTION(LayerNormOp)
 UNIMPLEMENTED_INFER_FUNCTION(CatOp)
 UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
-UNIMPLEMENTED_INFER_FUNCTION(TransposeOp)
+
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
 UNIMPLEMENTED_INFER_FUNCTION(MaxPoolOp)
 UNIMPLEMENTED_INFER_FUNCTION(AdaptiveAvgPoolOp)
@@ -309,29 +309,54 @@ INFER_FUNCTION(ReshapeOp) {
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   llvm::SmallVector<int64_t> new_shape;
   auto shapes = getShapes();
-  auto res = getResult();
-  auto result_type = llvm::cast<RankedTensorType>(res.getType());
+  auto input = getInput();
+  auto input_type = cast<ShapedType>(input.getType());
   auto symbols = llvm::SmallVector<StringRef>();
   for (auto dim : shapes) {
     if (isConstIntegerValue(dim)) {
       auto val = getConstIntegerValue(dim);
       new_shape.push_back(val);
-      auto symbol_op = symbol_analsis->getOrBuildConstSymbolFrom(res, val);
+      auto symbol_op = symbol_analsis->getOrBuildConstSymbolFrom(input, val);
       symbols.push_back(symbol_op.getSymName());
     } else {
       new_shape.push_back(ShapedType::kDynamic);
-      auto symbol_op = symbol_analsis->buildNewSymbolFrom(res);
+      auto symbol_op = symbol_analsis->buildNewSymbolFrom(input);
       symbols.push_back(symbol_op.getSymName());
     }
   }
   auto new_res_type =
-      RankedTensorType::get(new_shape, result_type.getElementType(),
+      RankedTensorType::get(new_shape, input_type.getElementType(),
                             EncodingAttr::get(getContext(), symbols));
-  res.setType(new_res_type);
+  getResult().setType(new_res_type);
   COMMON_CHECK
   return llvm::success();
 }
 
+INFER_FUNCTION(TransposeOp) {
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto prem = getPerms();
+  auto input_type = getInput().getType();
+  CHECK(llc::SymbolInfer, llvm::isa<RankedTensorType>(input_type));
+  auto input_tensor = llvm::cast<RankedTensorType>(input_type);
+  auto encoding_attr = input_tensor.getEncoding();
+  CHECK(llc::SymbolInfer, llvm::isa<EncodingAttr>(encoding_attr));
+  auto encoding = cast<EncodingAttr>(encoding_attr);
+  auto input_symbols = encoding.getShapeSymbols();
+  auto shape = input_tensor.getShape();
+  llvm::SmallVector<int64_t> new_shape;
+  auto new_symbols = llvm::SmallVector<StringRef>();
+  for (size_t i = 0; i < prem.size(); ++i) {
+    auto prem_val = prem[i];
+    new_shape.push_back(shape[prem_val]);
+    new_symbols.push_back(input_symbols[prem_val].getValue());
+  }
+  auto new_res_type =
+      RankedTensorType::get(new_shape, input_tensor.getElementType(),
+                            EncodingAttr::get(getContext(), new_symbols));
+  getResult().setType(new_res_type);
+  COMMON_CHECK
+  return llvm::success();
+}
 #undef INFER_FUNCTION
 #undef INFER_UNARY_OP
 #undef INFER_BINARY
