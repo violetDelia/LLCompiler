@@ -86,7 +86,7 @@ def OperationlegalizationPass : Pass<"operation-legalization","ModuleOp"> {
   }];
 }
 
-def RemoveRedundantOpsPass : Pass<"remove-redundant-ops">{
+def RemoveRedundantOpsPass : Pass<"remove-redundant-ops","ModuleOp">{
   let summary = "去除冗余的Op";
   let description = [{
     1.去除从torch框架上传的符号表达op (符号会在其他Pass中生成,弃用该方案);
@@ -94,7 +94,7 @@ def RemoveRedundantOpsPass : Pass<"remove-redundant-ops">{
   }];
 }
 
-def ReshapeBeforeBraodcastPass : Pass<"reshape-before-braodcast">{
+def ReshapeBeforeBraodcastPass : Pass<"reshape-before-braodcast","ModuleOp">{
   let summary = "在广播前插入reshape";
   let description = [{
     1.为了方便lowing到tosa,需要lowing前做融合。broadcast == reshape + tile;

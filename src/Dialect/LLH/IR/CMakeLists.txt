@@ -17,6 +17,10 @@ llcompiler_add_library(MLIRLLHDialect
     LINKS PUBLIC
     MLIRIR
     LLCSupport
+    MLIRSymbolShapeOpInterfaces
+    MLIRBraodcastableOpInterfaces
+
+    
 )
 
 # add_mlir_dialect_library(MLIRLLHDialect

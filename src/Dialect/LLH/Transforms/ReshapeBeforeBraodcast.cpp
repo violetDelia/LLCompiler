@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Interfaces/BraodcastableOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -56,19 +57,18 @@ namespace {
 // transform patterns
 //===----------------------------------------------------------------------===//
 
-
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateReshapeBeforeBraodcastPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  
 }
 
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
-void configReshapeBeforeBraodcastPassConversionTarget(ConversionTarget& target) {
+void configReshapeBeforeBraodcastPassConversionTarget(
+    ConversionTarget& target) {
   // target.addIllegalOp<llh::SymbolicBindOp>();
 }
 //===----------------------------------------------------------------------===//
@@ -88,9 +88,11 @@ void ReshapeBeforeBraodcastPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  RewritePatternSet patterns(context);
-  populateReshapeBeforeBraodcastPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
-    signalPassFailure();
+  module.walk([](Operation* op) {
+    auto braodcastable_op =
+        llvm::dyn_cast_or_null<BraodcastableOpInterface>(op);
+    if (!braodcastable_op) return;
+    braodcastable_op.reshapeForBrodcast();
+  });
   LLC_RUN_OUT_PASS
 }
