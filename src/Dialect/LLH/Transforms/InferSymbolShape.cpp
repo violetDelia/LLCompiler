@@ -57,7 +57,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 namespace mlir::llh {
-#define GEN_PASS_DEF_INFERSYMBOLSHAPE
+#define GEN_PASS_DEF_INFERSYMBOLSHAPEPASS
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -99,7 +99,7 @@ void generateEntranceSymbol(ModuleOp module) {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateInferSymbolShapePatterns(RewritePatternSet& patterns) {
+void populateInferSymbolShapePassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
 }
 
@@ -108,7 +108,7 @@ void populateInferSymbolShapePatterns(RewritePatternSet& patterns) {
 //===----------------------------------------------------------------------===//
 
 struct InferSymbolShapePass
-    : llh::impl::InferSymbolShapeBase<InferSymbolShapePass> {
+    : llh::impl::InferSymbolShapePassBase<InferSymbolShapePass> {
   void runOnOperation() override;
 };
 }  // namespace
@@ -125,11 +125,4 @@ void InferSymbolShapePass::runOnOperation() {
     checkAndInferSymbol(op);
   });
   LLC_RUN_OUT_PASS
-}
-
-//===----------------------------------------------------------------------===//
-// pass create
-//===----------------------------------------------------------------------===//
-std::unique_ptr<Pass> mlir::llh::createInferSymbolShapePass() {
-  return std::make_unique<InferSymbolShapePass>();
 }

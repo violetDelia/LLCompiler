@@ -41,7 +41,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 namespace mlir::llh {
-#define GEN_PASS_DEF_LOADWEIGHT
+#define GEN_PASS_DEF_LOADWEIGHTPASS
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -156,7 +156,7 @@ struct LoadWeightOp : public LLHOpRewritePattern<WeightOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateLoadWeightPatterns(RewritePatternSet& patterns) {
+void populateLoadWeightPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.insert<LoadWeightOp>(context);
 }
@@ -165,7 +165,7 @@ void populateLoadWeightPatterns(RewritePatternSet& patterns) {
 // pass defination
 //===----------------------------------------------------------------------===//
 
-struct LoadWeightPass : llh::impl::LoadWeightBase<LoadWeightPass> {
+struct LoadWeightPass : llh::impl::LoadWeightPassBase<LoadWeightPass> {
   void runOnOperation() override;
 };
 }  // namespace
@@ -177,16 +177,10 @@ void LoadWeightPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   RewritePatternSet patterns(context);
-  populateLoadWeightPatterns(patterns);
+  populateLoadWeightPassPatterns(patterns);
   auto op = getOperation();
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }
 
-//===----------------------------------------------------------------------===//
-// pass create
-//===----------------------------------------------------------------------===//
-std::unique_ptr<Pass> mlir::llh::createLoadWeightPass() {
-  return std::make_unique<LoadWeightPass>();
-}

@@ -42,7 +42,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::llh {
-#define GEN_PASS_DEF_OPERATIONLEGALIZATION
+#define GEN_PASS_DEF_OPERATIONLEGALIZATIONPASS
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -127,179 +127,12 @@ struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
   }
 };
 
-struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-  LogicalResult match(FlattenOp op) const final { return llvm::success(); }
-  void rewrite(FlattenOp op, LLHPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
-    auto operand = op->getOperand(0);
-    auto result_type = op->getResult(0).getType();
-    auto operand_type = operand.getType();
-    auto dim_value = op.getDim();
-    auto const_dim =
-        llvm::dyn_cast_or_null<llh::ConstantOp>(dim_value.getDefiningOp());
-    CHECK(llc::MLIR_PASS, const_dim);
-    auto dim_attr = llvm::cast_or_null<IntegerAttr>(const_dim.getValueAttr());
-    CHECK(llc::MLIR_PASS, dim_attr);
-    auto dim = dim_attr.getInt();
-    auto dims = buildTensorDims(operand, &rewriter);
-    auto reshape_operands = llvm::SmallVector<Value>();
-    size_t index = 0;
-    for (; index < dim; ++index) {
-      auto dim = dims[index];
-      reshape_operands.push_back(dim);
-    }
-    if (index < dims.size()) {
-      Value rear_dim_sum = dims[index];
-      size_t rear_shape = 1;
-      bool is_dynamic = false;
-      index++;
-      while (index < dims.size()) {
-        rear_dim_sum = rewriter.create<MulOp>(
-            loc, rewriter.getI64Type(), rear_dim_sum, dims[index]);
-        index++;
-      }
-      reshape_operands.push_back(rear_dim_sum);
-    }
-    auto reshape =
-        rewriter.create<ReshapeOp>(loc, result_type, operand, reshape_operands);
-    rewriter.replaceOp(op, reshape);
-  }
-};
-void traverseExpressionSymbolPos(AffineBinaryOpExpr& exp,
-                                 SmallVector<size_t>& symbol_pos) {
-  auto lhs = exp.getLHS();
-  if (auto symbol = llvm::dyn_cast_or_null<AffineSymbolExpr>(lhs)) {
-    auto dim_pos = symbol.getPosition();
-    exp.shiftSymbols(dim_pos, symbol_pos.size());
-    symbol_pos.push_back(dim_pos);
-  }
-  if (auto dim = llvm::dyn_cast_or_null<AffineDimExpr>(lhs)) {
-    auto dim_pos = dim.getPosition();
-    symbol_pos.push_back(dim_pos);
-  }
-  if (auto binary_exp = llvm::dyn_cast_or_null<AffineBinaryOpExpr>(lhs)) {
-    traverseExpressionSymbolPos(binary_exp, symbol_pos);
-  }
-  auto rhs = exp.getRHS();
-  if (auto dim = llvm::dyn_cast_or_null<AffineDimExpr>(rhs)) {
-    auto dim_pos = dim.getPosition();
-    symbol_pos.push_back(dim_pos);
-  }
-  if (auto binary_exp = llvm::dyn_cast_or_null<AffineBinaryOpExpr>(rhs)) {
-    traverseExpressionSymbolPos(binary_exp, symbol_pos);
-  }
-}
-
-std::pair<std::vector<std::string>, mlir::AffineExpr*> generateBindShapeMapKey(
-    AffineBinaryOpExpr& exp, SmallVector<size_t>& symbol_pos,
-    SymbolicBindOp& op) {
-  std::vector<std::string> symbols;
-  auto bind_symbols = op.getBindSymbols();
-  for (auto pos : symbol_pos) {
-    auto symbol = llvm::dyn_cast_or_null<TorchSymbolicIntOp>(
-        bind_symbols[pos].getDefiningOp());
-    CHECK(llc::MLIR_PASS, symbol);
-    symbols.push_back(symbol.getSymName().str());
-  }
-  return std::make_pair(symbols, &exp);
-}
-
-struct replaceTorchSymbolicIntOp
-    : public LLHOpRewritePattern<TorchSymbolicIntOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-  LogicalResult match(TorchSymbolicIntOp op) const final {
-    if (op->hasAttr(llc::SymbolGeneratedAttr)) return llvm::failure();
-    return llvm::success();
-  }
-  void rewrite(TorchSymbolicIntOp op,
-               LLHPatternRewriter& rewriter) const final {
-    rewriter.eraseOp(op);
-    // auto symbol_analysis = SymbolAnalysis::getInstance();
-    // auto symbol = symbol_analysis->buildNewSymbol(&rewriter, op);
-    // auto new_name = symbol.getSymNameAttr();
-    // op.setSymNameAttr(new_name);
-    // llc::add_symbol_generate_attr(op);
-  }
-};
-
-struct replaceSymbolicBindOp : public LLHOpRewritePattern<SymbolicBindOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-  LogicalResult match(SymbolicBindOp op) const final {
-    if (op->hasAttr(llc::StopRun)) return llvm::failure();
-    return llvm::success();
-  }
-
-  void rewrite(SymbolicBindOp op, LLHPatternRewriter& rewriter) const final {
-    rewriter.eraseOp(op);
-    // auto operand = op.getOperand();
-    // auto bind_shape = op.getBindSymbols();
-    // auto bind_type = llvm::cast_or_null<RankedTensorType>(operand.getType());
-    // CHECK(llc::MLIR_PASS, bind_type);
-    // auto symbol_analysis = SymbolAnalysis::getInstance();
-    // auto rank = bind_type.getRank();
-    // auto exps_map = op.getExpressions();
-    // auto symbol_num = exps_map.getNumSymbols();
-    // llvm::SmallVector<StringRef> shapes;
-    // for (int i = 0; i < rank; ++i) {
-    //   auto exp = exps_map.getResult(i);
-    //   if (auto dim = llvm::dyn_cast_or_null<AffineDimExpr>(exp)) {
-    //     auto pos = dim.getPosition();
-    //     auto symbol_op = llvm::cast_or_null<TorchSymbolicIntOp>(
-    //         op.getBindSymbols()[i].getDefiningOp());
-    //     CHECK(llc::MLIR_PASS, symbol_op);
-    //     auto dim_name = symbol_op.getSymName();
-    //     shapes.push_back(dim_name);
-    //   } else if (auto const_exp =
-    //                  llvm::dyn_cast_or_null<AffineConstantExpr>(exp)) {
-    //     auto val = const_exp.getValue();
-    //     auto symbol_op =
-    //         symbol_analysis->getOrBuildConstSymbol(&rewriter, op, val);
-    //     auto dim_name = symbol_op.getSymName();
-    //     shapes.push_back(dim_name);
-    //   } else if (auto binary_exp =
-    //                  llvm::dyn_cast_or_null<AffineBinaryOpExpr>(exp)) {
-    //     SmallVector<size_t> symbol_pos;
-    //     exps_map.dump();
-    //     binary_exp.dump();
-    //     traverseExpressionSymbolPos(binary_exp, symbol_pos);
-    //     DINFO << "1";
-    //     auto key = generateBindShapeMapKey(binary_exp, symbol_pos, op);
-    //     if (!bind_shape_map.count(key)) {
-    //       DINFO << "1";
-    //       llvm::SmallVector<AffineExpr> symReplacements(
-    //           symbol_num, rewriter.getAffineSymbolExpr(0));
-    //       for (auto sy : symReplacements) {
-    //         sy.dump();
-    //       }
-    //       for (int i = 0; i < symbol_num; i++) {
-    //         symReplacements[symbol_pos[i]] = rewriter.getAffineSymbolExpr(i);
-    //       }
-    //       for (auto sy : symReplacements) {
-    //         sy.dump();
-    //       }
-    //       DINFO << "1";
-    //       auto new_exp = binary_exp.replaceDimsAndSymbols({},
-    //       symReplacements); new_exp.dump(); auto symbol_op =
-    //       symbol_analysis->buildNewSymbol(&rewriter, op); bind_shape_map[key]
-    //       = symbol_op.getSymName().str();
-    //     }
-    //     shapes.push_back(bind_shape_map[key]);
-    //   }
-    // }
-    // llc::add_stop_run_attr(op);
-  }
-};
-
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<BraodcastableScalarToTensor>(context);
-  patterns.add<replaceFlattenOp>(context);
-  patterns.add<replaceTorchSymbolicIntOp>(context);
-  patterns.add<replaceSymbolicBindOp>(context);
   // patterns.add<replaceSymbolicBindOp>(context);
 }
 
@@ -314,7 +147,7 @@ void configOperationlegalizatioConversionTarget(ConversionTarget& target) {
 //===----------------------------------------------------------------------===//
 
 struct OperationlegalizatioPass
-    : llh::impl::OperationlegalizationBase<OperationlegalizatioPass> {
+    : llh::impl::OperationlegalizationPassBase<OperationlegalizatioPass> {
   void runOnOperation() override;
 };
 }  // namespace
@@ -325,26 +158,23 @@ struct OperationlegalizatioPass
 void OperationlegalizatioPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
-  RewritePatternSet patterns(context);
-  populateOperationlegalizatioPassPatterns(patterns);
   auto module = getOperation();
+  // mark layout
   auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
   CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
   auto layout = symbolizeLayout(dyn_cast<StringAttr>(global_layout).getValue());
   CHECK(llc::MLIR_PASS, layout.has_value());
   auto add_layout_attr = [&layout](Operation* op) {
     if (!isLayoutSensitive(op)) return;
-    llc::add_layout_attr(op, layout.value());
+    if (!op->hasAttr(llc::LayoutAttr)) {
+      llc::add_layout_attr(op, layout.value());
+    }
   };
   module->walk(add_layout_attr);
+
+  RewritePatternSet patterns(context);
+  populateOperationlegalizatioPassPatterns(patterns);
   if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS
-}
-
-//===----------------------------------------------------------------------===//
-// pass create
-//===----------------------------------------------------------------------===//
-std::unique_ptr<Pass> mlir::llh::createOperationlegalizationPass() {
-  return std::make_unique<OperationlegalizatioPass>();
 }

@@ -25,11 +25,13 @@ def TransformLayoutToNHWC : Pass<"transform-layout-to-nhwc","ModuleOp"> {
   let dependentDialects = [ "mlir::ex::IRExtensionDialect"];
 }
 
-def LoadWeight : Pass<"load-weight","ModuleOp"> {
-  let summary = "convert weight to constant";
+def LoadWeightPass : Pass<"load-weight","ModuleOp"> {
+  let summary = "将WeightOp转为ConstOp";
   let description = [{
+    1.用WeightOp代替Const是因为在xdsl上定义DensAttr时间太长。
+    2.在IR图上加载DensAttr占用内存太大,不方便调试。
+    3.可以转为runtime api加载Weight,减少编译模型文件的大小和编译时间。
   }];
-  let constructor = "mlir::llh::createLoadWeightPass()";
 }
 
 //暂时不做
@@ -38,15 +40,59 @@ def LoadWeight : Pass<"load-weight","ModuleOp"> {
 //   let constructor = "mlir::llh::createStoreConstToWeightPass()";
 // }
 
-def InferSymbolShape : Pass<"infer-symbol-shape","ModuleOp"> {
+def InferSymbolShapePass : Pass<"infer-symbol-shape","ModuleOp"> {
   let summary = "generate symbol";
-  let constructor = "mlir::llh::createInferSymbolShapePass()";
+  let description = [{
+      形状推导并生成符号信息;
+      ```mlir
+      %0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+      ```
+      ====>
+      ```mlir
+      "llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
+      "llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+      "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
+      "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+      %0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
+      ```
+  }];
   let dependentDialects = ["mlir::llh::LLHDialect"];
 }
 
-def Operationlegalization : Pass<"operation-legalization","ModuleOp"> {
-  let summary = "legalization for the operation";
-  let constructor = "mlir::llh::createOperationlegalizationPass()";
+def OperationlegalizationPass : Pass<"operation-legalization","ModuleOp"> {
+  let summary = "合法化Op";
+  let description = [{
+    1.为布局敏感的Op添加布局属性;
+
+    ```mlir
+    %176 = "llh.conv"(%175, %49) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 3, 3>, pad = array<i64: 1, 1, 1, 1>, stride = array<i64: 2, 2>}> : (tensor<?x256x?x?xf32>, tensor<512x256x3x3xf32>) -> tensor<?x512x?x?xf32>
+    "llh.symbolic_bind"(%174, %122, %123) <{expressions = #map5}> : (tensor<?x512x?x?xf32>, i64, i64) -> ()
+    '''
+    ===>
+    ```mlir
+    %176 = "llh.conv"(%175, %49) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 3, 3>, layout = #llh.Layout<NCHW>, pad = array<i64: 1, 1, 1, 1>, stride = array<i64: 2, 2>}> : (tensor<?x256x?x?xf32>, tensor<512x256x3x3xf32>) -> tensor<?x512x?x?xf32>
+    '''
+    
+
+    2.将非法的Tensor与标量的计算合法化; 这是方便对接框架才出现的非法情况。
+
+    ```mlir
+    %9 = "llh.add"(%7, %8) : (tensor<?x?x224x224xf32>, i64) -> tensor<?x?x224x224xf32>
+    '''
+    ===>
+    ```mlir
+    %9 = "llh.add"(%9, %2) : (tensor<?x?x224x224xf32>, tensor<1xf32>) -> tensor<?x?x224x224xf32>
+    '''
+  }];
+}
+
+def RemoveRedundantOpsPass : Pass<"remove-redundant-ops">{
+  let summary = "去除冗余的Op";
+  let description = [{
+    1.去除从torch框架上传的符号表达op (符号会在其他Pass中生成,弃用该方案);
+    2.将具有相似语义同意替换为1个,减少后续做优化的复杂度; flatten --> reshape , convbais --> conv + add
+  }];
+
 }
 
 #endif // LLH_PASS

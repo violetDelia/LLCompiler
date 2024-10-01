@@ -13,7 +13,6 @@
 //    limitations under the License.
 #include "llcompiler/Pipeline/BasicPipeline.h"
 
-
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
@@ -26,6 +25,7 @@ namespace llc::pipleline {
 void buildBasicPipeline(::mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options) {
   pm.addPass(mlir::llh::createOperationlegalizationPass());  //合法化非法的Op
+  pm.addPass(mlir::llh::createRemoveRedundantOpsPass());     // 去除冗余Op
   pm.addPass(::mlir::createInlinerPass());                   // 内联
   pm.addPass(mlir::llh::createInferSymbolShapePass());  // 符号推导和shapeinfer
   pm.addPass(mlir::createCanonicalizerPass());          //规范化

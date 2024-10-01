@@ -4,6 +4,7 @@ llcompiler_add_library(MLIRLLHTransforms
   LoadWeight.cpp
   InferSymbolShape.cpp
   Operationlegalization.cpp
+  RemoveRedundantOps.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen
