@@ -12,36 +12,44 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include "llcompiler/Support/Option.h"
+
 #include <string>
 
 #include "llcompiler/Support/Logger.h"
-#include "llcompiler/Support/Option.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/ManagedStatic.h"
 namespace llc::option {
-llvm::cl::OptionCategory commonOptions{"global options", ""};
 
-llvm::cl::opt<std::string> logRoot{
-    "log-root", llvm::cl::desc("the root to save log files"),
-    llvm::cl::value_desc("root_path"), llvm::cl::init(""),
-    llvm::cl::cat(commonOptions)};
+struct LogOptions {
+  llvm::cl::OptionCategory commonOptions{"global options", ""};
 
-llvm::cl::opt<logger::LOG_LEVEL> logLevel{
-    "log-lever", llvm::cl::desc("log level"),
-    llvm::cl::values(
-        clEnumValN(logger::LOG_LEVEL::DEBUG_,
-                   logger::log_level_to_str(logger::LOG_LEVEL::DEBUG_), ""),
-        clEnumValN(logger::LOG_LEVEL::INFO_,
-                   logger::log_level_to_str(logger::LOG_LEVEL::INFO_), ""),
-        clEnumValN(logger::LOG_LEVEL::WARN_,
-                   logger::log_level_to_str(logger::LOG_LEVEL::WARN_), ""),
-        clEnumValN(logger::LOG_LEVEL::ERROR_,
-                   logger::log_level_to_str(logger::LOG_LEVEL::ERROR_), ""),
-        clEnumValN(logger::LOG_LEVEL::FATAL_,
-                   logger::log_level_to_str(logger::LOG_LEVEL::FATAL_), "")),
-    llvm::cl::init(logger::LOG_LEVEL::DEBUG_), llvm::cl::cat(commonOptions)};
+  llvm::cl::opt<std::string> logRoot{
+      "log-root", llvm::cl::desc("the root to save log files"),
+      llvm::cl::value_desc("root_path"), llvm::cl::init(""),
+      llvm::cl::cat(commonOptions)};
+
+  llvm::cl::opt<logger::LOG_LEVEL> logLevel{
+      "log-lever", llvm::cl::desc("log level"),
+      llvm::cl::values(
+          clEnumValN(logger::LOG_LEVEL::DEBUG_,
+                     logger::log_level_to_str(logger::LOG_LEVEL::DEBUG_), ""),
+          clEnumValN(logger::LOG_LEVEL::INFO_,
+                     logger::log_level_to_str(logger::LOG_LEVEL::INFO_), ""),
+          clEnumValN(logger::LOG_LEVEL::WARN_,
+                     logger::log_level_to_str(logger::LOG_LEVEL::WARN_), ""),
+          clEnumValN(logger::LOG_LEVEL::ERROR_,
+                     logger::log_level_to_str(logger::LOG_LEVEL::ERROR_), ""),
+          clEnumValN(logger::LOG_LEVEL::FATAL_,
+                     logger::log_level_to_str(logger::LOG_LEVEL::FATAL_), "")),
+      llvm::cl::init(logger::LOG_LEVEL::INFO_), llvm::cl::cat(commonOptions)};
+};
+static llvm::ManagedStatic<LogOptions> log_options;
 
 logger::LoggerOption get_logger_option() {
-  return logger::LoggerOption{.path = logRoot, .level = logLevel};
+  *log_options;
+  return logger::LoggerOption{.path = log_options->logRoot,
+                              .level = log_options->logLevel};
 }
 
 }  // namespace llc::option

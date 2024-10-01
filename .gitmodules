@@ -45,9 +45,9 @@
 #     path = third_party/MegCC
 #     url = https://github.com/megengine/megcc.git
 
-# [submodule "third_party/mlir-hlo"]
-#     path = third_party/mlir-hlo
-#     url = https://github.com/tensorflow/mlir-hlo.git
+[submodule "third_party/mlir-hlo"]
+    path = third_party/mlir-hlo
+    url = https://github.com/tensorflow/mlir-hlo.git
 
 #     path = third_party/buddy-mlir
 #     url = https://github.com/buddy-compiler/buddy-mlir.git

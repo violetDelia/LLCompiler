@@ -34,7 +34,11 @@ bool isLayoutSensitive(Operation* op) {
 void checkAndInferSymbol(Operation* op) {
   auto symbol_op = llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op);
   if (!symbol_op) return;
-  bool need_infer_symbol = true;
+  bool need_infer_symbol = false;
+  for (auto res_type : op->getResultTypes()) {
+    if (llvm::isa<RankedTensorType>(res_type)) need_infer_symbol = true;
+  }
+  if (!need_infer_symbol) return;
   for (auto type : symbol_op->getOperandTypes()) {
     if (!llvm::isa<RankedTensorType>(type)) continue;
     if (llvm::isa<UnrankedTensorType>(type)) {
@@ -52,6 +56,7 @@ void checkAndInferSymbol(Operation* op) {
       break;
     }
   }
+
   if (need_infer_symbol) {
     symbol_op.inferSymbolicShape();
     DEBUG(llc::SymbolInfer)
@@ -61,7 +66,6 @@ void checkAndInferSymbol(Operation* op) {
                             << op->getName().getStringRef().str();
   }
 }
-
 
 llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
                           size_t dim) {

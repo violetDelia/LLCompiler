@@ -45,10 +45,14 @@ namespace mlir::llh {
   }
 namespace {
 
-void checkIsReturnOperand(Value value) {
+void checkIsReturnOperand(Value& value) {
   for (auto user : value.getUsers()) {
     if (llvm::isa<mlir::func::ReturnOp>(user)) {
-      UNIMPLEMENTED(llc::SymbolInfer);
+      auto func = user->getParentOfType<func::FuncOp>();
+      auto func_type = func.getFunctionType();
+      auto new_func_type = FunctionType::get(
+          value.getContext(), func_type.getInputs(), user->getOperandTypes());
+      func.setFunctionType(new_func_type);
     }
   }
 }
@@ -61,8 +65,9 @@ void simplyUnarySymbolInfer(Value& value) {
 }
 
 void simplyBinarySymbolInfer(Value& value) {
-  auto input1 = value.getDefiningOp()->getOperand(0);
-  auto input2 = value.getDefiningOp()->getOperand(1);
+  auto op = value.getDefiningOp();
+  auto input1 = op->getOperand(0);
+  auto input2 = op->getOperand(1);
   auto input1_type = dyn_cast<RankedTensorType>(input1.getType());
   auto input2_type = dyn_cast<RankedTensorType>(input2.getType());
   if (!input1_type || !input2_type) {
@@ -84,7 +89,7 @@ void simplyBinarySymbolInfer(Value& value) {
   auto new_shape_symbol = llvm::SmallVector<StringRef>();
   for (size_t i = 0; i < rank; i++) {
     auto encoding1 = dyn_cast<EncodingAttr>(input1_type.getEncoding());
-    auto encoding2 = dyn_cast<EncodingAttr>(input1_type.getEncoding());
+    auto encoding2 = dyn_cast<EncodingAttr>(input2_type.getEncoding());
     if (!encoding1 || !encoding2) {
       WRONG(llc::SymbolInfer) << "Unmatched Encoding!";
       return;
@@ -96,19 +101,32 @@ void simplyBinarySymbolInfer(Value& value) {
       new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
       continue;
     }
+    auto symbol_1 = encoding1.getShapeSymbols()[i].getValue();
+    auto symbol_2 = encoding2.getShapeSymbols()[i].getValue();
     if (dim1 == 1) {
       new_shape.push_back(dim2);
-      new_shape_symbol.push_back(encoding2.getShapeSymbols()[i].getValue());
+      new_shape_symbol.push_back(symbol_2);
       continue;
     }
     if (dim2 == 1) {
       new_shape.push_back(dim1);
-      new_shape_symbol.push_back(encoding1.getShapeSymbols()[i].getValue());
+      new_shape_symbol.push_back(symbol_1);
       continue;
     }
     new_shape.push_back(ShapedType::kDynamic);
-    new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+    if (symbol_1.str() == symbol_2.str()) {
+      new_shape_symbol.push_back(symbol_1);
+    } else {
+      new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+    }
   }
+  auto new_tensor =
+      RankedTensorType::get(new_shape, input1_type.getElementType());
+  op->getResult(0).setType(new_tensor);
+  auto res = op->getResult(0);
+  auto symbol_analsis = SymbolAnalysis::getInstance(op);
+  symbol_analsis->addEncoding(res, new_shape_symbol);
+  WARN_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
 }
 
 void ConvSymbolInfer(Operation* op) {
@@ -211,7 +229,7 @@ void ConvSymbolInfer(Operation* op) {
   op->getResult(0).setType(new_tensor);
   auto res = op->getResult(0);
   symbol_analsis->addEncoding(res, new_shape_symbol);
-  UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  WARN_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
 }
 }  // namespace
 

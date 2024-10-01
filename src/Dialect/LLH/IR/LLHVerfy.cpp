@@ -17,31 +17,33 @@
 #include "mlir/IR/BuiltinTypes.h"
 
 namespace mlir::llh {
-#define COMPUTABLE_BINARY_VERIFY(OP)                             \
-  ::llvm::LogicalResult OP::verify() {                           \
-    auto op = getOperation();                                    \
-    auto input1_type = op->getOperand(0).getType();              \
-    auto input2_type = op->getOperand(1).getType();              \
-    auto res_type = op->getResult(0).getType();                  \
-    auto input1_is_tensor = dyn_cast<TensorType>(input1_type);   \
-    auto input2_is_tensor = dyn_cast<TensorType>(input2_type);   \
-    auto res_is_tensor = dyn_cast<TensorType>(res_type);         \
-    if (input1_is_tensor && input2_is_tensor && res_is_tensor) { \
-      return llvm::success();                                    \
-    }                                                            \
-    auto input1_is_int = dyn_cast<IntegerType>(input1_type);     \
-    auto input2_is_int = dyn_cast<IntegerType>(input2_type);     \
-    auto res_is_int = dyn_cast<IntegerType>(res_type);           \
-    if (input1_is_int && input2_is_int && res_is_int) {          \
-      return llvm::success();                                    \
-    }                                                            \
-    auto input1_is_float = dyn_cast<FloatType>(input1_type);     \
-    auto input2_is_float = dyn_cast<FloatType>(input2_type);     \
-    auto res_is_float = dyn_cast<FloatType>(res_type);           \
-    if (input1_is_float && input2_is_float && res_is_float) {    \
-      return llvm::success();                                    \
-    }                                                            \
-    return llvm::failure();                                      \
+#define COMPUTABLE_BINARY_VERIFY(OP)                                          \
+  ::llvm::LogicalResult OP::verify() {                                        \
+    auto op = getOperation();                                                 \
+    auto input1_type = op->getOperand(0).getType();                           \
+    auto input2_type = op->getOperand(1).getType();                           \
+    auto res_type = op->getResult(0).getType();                               \
+    auto input1_is_tensor =                                                   \
+        isa<RankedTensorType, UnrankedTensorType>(input1_type);               \
+    auto input2_is_tensor =                                                   \
+        isa<RankedTensorType, UnrankedTensorType>(input2_type);               \
+    auto res_is_tensor = isa<RankedTensorType, UnrankedTensorType>(res_type); \
+    if (input1_is_tensor && input2_is_tensor && res_is_tensor) {              \
+      return llvm::success();                                                 \
+    }                                                                         \
+    auto input1_is_int = isa<IntegerType>(input1_type);                       \
+    auto input2_is_int = isa<IntegerType>(input2_type);                       \
+    auto res_is_int = isa<IntegerType>(res_type);                             \
+    if (input1_is_int && input2_is_int && res_is_int) {                       \
+      return llvm::success();                                                 \
+    }                                                                         \
+    auto input1_is_float = isa<FloatType>(input1_type);                       \
+    auto input2_is_float = isa<FloatType>(input2_type);                       \
+    auto res_is_float = isa<FloatType>(res_type);                             \
+    if (input1_is_float && input2_is_float && res_is_float) {                 \
+      return llvm::success();                                                 \
+    }                                                                         \
+    return llvm::failure();                                                   \
   }
 
 COMPUTABLE_BINARY_VERIFY(SubOp)

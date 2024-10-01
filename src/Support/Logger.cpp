@@ -77,6 +77,7 @@ void register_logger(const char *module, const LoggerOption &option) {
   using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
   sink_c->set_level(static_cast<spdlog::level>(option.level));
+  WARN(GLOBAL) << "option.level:" << static_cast<int>(option.level);
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
   std::string log_file;
@@ -130,7 +131,8 @@ void Logger::info(const char *message) {
   if (logger) {
     logger->log(static_cast<spdlog::level>(this->level_), message);
   } else {
-    spdlog::log(static_cast<spdlog::level>(this->level_), message);
+    if (this->level_ >= LOG_LEVEL::ERROR_)
+      spdlog::log(static_cast<spdlog::level>(this->level_), message);
   }
 }
 

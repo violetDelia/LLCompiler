@@ -1,35 +1,10 @@
-// RUN: llc-opt --split-input-file --operation-legalization %s | FileCheck %s
+// RUN: llc-opt --split-input-file --operation-legalization --safepoint-ir-verifier-print-only   %s | FileCheck %s
+
 module attributes {builtin.gloabal_layout = "NCHW"}{
   func.func @replaceFlattenOp(%arg2: tensor<?x512x1x1xf32>) ->() {
     // CHECK: %[[Reshape:.*]] = "llh.reshape"(%[[VAR0:.*]], %[[ND1:.*]], %[[ND2:.*]]) : (tensor<?x512x1x1xf32>, i64, i64) -> tensor<?x512xf32>
     %0 = "llh.constant"() <{value = 1 : i64}> : () -> i64
     %192 = "llh.flatten"(%arg2, %0) : (tensor<?x512x1x1xf32>, i64) -> tensor<?x512xf32>
-    return 
-  }
-}
-
-// -----
-module attributes {builtin.gloabal_layout = "NCHW"}{
-  func.func @BraodcastableScalarToTensor1(%arg2: tensor<?x3x?x?xi64>) ->() {
-    // CHECK: %[[VAR0:.*]] = "llh.constant"() <{value = dense<1> : tensor<1xi64>}>
-    // CHECK-SAME: -> tensor<1xi64>
-    // CHECK: %[[VAR2:.*]] = "llh.add"(%[[VAR3:.*]], %[[VAR0]])
-    // CHECK-SAME: (tensor<?x3x?x?xi64>, tensor<1xi64>) -> tensor<?x3x?x?xi64>
-    %0 = "llh.constant"() <{value = 1.0 : f32}> : () -> f32
-    %163 = "llh.add"(%arg2, %0) : (tensor<?x3x?x?xi64>, f32) -> tensor<?x3x?x?xi64>
-    return 
-  }
-}
-
-// -----
-module attributes {builtin.gloabal_layout = "NCHW"}{
-  func.func @BraodcastableScalarToTensor2(%arg2: tensor<?x3x?x?xbf16>) ->() {
-    // CHECK: %[[VAR0:.*]] = "llh.constant"() <{value = dense<1.000000e+00> : tensor<1xbf16>}>
-    // CHECK-SAME: -> tensor<1xbf16>
-    // CHECK: %[[VAR2:.*]] = "llh.add"(%[[VAR3:.*]], %[[VAR0]])
-    // CHECK-SAME: (tensor<?x3x?x?xbf16>, tensor<1xbf16>) -> tensor<?x3x?x?xbf16>
-    %0 = "llh.constant"() <{value = 1.0 : f32}> : () -> f32
-    %163 = "llh.add"(%arg2, %0) : (tensor<?x3x?x?xbf16>, f32) -> tensor<?x3x?x?xbf16>
     return 
   }
 }

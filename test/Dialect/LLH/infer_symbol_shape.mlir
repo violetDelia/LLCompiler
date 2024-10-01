@@ -11,7 +11,6 @@ func.func @block(%arg2: tensor<?x3x?x?xbf16>,%arg3: bf16) ->(tensor<?x3x?x?xbf16
   return %arg2 : tensor<?x3x?x?xbf16>
 }
 
-
 // -----
 // CHECK: "llh.symbolic_int"() <{sym_name = "c384"}> : () -> ()
 // CHECK-LABEL: constant
@@ -61,18 +60,40 @@ func.func @conv(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1,
 }
 
 
+
 // -----
 "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
 // CHECK-LABEL: binary
-func.func @binary(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>) ->() attributes {entrance}{
-  %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:46.139597+08:00/L__self___conv1.weight.npy"}> : () -> tensor<1xf32, #llh.encoding<shapes = @c1>>
+func.func @binary(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, %arg2: tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s3, @s1, @s3>>) ->() attributes {entrance}{
+  %4 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<1xf32, #llh.encoding<shapes = @c1>>
   // CHECK: llh.add
-  // CHECK-SAME:-> tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>
+  // CHECK-SAME: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>> 
   %126 = "llh.add"(%arg0, %4): (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, tensor<1xf32, #llh.encoding<shapes = @c1>>) -> tensor<?x3x?x?xf32>
+  // CHECK: llh.sub
+  // CHECK-SAME: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s4, @s1, @s5>>
+  %127 = "llh.sub"(%arg0, %arg2): (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s3, @s1, @s3>>) -> tensor<?x?x?x?xf32>
+
+  // CHECK: llh.add
+  // CHECK-SAME: tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>
+  %6 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>
+  %125 = "llh.add"(%6, %6): (tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>, tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>) -> tensor<1x3xf32>
   return 
 }
+
+
+// -----
+// CHECK: func.func
+// CHECK-SAME: -> (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64) 
+func.func @checkIsReturnOperand(%arg0: tensor<?x?x?x?xf32>, %arg1: i64) -> (tensor<?x?x?x?xf32> , i64) attributes {entrance} {
+  %0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+  // CHECK: return
+  // CHECK-SAME: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64
+  return %0, %arg1 : tensor<?x?x?x?xf32>, i64
+}
+
 
