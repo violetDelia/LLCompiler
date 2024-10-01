@@ -11,14 +11,13 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLC_LLH_INTERFACE
-#define LLC_LLH_INTERFACE
-
+#ifndef INCLUDE_LLCOMPILER_INTERFACES_SYMBOLSHAPEOPINTERFACES_TD_
+#define INCLUDE_LLCOMPILER_INTERFACES_SYMBOLSHAPEOPINTERFACES_TD_
 include "mlir/IR/OpBase.td"
 
 def SymbolicInferShapeOpInterface: OpInterface<"SymbolicInferShapeOpInterface"> {
   let description = [{
-    SymbolInferShapeOpInterface.
+    符号shepa推导的接口.
   }];
 
   let cppNamespace = "::mlir";
@@ -29,4 +28,4 @@ def SymbolicInferShapeOpInterface: OpInterface<"SymbolicInferShapeOpInterface"> 
   ];
 }
 
-#endif // LLC_LLH_INTERFACE
+#endif // INCLUDE_LLCOMPILER_INTERFACES_SYMBOLSHAPEOPINTERFACES_TD_

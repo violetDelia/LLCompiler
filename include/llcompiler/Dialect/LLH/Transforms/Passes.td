@@ -92,6 +92,13 @@ def RemoveRedundantOpsPass : Pass<"remove-redundant-ops">{
     1.去除从torch框架上传的符号表达op (符号会在其他Pass中生成,弃用该方案);
     2.将具有相似语义同意替换为1个,减少后续做优化的复杂度; flatten --> reshape , convbais --> conv + add
   }];
+}
+
+def ReshapeBeforeBraodcastPass : Pass<"reshape-before-braodcast">{
+  let summary = "在广播前插入reshape";
+  let description = [{
+    1.为了方便lowing到tosa,需要lowing前做融合。broadcast == reshape + tile;
+  }];
 
 }
 

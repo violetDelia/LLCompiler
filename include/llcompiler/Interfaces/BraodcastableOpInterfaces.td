@@ -11,19 +11,22 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llvm/Support/Casting.h"
-#include "mlir/IR/BuiltinTypes.h"
+#ifndef INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_TD_
+#define INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_TD_
 
-namespace mlir::llh {
+include "mlir/IR/OpBase.td"
 
-bool SymbolicCastOp::areCastCompatible(TypeRange inputs, TypeRange outputs) {
-  if (inputs.size() != 1 || outputs.size() != 1) return false;
-  RankedTensorType input = llvm::dyn_cast<RankedTensorType>(inputs.front());
-  RankedTensorType output = llvm::dyn_cast<RankedTensorType>(outputs.front());
-  if (!input || !output || (input.getElementType() != output.getElementType()))
-    return false;
-  return true;
+def BraodcastableOpInterface: OpInterface<"BraodcastableOpInterface"> {
+  let description = [{
+    广播Op的接口.
+  }];
+
+  let cppNamespace = "::mlir";
+
+  let methods = [
+    InterfaceMethod<"reshape for brodcastable",
+                    /*retTy=*/"::llvm::LogicalResult",/*methodName=*/ "reshapeForBrodcast">
+  ];
 }
 
-}  // namespace mlir::llh
+#endif // INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_TD_

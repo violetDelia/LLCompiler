@@ -20,6 +20,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
 #include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
+#include "llcompiler/Interfaces/BraodcastableOpInterfaces.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"

@@ -11,13 +11,14 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef LLH_OPS
-#define LLH_OPS
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_
 include "llcompiler/Dialect/LLH/IR/LLHAttrs.td"
 include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "llcompiler/Interfaces/SymbolShapeOpInterfaces.td"
+include "llcompiler/Interfaces/BraodcastableOpInterfaces.td"
 include "mlir/IR/SymbolInterfaces.td"
 
 include "mlir/Interfaces/CastInterfaces.td"
@@ -30,7 +31,7 @@ class LLH_Op<string mnemonic, list<Trait> traits = [Pure]> :
 }
 
 class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
-        LLH_Op<mnemonic,traits#[DeclareOpInterfaceMethods<InferShapedTypeOpInterface>,DeclareOpInterfaceMethods<SymbolicInferShapeOpInterface>]>{}
+        LLH_Op<mnemonic,traits#[DeclareOpInterfaceMethods<SymbolicInferShapeOpInterface>]>{}
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
@@ -43,7 +44,7 @@ class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type R
 }
 
 class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_SymbolOp<mnemonic,traits#[]>{
+        LLH_SymbolOp<mnemonic,traits#[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
         let arguments = !con((ins
             OperandType:$lhs,
             OperandType:$rhs),
@@ -234,7 +235,7 @@ def LLH_ConvOp : LLH_SymbolOp<"conv">{
     let results = (outs LLH_FloatTensor);
 }
 
-def LLH_MatMulOp          : LLH_SymbolOp<"matmul">{
+def LLH_MatMulOp          : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
     let arguments = (ins
         LLH_Tensor:$lhs,
         LLH_Tensor:$rhs);
@@ -556,4 +557,4 @@ def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{
 //CenterCropPad
 //Col2Im
 //AffineGrid
-#endif // LLH_OPS
+#endif // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_

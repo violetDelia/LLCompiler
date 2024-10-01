@@ -7,6 +7,7 @@ llcompiler_add_library(MLIRLLHDialect
     LLHCast.cpp
     LLHAttrs.cpp
     LLHinfersymbolShape.cpp
+    LLHBraodcastableOpInterfaces.cpp
     LLHEnums.cpp
     LLHVerfy.cpp
 

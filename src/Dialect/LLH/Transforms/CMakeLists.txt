@@ -5,6 +5,7 @@ llcompiler_add_library(MLIRLLHTransforms
   InferSymbolShape.cpp
   Operationlegalization.cpp
   RemoveRedundantOps.cpp
+  ReshapeBeforeBraodcast.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen

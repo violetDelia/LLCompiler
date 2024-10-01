@@ -11,19 +11,15 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llvm/Support/Casting.h"
+//
+
+#ifndef INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_H_
+#define INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_H_
+
+#include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinTypes.h"
-
-namespace mlir::llh {
-
-bool SymbolicCastOp::areCastCompatible(TypeRange inputs, TypeRange outputs) {
-  if (inputs.size() != 1 || outputs.size() != 1) return false;
-  RankedTensorType input = llvm::dyn_cast<RankedTensorType>(inputs.front());
-  RankedTensorType output = llvm::dyn_cast<RankedTensorType>(outputs.front());
-  if (!input || !output || (input.getElementType() != output.getElementType()))
-    return false;
-  return true;
-}
-
-}  // namespace mlir::llh
+#include "mlir/IR/OpDefinition.h"
+#define FIX_HEADER
+#include "llcompiler/Interfaces/BraodcastableOpInterfaces.h.inc"
+#undef FIX_HEADER
+#endif  // INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_H_
