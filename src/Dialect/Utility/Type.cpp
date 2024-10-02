@@ -86,6 +86,34 @@ int64_t getElementSizeFrom(const mlir::ShapedType& shapeType) {
   }
   return element_size;
 }
+
+#define BUILD_ATTR(judge, Ty, shape)                        \
+  if (judge) {                                              \
+    llvm::ArrayRef<Ty> value(0);                            \
+    auto attr = mlir::DenseElementsAttr::get(shape, value); \
+    return attr;                                            \
+  }
+
+mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value) {
+  CHECK(llc::MLIR, isa<mlir::RankedTensorType>(value.getType()));
+  auto tensor = cast<mlir::RankedTensorType>(value.getType());
+  auto type = tensor.getElementType();
+  BUILD_ATTR(type.isInteger(1), bool, tensor)
+  BUILD_ATTR(type.isSignedInteger(8), int8_t, tensor)
+  BUILD_ATTR(type.isSignedInteger(16), int16_t, tensor)
+  BUILD_ATTR(type.isSignedInteger(32), int32_t, tensor)
+  BUILD_ATTR(type.isSignedInteger(64), int64_t, tensor)
+  BUILD_ATTR(type.isSignlessInteger(8), uint8_t, tensor)
+  BUILD_ATTR(type.isSignlessInteger(16), uint16_t, tensor)
+  BUILD_ATTR(type.isSignlessInteger(32), uint32_t, tensor)
+  BUILD_ATTR(type.isSignlessInteger(64), uint64_t, tensor)
+  BUILD_ATTR(type.isF32(), float, tensor)
+  BUILD_ATTR(type.isF64(), double, tensor)
+  UNIMPLEMENTED(llc::MLIR);
+  return {};
+}
+
+#undef BUILD_ATTR
 // mlir::ex::Layout getLayoutFrom(const mlir::RankedTensorType& tensor) {
 //   auto encode =
 //       mlir::cast_or_null<mlir::ex::EncodingAttr>(tensor.getEncoding());

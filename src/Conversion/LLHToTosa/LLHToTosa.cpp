@@ -17,11 +17,8 @@
 #include <cstdio>
 #include <iostream>
 
-#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
-#include "llcompiler/Dialect/Utility/Macro.h"
 #include "llcompiler/Dialect/Utility/Tool.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
@@ -34,8 +31,6 @@
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributeInterfaces.h"
 #include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/IR/BuiltinDialect.h"
-#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Location.h"
@@ -60,33 +55,6 @@ using namespace ::mlir::llh;
 // common func
 //===----------------------------------------------------------------------===//
 namespace {
-#define BUILD_ATTR(judge, Ty, shape)                        \
-  if (judge) {                                              \
-    llvm::ArrayRef<Ty> value(0);                            \
-    auto attr = mlir::DenseElementsAttr::get(shape, value); \
-    return attr;                                            \
-  }
-
-DenseElementsAttr genZoreElementAttr(Value value) {
-  auto val = cast<mlir::RankedTensorType>(value.getType());
-  val.getRank();
-  CHECK(llc::MLIR, val);
-  auto tensor = val;
-  auto type = tensor.getElementType();
-  BUILD_ATTR(type.isInteger(1), bool, tensor)
-  BUILD_ATTR(type.isSignedInteger(8), int8_t, tensor)
-  BUILD_ATTR(type.isSignedInteger(16), int16_t, tensor)
-  BUILD_ATTR(type.isSignedInteger(32), int32_t, tensor)
-  BUILD_ATTR(type.isSignedInteger(64), int64_t, tensor)
-  BUILD_ATTR(type.isSignlessInteger(8), uint8_t, tensor)
-  BUILD_ATTR(type.isSignlessInteger(16), uint16_t, tensor)
-  BUILD_ATTR(type.isSignlessInteger(32), uint32_t, tensor)
-  BUILD_ATTR(type.isSignlessInteger(64), uint64_t, tensor)
-  BUILD_ATTR(type.isF32(), float, tensor)
-  BUILD_ATTR(type.isF64(), double, tensor)
-  UNIMPLEMENTED(llc::MLIR);
-  return {};
-}
 
 RankedTensorType cloneTensorWithLayoutAny(Value value) {
   auto val = cast<mlir::RankedTensorType>(value.getType());
@@ -121,12 +89,13 @@ mlir::RankedTensorType SqueezeTensor(Value value, int dim = 0) {
 
 #undef BUILD_ATTR
 //===----------------------------------------------------------------------===//
-// illegal func
+// legal func
 //===----------------------------------------------------------------------===//
 bool check_const_illegal(Operation* op) {
   auto const_op = llvm::cast_or_null<ConstantOp>(op);
   if (!const_op) return false;
-  
+  auto type = const_op.getResult().getType();
+  return !isa<RankedTensorType>(type);
 }
 
 bool check_matmal_illegal(Operation* op) {
@@ -209,13 +178,20 @@ struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
   void rewrite(ConstantOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
     LLC_RUN_IN_PATTERN
+    op->dump();
     auto loc = op.getLoc();
     auto out = op.getResult().getType();
     auto attrs = op->getAttrs();
     auto types = ::mlir::TypeRange{out};
+    out.dump();
+    for (auto cc : attrs) {
+      cc.getValue().dump();
+    }
     auto new_op = rewriter.create<mlir::tosa::ConstOp>(
         loc, types, ::mlir::ValueRange{}, attrs);
-    new_op.setValueAttr(cast<mlir::DenseElementsAttr>(adaptor.getValueAttr()));
+    new_op->dump();
+    new_op.setValueAttr(cast<mlir::DenseElementsAttr>(op.getValueAttr()));
+    new_op->dump();
     rewriter.replaceOp(op, new_op);
     LLC_RUN_OUT_PATTERN
   }
@@ -310,9 +286,9 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
 //===----------------------------------------------------------------------===//
 void populateLLHToTosaConversionPassPatterns(TypeConverter& converter,
                                              RewritePatternSet& patterns) {
-  // auto context = patterns.getContext();
+  auto context = patterns.getContext();
   // patterns.add<ReluOpLowering>(converter, context);
-  // patterns.add<ConstantOpLowering>(converter, context);
+  patterns.add<ConstantOpLowering>(converter, context);
   // patterns.add<MatMulOpLowering>(converter, context);
   // patterns.add<ConvOpLowering>(converter, context);
   // patterns.add<TransposeOpLowering>(converter, context);
@@ -329,8 +305,8 @@ void configLLHToTosaConversionPassTarget(ConversionTarget& target) {
   // target.addIllegalOp<TransposeOp>();
   // target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
   // target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
-  // target.addLegalDialect<mlir::tosa::TosaDialect>();
-  // target.addLegalDialect<mlir::func::FuncDialect>();
+  target.addLegalDialect<mlir::tosa::TosaDialect>();
+  target.addLegalDialect<mlir::func::FuncDialect>();
 }
 
 //===----------------------------------------------------------------------===//

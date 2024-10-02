@@ -142,7 +142,6 @@ void UnloadAndBindEncodingPass::runOnOperation() {
         auto encoding_bind = builder.create<EncodingBindOp>(
             builder.getUnknownLoc(), ::mlir::TypeRange{}, res,
             cast<EncodingAttr>(tensor.getEncoding()));
-        encoding_bind->dump();
       }
     }
   };

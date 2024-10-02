@@ -22,6 +22,8 @@
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Tosa/IR/ShardingInterfaceImpl.h"
+#include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/BuiltinDialect.h"
 
 namespace llc::compiler {
@@ -30,6 +32,7 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::BuiltinDialect>();
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
   context.getOrLoadDialect<mlir::func::FuncDialect>();
+  context.getOrLoadDialect<mlir::tosa::TosaDialect>();
   context.getOrLoadDialect<mlir::bufferization::BufferizationDialect>();
 }
 

@@ -13,6 +13,7 @@
 //    limitations under the License.
 
 #include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
@@ -36,14 +37,7 @@
 #include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
-#include "mlir/Dialect/UB/IR/UBOps.h"
-#include "mlir/IR/AsmState.h"
 #include "mlir/IR/DialectRegistry.h"
-#include "mlir/IR/MLIRContext.h"
-#include "mlir/InitAllDialects.h"
-#include "mlir/InitAllExtensions.h"
-#include "mlir/InitAllPasses.h"
-#include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
 
@@ -78,6 +72,7 @@ int main(int argc, char **argv) {
   llc::pipleline::registerCommonPipeline();
   llc::pipleline::registerBasicPipeline();
   mlir::llh::registerLLHOptPasses();
+  mlir::registerConvertLLHToTosaPass();
   mlir::registerTransformsPasses();
   mlir::transform::registerInterpreterPass();
   mlir::asMainReturnCode(
