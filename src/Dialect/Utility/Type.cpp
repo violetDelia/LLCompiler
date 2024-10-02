@@ -41,12 +41,12 @@ std::vector<int64_t> getShapeFrom(const mlir::Value& value) {
   return getShapeFrom(type);
 }
 
-std::vector<int64_t> getRankTensorFrom(const mlir::Type& type) {
+mlir::RankedTensorType getRankTensorFrom(const mlir::Type& type) {
   CHECK(::llc::UTILITY, mlir::isa<mlir::RankedTensorType>(type));
-  return mlir::cast<mlir::RankedTensorType>(type).getShape().vec();
+  return mlir::cast<mlir::RankedTensorType>(type);
 }
 
-std::vector<int64_t> getRankTensorFrom(const mlir::Value& value) {
+mlir::RankedTensorType getRankTensorFrom(const mlir::Value& value) {
   auto type = value.getType();
   return getRankTensorFrom(type);
 }

@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Interfaces/BraodcastableOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/APFloat.h"
@@ -59,6 +60,31 @@ namespace {
 
 struct SimplyBinaryOp : public LLHOpRewritePattern<AddOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
+  LogicalResult match(AddOp op) const final {
+    auto lhs = op.getOperand(0);
+    auto rhs = op.getOperand(1);
+    auto lhs_rank = llc::getRankTensorFrom(lhs).getRank();
+    auto rhs_rank = llc::getRankTensorFrom(rhs).getRank();
+    if (lhs_rank == rhs_rank) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(AddOp op, LLHPatternRewriter& rewriter) const final {
+    auto lhs = op.getOperand(0);
+    auto rhs = op.getOperand(1);
+    auto lhs_tensor = llc::getRankTensorFrom(lhs);
+    auto rhs_tensor = llc::getRankTensorFrom(rhs);
+    auto lhs_rank = lhs_tensor.getRank();
+    auto rhs_rank = rhs_tensor.getRank();
+    Value higher_value, lower_value;
+    if (lhs_rank > rhs_rank) {
+      higher_value = lhs;
+      lower_value = rhs;
+    } else {
+      higher_value = rhs;
+      lower_value = lhs;
+    }
+    op->dump();
+  }
 };
 
 //===----------------------------------------------------------------------===//
@@ -66,6 +92,7 @@ struct SimplyBinaryOp : public LLHOpRewritePattern<AddOp> {
 //===----------------------------------------------------------------------===//
 void populateReshapeBeforeBraodcastPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
+  patterns.add<SimplyBinaryOp>(context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -92,11 +119,9 @@ void ReshapeBeforeBraodcastPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  module.walk([](Operation* op) {
-    auto braodcastable_op =
-        llvm::dyn_cast_or_null<BraodcastableOpInterface>(op);
-    if (!braodcastable_op) return;
-    braodcastable_op.reshapeForBrodcast();
-  });
+  RewritePatternSet patterns(context);
+  populateReshapeBeforeBraodcastPassPatterns(patterns);
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+    signalPassFailure();
   LLC_RUN_OUT_PASS
 }

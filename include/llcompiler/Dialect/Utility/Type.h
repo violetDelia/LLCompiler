@@ -28,8 +28,8 @@
 namespace llc {
 std::vector<int64_t> getShapeFrom(const mlir::Type& shapeType);
 std::vector<int64_t> getShapeFrom(const mlir::Value& value);
-std::vector<int64_t> getRankTensorFrom(const mlir::Type& type);
-std::vector<int64_t> getRankTensorFrom(const mlir::Value& value);
+mlir::RankedTensorType getRankTensorFrom(const mlir::Type& type);
+mlir::RankedTensorType getRankTensorFrom(const mlir::Value& value);
 bool hasEncoding(const mlir::Type& type);
 bool hasEncoding(const mlir::Value& value);
 ::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Type& type);
