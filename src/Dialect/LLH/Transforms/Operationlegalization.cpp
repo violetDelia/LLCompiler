@@ -171,7 +171,6 @@ void OperationlegalizatioPass::runOnOperation() {
     }
   };
   module->walk(add_layout_attr);
-
   RewritePatternSet patterns(context);
   populateOperationlegalizatioPassPatterns(patterns);
   if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))

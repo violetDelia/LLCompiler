@@ -80,11 +80,12 @@ def LLH_SymbolicBindOp: Op<LLH_Dialect,"symbolic_bind">{
        AffineMapAttr:$expressions);
 }
 
-def LLH_EncodBindOp : Op<LLH_Dialect,"encoding_bind">{
+def LLH_EncodingBindOp : Op<LLH_Dialect,"encoding_bind">{
     let description = [{
         将tensor的encoding信息绑到这个Op上,防止用标准的Pass或者第三方库的Pass出现不识别encoding导致的错误。
     }];
     let arguments = (ins
+        LLH_Tensor:$operand ,
         LLH_Encoding:$encoding
     );
 }

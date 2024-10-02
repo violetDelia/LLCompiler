@@ -24,6 +24,7 @@ namespace mlir {
 class LLHPatternRewriter : public RewriterBase {
  public:
   explicit LLHPatternRewriter(MLIRContext *ctx) : RewriterBase(ctx) {}
+  explicit LLHPatternRewriter(Operation * op) : RewriterBase(op) {}
   using RewriterBase::RewriterBase;
 
   virtual void processWileBuildOperation(Operation *op);

@@ -1,13 +1,18 @@
 // RUN: llc-opt --split-input-file --unload-and-bind-encoding %s| FileCheck %s
+//  /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --unload-and-bind-encoding /home/lfr/LLCompiler/test/Dialect/LLH/unload_and_bind_encoding.mlir
 
-// CHECK-LABEL: None
-func.func @None(%arg0: i64, %arg1: i64, %arg2: tensor<?x?x224x224xf32>) ->(){
-    %1 = "llh.aot"(%arg0) <{name = "aot1"}> : (i64) -> i64
-    %2 = "llh.aot"(%arg1,%arg2) <{name = "aot2"}> : (i64,tensor<?x?x224x224xf32>) -> tensor<?x?x224x224xf32>
-    %3 = "llh.aot"() <{name = "aot3"}> : () -> i64
-    %4 = "llh.aot"() <{name = "aot4"}> : () -> i64
-    %5 = "llh.aot"() <{name = "aot5"}> : () -> i64
-    return
+"llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+// CHECK-LABEL: main
+// CHECK-SAME: (%arg0: tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+// CHECK-NEXT: "llh.encoding_bind"(%arg0) <{encoding = #llh.encoding<shapes = @s0, @s1, @s2, @s3>}> : (tensor<?x?x?x?xf32>) -> ()
+// CHECK: llh.add
+// CHECK-NEXT: "llh.encoding_bind"(%0) <{encoding = #llh.encoding<shapes = @s0, @s1, @s2, @s3>}> : (tensor<?x?x?x?xf32>) -> ()
+func.func @main(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>> attributes {entrance} {
+%0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
+return %0 : tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
 }
 
 
