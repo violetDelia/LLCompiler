@@ -18,14 +18,22 @@
 #include <vector>
 
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
 
 namespace llc {
 std::vector<int64_t> getShapeFrom(const mlir::Type& shapeType);
+std::vector<int64_t> getShapeFrom(const mlir::Value& value);
 std::vector<int64_t> getRankTensorFrom(const mlir::Type& type);
+std::vector<int64_t> getRankTensorFrom(const mlir::Value& value);
+bool hasEncoding(const mlir::Type& type);
+bool hasEncoding(const mlir::Value& value);
+::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Type& type);
+::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Value& value);
 int64_t getElementSizeFrom(const mlir::ShapedType& shapeType);
 // mlir::ex::Layout getLayoutFrom(const mlir::RankedTensorType& value);
 // mlir::RankedTensorType cloneTensorWithEncoding(
@@ -35,8 +43,8 @@ std::vector<int64_t> getUnsqueezeShape(const mlir::ShapedType& shapeType,
 std::vector<int64_t> getSqueezeShape(const mlir::ShapedType& shapeType,
                                      int dim = 0);
 mlir::RankedTensorType getUnsqueezeTensor(const mlir::RankedTensorType& tensor,
-                                        int dim = 0);
+                                          int dim = 0);
 mlir::RankedTensorType getSqueezeTensor(const mlir::RankedTensorType& tensor,
-                                      int dim = 0);
+                                        int dim = 0);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_

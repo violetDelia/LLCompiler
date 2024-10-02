@@ -57,6 +57,10 @@ namespace {
 // transform patterns
 //===----------------------------------------------------------------------===//
 
+struct SimplyBinaryOp : public LLHOpRewritePattern<AddOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+};
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//

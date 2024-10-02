@@ -20,7 +20,10 @@
 
 #include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
@@ -33,9 +36,45 @@ std::vector<int64_t> getShapeFrom(const mlir::Type& type) {
   return mlir::cast<mlir::ShapedType>(type).getShape().vec();
 }
 
+std::vector<int64_t> getShapeFrom(const mlir::Value& value) {
+  auto type = value.getType();
+  return getShapeFrom(type);
+}
+
 std::vector<int64_t> getRankTensorFrom(const mlir::Type& type) {
   CHECK(::llc::UTILITY, mlir::isa<mlir::RankedTensorType>(type));
   return mlir::cast<mlir::RankedTensorType>(type).getShape().vec();
+}
+
+std::vector<int64_t> getRankTensorFrom(const mlir::Value& value) {
+  auto type = value.getType();
+  return getRankTensorFrom(type);
+}
+
+bool hasEncoding(const mlir::Type& type) {
+  auto tensor = mlir::dyn_cast_or_null<mlir::RankedTensorType>(type);
+  if (!tensor) return false;
+  auto has_encoding =
+      mlir::dyn_cast_or_null<mlir::llh::EncodingAttr>(tensor.getEncoding());
+  if (!has_encoding) return false;
+  return true;
+}
+
+bool hasEncoding(const mlir::Value& value) {
+  auto type = value.getType();
+  return hasEncoding(type);
+}
+
+::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Type& type) {
+  CHECK(llc::UTILITY, llvm::isa<mlir::RankedTensorType>(type));
+  auto tensor = mlir::dyn_cast<mlir::RankedTensorType>(type);
+  auto encoding = tensor.getEncoding();
+  CHECK(llc::UTILITY, llvm::isa<mlir::llh::EncodingAttr>(encoding));
+  return llvm::dyn_cast<mlir::llh::EncodingAttr>(encoding);
+}
+::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Value& value) {
+  auto type = value.getType();
+  return getEncodingFrom(type);
 }
 
 int64_t getElementSizeFrom(const mlir::ShapedType& shapeType) {

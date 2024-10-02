@@ -82,6 +82,7 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
 
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const final {
+    DEBUG(llc::MLIR_PASS);
     DEBUG(llc::MLIR_PASS) << "run in pattern " << this->getDebugName().str();
     auto llh_rewriter = LLHPatternRewriter(rewriter.getContext());
     llh_rewriter.setInsertionPoint(rewriter.getBlock(),

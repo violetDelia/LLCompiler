@@ -39,6 +39,11 @@
 #include "mlir/Support/LLVM.h"
 
 namespace mlir::llh {
+
+namespace {
+void SimpleBinaryReshapeBefor(Operation* op) { op->dump(); }
+}  // namespace
+
 #define RESHAPE_FOR_FUNCTION(OP) llvm::LogicalResult OP::reshapeForBrodcast()
 
 #define UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(OP)                                \
