@@ -73,17 +73,16 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
 
   void rewrite(Operation *op, PatternRewriter &rewriter) const final {
     rewrite(cast<SourceOp>(op), rewriter);
-    DEBUG(llc::MLIR_PASS) << "rewrite "
-                          << cast<SourceOp>(op).getOperationName().str()
-                          << " in pattern " << this->getDebugName().str();
   }
+
   LogicalResult match(Operation *op) const final {
-    DEBUG(llc::MLIR_PASS) << "run in pattern " << this->getDebugName().str();
     auto result = match(cast<SourceOp>(op));
     return result;
   }
+
   LogicalResult matchAndRewrite(Operation *op,
                                 PatternRewriter &rewriter) const final {
+    DEBUG(llc::MLIR_PASS) << "run in pattern " << this->getDebugName().str();
     auto llh_rewriter = LLHPatternRewriter(rewriter.getContext());
     llh_rewriter.setInsertionPoint(rewriter.getBlock(),
                                    rewriter.getInsertionPoint());
@@ -100,6 +99,9 @@ struct LLCOpOrInterfaceRewritePatternBase : public RewritePattern {
                                         LLHPatternRewriter &rewriter) const {
     if (succeeded(match(op))) {
       rewrite(op, rewriter);
+      DEBUG(llc::MLIR_PASS)
+          << "rewrite " << cast<SourceOp>(op).getOperationName().str()
+          << " in pattern " << this->getDebugName().str();
       return success();
     }
     DEBUG(llc::MLIR_PASS) << "match pattern failed"

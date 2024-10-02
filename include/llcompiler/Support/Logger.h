@@ -121,7 +121,7 @@ NullStream &NullStream::operator<<(const Ty val) {
   ::llc::logger::NullStream()
 #endif  // LLCOMPILER_HAS_LOG
 
-#define DINFO LLCOMPILER_LOG(llc::DEBUG, ::llc::logger::LOG_LEVEL::INFO_)
+#define DINFO LLCOMPILER_LOG(llc::DEBUG, ::llc::logger::LOG_LEVEL::WARN_)
 #define DEBUG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::DEBUG_)
 #define INFO(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::INFO_)
 #define WARN(module)                                      \

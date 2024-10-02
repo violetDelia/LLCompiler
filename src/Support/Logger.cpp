@@ -76,7 +76,7 @@ void register_logger(const char *module, const LoggerOption &option) {
   using console_sink = spdlog::sinks::stdout_sink_st;
   using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
-  sink_c->set_level(static_cast<spdlog::level>(option.level));
+  sink_c->set_level(static_cast<spdlog::level>(llc::logger::LOG_LEVEL::WARN_));
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
   std::string log_file;
