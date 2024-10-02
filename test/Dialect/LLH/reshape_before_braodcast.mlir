@@ -5,6 +5,8 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
   // CHECK-LABEL: simplyBinary
   func.func @simplyBinary(%arg0: tensor<?x?x?x?xf32>) -> () attributes {entrance} {
     %1 = "llh.constant"() <{value = dense<0.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32, #llh.encoding<shapes = @c1>>
+    // CHECK: llh.reshape
+    // CHECK_SAME: -> -> tensor<1x1x1x1xf32, #llh.encoding<shapes = @c1, @c1, @c1, @c1>>
     %29 = "llh.add"(%arg0, %1) : (tensor<?x?x?x?xf32>, tensor<1xf32, #llh.encoding<shapes = @c1>>) -> tensor<?x?x?x?xf32>
     return 
   }

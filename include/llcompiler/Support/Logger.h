@@ -37,7 +37,7 @@ extern const char *MLIR;
 extern const char *MLIR_PASS;
 extern const char *DEBUG;
 extern const char *SymbolInfer;
-extern const char *Entrance_Module ;
+extern const char *Entrance_Module;
 };  // namespace llc
 
 namespace llc::logger {
@@ -121,7 +121,7 @@ NullStream &NullStream::operator<<(const Ty val) {
   ::llc::logger::NullStream()
 #endif  // LLCOMPILER_HAS_LOG
 
-#define DINFO LLCOMPILER_LOG(llc::DEBUG, ::llc::logger::LOG_LEVEL::WARN_)
+#define DINFO LLCOMPILER_LOG(llc::DEBUG, ::llc::logger::LOG_LEVEL::ERROR_)
 #define DEBUG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::DEBUG_)
 #define INFO(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::INFO_)
 #define WARN(module)                                      \
@@ -176,6 +176,10 @@ NullStream &NullStream::operator<<(const Ty val) {
 
 #define WARN_UNIMPLEMENTED(module) \
   WARN(module) << "function [" << __func__ << "] Unimplemented!"
+
+#define INFO_UNIMPLEMENTED(module)                         \
+  INFO(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" \
+               << "function [" << __func__ << "] Unimplemented!"
 
 #define LLC_RUN_IN_PASS                                                      \
   INFO(llc::MLIR_PASS) << "----- run in pass: " << this->getPassName().str() \

@@ -3,14 +3,14 @@ import torch.nn as nn
 import torch
 
 
-class Braodcast(nn.Module):
+class Broadcast(nn.Module):
     def __init__(self):
-        super(Braodcast, self).__init__()
+        super(Broadcast, self).__init__()
         self.cf = nn.Linear(224, 1)
 
     def forward(self, x: torch.Tensor):
         x = x.reshape(x.shape[0], x.shape[2], x.shape[1], x.shape[3])
-        x1 = torch.empty(x.shape[1])
+        x1 = torch.empty(x.shape[3])
         x = x + x1
         x2 = torch.empty(x.shape[2], x.shape[3])
         x = x + x2

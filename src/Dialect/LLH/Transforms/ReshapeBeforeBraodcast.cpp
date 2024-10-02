@@ -69,8 +69,11 @@ struct SimplyBinaryOp : public LLHOpRewritePattern<AddOp> {
     return llvm::success();
   }
   void rewrite(AddOp op, LLHPatternRewriter& rewriter) const final {
-    auto lhs = op.getOperand(0);
-    auto rhs = op.getOperand(1);
+    auto loc = op.getLoc();
+    auto module = op->getParentOfType<ModuleOp>();
+    auto lhs = op->getOperand(0);
+    auto rhs = op->getOperand(1);
+    auto res = op->getResult(0);
     auto lhs_tensor = llc::getRankTensorFrom(lhs);
     auto rhs_tensor = llc::getRankTensorFrom(rhs);
     auto lhs_rank = lhs_tensor.getRank();
@@ -83,7 +86,39 @@ struct SimplyBinaryOp : public LLHOpRewritePattern<AddOp> {
       higher_value = rhs;
       lower_value = lhs;
     }
-    op->dump();
+    auto higher_shapes = llc::getShapeFrom(higher_value);
+    auto lower_shapes = llc::getShapeFrom(lower_value);
+    auto higher_rank = higher_shapes.size();
+    auto lower_rank = lower_shapes.size();
+    auto one_const = rewriter.create<ConstantOp>(
+        loc, IntegerAttr::get(rewriter.getI64Type(), 1));
+    auto reshape_dims = llvm::SmallVector<mlir::Value>();
+    auto reshape_shapes = llvm::SmallVector<int64_t>();
+    reshape_shapes.assign(higher_rank, 1);
+    reshape_dims.assign(higher_rank, one_const);
+    for (int64_t i = higher_shapes.size() - 1, j = lower_shapes.size() - 1;
+         i >= 0 && j >= 0; i--, j--) {
+      auto higher_dim = higher_shapes[i];
+      auto lower_dim = lower_shapes[j];
+      if (lower_dim == 1 && (higher_dim > 1 || higher_dim < 0)) {
+      } else if (((lower_dim > 1 || lower_dim < 0) && higher_dim == 1) ||
+                 (lower_dim == higher_dim)) {
+        reshape_shapes[i] = lower_dim;
+        reshape_dims[i] = llh::buildTensorDim(lower_value, &rewriter, j);
+      } else {
+        WRONG(llc::MLIR) << "Invalid broadcast case";
+        return;
+      };
+    }
+    auto reshape_res =
+        RankedTensorType::get(reshape_shapes, lhs_tensor.getElementType());
+    auto reshape = rewriter.create<llh::ReshapeOp>(loc, reshape_res,
+                                                   lower_value, reshape_dims);
+    if (lhs_rank > rhs_rank) {
+      rewriter.replaceOpWithNewOp<AddOp>(op, res.getType(), lhs, reshape);
+    } else {
+      rewriter.replaceOpWithNewOp<AddOp>(op, res.getType(), reshape, rhs);
+    }
   }
 };
 

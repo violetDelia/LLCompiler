@@ -64,7 +64,6 @@ void getSymbolsAndShapesFrom(mlir::OperandRange& shapes,
                              llvm::SmallVector<llvm::StringRef>& symbols,
                              llvm::SmallVector<int64_t>& new_shapes) {
   for (auto shape : shapes) {
-    shape.dump();
     auto shape_op = shape.getDefiningOp();
     if (isa<ConstantOp>(shape_op)) {
       auto const_op = llvm::dyn_cast<ConstantOp>(shape_op);
@@ -157,7 +156,7 @@ void simplyBinarySymbolInfer(Value& value) {
   auto res = op->getResult(0);
   auto symbol_analsis = SymbolAnalysis::getInstance(op);
   symbol_analsis->addEncoding(res, new_shape_symbol);
-  WARN_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
 }
 
 void ConvSymbolInfer(Operation* op) {
@@ -257,7 +256,7 @@ void ConvSymbolInfer(Operation* op) {
   op->getResult(0).setType(new_tensor);
   auto res = op->getResult(0);
   symbol_analsis->addEncoding(res, new_shape_symbol);
-  WARN_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
 }
 }  // namespace
 
@@ -347,7 +346,7 @@ INFER_FUNCTION(ReshapeOp) {
   auto res = getResult();
   symbol_analsis->addEncoding(res, symbols);
   COMMON_CHECK
-  WARN_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
   return llvm::success();
 }
 
