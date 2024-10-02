@@ -20,7 +20,7 @@ include "mlir/Pass/PassBase.td"
 //===----------------------------------------------------------------------===//
 // LLH --> Tosa
 //===----------------------------------------------------------------------===//
-def ConvertLLHToTosa : Pass<"convert-llh-to-tosa"> {
+def ConvertLLHToTosaPass : Pass<"convert-llh-to-tosa"> {
   let summary = "convert LLH IR to Tosa IR";
   let description = [{
 

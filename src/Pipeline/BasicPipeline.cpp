@@ -14,6 +14,8 @@
 #include "llcompiler/Pipeline/BasicPipeline.h"
 
 #include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
+#include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
@@ -28,11 +30,14 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createOperationlegalizationPass());  //合法化非法的Op
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());     // 去除冗余Op
   pm.addPass(::mlir::createInlinerPass());                   // 内联
-  pm.addPass(mlir::llh::createReshapeBeforeBraodcastPass());  // 广播前插入reshape
+  pm.addPass(
+      mlir::llh::createReshapeBeforeBraodcastPass());  // 广播前插入reshape
   pm.addPass(mlir::llh::createInferSymbolShapePass());  // 符号推导和shapeinfer
   pm.addPass(mlir::createCanonicalizerPass());          //规范化
   pm.addPass(mlir::llh::createLoadWeightPass());  //将WeightOp转换为constant
   pm.addPass(mlir::createCanonicalizerPass());    //规范化
+  pm.addPass(mlir::llh::createTransformLayoutToNHWCPass());  //布局转换
+  pm.addPass(mlir::createConvertLLHToTosaPass());
 }
 void registerBasicPipeline() {
   ::mlir::PassPipelineRegistration<BasicPipelineOptions>(

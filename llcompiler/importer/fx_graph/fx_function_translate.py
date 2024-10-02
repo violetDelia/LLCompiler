@@ -1,5 +1,3 @@
-from xdsl.dialects.bufferization import AllocTensorOp
-from ...core.utility import Dict_Registry
 from .fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     torch_fake_tensor_translate,
@@ -27,9 +25,11 @@ from xdsl.dialects.builtin import (
     DenseArrayBase,
     IntegerAttr,
     BoolAttr,
+    DenseIntOrFPElementsAttr,
 )
 from ...dialect.llh import (
     ConvBiasOp,
+    EmptyOp,
     ConvOp,
     AddOp,
     DivOp,
@@ -117,8 +117,6 @@ def builtin_getitem_convert(
     block: Block,
 ):
     inputs = value_map[node.args[0].name]
-    print(node.args)
-    print(node.meta)
     if (len(inputs) == 1) and isinstance(inputs[0].type, TensorType):
         if isinstance(node.args[1], slice):
             raise NotImplementedError("do not support slice current")
@@ -277,7 +275,7 @@ def builtin_mul_convert(
     dims = [
         get_arg_value(node.args[i], value_map, block) for i in range(len(node.args))
     ]
-    op = AllocTensorOp.build(operands=[dims, None, None], result_types=[result_type])
+    op = EmptyOp.build(operands=[dims], result_types=[result_type])
     return op
 
 

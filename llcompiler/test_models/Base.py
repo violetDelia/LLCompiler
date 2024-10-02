@@ -13,8 +13,8 @@ class Base(nn.Module):
         self.cf = nn.Linear(int((224 - 17) / 2 + 7), 2)
 
     def forward(self, x: torch.Tensor):
-        x = x.reshape(1, 6, x.shape[2], x.shape[3])
-        x = x.reshape(2, 3, 224, 224)
+        x = x.reshape(x.shape[3],x.shape[2],x.shape[0],x.shape[1])
+        x = x.reshape(x.shape[2],x.shape[3],x.shape[1],x.shape[0])
         x = self.conv_layer1(x)
         x1 = x + x
         c = 2 + 2 * 5 / 3

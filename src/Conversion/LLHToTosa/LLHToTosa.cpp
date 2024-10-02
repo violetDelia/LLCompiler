@@ -49,7 +49,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 
 namespace mlir {
-#define GEN_PASS_DEF_CONVERTLLHTOTOSA
+#define GEN_PASS_DEF_CONVERTLLHTOTOSAPASS
 #include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
@@ -302,36 +302,35 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateLLHToTosaConversionPatterns(TypeConverter& converter,
+void populateLLHToTosaConversionPassPatterns(TypeConverter& converter,
                                          RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<ReluOpLowering>(converter, context);
-  // patterns.add<WeightOpLowering>(converter, context);
-  patterns.add<ConstantOpLowering>(converter, context);
-  patterns.add<MatMulOpLowering>(converter, context);
-  patterns.add<ConvOpLowering>(converter, context);
-  patterns.add<TransposeOpLowering>(converter, context);
+  // auto context = patterns.getContext();
+  // patterns.add<ReluOpLowering>(converter, context);
+  // patterns.add<ConstantOpLowering>(converter, context);
+  // patterns.add<MatMulOpLowering>(converter, context);
+  // patterns.add<ConvOpLowering>(converter, context);
+  // patterns.add<TransposeOpLowering>(converter, context);
   // populateWithGenerated(patterns);
 }
 
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
-void configLLHToTosaConversionTarget(ConversionTarget& target) {
-  target.addIllegalOp<ConstantOp>();
-  target.addIllegalOp<WeightOp>();
-  target.addIllegalOp<ReluOp>();
-  target.addIllegalOp<TransposeOp>();
-  target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
-  target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
-  target.addLegalDialect<mlir::tosa::TosaDialect>();
-  target.addLegalDialect<mlir::func::FuncDialect>();
+void configLLHToTosaConversionPassTarget(ConversionTarget& target) {
+  // target.addIllegalOp<ConstantOp>();
+  // target.addIllegalOp<WeightOp>();
+  // target.addIllegalOp<ReluOp>();
+  // target.addIllegalOp<TransposeOp>();
+  // target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
+  // target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
+  // target.addLegalDialect<mlir::tosa::TosaDialect>();
+  // target.addLegalDialect<mlir::func::FuncDialect>();
 }
 
 //===----------------------------------------------------------------------===//
 // init typeconvert
 //===----------------------------------------------------------------------===//
-void initLLHtoTosaConversionTypeConverter(TypeConverter& converter) {
+void initLLHtoTosaConversionPassTypeConverter(TypeConverter& converter) {
   auto shaped_repalce = [](ShapedType type) { return type; };
   auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
   converter.addConversion(ranked_tensor_replace);
@@ -341,8 +340,8 @@ void initLLHtoTosaConversionTypeConverter(TypeConverter& converter) {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct LLHToTosaConversion : impl::ConvertLLHToTosaBase<LLHToTosaConversion> {
-  using impl::ConvertLLHToTosaBase<LLHToTosaConversion>::ConvertLLHToTosaBase;
+struct LLHToTosaConversionPass : impl::ConvertLLHToTosaPassBase<LLHToTosaConversionPass> {
+  using impl::ConvertLLHToTosaPassBase<LLHToTosaConversionPass>::ConvertLLHToTosaPassBase;
   void runOnOperation() override;
 };
 }  // namespace
@@ -350,14 +349,14 @@ struct LLHToTosaConversion : impl::ConvertLLHToTosaBase<LLHToTosaConversion> {
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
-void LLHToTosaConversion::runOnOperation() {
+void LLHToTosaConversionPass::runOnOperation() {
   LLC_RUN_IN_PASS
   ConversionTarget target(getContext());
-  configLLHToTosaConversionTarget(target);
+  configLLHToTosaConversionPassTarget(target);
   TypeConverter converter;
-  initLLHtoTosaConversionTypeConverter(converter);
+  initLLHtoTosaConversionPassTypeConverter(converter);
   RewritePatternSet patterns(&getContext());
-  populateLLHToTosaConversionPatterns(converter, patterns);
+  populateLLHToTosaConversionPassPatterns(converter, patterns);
   if (failed(
           applyPartialConversion(getOperation(), target, std::move(patterns))))
     signalPassFailure();

@@ -74,7 +74,7 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   // llh
   //===----------------------------------------------------------------------===//
   pm.addPass(::mlir::createInlinerPass());       // 内联
-  pm.addPass(::mlir::createConvertLLHToTosa());  // LLH lowing to tosa
+  pm.addPass(::mlir::createConvertLLHToTosaPass());  // LLH lowing to tosa
   //===----------------------------------------------------------------------===//
   // tosa opt
   //===----------------------------------------------------------------------===//

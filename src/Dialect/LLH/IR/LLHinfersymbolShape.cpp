@@ -36,6 +36,7 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Value.h"
+#include "mlir/IR/ValueRange.h"
 #include "mlir/Support/LLVM.h"
 
 namespace mlir::llh {
@@ -58,6 +59,36 @@ void checkIsReturnOperand(Value& value) {
 }
 void checkIsIfOperand(Value value) { UNIMPLEMENTED(llc::SymbolInfer); }
 void checkIsWhileOperand(Value value) { UNIMPLEMENTED(llc::SymbolInfer); }
+
+void getSymbolsAndShapesFrom(mlir::OperandRange& shapes,
+                             llvm::SmallVector<llvm::StringRef>& symbols,
+                             llvm::SmallVector<int64_t>& new_shapes) {
+  for (auto shape : shapes) {
+    shape.dump();
+    auto shape_op = shape.getDefiningOp();
+    if (isa<ConstantOp>(shape_op)) {
+      auto const_op = llvm::dyn_cast<ConstantOp>(shape_op);
+      symbols.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+      auto dim = llvm::dyn_cast_or_null<IntegerAttr>(const_op.getValueAttr());
+      CHECK(llc::MLIR, dim);
+      new_shapes.push_back(dim.getInt());
+    } else if (isa<DimOp>(shape_op)) {
+      auto dim_op = llvm::dyn_cast<DimOp>(shape_op);
+      auto tensor =
+          llvm::dyn_cast<RankedTensorType>(dim_op.getInput().getType());
+      auto encoding =
+          llvm::dyn_cast_if_present<EncodingAttr>(tensor.getEncoding());
+      CHECK(llc::SymbolInfer, encoding);
+      CHECK(llc::SymbolInfer, isConstIntegerValue(dim_op.getDim()))
+          << "dim must be a constant for symbol infer";
+      auto dim = getConstIntegerValue(dim_op.getDim());
+      new_shapes.push_back(tensor.getShape()[dim]);
+      symbols.push_back(encoding.getShapeSymbols()[dim].getValue());
+    } else {
+      UNIMPLEMENTED(llc::MLIR);
+    }
+  }
+}
 
 void simplyUnarySymbolInfer(Value& value) {
   auto operand_type = value.getDefiningOp()->getOperand(0).getType();
@@ -221,9 +252,6 @@ void ConvSymbolInfer(Operation* op) {
   new_shape_symbol.insert(new_shape_symbol.begin() + channel_out_index,
                           channel_out_symbol);
   auto symbol_analsis = SymbolAnalysis::getInstance(op);
-  for (auto dim : new_shape) {
-    DINFO << dim;
-  }
   auto new_tensor =
       RankedTensorType::get(new_shape, input_type.getElementType());
   op->getResult(0).setType(new_tensor);
@@ -307,27 +335,36 @@ UNIMPLEMENTED_INFER_FUNCTION(AdaptiveAvgPoolOp)
 
 INFER_FUNCTION(ReshapeOp) {
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
-  llvm::SmallVector<int64_t> new_shape;
   auto shapes = getShapes();
   auto input = getInput();
   auto input_type = cast<ShapedType>(input.getType());
   auto symbols = llvm::SmallVector<StringRef>();
-  for (auto dim : shapes) {
-    if (isConstIntegerValue(dim)) {
-      auto val = getConstIntegerValue(dim);
-      new_shape.push_back(val);
-      auto symbol_op = symbol_analsis->getOrBuildConstSymbolFrom(input, val);
-      symbols.push_back(symbol_op.getSymName());
-    } else {
-      new_shape.push_back(ShapedType::kDynamic);
-      auto symbol_op = symbol_analsis->buildNewSymbolFrom(input);
-      symbols.push_back(symbol_op.getSymName());
-    }
-  }
+  auto new_shapes = llvm::SmallVector<int64_t>();
+  getSymbolsAndShapesFrom(shapes, symbols, new_shapes);
+  auto new_tensor =
+      RankedTensorType::get(new_shapes, input_type.getElementType());
+  getResult().setType(new_tensor);
+  auto res = getResult();
+  symbol_analsis->addEncoding(res, symbols);
+  COMMON_CHECK
+  WARN_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  return llvm::success();
+}
+
+INFER_FUNCTION(EmptyOp) {
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  llvm::SmallVector<int64_t> new_shape;
+  auto shapes = getShapes();
+  auto res_type = cast<ShapedType>(getResult().getType());
+  CHECK(llc::MLIR, res_type);
+  auto symbols = llvm::SmallVector<StringRef>();
+  getSymbolsAndShapesFrom(shapes, symbols, new_shape);
   auto new_res_type =
-      RankedTensorType::get(new_shape, input_type.getElementType(),
+      RankedTensorType::get(new_shape, res_type.getElementType(),
                             EncodingAttr::get(getContext(), symbols));
   getResult().setType(new_res_type);
+  auto res = getResult();
+  symbol_analsis->addEncoding(res, symbols);
   COMMON_CHECK
   return llvm::success();
 }

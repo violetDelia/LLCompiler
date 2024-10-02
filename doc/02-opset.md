@@ -25,6 +25,7 @@
 | DimOp              | Yes  | default | None   | [need] | None   | None   | None   | None   | [need] | [need] |     |
 | DivOp              | Yes  | default | [need] | [need] | [need] | [need] | None   | [need] | [need] | [need] |     |
 | DropOp             | Yes  | default | Yes    | [need] | [need] | [need] | None   | [need] | [need] | [need] |     |
+| EmptyOp            | Yes  | default | Yes    | None   | None   | None   | None   | None   | None   | [need] |     |
 | ExpandOp           | Yes  | [need]  | [need] | [need] | [need] | [need] | None   | [need] | [need] | [need] |     |
 | FlattenOp          | Yes  | default | None   | None   | None   | None   | Yes    | None   | None   | None   |     |
 | LayerNormOp        | Yes  | [need]  | [need] | [need] | [need] | [need] | [need] | [need] | [need] | None   |     |

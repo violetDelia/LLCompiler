@@ -21,7 +21,7 @@ class TypeConverter;
 class Pass;
 class RewritePatternSet;
 class ConversionTarget;
-#define GEN_PASS_DECL_CONVERTLLHTOTOSA
+#define GEN_PASS_DECL_CONVERTLLHTOTOSAPASS
 #include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir

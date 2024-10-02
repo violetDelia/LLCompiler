@@ -242,6 +242,11 @@ class ReshapeOp(IRDLOperation):
     shapes = var_operand_def(IntegerType)
     result = result_def(TensorType)
 
+@irdl_op_definition
+class EmptyOp(IRDLOperation):
+    name = "llh.empty"
+    shapes = var_operand_def(IntegerType)
+    result = result_def(TensorType)
 
 @irdl_op_definition
 class ExpandOp(IRDLOperation):
@@ -355,7 +360,8 @@ LLH = Dialect(
         AdaptiveAvgPoolOp,
         FlattenOp,
         BatchNormOp,
-        SubOp
+        SubOp,
+        EmptyOp
     ],
     [],
 )

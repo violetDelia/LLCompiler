@@ -109,4 +109,24 @@ func.func @transpose(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3,
   return 
 }
 
+// -----
+"llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+// CHECK-LABEL: empty
+func.func @empty(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> () attributes {entrance} {
+  %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
+  %2 = "llh.constant"() <{value = 1 : i64}> : () -> i64
+  %3 = "llh.constant"() <{value = 2 : i64}> : () -> i64
+  %4 = "llh.constant"() <{value = 0 : i64}> : () -> i64
+  %5 = "llh.dim"(%arg0, %4) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64) -> i64
+  %6 = "llh.dim"(%arg0, %3) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64) -> i64
+  %7 = "llh.dim"(%arg0, %2) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64) -> i64
+  %8 = "llh.dim"(%arg0, %0) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64) -> i64
+  // CHECK: llh.empty
+  // CHECK-SAME: -> tensor<?x?xf32, #llh.encoding<shapes = @s2, @s1>>
+  %22 = "llh.empty"(%6, %7) : (i64, i64) -> tensor<?x?xf32>
+  return 
+}
 

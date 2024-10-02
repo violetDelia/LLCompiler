@@ -44,10 +44,12 @@ def torch_compiler(model, inputs):
 module_dict = {
     Add: torch.randn((2, 3, 224, 224), device="cpu"),
     Base: torch.randn((2, 3, 224, 224), device="cpu"),
+    Braodcast: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
-    Braodcast: torch.randn((2, 3, 224, 224), device="cpu"),
+   
+    
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.vit_b_16: torch.randn((2, 3, 224, 224), device="cpu")
     # torchvision.models.convnext_tiny: torch.randn((2, 3, 224, 224), device="cpu"),

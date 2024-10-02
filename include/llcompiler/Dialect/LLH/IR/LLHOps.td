@@ -19,6 +19,7 @@ include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "llcompiler/Interfaces/SymbolShapeOpInterfaces.td"
 include "llcompiler/Interfaces/BraodcastableOpInterfaces.td"
+include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/IR/SymbolInterfaces.td"
 
 include "mlir/Interfaces/CastInterfaces.td"
@@ -162,6 +163,12 @@ def LLH_ReshapeOp : LLH_SymbolOp<"reshape",[]>{
         LLH_Tensor);
 }
 
+def LLH_EmptyOp : LLH_SymbolOp<"empty",[NoMemoryEffect]>{
+    let arguments = (ins 
+        Variadic<LLH_Int64>:$shapes);
+    let results = (outs 
+        LLH_Tensor);
+}
 
 def LLH_ShapeOfOp : LLH_Op<"shape_of">{
     let arguments = (ins 
