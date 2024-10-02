@@ -123,6 +123,12 @@ mlir::RankedTensorType SqueezeTensor(Value value, int dim = 0) {
 //===----------------------------------------------------------------------===//
 // illegal func
 //===----------------------------------------------------------------------===//
+bool check_const_illegal(Operation* op) {
+  auto const_op = llvm::cast_or_null<ConstantOp>(op);
+  if (!const_op) return false;
+  
+}
+
 bool check_matmal_illegal(Operation* op) {
   auto matmal = cast_or_null<MatMulOp>(op);
   if (!matmal) return false;
@@ -303,7 +309,7 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateLLHToTosaConversionPassPatterns(TypeConverter& converter,
-                                         RewritePatternSet& patterns) {
+                                             RewritePatternSet& patterns) {
   // auto context = patterns.getContext();
   // patterns.add<ReluOpLowering>(converter, context);
   // patterns.add<ConstantOpLowering>(converter, context);
@@ -317,7 +323,7 @@ void populateLLHToTosaConversionPassPatterns(TypeConverter& converter,
 // config target
 //===----------------------------------------------------------------------===//
 void configLLHToTosaConversionPassTarget(ConversionTarget& target) {
-  // target.addIllegalOp<ConstantOp>();
+  target.addDynamicallyLegalOp<ConstantOp>(check_const_illegal);
   // target.addIllegalOp<WeightOp>();
   // target.addIllegalOp<ReluOp>();
   // target.addIllegalOp<TransposeOp>();
@@ -340,8 +346,10 @@ void initLLHtoTosaConversionPassTypeConverter(TypeConverter& converter) {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct LLHToTosaConversionPass : impl::ConvertLLHToTosaPassBase<LLHToTosaConversionPass> {
-  using impl::ConvertLLHToTosaPassBase<LLHToTosaConversionPass>::ConvertLLHToTosaPassBase;
+struct LLHToTosaConversionPass
+    : impl::ConvertLLHToTosaPassBase<LLHToTosaConversionPass> {
+  using impl::ConvertLLHToTosaPassBase<
+      LLHToTosaConversionPass>::ConvertLLHToTosaPassBase;
   void runOnOperation() override;
 };
 }  // namespace

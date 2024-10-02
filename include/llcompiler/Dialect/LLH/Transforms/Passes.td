@@ -102,4 +102,13 @@ def ReshapeBeforeBraodcastPass : Pass<"reshape-before-braodcast","ModuleOp">{
 
 }
 
+def UnloadAndBindEncoding : Pass<"unload-and-bind-encoding","ModuleOp">{
+  let summary = "卸载tensor上的EncodingAttr到EncodingBindOp代替";
+  let description = [{
+    1.防止与其他第三方库和标准MLIR不兼容。
+  }];
+
+
+}
+
 #endif // LLH_PASS

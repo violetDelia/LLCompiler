@@ -37,6 +37,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createLoadWeightPass());  //将WeightOp转换为constant
   pm.addPass(mlir::createCanonicalizerPass());    //规范化
   pm.addPass(mlir::llh::createTransformLayoutToNHWCPass());  //布局转换
+  pm.addPass(mlir::llh::createUnloadAndBindEncoding());  // 卸载encodingAttr并绑定到encoding
+                                                         // bind Op 上
   pm.addPass(mlir::createConvertLLHToTosaPass());
 }
 void registerBasicPipeline() {

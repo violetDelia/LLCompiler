@@ -58,19 +58,19 @@ namespace {
 // transform patterns
 //===----------------------------------------------------------------------===//
 
-struct SimplyBinaryOp : public LLHOpRewritePattern<AddOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-  LogicalResult match(AddOp op) const final {
-    auto lhs = op.getOperand(0);
-    auto rhs = op.getOperand(1);
+template <class BinaryOp>
+struct SimplyBinaryOp : public LLHOpRewritePattern<BinaryOp> {
+  using LLHOpRewritePattern<BinaryOp>::LLHOpRewritePattern;
+  LogicalResult match(BinaryOp op) const final {
+    auto lhs = op->getOperand(0);
+    auto rhs = op->getOperand(1);
     auto lhs_rank = llc::getRankTensorFrom(lhs).getRank();
     auto rhs_rank = llc::getRankTensorFrom(rhs).getRank();
     if (lhs_rank == rhs_rank) return llvm::failure();
     return llvm::success();
   }
-  void rewrite(AddOp op, LLHPatternRewriter& rewriter) const final {
+  void rewrite(BinaryOp op, LLHPatternRewriter& rewriter) const final {
     auto loc = op.getLoc();
-    auto module = op->getParentOfType<ModuleOp>();
     auto lhs = op->getOperand(0);
     auto rhs = op->getOperand(1);
     auto res = op->getResult(0);
@@ -115,9 +115,9 @@ struct SimplyBinaryOp : public LLHOpRewritePattern<AddOp> {
     auto reshape = rewriter.create<llh::ReshapeOp>(loc, reshape_res,
                                                    lower_value, reshape_dims);
     if (lhs_rank > rhs_rank) {
-      rewriter.replaceOpWithNewOp<AddOp>(op, res.getType(), lhs, reshape);
+      rewriter.replaceOpWithNewOp<BinaryOp>(op, res.getType(), lhs, reshape);
     } else {
-      rewriter.replaceOpWithNewOp<AddOp>(op, res.getType(), reshape, rhs);
+      rewriter.replaceOpWithNewOp<BinaryOp>(op, res.getType(), reshape, rhs);
     }
   }
 };
@@ -127,7 +127,10 @@ struct SimplyBinaryOp : public LLHOpRewritePattern<AddOp> {
 //===----------------------------------------------------------------------===//
 void populateReshapeBeforeBraodcastPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<SimplyBinaryOp>(context);
+  patterns.add<SimplyBinaryOp<AddOp>>(context);
+  patterns.add<SimplyBinaryOp<SubOp>>(context);
+  patterns.add<SimplyBinaryOp<DivOp>>(context);
+  patterns.add<SimplyBinaryOp<MulOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//

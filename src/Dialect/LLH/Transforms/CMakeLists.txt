@@ -6,6 +6,7 @@ llcompiler_add_library(MLIRLLHTransforms
   Operationlegalization.cpp
   RemoveRedundantOps.cpp
   ReshapeBeforeBraodcast.cpp
+  UnloadAndBindEncoding.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen
