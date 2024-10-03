@@ -95,7 +95,6 @@ struct ReshapeOpLowing : public OpConversionPattern<ReshapeOp> {
       auto dim_val =
           rewriter.create<index::CastSOp>(loc, rewriter.getIndexType(), shape);
       new_shapes.push_back(dim_val);
-      c = dim_val;
     }
     auto new_shape = rewriter.create<tensor::FromElementsOp>(loc, new_shapes);
     auto new_reshape = rewriter.create<tensor::ReshapeOp>(

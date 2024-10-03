@@ -174,7 +174,6 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
 //   }
 // };
 
-
 struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
   using OpConversionPattern<MatMulOp>::OpConversionPattern;
   LogicalResult match(MatMulOp op) const final { return success(); }
@@ -259,22 +258,60 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
   };
 };
 
+struct MulOpLowing : public OpConversionPattern<MulOp> {
+  using OpConversionPattern<MulOp>::OpConversionPattern;
+  LogicalResult match(MulOp op) const final { return success(); }
+  void rewrite(MulOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    LLC_RUN_IN_PATTERN
+    auto loc = op.getLoc();
+    auto types = op->getResultTypes();
+    auto operands = op->getOperands();
+    auto attrs = op->getAttrs();
+    auto new_op = rewriter.create<tosa::MulOp>(loc, types, operands, attrs);
+    new_op->setAttr("shift", rewriter.getI8IntegerAttr(0));
+    rewriter.replaceOp(op, new_op);
+    LLC_RUN_OUT_PATTERN
+  };
+};
+
+struct DivOpLowing : public OpConversionPattern<DivOp> {
+  using OpConversionPattern<DivOp>::OpConversionPattern;
+  LogicalResult match(DivOp op) const final { return success(); }
+  void rewrite(DivOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    LLC_RUN_IN_PATTERN
+    auto loc = op.getLoc();
+    auto types = op->getResultTypes();
+    auto rhs = op.getRhs();
+    auto lhs = op.getLhs();
+    auto new_rhs = rewriter.create<tosa::ReciprocalOp>(loc, types, rhs);
+    auto attrs = op->getAttrs();
+    auto new_op = rewriter.create<tosa::MulOp>(loc, types,
+                                               ValueRange{lhs, new_rhs}, attrs);
+    new_op->setAttr("shift", rewriter.getI8IntegerAttr(0));
+    rewriter.replaceOp(op, new_op);
+    LLC_RUN_OUT_PATTERN
+  };
+};
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateConvertLLHToTosaPassPatterns(TypeConverter& converter,
                                           RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  // patterns.add<ReluOpLowering>(converter, context);
   patterns.add<SimplyFullLowing<AddOp, tosa::AddOp>>(converter, context);
-  patterns.add<SimplyFullLowing<ConstantOp, tosa::ConstOp>>(converter, context);
-  // patterns.add<SimplyFullLowing<MulOp, tosa::MulOp>>(converter, context);
   patterns.add<SimplyFullLowing<SubOp, tosa::SubOp>>(converter, context);
+  patterns.add<SimplyFullLowing<ConstantOp, tosa::ConstOp>>(converter, context);
+  patterns.add<MulOpLowing>(converter, context);
+  patterns.add<DivOpLowing>(converter, context);
+
   // patterns.add<ConstantOpLowering>(converter, context);
-  //  patterns.add<MatMulOpLowering>(converter, context);
-  //  patterns.add<ConvOpLowering>(converter, context);
-  //  patterns.add<TransposeOpLowering>(converter, context);
-  //  populateWithGenerated(patterns);
+  // patterns.add<MatMulOpLowering>(converter, context);
+  // patterns.add<ConvOpLowering>(converter, context);
+  // patterns.add<TransposeOpLowering>(converter, context);
+  // populateWithGenerated(patterns);
 }
 
 //===----------------------------------------------------------------------===//
@@ -284,7 +321,8 @@ void configConvertLLHToTosaPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
   target.addIllegalOp<AddOp>();
   target.addIllegalOp<SubOp>();
-  // target.addIllegalOp<MulOp>();
+  target.addIllegalOp<MulOp>();
+  target.addIllegalOp<DivOp>();
   //  target.addIllegalOp<WeightOp>();
   //  target.addIllegalOp<ReluOp>();
   //  target.addIllegalOp<TransposeOp>();
