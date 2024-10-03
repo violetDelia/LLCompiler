@@ -11,10 +11,23 @@ func.func @constant() ->() attributes {entrance}{
 }
 
 
-func.func @add(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
+func.func @add_and_sub(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
   // CHECK: tosa.sub
   %23 = "llh.sub"(%arg0, %arg0) : (tensor<?x10x?x?xf32>, tensor<?x10x?x?xf32>) -> tensor<?x10x?x?xf32>
   // CHECK: tosa.add
   %24 = "llh.add"(%23, %23) : (tensor<?x10x?x?xf32>, tensor<?x10x?x?xf32>) -> tensor<?x10x?x?xf32>
+  return 
+}
+
+func.func @mul(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
+  // CHECK: tosa.mul
+  %23 = "llh.mul"(%arg0, %arg0) : (tensor<?x10x?x?xf32>, tensor<?x10x?x?xf32>) -> tensor<?x10x?x?xf32>
+  return 
+}
+
+func.func @div(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
+  // CHECK: tosa.reciprocal
+  // CHECK: tosa.mul
+  %23 = "llh.div"(%arg0, %arg0) : (tensor<?x10x?x?xf32>, tensor<?x10x?x?xf32>) -> tensor<?x10x?x?xf32>
   return 
 }

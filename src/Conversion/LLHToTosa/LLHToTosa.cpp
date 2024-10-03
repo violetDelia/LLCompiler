@@ -285,7 +285,7 @@ struct DivOpLowing : public OpConversionPattern<DivOp> {
     auto types = op->getResultTypes();
     auto rhs = op.getRhs();
     auto lhs = op.getLhs();
-    auto new_rhs = rewriter.create<tosa::ReciprocalOp>(loc, types, rhs);
+    auto new_rhs = rewriter.create<tosa::ReciprocalOp>(loc, rhs.getType(), rhs);
     auto attrs = op->getAttrs();
     auto new_op = rewriter.create<tosa::MulOp>(loc, types,
                                                ValueRange{lhs, new_rhs}, attrs);

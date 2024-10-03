@@ -70,12 +70,12 @@ struct DimOpLowing : public OpConversionPattern<DimOp> {
     auto attrs = op->getAttrs();
     auto res = op->getResult(0);
     auto index_dim =
-        rewriter.create<index::CastSOp>(loc, rewriter.getIndexType(), dim);
+        rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), dim);
     auto new_dim = rewriter.create<tensor::DimOp>(
         loc, rewriter.getIndexType(), ::mlir::ValueRange{input, index_dim},
         attrs);
     auto index_out =
-        rewriter.create<index::CastSOp>(loc, op->getResultTypes(), new_dim);
+        rewriter.create<index::CastUOp>(loc, op->getResultTypes(), new_dim);
     rewriter.replaceOp(op, index_out);
   }
 };
@@ -93,7 +93,7 @@ struct ReshapeOpLowing : public OpConversionPattern<ReshapeOp> {
     llvm::SmallVector<Value> new_shapes;
     for (auto shape : shapes) {
       auto dim_val =
-          rewriter.create<index::CastSOp>(loc, rewriter.getIndexType(), shape);
+          rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), shape);
       new_shapes.push_back(dim_val);
     }
     auto new_shape = rewriter.create<tensor::FromElementsOp>(loc, new_shapes);
@@ -102,6 +102,28 @@ struct ReshapeOpLowing : public OpConversionPattern<ReshapeOp> {
     rewriter.replaceOp(op, new_reshape);
   }
 };
+
+struct EmptyOpLowing : public OpConversionPattern<EmptyOp> {
+  using OpConversionPattern::OpConversionPattern;
+  LogicalResult match(EmptyOp op) const final { return llvm::success(); }
+
+  void rewrite(EmptyOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    auto loc = op->getLoc();
+    auto shapes = op.getShapes();
+    auto attrs = op->getAttrs();
+    llvm::SmallVector<Value> new_shapes;
+    for (auto shape : shapes) {
+      auto dim_val =
+          rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), shape);
+      new_shapes.push_back(dim_val);
+    }
+    auto new_reshape = rewriter.create<tensor::EmptyOp>(
+        loc, op->getResultTypes(), ::mlir::ValueRange{new_shapes}, attrs);
+    rewriter.replaceOp(op, new_reshape);
+  }
+};
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -110,6 +132,7 @@ void populateConvertLLHToTensorPassPatterns(TypeConverter& converter,
   auto context = patterns.getContext();
   patterns.add<DimOpLowing>(converter, context);
   patterns.add<ReshapeOpLowing>(converter, context);
+  patterns.add<EmptyOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -122,6 +145,7 @@ void configConvertLLHToTensorPassTarget(ConversionTarget& target) {
   target.addLegalDialect<mlir::tensor::TensorDialect>();
   target.addIllegalOp<DimOp>();
   target.addIllegalOp<ReshapeOp>();
+  target.addIllegalOp<EmptyOp>();
 }
 
 //===----------------------------------------------------------------------===//
