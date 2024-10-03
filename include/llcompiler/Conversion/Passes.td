@@ -28,4 +28,29 @@ def ConvertLLHToTosaPass : Pass<"convert-llh-to-tosa"> {
   let dependentDialects = [ "::mlir::tosa::TosaDialect",
                             "::mlir::func::FuncDialect"];
 }
+
+//===----------------------------------------------------------------------===//
+// LLH --> Arith
+//===----------------------------------------------------------------------===//
+def ConvertLLHToArithPass : Pass<"convert-llh-to-arith"> {
+  let summary = "convert LLH IR to Arith IR";
+  let description = [{
+
+  }];
+  let dependentDialects = [ "::mlir::arith::ArithDialect",
+                            "::mlir::func::FuncDialect"];
+}
+
+//===----------------------------------------------------------------------===//
+// LLH --> Tensor
+//===----------------------------------------------------------------------===//
+def ConvertLLHToTensorPass : Pass<"convert-llh-to-tensor"> {
+  let summary = "convert LLH IR to Tensor IR";
+  let description = [{
+
+  }];
+  let dependentDialects = [ "::mlir::tensor::TensorDialect",
+                            "::mlir::func::FuncDialect"];
+}
+
 #endif // LLC_CONVERSION_PASSES

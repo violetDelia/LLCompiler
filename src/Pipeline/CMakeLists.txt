@@ -13,6 +13,8 @@ llcompiler_add_library(LLCPipelines
     MLIRLLHUtils
     MLIRLLHTransforms
     MLIRLLHToTosa
+    MLIRLLHToArith
+    MLIRLLHToTensor
     MLIRTosaTransforms
     MLIRTosaToArith
     MLIRTosaToTensor

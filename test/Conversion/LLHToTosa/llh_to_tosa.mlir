@@ -1,6 +1,5 @@
 // RUN: llc-opt --split-input-file --convert-llh-to-tosa %s| FileCheck %s
 
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --convert-llh-to-tosa /home/lfr/LLCompiler/test/Conversion/llh_to_tosa.mlir
 func.func @constant() ->() attributes {entrance}{
   // CHECK: tosa.const
   // CHECK-SAME: tensor<384xf32>

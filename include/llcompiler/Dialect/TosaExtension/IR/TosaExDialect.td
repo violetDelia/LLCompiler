@@ -27,7 +27,7 @@ def TosaEx_Dialect : Dialect{
      extension of tosa dialect. if front can't convert to tasa op, use this.
      }];
     let cppNamespace = "::mlir::tosa_ex";
-    let dependentDialects = ["tensor::TensorDialect", "quant::QuantizationDialect", "tosa::TosaDialect"];
+    let dependentDialects = ["tensor::TensorDialect", "quant::QuantDialect", "tosa::TosaDialect"];
     let useDefaultAttributePrinterParser = 0;
     let hasConstantMaterializer = 0;
     let extraClassDeclaration = [{

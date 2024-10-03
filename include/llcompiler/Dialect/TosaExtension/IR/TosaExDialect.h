@@ -17,6 +17,8 @@
 #define INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXDIALECT_H_
 
 #include "mlir/Bytecode/BytecodeOpInterface.h"
+#include "mlir/Dialect/Quant/IR/Quant.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/Dialect.h"
 
 #define LLCOMPILER_MACRO_FOR_FIX_HEAD

@@ -15,10 +15,9 @@
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h"
-#include "mlir/Dialect/Quant/QuantOps.h"
-#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
-
+#include "mlir/Dialect/Quant/IR/Quant.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #define FIX_HEADER
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.cpp.inc"
 #undef FIX_HEADER

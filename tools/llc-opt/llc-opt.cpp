@@ -66,13 +66,12 @@ int main(int argc, char **argv) {
   mlir::arith::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::scf::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::tensor::registerInferTypeOpInterfaceExternalModels(registry);
   mlir::func::registerInlinerExtension(registry);
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
   llc::pipleline::registerCommonPipeline();
   llc::pipleline::registerBasicPipeline();
   mlir::llh::registerLLHOptPasses();
-  mlir::registerConvertLLHToTosaPass();
+  mlir::registerLLCConversionPasses();
   mlir::registerTransformsPasses();
   mlir::transform::registerInterpreterPass();
   mlir::asMainReturnCode(

@@ -14,6 +14,8 @@
 #include "llcompiler/Pipeline/BasicPipeline.h"
 
 #include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
+#include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
@@ -37,9 +39,13 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createLoadWeightPass());  //将WeightOp转换为constant
   pm.addPass(mlir::createCanonicalizerPass());    //规范化
   pm.addPass(mlir::llh::createTransformLayoutToNHWCPass());  //布局转换
-  pm.addPass(mlir::llh::createUnloadAndBindEncoding());  // 卸载encodingAttr并绑定到encoding
-                                                         // bind Op 上
+  pm.addPass(
+      mlir::llh::
+          createUnloadAndBindEncoding());  // 卸载encodingAttr并绑定到encoding
+                                           // bind Op 上
   pm.addPass(mlir::createConvertLLHToTosaPass());
+  pm.addPass(mlir::createConvertLLHToTensorPass());
+  pm.addPass(mlir::createConvertLLHToArithPass());
 }
 void registerBasicPipeline() {
   ::mlir::PassPipelineRegistration<BasicPipelineOptions>(

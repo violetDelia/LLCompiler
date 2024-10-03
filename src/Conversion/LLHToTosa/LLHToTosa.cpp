@@ -183,15 +183,8 @@ struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
     auto out = op.getResult().getType();
     auto attrs = op->getAttrs();
     auto types = ::mlir::TypeRange{out};
-    out.dump();
-    for (auto cc : attrs) {
-      cc.getValue().dump();
-    }
-    auto new_op = rewriter.create<mlir::tosa::ConstOp>(
-        loc, types, ::mlir::ValueRange{}, attrs);
-    new_op->dump();
-    new_op.setValueAttr(cast<mlir::DenseElementsAttr>(op.getValueAttr()));
-    new_op->dump();
+    auto new_op =
+        rewriter.create<mlir::tosa::ConstOp>(loc, ::mlir::ValueRange{}, attrs);
     rewriter.replaceOp(op, new_op);
     LLC_RUN_OUT_PATTERN
   }
@@ -284,7 +277,7 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateLLHToTosaConversionPassPatterns(TypeConverter& converter,
+void populateConvertLLHToTosaPassPatterns(TypeConverter& converter,
                                              RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   // patterns.add<ReluOpLowering>(converter, context);
@@ -298,7 +291,7 @@ void populateLLHToTosaConversionPassPatterns(TypeConverter& converter,
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
-void configLLHToTosaConversionPassTarget(ConversionTarget& target) {
+void configConvertLLHToTosaPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_illegal);
   // target.addIllegalOp<WeightOp>();
   // target.addIllegalOp<ReluOp>();
@@ -312,7 +305,7 @@ void configLLHToTosaConversionPassTarget(ConversionTarget& target) {
 //===----------------------------------------------------------------------===//
 // init typeconvert
 //===----------------------------------------------------------------------===//
-void initLLHtoTosaConversionPassTypeConverter(TypeConverter& converter) {
+void initConvertLLHToTosaPassTypeConverter(TypeConverter& converter) {
   auto shaped_repalce = [](ShapedType type) { return type; };
   auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
   converter.addConversion(ranked_tensor_replace);
@@ -322,10 +315,10 @@ void initLLHtoTosaConversionPassTypeConverter(TypeConverter& converter) {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct LLHToTosaConversionPass
-    : impl::ConvertLLHToTosaPassBase<LLHToTosaConversionPass> {
+struct ConvertLLHToTosaPass
+    : impl::ConvertLLHToTosaPassBase<ConvertLLHToTosaPass> {
   using impl::ConvertLLHToTosaPassBase<
-      LLHToTosaConversionPass>::ConvertLLHToTosaPassBase;
+      ConvertLLHToTosaPass>::ConvertLLHToTosaPassBase;
   void runOnOperation() override;
 };
 }  // namespace
@@ -333,14 +326,14 @@ struct LLHToTosaConversionPass
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
-void LLHToTosaConversionPass::runOnOperation() {
+void ConvertLLHToTosaPass::runOnOperation() {
   LLC_RUN_IN_PASS
   ConversionTarget target(getContext());
-  configLLHToTosaConversionPassTarget(target);
+  configConvertLLHToTosaPassTarget(target);
   TypeConverter converter;
-  initLLHtoTosaConversionPassTypeConverter(converter);
+  initConvertLLHToTosaPassTypeConverter(converter);
   RewritePatternSet patterns(&getContext());
-  populateLLHToTosaConversionPassPatterns(converter, patterns);
+  populateConvertLLHToTosaPassPatterns(converter, patterns);
   if (failed(
           applyPartialConversion(getOperation(), target, std::move(patterns))))
     signalPassFailure();
