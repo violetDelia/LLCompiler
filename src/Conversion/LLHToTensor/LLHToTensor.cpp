@@ -53,7 +53,15 @@ namespace {
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
+struct DimOpLowing : public OpConversionPattern<DimOp> {
+  using OpConversionPattern<DimOp>::OpConversionPattern;
+  LogicalResult match(DimOp op) const final { return llvm::success(); }
 
+  void rewrite(DimOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    auto loc = op->getLoc();
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//

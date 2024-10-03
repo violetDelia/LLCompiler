@@ -19,6 +19,7 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -45,11 +46,20 @@ namespace mlir {
 
 using namespace ::mlir;
 using namespace ::mlir::llh;
+namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-namespace {
 
+//===----------------------------------------------------------------------===//
+// legal func
+//===----------------------------------------------------------------------===//
+bool check_const_legal(Operation* op) {
+  auto const_op = llvm::cast_or_null<ConstantOp>(op);
+  if (!const_op) return false;
+  auto type = const_op.getResult().getType();
+  return isa<RankedTensorType>(type);
+}
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
@@ -60,12 +70,15 @@ namespace {
 void populateConvertLLHToArithPassPatterns(TypeConverter& converter,
                                            RewritePatternSet& patterns) {
   auto context = patterns.getContext();
+  patterns.add<SimplyFullLowing<ConstantOp, arith::ConstantOp>>(converter,
+                                                                context);
 }
 
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
 void configConvertLLHToArithPassTarget(ConversionTarget& target) {
+  target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
   target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::func::FuncDialect>();
 }

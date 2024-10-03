@@ -42,10 +42,10 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(
       mlir::llh::
           createUnloadAndBindEncoding());  // 卸载encodingAttr并绑定到encoding
-                                           // bind Op 上
-  pm.addPass(mlir::createConvertLLHToTosaPass());
-  pm.addPass(mlir::createConvertLLHToTensorPass());
+  // bind Op 上
   pm.addPass(mlir::createConvertLLHToArithPass());
+  pm.addPass(mlir::createConvertLLHToTensorPass());
+  pm.addPass(mlir::createConvertLLHToTosaPass());
 }
 void registerBasicPipeline() {
   ::mlir::PassPipelineRegistration<BasicPipelineOptions>(

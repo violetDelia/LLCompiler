@@ -146,8 +146,10 @@ struct LoadWeightOp : public LLHOpRewritePattern<WeightOp> {
   void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {
     auto weight_file = op.getWeightFile();
     auto type = op->getResult(0).getType();
-    auto tensor = mlir::cast_or_null<ShapedType>(type);
-    CHECK(llc::MLIR, tensor);
+    CHECK(llc::MLIR, isa<ShapedType>(type));
+    auto shape = mlir::cast_or_null<ShapedType>(type);
+    auto tensor =
+        RankedTensorType::get(shape.getShape(), shape.getElementType());
     auto value = loadWeightFile(tensor, weight_file, &rewriter);
     auto const_op = rewriter.createOrFold<llh::ConstantOp>(op->getLoc(), value);
     rewriter.replaceOp(op, const_op);
@@ -183,4 +185,3 @@ void LoadWeightPass::runOnOperation() {
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }
-

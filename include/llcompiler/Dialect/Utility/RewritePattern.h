@@ -18,13 +18,14 @@
 
 #include "llcompiler/Support/Logger.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/Transforms/DialectConversion.h"
 
 namespace mlir {
 
 class LLHPatternRewriter : public RewriterBase {
  public:
   explicit LLHPatternRewriter(MLIRContext *ctx) : RewriterBase(ctx) {}
-  explicit LLHPatternRewriter(Operation * op) : RewriterBase(op) {}
+  explicit LLHPatternRewriter(Operation *op) : RewriterBase(op) {}
   using RewriterBase::RewriterBase;
 
   virtual void processWileBuildOperation(Operation *op);
@@ -127,5 +128,24 @@ struct LLHOpRewritePattern
       : detail::LLCOpOrInterfaceRewritePatternBase<SourceOp>(
             SourceOp::getOperationName(), benefit, context, generatedNames) {}
 };
+
+template <class SourceOp, class TargetOp>
+struct SimplyFullLowing : public OpConversionPattern<SourceOp> {
+  using OpConversionPattern<SourceOp>::OpConversionPattern;
+  using OpAdaptor = typename SourceOp::Adaptor;
+
+  LogicalResult match(SourceOp op) const final { return success(); }
+
+  void rewrite(SourceOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter &rewriter) const final {
+    auto loc = op.getLoc();
+    auto types = op->getResultTypes();
+    auto operands = op->getOperands();
+    auto attrs = op->getAttrs();
+    auto new_op = rewriter.create<TargetOp>(loc, types, operands, attrs);
+    rewriter.replaceOp(op, new_op);
+  }
+};
+
 }  // namespace mlir
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_REWRITEPATTERN_H_

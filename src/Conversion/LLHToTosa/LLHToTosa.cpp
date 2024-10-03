@@ -13,12 +13,14 @@
 //    limitations under the License.
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Tool.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
@@ -91,7 +93,7 @@ mlir::RankedTensorType SqueezeTensor(Value value, int dim = 0) {
 //===----------------------------------------------------------------------===//
 // legal func
 //===----------------------------------------------------------------------===//
-bool check_const_illegal(Operation* op) {
+bool check_const_legal(Operation* op) {
   auto const_op = llvm::cast_or_null<ConstantOp>(op);
   if (!const_op) return false;
   auto type = const_op.getResult().getType();
@@ -172,23 +174,6 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
 //   }
 // };
 
-struct ConstantOpLowering : public OpConversionPattern<ConstantOp> {
-  using OpConversionPattern<ConstantOp>::OpConversionPattern;
-  LogicalResult match(ConstantOp op) const final { return success(); }
-  void rewrite(ConstantOp op, OpAdaptor adaptor,
-               ConversionPatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
-    op->dump();
-    auto loc = op.getLoc();
-    auto out = op.getResult().getType();
-    auto attrs = op->getAttrs();
-    auto types = ::mlir::TypeRange{out};
-    auto new_op =
-        rewriter.create<mlir::tosa::ConstOp>(loc, ::mlir::ValueRange{}, attrs);
-    rewriter.replaceOp(op, new_op);
-    LLC_RUN_OUT_PATTERN
-  }
-};
 
 struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
   using OpConversionPattern<MatMulOp>::OpConversionPattern;
@@ -278,26 +263,33 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateConvertLLHToTosaPassPatterns(TypeConverter& converter,
-                                             RewritePatternSet& patterns) {
+                                          RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   // patterns.add<ReluOpLowering>(converter, context);
-  patterns.add<ConstantOpLowering>(converter, context);
-  // patterns.add<MatMulOpLowering>(converter, context);
-  // patterns.add<ConvOpLowering>(converter, context);
-  // patterns.add<TransposeOpLowering>(converter, context);
-  // populateWithGenerated(patterns);
+  patterns.add<SimplyFullLowing<AddOp, tosa::AddOp>>(converter, context);
+  patterns.add<SimplyFullLowing<ConstantOp, tosa::ConstOp>>(converter, context);
+  // patterns.add<SimplyFullLowing<MulOp, tosa::MulOp>>(converter, context);
+  patterns.add<SimplyFullLowing<SubOp, tosa::SubOp>>(converter, context);
+  // patterns.add<ConstantOpLowering>(converter, context);
+  //  patterns.add<MatMulOpLowering>(converter, context);
+  //  patterns.add<ConvOpLowering>(converter, context);
+  //  patterns.add<TransposeOpLowering>(converter, context);
+  //  populateWithGenerated(patterns);
 }
 
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
 void configConvertLLHToTosaPassTarget(ConversionTarget& target) {
-  target.addDynamicallyLegalOp<ConstantOp>(check_const_illegal);
-  // target.addIllegalOp<WeightOp>();
-  // target.addIllegalOp<ReluOp>();
-  // target.addIllegalOp<TransposeOp>();
-  // target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
-  // target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
+  target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
+  target.addIllegalOp<AddOp>();
+  target.addIllegalOp<SubOp>();
+  // target.addIllegalOp<MulOp>();
+  //  target.addIllegalOp<WeightOp>();
+  //  target.addIllegalOp<ReluOp>();
+  //  target.addIllegalOp<TransposeOp>();
+  //  target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
+  //  target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mlir::tosa::TosaDialect>();
   target.addLegalDialect<mlir::func::FuncDialect>();
 }
