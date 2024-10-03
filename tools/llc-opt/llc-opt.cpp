@@ -15,6 +15,7 @@
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
@@ -27,6 +28,7 @@
 #include "mlir/Dialect/Bufferization/Transforms/FuncBufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
@@ -60,6 +62,7 @@ int main(int argc, char **argv) {
   registry.insert<mlir::memref::MemRefDialect>();
   registry.insert<mlir::affine::AffineDialect>();
   registry.insert<mlir::scf::SCFDialect>();
+  registry.insert<mlir::index::IndexDialect>();
   mlir::tensor::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
       registry);
@@ -72,6 +75,7 @@ int main(int argc, char **argv) {
   llc::pipleline::registerBasicPipeline();
   mlir::llh::registerLLHOptPasses();
   mlir::registerLLCConversionPasses();
+  mlir::index_ex::registerIndexExtensionPasses();
   mlir::registerTransformsPasses();
   mlir::transform::registerInterpreterPass();
   mlir::asMainReturnCode(

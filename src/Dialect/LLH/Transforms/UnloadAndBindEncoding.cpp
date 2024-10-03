@@ -125,7 +125,6 @@ void UnloadAndBindEncodingPass::runOnOperation() {
   auto &context = getContext();
   auto module = getOperation();
   auto builder = LLHPatternRewriter(module);
-
   auto unloda_and_bind_func_attr = [&builder](func::FuncOp func) {
     unloadAndBindEncodingFuncOp(func, &builder);
   };

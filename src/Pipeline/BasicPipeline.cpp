@@ -18,6 +18,7 @@
 #include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Conversion/Passes.h"
+#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
@@ -48,6 +49,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::createConvertLLHToTensorPass());
   pm.addPass(mlir::createConvertLLHToTosaPass());
   pm.addPass(mlir::createCanonicalizerPass());
+  pm.addPass(mlir::index_ex::createFoldIndexCastPass());
 }
 void registerBasicPipeline() {
   ::mlir::PassPipelineRegistration<BasicPipelineOptions>(

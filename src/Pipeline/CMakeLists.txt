@@ -15,6 +15,7 @@ llcompiler_add_library(LLCPipelines
     MLIRLLHToTosa
     MLIRLLHToArith
     MLIRLLHToTensor
+    MLIRIndexExtensionTransforms
     MLIRTosaTransforms
     MLIRTosaToArith
     MLIRTosaToTensor
