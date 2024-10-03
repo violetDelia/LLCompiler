@@ -50,7 +50,8 @@ def ConvertLLHToTensorPass : Pass<"convert-llh-to-tensor"> {
 
   }];
   let dependentDialects = [ "::mlir::tensor::TensorDialect",
-                            "::mlir::func::FuncDialect"];
+                            "::mlir::func::FuncDialect",
+                            "::mlir::index::IndexDialect"];
 }
 
 #endif // LLC_CONVERSION_PASSES
