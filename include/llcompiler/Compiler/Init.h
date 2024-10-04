@@ -22,7 +22,9 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
+#include "llcompiler/Compiler/Entrance.h"
 #include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/IR/MLIRContext.h"
@@ -32,7 +34,11 @@
 namespace llc::compiler {
 void load_dialect(mlir::MLIRContext& context);
 
-void add_extension_and_interface(mlir::DialectRegistry&registry);
+void add_extension_and_interface(mlir::DialectRegistry& registry);
+
+void generatePiplineOptions(
+    CompilerOptions& options,
+    llc::pipleline::BasicPipelineOptions& pipleline_options);
 
 void init_logger(const logger::LoggerOption& logger_option);
 void init_frontend(const front::FrontEndOption& front_option,

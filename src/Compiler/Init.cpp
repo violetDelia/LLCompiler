@@ -16,8 +16,10 @@
 #include <iostream>
 #include <string>
 
+#include "llcompiler/Compiler/Entrance.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/Dialect/Arith/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
@@ -50,7 +52,8 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::LLVM::registerInlinerInterface(registry);
   mlir::arith::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::tensor::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
+      registry);
   mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::scf::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
@@ -83,4 +86,34 @@ void init_frontend(const front::FrontEndOption& front_option,
   }
 }
 
+void generatePiplineOptions(
+    CompilerOptions& options,
+    llc::pipleline::BasicPipelineOptions& pipleline_options) {
+  if (options.L1_cache_size == 0) {
+    pipleline_options.L1CacheSize = sysconf(_SC_LEVEL1_DCACHE_SIZE);
+  } else {
+    pipleline_options.L1CacheSize = options.L1_cache_size;
+  }
+  if (options.L2_cache_size == 0) {
+    pipleline_options.L2CacheSize = sysconf(_SC_LEVEL2_CACHE_SIZE);
+  } else {
+    pipleline_options.L2CacheSize = options.L2_cache_size;
+  }
+  if (options.L3_cache_size == 0) {
+    pipleline_options.L3CacheSize = sysconf(_SC_LEVEL3_CACHE_SIZE);
+  } else {
+    pipleline_options.L3CacheSize = options.L3_cache_size;
+  }
+  INFO(llc::GLOBAL) << "L3 Cache Size: "
+                    << pipleline_options.L3CacheSize.getValue();
+  INFO(llc::GLOBAL) << "L2 Cache Size: "
+                    << pipleline_options.L2CacheSize.getValue();
+  INFO(llc::GLOBAL) << "L1 Cache Size: "
+                    << pipleline_options.L1CacheSize.getValue();
+  pipleline_options.runMode = str_to_mode(options.mode.c_str());
+  pipleline_options.target = str_to_target(options.target.c_str());
+  pipleline_options.symbolInfer = options.symbol_infer;
+  pipleline_options.irTreeDir = options.ir_tree_dir;
+  pipleline_options.indexBitWidth = options.index_bit_width;
+}
 }  // namespace llc::compiler

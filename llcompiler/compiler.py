@@ -1,7 +1,7 @@
 import torch.fx
 import llcompiler.core
 from typing import Any, Union, List, Dict
-
+import sys
 from torch._functorch.aot_autograd import aot_module_simplified
 from functorch.compile import make_boxed_func
 from torch._dynamo.backends.common import aot_autograd
@@ -29,7 +29,10 @@ class LLCompiler(llcompiler.core.Importer):
         mode: str = "inference",  # 推理/训练
         target: str = "cpu",  # 执行平台
         index_bit_width: int = 32,
-        symbol_infer = True,
+        symbol_infer=True,
+        L3_cache_size=0,
+        L2_cache_size=0,
+        L1_cache_size=0,
         vebose_first_ir=False,  # 输出构建的xdsl IR
         ir_tree_dir: str = "",  # mlir ir tree dir
         log_path: str = "",  # 日志保存路径
@@ -51,6 +54,9 @@ class LLCompiler(llcompiler.core.Importer):
         self.target = target
         self.symbol_infer = symbol_infer
         self.index_bit_width = index_bit_width
+        self.L3_cache_size = L3_cache_size
+        self.L2_cache_size = L2_cache_size
+        self.L1_cache_size = L1_cache_size
         if ir_tree_dir != "":
             os.makedirs(ir_tree_dir, exist_ok=True)
         self.ir_tree_dir = ir_tree_dir
@@ -63,6 +69,9 @@ class LLCompiler(llcompiler.core.Importer):
             self.mode,
             self.target,
             self.symbol_infer,
+            self.L3_cache_size,
+            self.L2_cache_size,
+            self.L1_cache_size,
             self.index_bit_width,
             self.ir_tree_dir,
             self.log_path,

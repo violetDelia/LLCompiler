@@ -57,6 +57,8 @@
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
+#include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassOptions.h"
 #include "mlir/Pass/PassRegistry.h"
@@ -156,7 +158,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
   bufferization_opts.bufferizeFunctionBoundaries = true;
   bufferization_opts.analysisHeuristic = mlir::bufferization::
-      OneShotBufferizationOptions::AnalysisHeuristic::BottomUp;
+      OneShotBufferizationOptions::AnalysisHeuristic::BottomUpFromTerminators;
   bufferization_opts.opFilter.allowDialect<
       mlir::tensor::TensorDialect, mlir::bufferization::BufferizationDialect,
       mlir::linalg::LinalgDialect, mlir::arith::ArithDialect,
@@ -191,61 +193,48 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 化简memref.dim
   pm.addPass(mlir::memref::createResolveRankedShapeTypeResultDimsPass());
 
-  // //===----------------------------------------------------------------------===//
-  // //  scf  opt
-  // //===----------------------------------------------------------------------===//
-  // forall ->for.para
-  pm.addPass(mlir::createForallToParallelLoopPass());
-  // 固定变量移到loop外
-  pm.addPass(mlir::createLoopInvariantCodeMotionPass());
-  // 固定Op移到loop外
-  pm.addPass(mlir::createLoopInvariantSubsetHoistingPass());
-  // 剥离循环首尾
-  pm.addPass(mlir::createForLoopPeelingPass());
-  // 外移计算
-  pm.addPass(mlir::createForLoopRangeFoldingPass());
-  // 控制流下沉
-  pm.addPass(mlir::createControlFlowSinkPass());
-  // scf fusion
-  pm.addPass(mlir::createParallelLoopFusionPass());
-  // 规范化scf
-  pm.addPass(mlir::createSCFForLoopCanonicalizationPass());
-  // 条件常量传播
-  pm.addPass(mlir::createSCCPPass());
-  // for -> while
-  pm.addPass(mlir::createForToWhileLoopPass());
-  // 规范化
-  pm.addPass(mlir::createCanonicalizerPass());
-
   //===----------------------------------------------------------------------===//
   // affine opt
   //===----------------------------------------------------------------------===//
-  //   // 简化affine表达
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createSimplifyAffineStructuresPass());
+  // 简化affine表达
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createSimplifyAffineStructuresPass());
   //   //去除affine.delinearize_index
   //   pm.addPass(mlir::affine::createAffineExpandIndexOpsPass());
-  //   // loop融合
-  //   pm.addPass(mlir::affine::createLoopFusionPass(
-  //       0, 1024 * 1024, false, mlir::affine::FusionMode::Greedy));
-  //   // 去除冗余内存操作
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createAffineScalarReplacementPass());
-  //   // 简化dma
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createPipelineDataTransferPass());
-  //   //循环展开+融合
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createLoopUnrollAndJamPass());
-  //   // 循环合并
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createLoopCoalescingPass());
+
   //   // affine 并行化
   //   pm.addNestedPass<mlir::func::FuncOp>(
   //       mlir::affine::createAffineParallelizePass());
-  //   // 简化loop
+  // 简化loop
   //   pm.addNestedPass<mlir::func::FuncOp>(
   //       mlir::affine::createLoopCoalescingPass());
+  // dma生成
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createAffineDataCopyGenerationPass(0, 3, 0, 1024,
+  //                                                        options.L3CacheSize));
+  //简化dma
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createPipelineDataTransferPass());
+  // loop融合
+  pm.addPass(mlir::affine::createLoopFusionPass(
+      0, 1024, false, mlir::affine::FusionMode::Greedy));
+  //去除冗余内存操作
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createAffineScalarReplacementPass());
+  //循环展开+融合
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createLoopUnrollAndJamPass());
+  // 循环合并
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createLoopCoalescingPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createAffineDataCopyGenerationPass(3, 2, 0, 1024,
+  //                                                        options.L2CacheSize));
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createAffineDataCopyGenerationPass(2, 1, 0, 128,
+  //                                                        options.L1CacheSize));
+
+  //   pm.addNestedPass<mlir::func::FuncOp>(mlir::affine::createLoopTilingPass(128));
 
   //===----------------------------------------------------------------------===//
   // lowing affine
@@ -267,6 +256,31 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 合法化lowing to LLVM
   pm.addPass(mlir::arith::createArithExpandOpsPass());
 
+  //===----------------------------------------------------------------------===//
+  //  scf  opt
+  //===----------------------------------------------------------------------===//
+  //   // forall ->for.para
+  //   pm.addPass(mlir::createForallToParallelLoopPass());
+  // 固定变量移到loop外
+  pm.addPass(mlir::createLoopInvariantCodeMotionPass());
+  // 固定Op移到loop外
+  pm.addPass(mlir::createLoopInvariantSubsetHoistingPass());
+  // 剥离循环首尾
+  pm.addPass(mlir::createForLoopPeelingPass());
+  // 外移计算
+  pm.addPass(mlir::createForLoopRangeFoldingPass());
+  // 控制流下沉
+  pm.addPass(mlir::createControlFlowSinkPass());
+  // scf fusion
+  pm.addPass(mlir::createParallelLoopFusionPass());
+  // 规范化scf
+  pm.addPass(mlir::createSCFForLoopCanonicalizationPass());
+  // 条件常量传播
+  pm.addPass(mlir::createSCCPPass());
+  //   // for -> while
+  //   pm.addPass(mlir::createForToWhileLoopPass());
+  // 规范化
+  pm.addPass(mlir::createCanonicalizerPass());
   //===----------------------------------------------------------------------===//
   // memref opt
   //===----------------------------------------------------------------------===//

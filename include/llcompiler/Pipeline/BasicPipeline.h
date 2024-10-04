@@ -33,8 +33,8 @@ struct BasicPipelineOptions
           clEnumValN(MODE::Inference, mode_to_str(MODE::Inference), ""),
           clEnumValN(MODE::Training, mode_to_str(MODE::Training), ""))};
   Option<bool> symbolInfer{*this, "symbol-infer",
-                            llvm::cl::desc("symbol-infer"),
-                            llvm::cl::init(false)};
+                           llvm::cl::desc("symbol-infer"),
+                           llvm::cl::init(false)};
   Option<TARGET> target{*this, "target", llvm::cl::desc("target ir"),
                         llvm::cl::init(TARGET::CPU),
                         llvm::cl::values(clEnumValN(
@@ -42,9 +42,17 @@ struct BasicPipelineOptions
   Option<std::string> irTreeDir{
       *this, "ir_tree_dir", llvm::cl::desc("ir tree dir"), llvm::cl::init("")};
   Option<unsigned> indexBitWidth = {*this, "index bit width",
-                                   llvm::cl::desc("index bit width"),
-                                   llvm::cl::init(32)};
-                    
+                                    llvm::cl::desc("index bit width"),
+                                    llvm::cl::init(32)};
+  Option<uint64_t> L3CacheSize = {*this, "L3 bytes size",
+                                  llvm::cl::desc("L3 bytes size"),
+                                  llvm::cl::init(37748736)};
+  Option<uint64_t> L2CacheSize = {*this, "L2 bytes size",
+                                  llvm::cl::desc("L2 bytes size"),
+                                  llvm::cl::init(2097152)};
+  Option<uint64_t> L1CacheSize = {*this, "L1 bytes size",
+                                  llvm::cl::desc("L1 bytes size"),
+                                  llvm::cl::init(49152)};
 };
 void buildBasicPipeline(mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options);

@@ -29,12 +29,17 @@
 namespace llc::compiler {
 
 extern "C" struct CompilerOptions {
-  CompilerOptions(std::string mode, std::string target, bool symbol_infer,unsigned index_bits,
+  CompilerOptions(std::string mode, std::string target, bool symbol_infer,
+                  uint64_t L3_cache_size, uint64_t L2_cache_size,
+                  uint64_t L1_cache_size, unsigned index_bits,
                   std::string ir_tree_dir, std::string log_root,
                   std::string log_level);
   std::string mode;
   std::string target;
   bool symbol_infer;
+  uint64_t L3_cache_size;
+  uint64_t L2_cache_size;
+  uint64_t L1_cache_size;
   unsigned index_bit_width;
   std::string ir_tree_dir;
   std::string log_root;

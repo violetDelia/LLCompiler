@@ -29,20 +29,8 @@ import typing
 #     return model(inputs)
 
 
-@run_time
-def torch_compiler(model, inputs):
-
-    model = torch.compile(
-        model=model,
-        backend="inductor",
-        dynamic=False,
-        fullgraph=False,
-    )
-    return model(inputs)
-
-
 module_dict = {
-    Add: torch.randn((2, 3, 224, 224), device="cpu"),
+    Add: torch.randn((100, 3, 224, 224), device="cpu"),
     Base: torch.randn((2, 3, 224, 224), device="cpu"),
     Broadcast: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -71,7 +59,7 @@ def run_model_dict(dict):
         model = torch.compile(
             model=func(),
             backend=compiler,
-            dynamic=True,
+            dynamic=False,
             fullgraph=True,
         )
         model(inputs)

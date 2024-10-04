@@ -13,6 +13,9 @@
 //    limitations under the License.
 #include "llcompiler/Compiler/Entrance.h"
 
+#include <stdio.h>
+#include <unistd.h>
+
 #include <cassert>
 #include <filesystem>
 #include <fstream>
@@ -35,12 +38,16 @@
 namespace llc::compiler {
 
 CompilerOptions::CompilerOptions(std::string mode, std::string target,
-                                 bool symbol_infer, unsigned index_bits,
-                                 std::string ir_tree_dir, std::string log_root,
-                                 std::string log_level)
+                                 bool symbol_infer, uint64_t L3_cache_size,
+                                 uint64_t L2_cache_size, uint64_t L1_cache_size,
+                                 unsigned index_bits, std::string ir_tree_dir,
+                                 std::string log_root, std::string log_level)
     : mode(mode),
       target(target),
       symbol_infer(symbol_infer),
+      L3_cache_size(L3_cache_size),
+      L2_cache_size(L2_cache_size),
+      L1_cache_size(L1_cache_size),
       index_bit_width(index_bits),
       ir_tree_dir(ir_tree_dir),
       log_level(log_level),
@@ -63,12 +70,7 @@ void do_compile(const char* xdsl_module, CompilerOptions options) {
   file::str_to_mlir_module(context, module, xdsl_module);
   // ********* init pipeline options *********//
   pipleline::BasicPipelineOptions pipleline_options;
-  pipleline_options.runMode = str_to_mode(options.mode.c_str());
-  pipleline_options.target = str_to_target(options.target.c_str());
-  pipleline_options.symbolInfer = options.symbol_infer;
-  pipleline_options.irTreeDir = options.ir_tree_dir;
-  pipleline_options.indexBitWidth = options.index_bit_width;
-
+  generatePiplineOptions(options, pipleline_options);
   // ********* process in mlir *********//
   mlir::PassManager pm(module.get()->getName());
   if (std::filesystem::exists(pipleline_options.irTreeDir.getValue())) {
