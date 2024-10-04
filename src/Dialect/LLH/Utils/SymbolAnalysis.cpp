@@ -48,6 +48,8 @@ std::mutex SymbolAnalysis::mutex_;
 
 StringRef SymbolAnalysis::UNKOW_SYMBOL = "UNKOW";
 
+bool SymbolAnalysis::symbol_enable = true;
+
 SymbolAnalysis::SymbolAnalysis(Operation* op) {
   ModuleOp module;
   if (llvm::isa<ModuleOp>(op)) {

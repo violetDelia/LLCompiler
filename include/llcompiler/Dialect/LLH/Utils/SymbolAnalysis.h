@@ -66,6 +66,7 @@ class SymbolAnalysis {
 
  public:
   static llvm::StringRef UNKOW_SYMBOL;
+  static bool symbol_enable;
 
  private:
   static std::mutex mutex_;

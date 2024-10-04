@@ -19,6 +19,7 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/Casting.h"
@@ -33,6 +34,7 @@ bool isLayoutSensitive(Operation* op) {
 }
 
 void checkAndInferSymbol(Operation* op) {
+  if (!SymbolAnalysis::symbol_enable) return;
   auto symbol_op = llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op);
   if (!symbol_op) return;
   bool need_infer_symbol = false;

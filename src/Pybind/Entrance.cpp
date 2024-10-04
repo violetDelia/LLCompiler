@@ -24,10 +24,11 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
   entrance.doc() = "entrance for compiler";  // optional module docstring
 
   pybind11::class_<llc::compiler::CompilerOptions>(entrance, "CompilerOptions")
-      .def(pybind11::init<std::string, std::string, unsigned, std::string,
+      .def(pybind11::init<std::string, std::string, bool, unsigned, std::string,
                           std::string, std::string>())
       .def_readwrite("mode", &CompilerOptions::mode)
       .def_readwrite("target", &CompilerOptions::target)
+      .def_readwrite("symbol_infer", &CompilerOptions::symbol_infer)
       .def_readwrite("index_bits", &CompilerOptions::index_bit_width)
       .def_readwrite("ir_tree_dir", &CompilerOptions::ir_tree_dir)
       .def_readwrite("log_root", &CompilerOptions::log_root)

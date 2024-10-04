@@ -65,7 +65,7 @@ void do_compile(const char* xdsl_module, CompilerOptions options) {
   pipleline::BasicPipelineOptions pipleline_options;
   pipleline_options.runMode = str_to_mode(options.mode.c_str());
   pipleline_options.target = str_to_target(options.target.c_str());
-  pipleline_options.onlyCompiler = false;
+  pipleline_options.symbolInfer = options.symbol_infer;
   pipleline_options.irTreeDir = options.ir_tree_dir;
   pipleline_options.indexBitWidth = options.index_bit_width;
 

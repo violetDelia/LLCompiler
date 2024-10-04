@@ -35,7 +35,7 @@ def torch_compiler(model, inputs):
     model = torch.compile(
         model=model,
         backend="inductor",
-        dynamic=True,
+        dynamic=False,
         fullgraph=False,
     )
     return model(inputs)
