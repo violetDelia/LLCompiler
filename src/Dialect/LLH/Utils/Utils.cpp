@@ -122,7 +122,7 @@ bool isConstIntegerValue(Value value) {
   }
   DINFO << "need fold operator: " << op->getName().getStringRef().str();
   return false;
-};
+}
 
 size_t getConstIntegerValue(Value value) {
   auto type = value.getType();

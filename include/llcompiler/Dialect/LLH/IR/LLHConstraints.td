@@ -76,6 +76,9 @@ def LLH_Computable_Type    : AnyTypeOf<[LLH_Tensor, LLH_Float, LLH_Int]>;
 
 def LLH_Symbolic_Type     : AnyTypeOf<[LLH_Tensor, LLH_Int64]>;
 
+
+def LLH_Eencoding_Bind_Type : AnyTypeOf<[AnyNon0RankedMemRef, LLH_Tensor]>;
+
 def LLH_StringAttr : StringBasedAttr<CPred<"::llvm::isa<::mlir::StringAttr>($_self)">,
                               "string attribute">;
 
@@ -90,4 +93,5 @@ def LLH_DenseElementsAttr : DenseElementsAttrBase<CPred<"::llvm::isa<::mlir::Den
                                     "constant vector/tensor attribute">;
 
 def LLH_ConstantAttr   : AnyAttrOf<[LLH_DenseElementsAttr, APIntAttr, F32Attr, F64Attr]>;
+
 #endif // LLH_CONSTRAINTS

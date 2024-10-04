@@ -33,13 +33,24 @@
 #include "mlir/Pass/PassManager.h"
 
 namespace llc::compiler {
-void do_compile(const char* xdsl_module, const char* mode, const char* target,
-                const char* ir_tree_dir, const char* log_root,
-                const char* log_level) {
+
+CompilerOptions::CompilerOptions(std::string mode, std::string target,
+                                 bool symbol_infer, unsigned index_bits,
+                                 std::string ir_tree_dir, std::string log_root,
+                                 std::string log_level)
+    : mode(mode),
+      target(target),
+      symbol_infer(symbol_infer),
+      index_bit_width(index_bits),
+      ir_tree_dir(ir_tree_dir),
+      log_level(log_level),
+      log_root(log_root){};
+
+void do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* init logger *********//
   logger::LoggerOption logger_option;
-  logger_option.level = logger::str_to_log_level(log_level);
-  logger_option.path = log_root;
+  logger_option.level = logger::str_to_log_level(options.log_level.c_str());
+  logger_option.path = options.log_root;
   init_logger(logger_option);
   INFO(llc::Entrance_Module) << "\n" << xdsl_module;
   // ********* init mlir context *********//
@@ -52,10 +63,12 @@ void do_compile(const char* xdsl_module, const char* mode, const char* target,
   file::str_to_mlir_module(context, module, xdsl_module);
   // ********* init pipeline options *********//
   pipleline::BasicPipelineOptions pipleline_options;
-  pipleline_options.runMode = str_to_mode(mode);
-  pipleline_options.target = str_to_target(target);
+  pipleline_options.runMode = str_to_mode(options.mode.c_str());
+  pipleline_options.target = str_to_target(options.target.c_str());
   pipleline_options.onlyCompiler = false;
-  pipleline_options.irTreeDir = ir_tree_dir;
+  pipleline_options.irTreeDir = options.ir_tree_dir;
+  pipleline_options.indexBitWidth = options.index_bit_width;
+
   // ********* process in mlir *********//
   mlir::PassManager pm(module.get()->getName());
   if (std::filesystem::exists(pipleline_options.irTreeDir.getValue())) {

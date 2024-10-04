@@ -25,11 +25,24 @@
 
 #ifndef INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
 #define INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+#include <string>
 namespace llc::compiler {
 
-extern "C" void do_compile(const char* xdsl_module, const char* mode,
-                           const char* target, const char* ir_tree_dir,
-                           const char* log_root, const char* log_level);
+extern "C" struct CompilerOptions {
+  CompilerOptions(std::string mode, std::string target, bool symbol_infer,unsigned index_bits,
+                  std::string ir_tree_dir, std::string log_root,
+                  std::string log_level);
+  std::string mode;
+  std::string target;
+  bool symbol_infer;
+  unsigned index_bit_width;
+  std::string ir_tree_dir;
+  std::string log_root;
+  std::string log_level;
+};
+
+extern "C" void do_compile(const char* xdsl_module,
+                           CompilerOptions compiler_options);
 
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_

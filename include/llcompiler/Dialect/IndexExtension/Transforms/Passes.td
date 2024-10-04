@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#ifndef INDEX_EXT_PASS
-#define INDEX_EXT_PASS
+#ifndef INCLUDE_LLCOMPILER_DIALECT_INDEXEXTENSION_TRANSFORMS_PASSES_TD_
+#define INCLUDE_LLCOMPILER_DIALECT_INDEXEXTENSION_TRANSFORMS_PASSES_TD_
 
 include "mlir/Pass/PassBase.td"
 

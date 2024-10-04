@@ -6,7 +6,7 @@ from torch._functorch.aot_autograd import aot_module_simplified
 from functorch.compile import make_boxed_func
 from torch._dynamo.backends.common import aot_autograd
 from xdsl.printer import Printer
-from llcompiler_.entrance import do_compile
+from llcompiler_.entrance import do_compile, CompilerOptions
 import os
 
 
@@ -28,6 +28,8 @@ class LLCompiler(llcompiler.core.Importer):
         self,
         mode: str = "inference",  # 推理/训练
         target: str = "cpu",  # 执行平台
+        index_bit_width: int = 32,
+        symbol_infer = True,
         vebose_first_ir=False,  # 输出构建的xdsl IR
         ir_tree_dir: str = "",  # mlir ir tree dir
         log_path: str = "",  # 日志保存路径
@@ -47,22 +49,26 @@ class LLCompiler(llcompiler.core.Importer):
         self.log_level = log_level
         assert target in ["cpu"]
         self.target = target
+        self.symbol_infer = symbol_infer
+        self.index_bit_width = index_bit_width
         if ir_tree_dir != "":
-            os.makedirs(ir_tree_dir,exist_ok = True)
+            os.makedirs(ir_tree_dir, exist_ok=True)
         self.ir_tree_dir = ir_tree_dir
 
     def compiler(self, model: Any):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
-        do_compile(
-            self._mlir_module.__str__(),
+        compiler_options = CompilerOptions(
             self.mode,
             self.target,
+            self.symbol_infer,
+            self.index_bit_width,
             self.ir_tree_dir,
             self.log_path,
-            self.log_level
+            self.log_level,
         )
+        do_compile(self._mlir_module.__str__(), compiler_options)
         return model
 
     def _compiler_torch_module():

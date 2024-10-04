@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef LLC_CONVERSION_PASSES
-#define LLC_CONVERSION_PASSES
+#ifndef INCLUDE_LLCOMPILER_CONVERSION_PASSES_TD_
+#define INCLUDE_LLCOMPILER_CONVERSION_PASSES_TD_
 
 include "mlir/Pass/PassBase.td"
 
@@ -54,4 +54,4 @@ def ConvertLLHToTensorPass : Pass<"convert-llh-to-tensor"> {
                             "::mlir::index::IndexDialect"];
 }
 
-#endif // LLC_CONVERSION_PASSES
+#endif // INCLUDE_LLCOMPILER_CONVERSION_PASSES_TD_

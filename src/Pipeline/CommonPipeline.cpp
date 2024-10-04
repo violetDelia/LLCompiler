@@ -73,68 +73,84 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // llh
   //===----------------------------------------------------------------------===//
-  pm.addPass(::mlir::createInlinerPass());       // 内联
-  pm.addPass(::mlir::createConvertLLHToTosaPass());  // LLH lowing to tosa
+  // 内联
+  pm.addPass(::mlir::createInlinerPass());
+  // LLH lowing to tosa
+  pm.addPass(::mlir::createConvertLLHToTosaPass());
   //===----------------------------------------------------------------------===//
   // tosa opt
   //===----------------------------------------------------------------------===//
-  pm.addPass(
-      mlir::tosa_ex::createTransformLayoutToNHWCPass());  // 布局转换到NHWC
+
+  // 布局转换到NHWC
+  // 布局转换到NHWC
+  pm.addPass(mlir::tosa_ex::createTransformLayoutToNHWCPass());
   if (!options.onlyCompiler && options.optInTosa) {
-    pm.addPass(mlir::tosa::createTosaOptionalDecompositions());  // 算子分解
-    pm.addPass(mlir::createCanonicalizerPass());                 // 规范化
-    pm.addPass(mlir::tosa::createTosaInferShapesPass());         // 形状推导
+    // 算子分解
+    pm.addPass(mlir::tosa::createTosaOptionalDecompositions());
+    // 规范化
+    pm.addPass(mlir::createCanonicalizerPass());
+    // 形状推导
+    pm.addPass(mlir::tosa::createTosaInferShapesPass());
   }
-  pm.addPass(
-      mlir::tosa::createTosaMakeBroadcastablePass());  // 规范算子广播形状
-  pm.addPass(
-      mlir::tosa::createTosaValidation(ValidationOption));  // 检测算子合法性
+  // 规范算子广播形状
+  pm.addPass(mlir::tosa::createTosaMakeBroadcastablePass());
+  // 检测算子合法性
+  pm.addPass(mlir::tosa::createTosaValidation(ValidationOption));
   if (!options.onlyCompiler && options.optInTosa) {
-    pm.addPass(mlir::createCSEPass());               // cse
-    pm.addPass(mlir::createRemoveDeadValuesPass());  // 死代码消除
-    pm.addPass(mlir::createCanonicalizerPass());     //// 规范化
+    // cse
+    pm.addPass(mlir::createCSEPass());
+    // 死代码消除
+    pm.addPass(mlir::createRemoveDeadValuesPass());
+    // 规范化
+    pm.addPass(mlir::createCanonicalizerPass());
   }
   //===----------------------------------------------------------------------===//
   // lowing tosa
   //===----------------------------------------------------------------------===//
+  // Tosa lowing to linalg step1
   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
-      {.preferConv2DKernelLayoutHWCF = false}));  // Tosa lowing to linalg step1
-  pm.addPass(
-      mlir::tosa::createTosaMakeBroadcastablePass());  // 规范算子广播形状
+      {.preferConv2DKernelLayoutHWCF = false}));
+  // 规范算子广播形状
+  pm.addPass(mlir::tosa::createTosaMakeBroadcastablePass());
   if (!options.onlyCompiler && options.optInTosa) {
+    // 常量折叠
     pm.addPass(mlir::tosa::createTosaLayerwiseConstantFoldPass(
-        {.aggressiveReduceConstant = options.ReduceConstant}));  // 常量折叠
-    pm.addPass(mlir::createCSEPass());                           // cse
-    pm.addPass(mlir::createCanonicalizerPass());                 // 规范化
+        {.aggressiveReduceConstant = options.ReduceConstant}));
+    // cse
+    pm.addPass(mlir::createCSEPass());
+    // 规范化
+    pm.addPass(mlir::createCanonicalizerPass());
   }
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createTosaToLinalg());         // Tosa lowing to linalg step2
-  pm.addPass(mlir::tosa::createTosaToTensor());  // Tosa lowing to tensor
-  pm.addPass(mlir::tosa::createTosaToArith(true));  // Tosa lowing to arith
-  pm.addPass(mlir::tosa::createTosaToSCF());        // Tosa lowing to scf
+  // Tosa lowing to linalg step2
+  pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalg());
+  // Tosa lowing to tensor
+  pm.addPass(mlir::tosa::createTosaToTensor());
+  // Tosa lowing to arith
+  pm.addPass(mlir::tosa::createTosaToArith(true));
+  // Tosa lowing to scf
+  pm.addPass(mlir::tosa::createTosaToSCF());
   //===----------------------------------------------------------------------===//
   // lowing tensor and tensor opt
   //===----------------------------------------------------------------------===//
   if (!options.onlyCompiler && options.optInTensor) {
-    pm.addPass(
-        mlir::tensor::createFoldTensorSubsetOpsPass());  // tensor.insert_slice
-    // 的常量折叠
+    // tensor.insert_slice  的常量折叠
+    pm.addPass(mlir::tensor::createFoldTensorSubsetOpsPass());
     pm.addPass(mlir::createCanonicalizerPass());
   }
-  pm.addPass(mlir::createConvertTensorToLinalgPass());  // tensor.pad -> linalg
+  // tensor.pad -> linalg
+  pm.addPass(mlir::createConvertTensorToLinalgPass());
   //===----------------------------------------------------------------------===//
   //  linalg fusion
   //===----------------------------------------------------------------------===//
-  pm.addPass(
-      mlir::createLinalgGeneralizeNamedOpsPass());  // named linalg lowing to
-                                                    // linalg.generic
+  // named linalg lowing to  linalg.generic
+  pm.addPass(mlir::createLinalgGeneralizeNamedOpsPass());
   if (!options.onlyCompiler && options.optInLinalg) {
-    pm.addPass(
-        mlir::
-            createConvertElementwiseToLinalgPass());  // 单op转换为linalg.generic
-    pm.addPass(mlir::createLinalgElementwiseOpFusionPass());  // linalg.generic
-                                                              // fusion
-    pm.addPass(mlir::createCanonicalizerPass());              // 规范化
+    // 单op转换为linalg.generic
+    pm.addPass(mlir::createConvertElementwiseToLinalgPass());
+    // linalg.generic fusion
+    pm.addPass(mlir::createLinalgElementwiseOpFusionPass());
+    // 规范化
+    pm.addPass(mlir::createCanonicalizerPass());
   }
 
   //===----------------------------------------------------------------------===//

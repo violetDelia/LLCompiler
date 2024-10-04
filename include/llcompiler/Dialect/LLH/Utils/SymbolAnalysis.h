@@ -61,7 +61,8 @@ class SymbolAnalysis {
 
  private:
   Operation *_getMainFunc(Operation *op);
-  void _insertOp(LLHPatternRewriter *builder, Operation *op, Value &value) const;
+  void _insertOp(LLHPatternRewriter *builder, Operation *op,
+                 Value &value) const;
 
  public:
   static llvm::StringRef UNKOW_SYMBOL;

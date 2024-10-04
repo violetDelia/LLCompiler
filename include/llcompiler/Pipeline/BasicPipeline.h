@@ -14,6 +14,8 @@
 
 #ifndef INCLUDE_LLCOMPILER_PIPELINE_BASICPIPELINE_H_
 #define INCLUDE_LLCOMPILER_PIPELINE_BASICPIPELINE_H_
+#include <cstddef>
+#include <cstdint>
 #include <string>
 
 #include "llcompiler/Support/Enums.h"
@@ -30,16 +32,19 @@ struct BasicPipelineOptions
       llvm::cl::values(
           clEnumValN(MODE::Inference, mode_to_str(MODE::Inference), ""),
           clEnumValN(MODE::Training, mode_to_str(MODE::Training), ""))};
-  Option<bool> onlyCompiler{*this, "only-compiler",
-                            llvm::cl::desc("only compiler ther model"),
+  Option<bool> symbolInfer{*this, "symbol-infer",
+                            llvm::cl::desc("symbol-infer"),
                             llvm::cl::init(false)};
   Option<TARGET> target{*this, "target", llvm::cl::desc("target ir"),
                         llvm::cl::init(TARGET::CPU),
                         llvm::cl::values(clEnumValN(
                             TARGET::CPU, target_to_str(TARGET::CPU), "cpu"))};
-
   Option<std::string> irTreeDir{
       *this, "ir_tree_dir", llvm::cl::desc("ir tree dir"), llvm::cl::init("")};
+  Option<unsigned> indexBitWidth = {*this, "index bit width",
+                                   llvm::cl::desc("index bit width"),
+                                   llvm::cl::init(32)};
+                    
 };
 void buildBasicPipeline(mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options);

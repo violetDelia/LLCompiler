@@ -64,7 +64,8 @@ namespace {
 //   return {};
 // }
 
-// mlir::RankedTensorType genReturnTensorFrom(mlir::Value value, llc::LAYOUT src) {
+// mlir::RankedTensorType genReturnTensorFrom(mlir::Value value, llc::LAYOUT
+// src) {
 //   auto context = value.getContext();
 //   auto tensor = cast<RankedTensorType>(value.getType());
 //   auto shape = tensor.getShape();
@@ -108,7 +109,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 void populateTransformLayoutToNHWCPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  //populateWithGenerated(patterns);
+  // populateWithGenerated(patterns);
 }
 }  // namespace
 //===----------------------------------------------------------------------===//

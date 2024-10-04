@@ -68,7 +68,7 @@ void str_to_mlir_module(mlir::MLIRContext& context,
   }
   llvm::SourceMgr sourceMgr;
   sourceMgr.AddNewSourceBuffer(std::move(*fileOrErr), llvm::SMLoc());
-  module = mlir::parseSourceFile<mlir::ModuleOp>(sourceMgr, {&context,false});
+  module = mlir::parseSourceFile<mlir::ModuleOp>(sourceMgr, {&context, false});
   if (!module) {
     FATAL(UTILITY) << "parse xdsl module fatal error!";
     return;

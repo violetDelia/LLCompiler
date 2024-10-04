@@ -15,12 +15,25 @@
 
 #include <iostream>
 
+#include "llcompiler/Pipeline/BasicPipeline.h"
 #include "pybind11/pybind11.h"
 namespace llc::compiler {
 
 PYBIND11_MODULE(llcompiler_, llcompiler_) {
   auto entrance = llcompiler_.def_submodule("entrance");
   entrance.doc() = "entrance for compiler";  // optional module docstring
+
+  pybind11::class_<llc::compiler::CompilerOptions>(entrance, "CompilerOptions")
+      .def(pybind11::init<std::string, std::string, unsigned, std::string,
+                          std::string, std::string>())
+      .def_readwrite("mode", &CompilerOptions::mode)
+      .def_readwrite("target", &CompilerOptions::target)
+      .def_readwrite("index_bits", &CompilerOptions::index_bit_width)
+      .def_readwrite("ir_tree_dir", &CompilerOptions::ir_tree_dir)
+      .def_readwrite("log_root", &CompilerOptions::log_root)
+      .def_readwrite("log_level", &CompilerOptions::log_level);
+
   entrance.def("do_compile", &do_compile, "");
 }
+
 }  // namespace llc::compiler

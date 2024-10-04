@@ -108,7 +108,7 @@ struct SimplyBinaryOp : public LLHOpRewritePattern<BinaryOp> {
       } else {
         WRONG(llc::MLIR) << "Invalid broadcast case";
         return;
-      };
+      }
     }
     auto reshape_res =
         RankedTensorType::get(reshape_shapes, lhs_tensor.getElementType());

@@ -69,11 +69,13 @@ using namespace mlir::tosa_ex;
 //   }
 //   auto out = RankedTensorType::get({4}, builder->getI64Type());
 //   auto const_op =
-//       llc::create_tosa_const(builder, {4}, value, builder->getI64Type(), loc);
+//       llc::create_tosa_const(builder, {4}, value, builder->getI64Type(),
+//       loc);
 //   return const_op;
 // }
 
-// mlir::RankedTensorType genReturnTensorFromTo(mlir::Value value, StringRef from,
+// mlir::RankedTensorType genReturnTensorFromTo(mlir::Value value, StringRef
+// from,
 //                                              StringRef to) {
 //   auto context = value.getContext();
 //   auto tensor = cast<RankedTensorType>(value.getType());
@@ -181,7 +183,8 @@ namespace {
 //       }
 //     }
 //     auto out_transpose = buildTansposeFromTo(
-//         &rewriter, new_op, llc::layout_to_str(llc::LAYOUT::NHWC), layout, loc);
+//         &rewriter, new_op, llc::layout_to_str(llc::LAYOUT::NHWC), layout,
+//         loc);
 //     rewriter.replaceOp(op, out_transpose);
 //     LLC_RUN_OUT_PATTERN
 //   }

@@ -66,6 +66,7 @@ def run_model_dict(dict):
                 os.path.dirname(__file__), "ir_tree", "fx", func.__name__, "log"
             ),
             log_level="debug",
+            symbol_infer= False
         )
         model = torch.compile(
             model=func(),

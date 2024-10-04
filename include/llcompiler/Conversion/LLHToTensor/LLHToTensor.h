@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTtt_H_
-#define INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTtt_H_
+#ifndef INCLUDE_LLCOMPILER_CONVERSION_LLHTOTENSOR_LLHTOTENSOR_H_
+#define INCLUDE_LLCOMPILER_CONVERSION_LLHTOTENSOR_LLHTOTENSOR_H_
 #include <memory>
 namespace mlir {
 class MLIRContext;
@@ -25,4 +25,4 @@ class ConversionTarget;
 #include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
-#endif  // INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTtt_H_
+#endif  // INCLUDE_LLCOMPILER_CONVERSION_LLHTOTENSOR_LLHTOTENSOR_H_

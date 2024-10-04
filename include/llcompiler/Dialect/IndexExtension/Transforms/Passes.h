@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFcccS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFcccS_PASSES_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_INDEXEXTENSION_TRANSFORMS_PASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_INDEXEXTENSION_TRANSFORMS_PASSES_H_
 
 #include <memory>
 
@@ -28,6 +28,6 @@ namespace mlir::index_ex {
 #define GEN_PASS_REGISTRATION
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h.inc"
 
-}  // namespace mlir::llh
+}  // namespace mlir::index_ex
 
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFcccS_PASSES_H_
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_INDEXEXTENSION_TRANSFORMS_PASSES_H_
