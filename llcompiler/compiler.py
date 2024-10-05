@@ -61,7 +61,7 @@ class LLCompiler(llcompiler.core.Importer):
             os.makedirs(ir_tree_dir, exist_ok=True)
         self.ir_tree_dir = ir_tree_dir
 
-    def compiler(self, model: Any):
+    def compiler(self, model: Any, inputs: List[torch.Tensor]):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
@@ -77,8 +77,8 @@ class LLCompiler(llcompiler.core.Importer):
             self.log_path,
             self.log_level,
         )
-        do_compile(self._mlir_module.__str__(), compiler_options)
-        return model
+        engine = do_compile(self._mlir_module.__str__(), compiler_options)
+        return llcompiler.core.engine.ExecutionEngine(engine)
 
     def _compiler_torch_module():
         raise NotImplementedError
@@ -97,4 +97,4 @@ class LLCompiler(llcompiler.core.Importer):
                 fw_compiler=self.compiler,
             )
         if self.mode in ["inference"]:
-            return self.compiler(model)
+            return self.compiler(model, inputs)

@@ -30,14 +30,16 @@ import typing
 
 
 module_dict = {
-    Add: torch.randn((100, 3, 224, 224), device="cpu"),
-    Base: torch.randn((2, 3, 224, 224), device="cpu"),
-    Broadcast: torch.randn((2, 3, 224, 224), device="cpu"),
+    Add: [torch.randn((100, 3, 224, 224), device="cpu")],
+    Multi_Add: [
+        torch.randn((1, 3, 224, 224), device="cpu"),
+        torch.randn((1, 3, 224, 224), device="cpu"),
+    ],
+    # Base: torch.randn((2, 3, 224, 224), device="cpu"),
+    # Broadcast: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
-   
-    
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.vit_b_16: torch.randn((2, 3, 224, 224), device="cpu")
     # torchvision.models.convnext_tiny: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -48,13 +50,13 @@ module_dict = {
 def run_model_dict(dict):
     for func, inputs in dict.items():
         compiler = LLC.LLCompiler(
-            mode="inference",
+            mode="training",
             ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", func.__name__),
             log_path=os.path.join(
                 os.path.dirname(__file__), "ir_tree", "fx", func.__name__, "log"
             ),
             log_level="debug",
-            symbol_infer= False
+            symbol_infer=False,
         )
         model = torch.compile(
             model=func(),
@@ -62,7 +64,8 @@ def run_model_dict(dict):
             dynamic=False,
             fullgraph=True,
         )
-        model(inputs)
+
+        print(model(*inputs).shape)
 
 
 if __name__ == "__main__":

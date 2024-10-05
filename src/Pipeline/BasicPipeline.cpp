@@ -121,7 +121,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
       {.preferConv2DKernelLayoutHWCF = false}));
   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalg());
-  pm.addPass(mlir::createConvertLLHToTensorPass());
   pm.addPass(mlir::tosa::createTosaToArith(true));
 
   //===----------------------------------------------------------------------===//

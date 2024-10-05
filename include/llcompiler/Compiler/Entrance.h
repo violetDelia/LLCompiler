@@ -26,6 +26,8 @@
 #ifndef INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
 #define INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
 #include <string>
+
+#include "mlir/ExecutionEngine/ExecutionEngine.h"
 namespace llc::compiler {
 
 extern "C" struct CompilerOptions {
@@ -46,8 +48,16 @@ extern "C" struct CompilerOptions {
   std::string log_level;
 };
 
-extern "C" void do_compile(const char* xdsl_module,
-                           CompilerOptions compiler_options);
+extern "C" struct Engine {
+  Engine(mlir::ExecutionEngine* engine);
+
+  void debug_info();
+
+  mlir::ExecutionEngine* engine;
+};
+
+extern "C" Engine do_compile(const char* xdsl_module,
+                            CompilerOptions compiler_options);
 
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_

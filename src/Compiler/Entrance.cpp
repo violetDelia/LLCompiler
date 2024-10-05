@@ -32,8 +32,13 @@
 #include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Support/TargetSelect.h"
+#include "mlir-c/ExecutionEngine.h"
+#include "mlir/ExecutionEngine/ExecutionEngine.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
+#include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
+#include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 
 namespace llc::compiler {
 
@@ -53,7 +58,11 @@ CompilerOptions::CompilerOptions(std::string mode, std::string target,
       log_level(log_level),
       log_root(log_root){};
 
-void do_compile(const char* xdsl_module, CompilerOptions options) {
+Engine::Engine(mlir::ExecutionEngine* engine) : engine(engine){};
+
+void Engine::debug_info() { DINFO << engine; }
+
+Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* init logger *********//
   logger::LoggerOption logger_option;
   logger_option.level = logger::str_to_log_level(options.log_level.c_str());
@@ -87,7 +96,19 @@ void do_compile(const char* xdsl_module, CompilerOptions options) {
   }
   pipleline::buildBasicPipeline(pm, pipleline_options);
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
-  return;
+  // ********* register target *********//
+  llvm::InitializeNativeTarget();
+  llvm::InitializeNativeTargetAsmPrinter();
+  // ********* engine *********//
+  DINFO << "Execution engine";
+  mlir::ExecutionEngineOptions engine_options;
+  engine_options.jitCodeGenOptLevel = llvm::CodeGenOptLevel::Default;
+  auto maybeEngine =
+      mlir::ExecutionEngine::create(module.get(), engine_options);
+  CHECK(llc::GLOBAL, maybeEngine) << "failed to construct an execution engine";
+  auto& mlir_engine = maybeEngine.get();
+  Engine engine(mlir_engine.release());
+  return engine;
 }
 
 }  // namespace llc::compiler

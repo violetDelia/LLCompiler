@@ -13,19 +13,36 @@
 //    limitations under the License.
 #include "llcompiler/Compiler/Entrance.h"
 
+#include <pybind11/cast.h>
+#include <pybind11/detail/common.h>
+
 #include <iostream>
 
 #include "llcompiler/Pipeline/BasicPipeline.h"
+#include "mlir-c/ExecutionEngine.h"
 #include "pybind11/pybind11.h"
+namespace py = pybind11;
 namespace llc::compiler {
+
+namespace {}  // namespace
 
 PYBIND11_MODULE(llcompiler_, llcompiler_) {
   auto entrance = llcompiler_.def_submodule("entrance");
   entrance.doc() = "entrance for compiler";  // optional module docstring
 
+  pybind11::class_<mlir::ExecutionEngine>(entrance, "ExecutionEngine")
+      .def(pybind11::init<bool, bool, bool>());
+
+  pybind11::class_<Engine>(entrance, "EngineInternel")
+      .def(pybind11::init<mlir::ExecutionEngine*>(),
+           py::arg("execution_engine_ptr"))
+      .def_readonly("engine", &Engine::engine)
+      .def("debug_info", &Engine::debug_info);
+
   pybind11::class_<llc::compiler::CompilerOptions>(entrance, "CompilerOptions")
-      .def(pybind11::init<std::string, std::string, bool, unsigned, unsigned, unsigned,
-                          unsigned, std::string, std::string, std::string>())
+      .def(pybind11::init<std::string, std::string, bool, unsigned, unsigned,
+                          unsigned, unsigned, std::string, std::string,
+                          std::string>())
       .def_readwrite("mode", &CompilerOptions::mode)
       .def_readwrite("target", &CompilerOptions::target)
       .def_readwrite("symbol_infer", &CompilerOptions::symbol_infer)
@@ -37,7 +54,7 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
       .def_readwrite("log_root", &CompilerOptions::log_root)
       .def_readwrite("log_level", &CompilerOptions::log_level);
 
-  entrance.def("do_compile", &do_compile, "");
+  entrance.def("do_compile", &do_compile);
 }
 
 }  // namespace llc::compiler
