@@ -23,6 +23,7 @@ llcompiler_add_library(LLCompiler
     LLCMLIRUtility
     LLCPipelines
     MLIRExecutionEngine
+    LLVMX86AsmParser
     ${pipeline_depends}
 
 

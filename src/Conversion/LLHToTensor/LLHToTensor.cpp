@@ -19,6 +19,7 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -114,6 +115,7 @@ struct EmptyOpLowing : public OpConversionPattern<EmptyOp> {
     auto attrs = op->getAttrs();
     llvm::SmallVector<Value> new_shapes;
     for (auto shape : shapes) {
+      if (llh::isConstIntegerValue(shape)) continue;
       auto dim_val =
           rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), shape);
       new_shapes.push_back(dim_val);

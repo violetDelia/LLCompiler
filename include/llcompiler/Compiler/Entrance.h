@@ -31,14 +31,11 @@
 namespace llc::compiler {
 
 extern "C" struct CompilerOptions {
-  CompilerOptions(std::string mode, std::string target, bool symbol_infer,
-                  uint64_t L3_cache_size, uint64_t L2_cache_size,
-                  uint64_t L1_cache_size, unsigned index_bits,
-                  std::string ir_tree_dir, std::string log_root,
-                  std::string log_level);
+  CompilerOptions();
   std::string mode;
   std::string target;
   bool symbol_infer;
+  unsigned opt_level;
   uint64_t L3_cache_size;
   uint64_t L2_cache_size;
   uint64_t L1_cache_size;
@@ -46,18 +43,19 @@ extern "C" struct CompilerOptions {
   std::string ir_tree_dir;
   std::string log_root;
   std::string log_level;
+  bool log_llvm;
 };
 
 extern "C" struct Engine {
-  Engine(mlir::ExecutionEngine* engine);
+  Engine(llvm::orc::LLJIT* engine);
 
   void debug_info();
 
-  mlir::ExecutionEngine* engine;
+  llvm::orc::LLJIT* engine;
 };
 
 extern "C" Engine do_compile(const char* xdsl_module,
-                            CompilerOptions compiler_options);
+                             CompilerOptions compiler_options);
 
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_

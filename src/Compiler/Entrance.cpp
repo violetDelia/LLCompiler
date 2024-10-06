@@ -29,36 +29,28 @@
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Dialect/Utility/File.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ExecutionEngine/Orc/LLJIT.h"
+#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
+#include "llvm/IR/LLVMContext.h"
+#include "llvm/IR/Module.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/TargetSelect.h"
-#include "mlir-c/ExecutionEngine.h"
+#include "llvm/Support/raw_ostream.h"
+#include "mlir/ExecutionEngine/CRunnerUtils.h"
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
+#include "mlir/ExecutionEngine/OptUtils.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
+#include "mlir/Target/LLVMIR/Export.h"
 
 namespace llc::compiler {
 
-CompilerOptions::CompilerOptions(std::string mode, std::string target,
-                                 bool symbol_infer, uint64_t L3_cache_size,
-                                 uint64_t L2_cache_size, uint64_t L1_cache_size,
-                                 unsigned index_bits, std::string ir_tree_dir,
-                                 std::string log_root, std::string log_level)
-    : mode(mode),
-      target(target),
-      symbol_infer(symbol_infer),
-      L3_cache_size(L3_cache_size),
-      L2_cache_size(L2_cache_size),
-      L1_cache_size(L1_cache_size),
-      index_bit_width(index_bits),
-      ir_tree_dir(ir_tree_dir),
-      log_level(log_level),
-      log_root(log_root){};
+CompilerOptions::CompilerOptions(){};
 
-Engine::Engine(mlir::ExecutionEngine* engine) : engine(engine){};
+Engine::Engine(llvm::orc::LLJIT* engine) : engine(engine){};
 
 void Engine::debug_info() { DINFO << engine; }
 
@@ -96,18 +88,62 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   }
   pipleline::buildBasicPipeline(pm, pipleline_options);
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
-  // ********* register target *********//
+  // ********* convert to llvm ir *********//
+  auto llvm_context = std::make_unique<llvm::LLVMContext>();
+  auto llvm_module = mlir::translateModuleToLLVMIR(module.get(), *llvm_context);
+  CHECK(llc::GLOBAL, llvm_module) << "Failed to emit LLVM IR\n";
+  if (options.log_llvm) {
+    if (options.log_root == "") {
+      WARN(llc::GLOBAL) << " could not find log root!";
+    } else {
+      auto module_file = options.log_root + "/original.ll";
+      DINFO << module_file;
+      std::error_code ec;
+      llvm::raw_fd_ostream outs(module_file, ec);
+      llvm_module->print(outs, nullptr);
+      outs.close();
+    }
+  }
   llvm::InitializeNativeTarget();
   llvm::InitializeNativeTargetAsmPrinter();
+  llvm::InitializeNativeTargetAsmParser();
+  auto tmBuilderOrError = llvm::orc::JITTargetMachineBuilder::detectHost();
+  CHECK(llc::GLOBAL, tmBuilderOrError)
+      << "Could not create JITTargetMachineBuilder\n";
+  auto tmOrError = tmBuilderOrError->createTargetMachine();
+  CHECK(llc::GLOBAL, tmOrError) << "Could not create TargetMachine\n";
+  mlir::ExecutionEngine::setupTargetTripleAndDataLayout(llvm_module.get(),
+                                                        tmOrError.get().get());
+  auto optPipeline = mlir::makeOptimizingTransformer(
+      /*optLevel=*/options.opt_level, /*sizeLevel=*/0,
+      /*targetMachine=*/nullptr);
+  CHECK(llc::GLOBAL, !optPipeline(llvm_module.get()))
+      << "Failed to optimize LLVM IR "
+      << "\n";
+  if (options.log_llvm) {
+    if (options.log_root == "") {
+      WARN(llc::GLOBAL) << " could not find log root!";
+    } else {
+      auto module_file = options.log_root + "/final.ll";
+      std::error_code ec;
+      llvm::raw_fd_ostream outs(module_file, ec);
+      llvm_module->print(outs, nullptr);
+      outs.close();
+    }
+  }
   // ********* engine *********//
-  DINFO << "Execution engine";
-  mlir::ExecutionEngineOptions engine_options;
-  engine_options.jitCodeGenOptLevel = llvm::CodeGenOptLevel::Default;
-  auto maybeEngine =
-      mlir::ExecutionEngine::create(module.get(), engine_options);
-  CHECK(llc::GLOBAL, maybeEngine) << "failed to construct an execution engine";
-  auto& mlir_engine = maybeEngine.get();
-  Engine engine(mlir_engine.release());
+  auto maybe_jit = llvm::orc::LLJITBuilder().setNumCompileThreads(8).create();
+  CHECK(llc::GLOBAL, maybe_jit) << "Failed to create JIT";
+  auto& jit = maybe_jit.get();
+  auto error = jit->addIRModule(llvm::orc::ThreadSafeModule(
+      std::move(llvm_module), std::move(llvm_context)));
+  CHECK(llc::GLOBAL, !error) << "Failed to add module!";
+  // auto maybe_func = jit->lookup("main");
+  // CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
+  // auto& func = maybe_func.get();
+  // auto run = func.toPtr<StridedMemRefType<float, 3>()>();
+  // auto c = run();
+  Engine engine(jit.release());
   return engine;
 }
 

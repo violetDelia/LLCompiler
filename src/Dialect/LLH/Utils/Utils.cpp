@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/Casting.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
@@ -108,8 +109,9 @@ llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
 
 bool isConstIntegerValue(Value value) {
   auto type = value.getType();
-  if (!llvm::isa<IntegerType>(type)) return false;
+  if (!llvm::isa<IntegerType, IndexType>(type)) return false;
   auto op = value.getDefiningOp();
+  if (llvm::isa<mlir::arith::ConstantOp>(op)) return true;
   if (llvm::isa<DimOp>(op)) {
     auto dim_op = cast<DimOp>(op);
     auto dim_type = llvm::cast<RankedTensorType>(dim_op.getInput().getType());
@@ -122,7 +124,8 @@ bool isConstIntegerValue(Value value) {
     auto constant_op = llvm::cast<ConstantOp>(op);
     return llvm::isa<IntegerAttr>(constant_op.getValueAttr());
   }
-  DINFO << "need fold operator: " << op->getName().getStringRef().str();
+  UNIMPLEMENTED(llc::UTILITY) << "unsupport check operator is const: "
+                              << op->getName().getStringRef().str();
   return false;
 }
 
@@ -141,7 +144,8 @@ size_t getConstIntegerValue(Value value) {
     if (!llvm::isa<IntegerAttr>(constant_op.getValueAttr())) FATAL(llc::MLIR);
     return llvm::cast<IntegerAttr>(constant_op.getValueAttr()).getInt();
   }
-  UNIMPLEMENTED(llc::MLIR);
+  UNIMPLEMENTED(llc::UTILITY) << "unsupport get operator const value: "
+                              << op->getName().getStringRef().str();
 }
 
 }  // namespace mlir::llh

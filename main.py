@@ -30,11 +30,12 @@ import typing
 
 
 module_dict = {
-    Add: [torch.randn((100, 3, 224, 224), device="cpu")],
-    Multi_Add: [
-        torch.randn((1, 3, 224, 224), device="cpu"),
-        torch.randn((1, 3, 224, 224), device="cpu"),
-    ],
+    Empty_Jit: [],
+    # Add: [torch.randn((100, 3, 224, 224), device="cpu")],
+    # Multi_Add: [
+    #     torch.randn((1, 3, 224, 224), device="cpu"),
+    #     torch.randn((1, 3, 224, 224), device="cpu"),
+    # ],
     # Base: torch.randn((2, 3, 224, 224), device="cpu"),
     # Broadcast: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -52,7 +53,7 @@ def run_model_dict(dict):
         compiler = LLC.LLCompiler(
             mode="training",
             ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", func.__name__),
-            log_path=os.path.join(
+            log_root=os.path.join(
                 os.path.dirname(__file__), "ir_tree", "fx", func.__name__, "log"
             ),
             log_level="debug",

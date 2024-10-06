@@ -208,6 +208,8 @@ def get_arg_value(
             const = build_llh_constant(arg)
         block.add_op(const)
         return const.result
+    elif isinstance(arg, torch.fx.immutable_collections.immutable_list):
+        return [get_arg_value(arg[i], value_map, block) for i in range(len(arg))]
     else:
         raise NotImplementedError(arg, type(arg))
 
@@ -289,7 +291,7 @@ def commond_build_op(
             result_types=[i64],
             attributes=attrs,
         )
-    raise NotImplementedError(out,type(out))
+    raise NotImplementedError(out, type(out))
 
 
 def _expand_to_2_if_int(value):
@@ -340,7 +342,7 @@ def torch_build_func(
                     # value_map[node.name] = [
                     #     block.insert_arg(op.result.type, len(input_types))
                     # ]
-                    #input_types.append(op.result.type)
+                    # input_types.append(op.result.type)
                     block.add_op(op)
                 else:
                     print("unimplemented placeholder type: ", type(val))
@@ -357,7 +359,7 @@ def torch_build_func(
                 # value_map[node.name] = [
                 #     block.insert_arg(op.result.type, len(input_types))
                 # ]
-                #input_types.append(op.result.type)
+                # input_types.append(op.result.type)
                 block.add_op(op)
             else:
                 print("unimplemented placeholder type: ", node.type)

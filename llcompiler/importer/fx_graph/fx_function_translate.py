@@ -263,6 +263,20 @@ def aten_convolution_convert(
         )
 
 
+@TORCH_FUNCTION_TRANSLATE("aten::empty.memory_format")
+def builtin_mul_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+
+    result_type = torch_fake_tensor_translate(get_result_type(node))
+    dims = get_arg_value(node.args[0], value_map, block)
+    op = EmptyOp.build(operands=[dims], result_types=[result_type])
+    return op
+
+
 @TORCH_FUNCTION_TRANSLATE("empty")
 def builtin_mul_convert(
     node: torch.fx.node.Node,

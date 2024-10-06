@@ -40,19 +40,19 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
       .def("debug_info", &Engine::debug_info);
 
   pybind11::class_<llc::compiler::CompilerOptions>(entrance, "CompilerOptions")
-      .def(pybind11::init<std::string, std::string, bool, unsigned, unsigned,
-                          unsigned, unsigned, std::string, std::string,
-                          std::string>())
+      .def(pybind11::init<>())
       .def_readwrite("mode", &CompilerOptions::mode)
       .def_readwrite("target", &CompilerOptions::target)
       .def_readwrite("symbol_infer", &CompilerOptions::symbol_infer)
+      .def_readwrite("opt_level", &CompilerOptions::opt_level)
       .def_readwrite("L3_cache_size", &CompilerOptions::L3_cache_size)
       .def_readwrite("L2_cache_size", &CompilerOptions::L2_cache_size)
       .def_readwrite("L1_cache_size", &CompilerOptions::L1_cache_size)
-      .def_readwrite("index_bits", &CompilerOptions::index_bit_width)
+      .def_readwrite("index_bit_width", &CompilerOptions::index_bit_width)
       .def_readwrite("ir_tree_dir", &CompilerOptions::ir_tree_dir)
       .def_readwrite("log_root", &CompilerOptions::log_root)
-      .def_readwrite("log_level", &CompilerOptions::log_level);
+      .def_readwrite("log_level", &CompilerOptions::log_level)
+      .def_readwrite("log_llvm", &CompilerOptions::log_llvm);
 
   entrance.def("do_compile", &do_compile);
 }
