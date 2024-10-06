@@ -13,14 +13,19 @@
 //    limitations under the License.
 #include "llcompiler/Compiler/Entrance.h"
 
-#include <pybind11/cast.h>
-#include <pybind11/detail/common.h>
+#include <pybind11/buffer_info.h>
+#include <pybind11/pytypes.h>
 
+#include <cstddef>
 #include <iostream>
 
 #include "llcompiler/Pipeline/BasicPipeline.h"
+#include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "mlir-c/ExecutionEngine.h"
+#include "pybind11/cast.h"
+#include "pybind11/detail/common.h"
 #include "pybind11/pybind11.h"
+#include "pybind11/stl.h"
 namespace py = pybind11;
 namespace llc::compiler {
 
@@ -29,14 +34,23 @@ namespace {}  // namespace
 PYBIND11_MODULE(llcompiler_, llcompiler_) {
   auto entrance = llcompiler_.def_submodule("entrance");
   entrance.doc() = "entrance for compiler";  // optional module docstring
-
-  pybind11::class_<mlir::ExecutionEngine>(entrance, "ExecutionEngine")
-      .def(pybind11::init<bool, bool, bool>());
+  pybind11::class_<Tensor>(entrance, "Tensor")
+      .def(pybind11::init<>())
+      .def_readwrite("data", &Tensor::data)
+      .def_readwrite("base", &Tensor::base)
+      .def_readwrite("offset", &Tensor::offset)
+      .def_readwrite("size", &Tensor::size)
+      .def_readwrite("stride", &Tensor::stride)
+      .def("print", &Tensor::print)
+      .def("test", [](py::buffer a) {
+        py::buffer_info a_info = a.request();
+        auto data = reinterpret_cast<int *>(a_info.ptr);
+        std::cout << data[2] << data[1];
+      });
 
   pybind11::class_<Engine>(entrance, "EngineInternel")
-      .def(pybind11::init<mlir::ExecutionEngine*>(),
+      .def(pybind11::init<llvm::orc::LLJIT *>(),
            py::arg("execution_engine_ptr"))
-      .def_readonly("engine", &Engine::engine)
       .def("debug_info", &Engine::debug_info);
 
   pybind11::class_<llc::compiler::CompilerOptions>(entrance, "CompilerOptions")

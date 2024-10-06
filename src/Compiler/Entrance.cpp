@@ -17,6 +17,7 @@
 #include <unistd.h>
 
 #include <cassert>
+#include <cstddef>
 #include <filesystem>
 #include <fstream>
 #include <ios>
@@ -49,6 +50,33 @@
 namespace llc::compiler {
 
 CompilerOptions::CompilerOptions(){};
+
+Tensor::Tensor(void* data, void* base, size_t offset, std::vector<size_t>& size,
+               std::vector<size_t>& stride)
+    : data(data), base(base), offset(offset), size(size), stride(stride) {}
+Tensor::Tensor(){};
+
+void Tensor::print() {
+  std::cout << "data: " << data << std::endl;
+  std::cout << "base: " << base << std::endl;
+  std::cout << "offset: " << offset << std::endl;
+  std::cout << "size: ";
+  for (auto s : size) {
+    std::cout << " " << s;
+  }
+  std::cout << std::endl;
+  std::cout << "size: ";
+  for (auto s : stride) {
+    std::cout << " " << s;
+  }
+  std::cout << std::endl;
+  float* data = reinterpret_cast<float*>(data);
+  std::cout << "size: ";
+  for (int i = 0; i < 6; i++) {
+    std::cout << " " << data[i];
+  }
+  std::cout << std::endl;
+}
 
 Engine::Engine(llvm::orc::LLJIT* engine) : engine(engine){};
 

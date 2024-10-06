@@ -2,14 +2,6 @@ import torch.nn as nn
 import torch
 
 
-class Empty_Jit(nn.Module):
-    def __init__(self):
-        super(Empty_Jit, self).__init__()
-
-    def forward(self):
-        x = torch.empty([1, 1, 1])
-        return x
-
 
 class Base(nn.Module):
     def __init__(self):

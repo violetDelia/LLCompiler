@@ -30,8 +30,7 @@ import typing
 
 
 module_dict = {
-    Empty_Jit: [],
-    # Add: [torch.randn((100, 3, 224, 224), device="cpu")],
+    Add: [torch.randn((1,2,3), device="cpu")],
     # Multi_Add: [
     #     torch.randn((1, 3, 224, 224), device="cpu"),
     #     torch.randn((1, 3, 224, 224), device="cpu"),

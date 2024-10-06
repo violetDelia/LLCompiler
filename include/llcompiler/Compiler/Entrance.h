@@ -25,9 +25,11 @@
 
 #ifndef INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
 #define INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+#include <cstddef>
 #include <string>
+#include <vector>
 
-#include "mlir/ExecutionEngine/ExecutionEngine.h"
+#include "llvm/ExecutionEngine/Orc/LLJIT.h"
 namespace llc::compiler {
 
 extern "C" struct CompilerOptions {
@@ -44,6 +46,20 @@ extern "C" struct CompilerOptions {
   std::string log_root;
   std::string log_level;
   bool log_llvm;
+};
+
+
+extern "C" struct Tensor {
+  Tensor();
+  Tensor(void* data, void* base, size_t offset, std::vector<size_t>& size,
+         std::vector<size_t>& stride);
+  void print();
+
+  void* data;
+  void* base;
+  size_t offset;
+  std::vector<size_t> size;
+  std::vector<size_t> stride;
 };
 
 extern "C" struct Engine {

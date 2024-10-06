@@ -1,9 +1,8 @@
-from llcompiler_.entrance import ExecutionEngine
+from llcompiler_.entrance import EngineInternel, Tensor
 import torch.fx
 from typing import Any, Union, List, Dict
 import ctypes
 import numpy as np
-from .np_to_memref import *
 
 
 class ExecutionEngine:
@@ -14,16 +13,18 @@ class ExecutionEngine:
     def debug_info(self):
         self.engine.debug_info()
 
-    def gen_real_call_args(self, *args):
-        input_memref = [
-            ctypes.pointer(ctypes.pointer(get_ranked_memref_descriptor(tensor.numpy())))
-            for tensor in args
-        ]
+    def trans_to_tensor(self, *args):
+        for arg in args:
+            if isinstance(arg, torch.Tensor):
+                print(arg)
+                c = Tensor(
+                )
+                c.test(arg.data_ptr())
 
     def run(self, *args) -> Any:
         print("Running")
-        real_args = self.gen_real_call_args(*args)
-        
+        self.engine.debug_info()
+        inputs = self.trans_to_tensor(*args)
 
     def __call__(self, *args) -> Any:
         return self.run(*args)
