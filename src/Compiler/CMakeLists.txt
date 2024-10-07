@@ -8,6 +8,8 @@ llcompiler_add_library(LLCompiler
     SRC_FILES
     Init.cpp
     Entrance.cpp
+    Engine.cpp
+    Tensor.cpp
     #Utility.cpp
 
     ADDITIONAL_INCLUDE_DIRS

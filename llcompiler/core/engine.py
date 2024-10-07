@@ -5,7 +5,10 @@ import ctypes
 import numpy as np
 
 
-class ExecutionEngine:
+TORCH_DTYPE_TO_TYPE = {torch.float32: 4}
+
+
+class Torch_ExecutionEngine:
 
     def __init__(self, ExecutionEngine):
         self.engine = ExecutionEngine
@@ -14,17 +17,31 @@ class ExecutionEngine:
         self.engine.debug_info()
 
     def trans_to_tensor(self, *args):
+        inputs = []
         for arg in args:
             if isinstance(arg, torch.Tensor):
-                print(arg)
-                c = Tensor(
+                tensor = Tensor(
+                    arg.data_ptr(),
+                    arg.data_ptr(),
+                    TORCH_DTYPE_TO_TYPE[arg.dtype],
+                    arg.storage_offset(),
+                    arg.shape,
+                    arg.stride(),
                 )
-                c.test(arg.data_ptr())
+                inputs.append(tensor)
+            else:
+                raise TypeError(f"Unsupported type: {type(arg)}")
+        return inputs
+
+    def trans_to_torch(self, outs: list[Tensor]):
+        i = outs[0]
+        a = torch.Tensor(i.data)
+        a.shape = i.size
 
     def run(self, *args) -> Any:
-        print("Running")
-        self.engine.debug_info()
         inputs = self.trans_to_tensor(*args)
+        res = [torch.as_tensor(out.to_numpy()) for out in self.engine.run(inputs)]
+        return res
 
     def __call__(self, *args) -> Any:
         return self.run(*args)

@@ -38,49 +38,15 @@
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/TargetSelect.h"
 #include "llvm/Support/raw_ostream.h"
-#include "mlir/ExecutionEngine/CRunnerUtils.h"
 #include "mlir/ExecutionEngine/ExecutionEngine.h"
 #include "mlir/ExecutionEngine/OptUtils.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
-#include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
-#include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Export.h"
 
 namespace llc::compiler {
 
 CompilerOptions::CompilerOptions(){};
-
-Tensor::Tensor(void* data, void* base, size_t offset, std::vector<size_t>& size,
-               std::vector<size_t>& stride)
-    : data(data), base(base), offset(offset), size(size), stride(stride) {}
-Tensor::Tensor(){};
-
-void Tensor::print() {
-  std::cout << "data: " << data << std::endl;
-  std::cout << "base: " << base << std::endl;
-  std::cout << "offset: " << offset << std::endl;
-  std::cout << "size: ";
-  for (auto s : size) {
-    std::cout << " " << s;
-  }
-  std::cout << std::endl;
-  std::cout << "size: ";
-  for (auto s : stride) {
-    std::cout << " " << s;
-  }
-  std::cout << std::endl;
-  float* data = reinterpret_cast<float*>(data);
-  std::cout << "size: ";
-  for (int i = 0; i < 6; i++) {
-    std::cout << " " << data[i];
-  }
-  std::cout << std::endl;
-}
-
-Engine::Engine(llvm::orc::LLJIT* engine) : engine(engine){};
-
-void Engine::debug_info() { DINFO << engine; }
 
 Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* init logger *********//
@@ -125,7 +91,6 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
       WARN(llc::GLOBAL) << " could not find log root!";
     } else {
       auto module_file = options.log_root + "/original.ll";
-      DINFO << module_file;
       std::error_code ec;
       llvm::raw_fd_ostream outs(module_file, ec);
       llvm_module->print(outs, nullptr);

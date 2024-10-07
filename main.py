@@ -30,7 +30,7 @@ import typing
 
 
 module_dict = {
-    Add: [torch.randn((1,2,3), device="cpu")],
+    Add: [torch.randn((2, 2, 2), device="cpu")],
     # Multi_Add: [
     #     torch.randn((1, 3, 224, 224), device="cpu"),
     #     torch.randn((1, 3, 224, 224), device="cpu"),
@@ -50,7 +50,7 @@ module_dict = {
 def run_model_dict(dict):
     for func, inputs in dict.items():
         compiler = LLC.LLCompiler(
-            mode="training",
+            mode="inference",
             ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", func.__name__),
             log_root=os.path.join(
                 os.path.dirname(__file__), "ir_tree", "fx", func.__name__, "log"
@@ -58,14 +58,13 @@ def run_model_dict(dict):
             log_level="debug",
             symbol_infer=False,
         )
-        model = torch.compile(
+        model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
             model=func(),
             backend=compiler,
             dynamic=False,
             fullgraph=True,
         )
-
-        print(model(*inputs).shape)
+        model(*inputs)
 
 
 if __name__ == "__main__":

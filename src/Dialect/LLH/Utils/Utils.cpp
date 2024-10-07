@@ -116,8 +116,6 @@ bool isConstIntegerValue(Value value) {
     auto dim_op = cast<DimOp>(op);
     auto dim_type = llvm::cast<RankedTensorType>(dim_op.getInput().getType());
     CHECK(llc::MLIR, isConstIntegerValue(dim_op.getDim()));
-    DINFO << isConstIntegerValue(dim_op.getDim());
-    DINFO << getConstIntegerValue(dim_op.getDim());
     return !dim_type.isDynamicDim(getConstIntegerValue(dim_op.getDim()));
   }
   if (llvm::isa<ConstantOp>(op)) {

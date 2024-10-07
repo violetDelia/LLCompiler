@@ -23,34 +23,39 @@
  *
  */
 
-#ifndef INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
-#define INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+#ifndef INCLUDE_LLCOMPILER_COMPILER_TENSOR_H_
+#define INCLUDE_LLCOMPILER_COMPILER_TENSOR_H_
+
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
-#include "llcompiler/Compiler/Engine.h"
-
 namespace llc::compiler {
 
-extern "C" struct CompilerOptions {
-  CompilerOptions();
-  std::string mode;
-  std::string target;
-  bool symbol_infer;
-  unsigned opt_level;
-  uint64_t L3_cache_size;
-  uint64_t L2_cache_size;
-  uint64_t L1_cache_size;
-  unsigned index_bit_width;
-  std::string ir_tree_dir;
-  std::string log_root;
-  std::string log_level;
-  bool log_llvm;
+enum Type : size_t {
+  INT8 = 0,
+  INT16 = 1,
+  INT32 = 2,
+  INT64 = 3,
+  FLOAT32 = 4,
+  DOUBL64 = 5,
+  INT1 = 6,
 };
 
-extern "C" Engine do_compile(const char* xdsl_module,
-                             CompilerOptions compiler_options);
+extern "C" struct Tensor {
+  Tensor();
+  Tensor(size_t data_ptr, size_t base_ptr, size_t type, size_t offset,
+         std::vector<size_t>& size, std::vector<size_t>& stride);
+  void print();
+
+  void* data;
+  void* base;
+  Type type;
+  size_t offset;
+  std::vector<size_t> size;
+  std::vector<size_t> stride;
+};
 
 }  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+#endif  // INCLUDE_LLCOMPILER_COMPILER_TENSOR_H_

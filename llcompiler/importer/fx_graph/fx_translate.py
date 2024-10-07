@@ -371,7 +371,8 @@ def torch_build_func(
             _updata_torch_symbol_bind(op, block, symbol_map, node)
         # 输出
         elif node.op == "output":
-
+            print(node.meta)
+            print(node.args)
             def trav_args(args):
                 for arg in args:
                     if isinstance(arg, tuple):

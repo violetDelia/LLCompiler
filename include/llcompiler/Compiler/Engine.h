@@ -23,34 +23,25 @@
  *
  */
 
-#ifndef INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
-#define INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+#ifndef INCLUDE_LLCOMPILER_COMPILER_ENGINE_H_
+#define INCLUDE_LLCOMPILER_COMPILER_ENGINE_H_
 #include <cstddef>
 #include <string>
 #include <vector>
 
-#include "llcompiler/Compiler/Engine.h"
-
+#include "llcompiler/Compiler/Tensor.h"
+#include "llvm/ExecutionEngine/Orc/LLJIT.h"
 namespace llc::compiler {
 
-extern "C" struct CompilerOptions {
-  CompilerOptions();
-  std::string mode;
-  std::string target;
-  bool symbol_infer;
-  unsigned opt_level;
-  uint64_t L3_cache_size;
-  uint64_t L2_cache_size;
-  uint64_t L1_cache_size;
-  unsigned index_bit_width;
-  std::string ir_tree_dir;
-  std::string log_root;
-  std::string log_level;
-  bool log_llvm;
+extern "C" struct Engine {
+  Engine(llvm::orc::LLJIT* engine);
+
+  void debug_info();
+
+  std::vector<Tensor*> run(std::vector<Tensor*>& inputs);
+
+  llvm::orc::LLJIT* engine;
 };
 
-extern "C" Engine do_compile(const char* xdsl_module,
-                             CompilerOptions compiler_options);
-
 }  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+#endif  // INCLUDE_LLCOMPILER_COMPILER_ENGINE_H_

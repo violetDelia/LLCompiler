@@ -85,7 +85,8 @@ class LLCompiler(llcompiler.core.Importer):
         compiler_options.log_llvm = self.log_llvm
 
         engine = do_compile(self._mlir_module.__str__(), compiler_options)
-        return llcompiler.core.engine.ExecutionEngine(engine)
+        print("meke engine")
+        return llcompiler.core.engine.Torch_ExecutionEngine(engine).run
 
     def _compiler_torch_module():
         raise NotImplementedError

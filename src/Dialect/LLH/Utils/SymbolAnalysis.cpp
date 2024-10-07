@@ -220,7 +220,6 @@ Value& SymbolAnalysis::addEncoding(Value& value,
 
 void SymbolAnalysis::debugPrintSymbols() {
   for (auto pair : symbols_table_) {
-    DINFO << pair.first;
     pair.second->dump();
   }
 }
