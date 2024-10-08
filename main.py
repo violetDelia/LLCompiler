@@ -30,13 +30,13 @@ import typing
 
 
 module_dict = {
-    Add: [torch.randn((2, 1, 4), device="cpu")],
+    #Add: [torch.randn((2, 1, 4), device="cpu")],
     # Multi_Add: [
     #     torch.randn((1, 3, 224, 224), device="cpu"),
     #     torch.randn((1, 3, 224, 224), device="cpu"),
     # ],
     # Base: torch.randn((2, 3, 224, 224), device="cpu"),
-    # Broadcast: torch.randn((2, 3, 224, 224), device="cpu"),
+    Broadcast: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),

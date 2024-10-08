@@ -40,6 +40,7 @@
 #include "mlir/InitAllTranslations.h"
 #include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
+#include "mlir/Target/SPIRV/Target.h"
 
 namespace llc::compiler {
 
@@ -66,6 +67,8 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::registerLLVMDialectTranslation(registry);
   mlir::ub::registerConvertUBToLLVMInterface(registry);
   mlir::registerConvertMemRefToLLVMInterface(registry);
+  mlir::registerConvertFuncToLLVMInterface(registry);
+  mlir::index::registerConvertIndexToLLVMInterface(registry);
 }
 
 void init_logger(const logger::LoggerOption& logger_option) {

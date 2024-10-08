@@ -69,7 +69,7 @@ def builtin_add_convert(
     return commond_build_op(AddOp.build, 2, node, value_map, block)
 
 
-@TORCH_FUNCTION_TRANSLATE("sub")
+@TORCH_FUNCTION_TRANSLATE("sub","aten::sub.Tensor")
 def builtin_add_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

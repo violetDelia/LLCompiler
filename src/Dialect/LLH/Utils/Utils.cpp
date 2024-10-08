@@ -142,6 +142,11 @@ size_t getConstIntegerValue(Value value) {
     if (!llvm::isa<IntegerAttr>(constant_op.getValueAttr())) FATAL(llc::MLIR);
     return llvm::cast<IntegerAttr>(constant_op.getValueAttr()).getInt();
   }
+  if ( llvm::isa<arith::ConstantOp>(op)){
+    auto constant_op = llvm::cast<arith::ConstantOp>(op);
+    if (!llvm::isa<IntegerAttr>(constant_op.getValueAttr())) FATAL(llc::MLIR);
+    return llvm::cast<IntegerAttr>(constant_op.getValueAttr()).getInt();
+  }
   UNIMPLEMENTED(llc::UTILITY) << "unsupport get operator const value: "
                               << op->getName().getStringRef().str();
 }

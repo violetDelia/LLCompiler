@@ -29,10 +29,13 @@
 #include "llcompiler/Support/Logger.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
+#include "mlir/Conversion/BufferizationToMemRef/BufferizationToMemRef.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
+#include "mlir/Conversion/ControlFlowToSCF/ControlFlowToSCF.h"
 #include "mlir/Conversion/ControlFlowToSPIRV/ControlFlowToSPIRVPass.h"
 #include "mlir/Conversion/ConvertToLLVM/ToLLVMPass.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
+#include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
 #include "mlir/Conversion/Passes.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
@@ -102,6 +105,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::createConvertLLHToTosaPass());
   pm.addPass(mlir::createCanonicalizerPass());
   pm.addPass(mlir::index_ex::createFoldIndexCastPass());
+
   //===----------------------------------------------------------------------===//
   //  tosa opt
   //===----------------------------------------------------------------------===//
@@ -159,16 +163,16 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
   bufferization_opts.bufferizeFunctionBoundaries = true;
   bufferization_opts.analysisHeuristic = mlir::bufferization::
-      OneShotBufferizationOptions::AnalysisHeuristic::BottomUpFromTerminators;
+      OneShotBufferizationOptions::AnalysisHeuristic::TopDown;
   bufferization_opts.opFilter.allowDialect<
       mlir::tensor::TensorDialect, mlir::bufferization::BufferizationDialect,
       mlir::linalg::LinalgDialect, mlir::arith::ArithDialect,
-      mlir::func::FuncDialect, mlir::scf::SCFDialect>();
+      mlir::scf::SCFDialect>();
+  // func Bufferize  for remove the memref.copy before one-shot
+  pm.addPass(mlir::func::createFuncBufferizePass());
   // Bufferize
   pm.addPass(
       mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
-  // func Bufferize
-  pm.addPass(mlir::func::createFuncBufferizePass());
   mlir::bufferization::BufferResultsToOutParamsOpts buffer_result_opts;
   buffer_result_opts.filterFn = [](mlir::func::FuncOp *func) {
     auto name = func->getSymName();
@@ -285,6 +289,12 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // memref opt
   //===----------------------------------------------------------------------===//
+  // 化简memref.dim
+  pm.addPass(mlir::memref::createResolveShapedTypeResultDimsPass());
+  // 化简memref.dim
+  pm.addPass(mlir::memref::createResolveRankedShapeTypeResultDimsPass());
+  // 内存访问转为reinterpret_cast
+  pm.addPass(mlir::memref::createExpandStridedMetadataPass());
   // 控制块alloc化简
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createBufferHoistingPass());
@@ -293,12 +303,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
       mlir::bufferization::createBufferLoopHoistingPass());
   // 优化realloc为scf->alloc
   pm.addPass(mlir::memref::createExpandReallocPass());
-  // 化简memref.dim
-  pm.addPass(mlir::memref::createResolveShapedTypeResultDimsPass());
-  // 化简memref.dim
-  pm.addPass(mlir::memref::createResolveRankedShapeTypeResultDimsPass());
-  // 内存访问转为reinterpret_cast
-  pm.addPass(mlir::memref::createExpandStridedMetadataPass());
   // 内存折叠
   pm.addPass(mlir::memref::createFoldMemRefAliasOpsPass());
   // 规范化
@@ -309,31 +313,36 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // liveness
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createOptimizeAllocationLivenessPass());
-  // legalizes memref dialect ops to be convertible to LLVM
-  pm.addPass(mlir::memref::createExpandOpsPass());
+
   // 规范化
   pm.addPass(mlir::createCanonicalizerPass());
+  // legalizes memref dialect ops to be convertible to LLVM
+  pm.addPass(mlir::memref::createExpandOpsPass());
+  pm.addPass(mlir::createBufferizationToMemRefPass());
   // 去重重复的func
   pm.addPass(mlir::func::createDuplicateFunctionEliminationPass());
   //===----------------------------------------------------------------------===//
   // lowing scf
   //===----------------------------------------------------------------------===//
-  // lowing to scf to cf
   pm.addPass(mlir::createConvertSCFToCFPass());
+
   //===----------------------------------------------------------------------===//
   // lowing to llvm
   //===----------------------------------------------------------------------===//
   if (options.target == TARGET::CPU) {
-    pm.addPass(mlir::createConvertFuncToLLVMPass(
-        {.useBarePtrCallConv = false, .indexBitwidth = options.indexBitWidth}));
     pm.addPass(mlir::createConvertControlFlowToLLVMPass(
+        {.indexBitwidth = options.indexBitWidth}));
+    pm.addPass(mlir::createConvertIndexToLLVMPass(
+        {.indexBitwidth = options.indexBitWidth}));
+    pm.addPass(mlir::createArithToLLVMConversionPass(
         {.indexBitwidth = options.indexBitWidth}));
     pm.addPass(mlir::createFinalizeMemRefToLLVMConversionPass(
         {.useAlignedAlloc = false,
          .indexBitwidth = options.indexBitWidth,
          .useGenericFunctions = false}));
-    pm.addPass(mlir::createArithToLLVMConversionPass(
-        {.indexBitwidth = options.indexBitWidth}));
+    pm.addPass(mlir::createConvertFuncToLLVMPass(
+        {.useBarePtrCallConv = false, .indexBitwidth = options.indexBitWidth}));
+    // lowing to scf to cf
   } else {
     FATAL(llc::MLIR);
   }

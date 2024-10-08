@@ -28,6 +28,7 @@ from xdsl.dialects.builtin import (
     f64,
     DYNAMIC_INDEX,
     DenseArrayBase,
+    DenseResourceAttr,
     FloatAttr,
     Float64Type,
     IntegerAttr,
@@ -36,6 +37,7 @@ from xdsl.dialects.builtin import (
     AffineMapAttr,
     SymbolNameAttr,
     SymbolRefAttr,
+    DictionaryAttr,
 )
 from xdsl.ir.affine.affine_map import AffineMap
 from ...dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
@@ -166,6 +168,23 @@ def torch_fake_tensor_translate(tensor: FakeTensor):
             else:
                 shape.append(DYNAMIC_INDEX)
     return TensorType(element_type=ele_type, shape=shape)
+
+
+def torch_fake_tensor_encoding(tensor: FakeTensor):
+    shape = []
+    for dim in tensor.shape:
+        if isinstance(dim, int):
+            shape.append(str("c") + str(dim))
+        if isinstance(dim, torch.SymInt):
+            if str(dim).isdigit():
+                shape.append(str("c") + str(dim.node.int_()))
+            else:
+                shape.append(str(dim))
+    string_attr_dict = dict()
+    for index, dim in zip(range(len(shape)), shape):
+        string_attr_dict[index] = StringAttr(dim)
+    encode = DictionaryAttr(string_attr_dict)
+    return encode
 
 
 TORCH_DTYPE_TO_MLIR_TYPE = {
@@ -327,7 +346,12 @@ def torch_build_func(
                 # 张量输入
                 if isinstance(val, FakeTensor):
                     fake_tensor = node.meta["val"]
-                    tensor_type = torch_fake_tensor_translate(fake_tensor)
+                    base_tensor_type = torch_fake_tensor_translate(fake_tensor)
+                    tensor_type = TensorType(
+                        base_tensor_type.element_type,
+                        base_tensor_type.shape,
+                        torch_fake_tensor_encoding(fake_tensor),
+                    )
                     arg_value = block.insert_arg(tensor_type, len(input_types))
                     value_map[node.name] = [arg_value]
                     input_types.append(tensor_type)
@@ -373,6 +397,7 @@ def torch_build_func(
         elif node.op == "output":
             print(node.meta)
             print(node.args)
+
             def trav_args(args):
                 for arg in args:
                     if isinstance(arg, tuple):

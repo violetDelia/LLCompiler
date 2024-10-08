@@ -31,6 +31,8 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/Block.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -74,6 +76,37 @@ void traverseExpressionSymbolPos(AffineBinaryOpExpr& exp,
   }
   if (auto binary_exp = llvm::dyn_cast_or_null<AffineBinaryOpExpr>(rhs)) {
     traverseExpressionSymbolPos(binary_exp, symbol_pos);
+  }
+}
+
+void removeEntranceTensorEncoding(ModuleOp module) {
+  auto funcs = module.getOps<func::FuncOp>();
+  auto context = module->getContext();
+  auto builder = IRRewriter(context);
+  llvm::SmallVector<Type> new_input;
+  for (auto func : funcs) {
+    if (!func->hasAttr(llc::EntranceAttr)) continue;
+    auto func_type = func.getFunctionType();
+    auto& block = func.getFunctionBody().getBlocks().front();
+    auto input_num = block.getNumArguments();
+    for (int i{}; i < input_num; i++) {
+      auto arg = block.getArgument(i);
+      if (isa<RankedTensorType>(arg.getType())) {
+        auto tensor = llvm::cast<RankedTensorType>(arg.getType());
+        auto new_tensor =
+            RankedTensorType::get(tensor.getShape(), tensor.getElementType());
+        arg.setType(new_tensor);
+      }
+      new_input.push_back(arg.getType());
+    }
+    auto& blocks = func.getFunctionBody().getBlocks();
+    for (auto& block : blocks) {
+      if (block.isEntryBlock()) {
+        auto new_func_type = FunctionType::get(
+            context, new_input, block.getTerminator()->getOperandTypes());
+        func.setType(new_func_type);
+      }
+    }
   }
 }
 //===----------------------------------------------------------------------===//
@@ -137,17 +170,36 @@ struct replaceTorchSymbolicIntOp
     : public LLHOpRewritePattern<TorchSymbolicIntOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(TorchSymbolicIntOp op) const final {
-    if (op->hasAttr(llc::SymbolGeneratedAttr)) return llvm::failure();
     return llvm::success();
   }
   void rewrite(TorchSymbolicIntOp op,
                LLHPatternRewriter& rewriter) const final {
-    rewriter.eraseOp(op);
-    // auto symbol_analysis = SymbolAnalysis::getInstance();
-    // auto symbol = symbol_analysis->buildNewSymbol(&rewriter, op);
-    // auto new_name = symbol.getSymNameAttr();
-    // op.setSymNameAttr(new_name);
-    // llc::add_symbol_generate_attr(op);
+    auto func = op->getParentOfType<func::FuncOp>();
+    CHECK(llc::MLIR, func);
+    auto loc = op->getLoc();
+    auto symbol = op.getSymName().str();
+    auto& blocks = func.getBlocks();
+    for (auto& block : blocks) {
+      if (!block.isEntryBlock()) continue;
+      for (auto arg : block.getArguments()) {
+        auto type = arg.getType();
+        if (!isa<RankedTensorType>(type)) continue;
+        auto has_encode = llvm::cast<RankedTensorType>(type).getEncoding();
+        if (!has_encode) continue;
+        if (isa<DictionaryAttr>(has_encode)) {
+          auto dim_dict = cast<DictionaryAttr>(has_encode);
+          for (auto key : dim_dict.getValue()) {
+            auto name = cast<StringAttr>(key.getValue()).str();
+            if (name != symbol) continue;
+            auto dim = stoi(key.getName().str());
+            auto dim_op = llh::buildTensorDim(arg, &rewriter, dim);
+            rewriter.replaceOp(op, dim_op);
+            return;
+          }
+        }
+      }
+    }
+    WARN(llc::MLIR) << "not find symbol dim!";
   }
 };
 
@@ -160,62 +212,6 @@ struct replaceSymbolicBindOp : public LLHOpRewritePattern<SymbolicBindOp> {
 
   void rewrite(SymbolicBindOp op, LLHPatternRewriter& rewriter) const final {
     rewriter.eraseOp(op);
-    // auto operand = op.getOperand();
-    // auto bind_shape = op.getBindSymbols();
-    // auto bind_type = llvm::cast_or_null<RankedTensorType>(operand.getType());
-    // CHECK(llc::MLIR_PASS, bind_type);
-    // auto symbol_analysis = SymbolAnalysis::getInstance();
-    // auto rank = bind_type.getRank();
-    // auto exps_map = op.getExpressions();
-    // auto symbol_num = exps_map.getNumSymbols();
-    // llvm::SmallVector<StringRef> shapes;
-    // for (int i = 0; i < rank; ++i) {
-    //   auto exp = exps_map.getResult(i);
-    //   if (auto dim = llvm::dyn_cast_or_null<AffineDimExpr>(exp)) {
-    //     auto pos = dim.getPosition();
-    //     auto symbol_op = llvm::cast_or_null<TorchSymbolicIntOp>(
-    //         op.getBindSymbols()[i].getDefiningOp());
-    //     CHECK(llc::MLIR_PASS, symbol_op);
-    //     auto dim_name = symbol_op.getSymName();
-    //     shapes.push_back(dim_name);
-    //   } else if (auto const_exp =
-    //                  llvm::dyn_cast_or_null<AffineConstantExpr>(exp)) {
-    //     auto val = const_exp.getValue();
-    //     auto symbol_op =
-    //         symbol_analysis->getOrBuildConstSymbol(&rewriter, op, val);
-    //     auto dim_name = symbol_op.getSymName();
-    //     shapes.push_back(dim_name);
-    //   } else if (auto binary_exp =
-    //                  llvm::dyn_cast_or_null<AffineBinaryOpExpr>(exp)) {
-    //     SmallVector<size_t> symbol_pos;
-    //     exps_map.dump();
-    //     binary_exp.dump();
-    //     traverseExpressionSymbolPos(binary_exp, symbol_pos);
-    //     DINFO << "1";
-    //     auto key = generateBindShapeMapKey(binary_exp, symbol_pos, op);
-    //     if (!bind_shape_map.count(key)) {
-    //       DINFO << "1";
-    //       llvm::SmallVector<AffineExpr> symReplacements(
-    //           symbol_num, rewriter.getAffineSymbolExpr(0));
-    //       for (auto sy : symReplacements) {
-    //         sy.dump();
-    //       }
-    //       for (int i = 0; i < symbol_num; i++) {
-    //         symReplacements[symbol_pos[i]] = rewriter.getAffineSymbolExpr(i);
-    //       }
-    //       for (auto sy : symReplacements) {
-    //         sy.dump();
-    //       }
-    //       DINFO << "1";
-    //       auto new_exp = binary_exp.replaceDimsAndSymbols({},
-    //       symReplacements); new_exp.dump(); auto symbol_op =
-    //       symbol_analysis->buildNewSymbol(&rewriter, op); bind_shape_map[key]
-    //       = symbol_op.getSymName().str();
-    //     }
-    //     shapes.push_back(bind_shape_map[key]);
-    //   }
-    // }
-    // llc::add_stop_run_attr(op);
   }
 };
 
@@ -257,5 +253,6 @@ void RemoveRedundantOpsPass::runOnOperation() {
   populateRemoveRedundantOpsPassPatterns(patterns);
   if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
     signalPassFailure();
+  removeEntranceTensorEncoding(module);
   LLC_RUN_OUT_PASS
 }

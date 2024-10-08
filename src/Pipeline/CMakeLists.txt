@@ -35,8 +35,11 @@ llcompiler_add_library(LLCPipelines
     MLIRFuncToLLVM
     MLIRConvertToLLVMPass
     MLIRLLVMIRTransforms
-    
-    
+    MLIRConvertToSPIRVPass
+    MLIRTensorToSPIRV
+    MLIRControlFlowToSCF
+    MLIRBufferizationToMemRef
+    MLIRIndexToLLVM
 )
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRFuncInlinerExtension)
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRTensorInferTypeOpInterfaceImpl)

@@ -17,6 +17,7 @@ class Torch_ExecutionEngine:
         self.engine.debug_info()
 
     def trans_to_tensor(self, *args):
+        print(args)
         inputs = []
         for arg in args:
             if isinstance(arg, torch.Tensor):
@@ -29,6 +30,8 @@ class Torch_ExecutionEngine:
                     arg.stride(),
                 )
                 inputs.append(tensor)
+            elif isinstance(arg, int):
+                pass
             else:
                 raise TypeError(f"Unsupported type: {type(arg)}")
         return inputs
