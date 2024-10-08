@@ -18,16 +18,20 @@
 #include <regex>
 #include <string>
 
-#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Operation.h"
@@ -38,12 +42,12 @@
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-namespace mlir::index_ex {
-#define GEN_PASS_DEF_FOLDINDEXCASTPASS
-#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h.inc"
-}  // namespace mlir::index_ex
+namespace mlir::LLVM::ex {
+#define GEN_PASS_DEF_ADAPTENTRYPARMSFORENGINEPASS
+#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h.inc"
+}  // namespace mlir::LLVM::ex
 using namespace ::mlir;
-using namespace ::mlir::index;
+using namespace ::mlir::LLVM;
 namespace {
 //===----------------------------------------------------------------------===//
 // common func
@@ -52,35 +56,22 @@ namespace {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-template <class CastOp>
-struct FoldCastOp : public OpRewritePattern<CastOp> {
-  using OpRewritePattern<CastOp>::OpRewritePattern;
-  LogicalResult matchAndRewrite(CastOp op, PatternRewriter& rewriter) const {
-    if (!isa<CastOp>(op->getOperand(0).getDefiningOp())) return llvm::failure();
-    auto type = op->getResult(0).getType();
-    auto front_cast_res = op->getOperand(0);
-    auto front_cast = front_cast_res.getDefiningOp();
-    auto front_type = front_cast->getOperand(0).getType();
-    if (front_type != type) return llvm::failure();
-    rewriter.replaceAllUsesWith(op->getResult(0), front_cast->getOperand(0));
-    return llvm::success();
-  }
-};
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateFoldIndexCastPassPassPatterns(RewritePatternSet& patterns) {
+void populateAdaptEntryParmsForEnginePassPassPatterns(
+    RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<FoldCastOp<CastSOp>>(context);
-  patterns.add<FoldCastOp<CastUOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
 
-struct FoldIndexCastPass
-    : ::index_ex::impl::FoldIndexCastPassBase<FoldIndexCastPass> {
+struct AdaptEntryParmsForEnginePass
+    : ::LLVM::ex::impl::AdaptEntryParmsForEnginePassBase<
+          AdaptEntryParmsForEnginePass> {
   void runOnOperation() override;
 };
 }  // namespace
@@ -88,14 +79,21 @@ struct FoldIndexCastPass
 // pass implement
 //===----------------------------------------------------------------------===//
 
-void FoldIndexCastPass::runOnOperation() {
+void AdaptEntryParmsForEnginePass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  RewritePatternSet patterns(context);
-  populateFoldIndexCastPassPassPatterns(patterns);
-  auto op = getOperation();
-  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
-    signalPassFailure();
+  auto funcs = module.getOps<LLVM::LLVMFuncOp>();
+  for (auto func : funcs) {
+    if (!func->hasAttr(llc::EntranceAttr)) continue;
+    auto &blocks = func.getFunctionBody().getBlocks();
+    for( auto &block : blocks){
+      if (!block.isEntryBlock()) continue;
+      auto termina = block.getTerminator();
+      termina->dump();
+    }
+    
+    
+  }
   LLC_RUN_OUT_PASS
 }

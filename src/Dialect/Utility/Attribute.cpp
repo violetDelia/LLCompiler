@@ -79,8 +79,8 @@ ADD_DENSE_I64_ATTR(pad, PadAttr)
 ADD_DENSE_I64_ATTR(dilation, DilationAttr)
 ADD_UNIT_ATTR(is_weight, IsWeightAttr)
 ADD_UNIT_ATTR(symbol_generate, SymbolGeneratedAttr)
-ADD_UNIT_ATTR(stop_run, StopRun)
-ADD_UNIT_ATTR(entrance, Entrance)
+ADD_UNIT_ATTR(stop_run, StopRunAttr)
+ADD_UNIT_ATTR(entrance, EntranceAttr)
 
 #undef ADD_LAYOUT_ATTR
 #undef ADD_STRING_ATTR

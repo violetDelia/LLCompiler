@@ -15,6 +15,7 @@ llcompiler_add_library(LLCPipelines
     MLIRLLHToTosa
     MLIRLLHToArith
     MLIRLLHToTensor
+    MLIRLLVMExtensionTransforms
     MLIRIndexExtensionTransforms
     MLIRTosaTransforms
     MLIRTosaToArith
@@ -32,7 +33,12 @@ llcompiler_add_library(LLCPipelines
     MLIRSPIRVToLLVM
     MLIRSCFToSPIRV
     MLIRFuncToLLVM
+    MLIRConvertToLLVMPass
     MLIRLLVMIRTransforms
+    
+    
 )
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRFuncInlinerExtension)
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRTensorInferTypeOpInterfaceImpl)
+set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRUBToLLVM)
+set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRMemRefToLLVM)

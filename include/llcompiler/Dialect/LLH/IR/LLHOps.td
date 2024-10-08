@@ -90,6 +90,16 @@ def LLH_EncodingBindOp : Op<LLH_Dialect,"encoding_bind">{
     );
 }
 
+def LLH_SymbolBindOp : Op<LLH_Dialect, "symbol_bind">{
+    let description = [{
+        单符号
+    }];
+    let arguments = (ins 
+       AnySignlessIntegerOrIndex:$operand ,
+       FlatSymbolRefAttr:$symbol);
+
+}
+
 
 def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
     let description = [{

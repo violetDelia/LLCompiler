@@ -13,21 +13,44 @@
 //    limitations under the License.
 #include "llcompiler/Compiler/Engine.h"
 
+#include <cstdint>
+
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
-
+#include "mlir/ExecutionEngine/RunnerUtils.h"
 namespace llc::compiler {
 
 Engine::Engine(llvm::orc::LLJIT* engine) : engine(engine){};
 
 void Engine::debug_info() { DINFO << engine; }
 
-std::vector<Tensor*> Engine::run(std::vector<Tensor*>& inputs){
-  for(auto t : inputs){
-    t->print();
-  }
-  return inputs;
+struct Tensor_D {
+  void* ptr;
+  void* base;
+  int64_t offset;
+  int64_t* sizes;
+  int64_t* strides;
+};
 
+std::vector<Tensor*> Engine::run(std::vector<Tensor*>& inputs) {
+  auto maybe_func = engine->lookup("main");
+  CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
+  auto& func = maybe_func.get();
+  auto in = inputs[0];
+  in->print();
+  auto run =
+      func.toPtr<Tensor_D(void*, void*, int, int, int, int, int, int, int)>();
+  auto c = run(in->data, in->base, in->offset, in->size[0], in->size[1],
+               in->size[2], in->stride[0], in->stride[1], in->stride[2]);
+  DINFO << c.ptr;
+  DINFO << c.base;
+  DINFO << c.sizes[0];
+  DINFO << c.sizes[1];
+  DINFO << c.sizes[2];
+  DINFO << c.strides[0];
+  DINFO << c.strides[1];
+  DINFO << c.strides[2];
+  return inputs;
 };
 
 }  // namespace llc::compiler

@@ -13,5 +13,5 @@ class Add(nn.Module):
         self.cf = nn.Linear(int((224 - 17) / 2 + 7), 2)
 
     def forward(self, x: torch.Tensor):
-        y = x + x
-        return y,x
+        x = x + x
+        return x

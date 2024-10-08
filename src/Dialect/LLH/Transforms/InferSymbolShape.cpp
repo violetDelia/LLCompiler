@@ -73,7 +73,7 @@ void generateEntranceSymbol(ModuleOp module) {
   llvm::SmallVector<Type> new_input;
   auto symbol_analysis = SymbolAnalysis::getInstance(module);
   for (auto func : funcs) {
-    if (!func->hasAttr(llc::Entrance)) continue;
+    if (!func->hasAttr(llc::EntranceAttr)) continue;
     auto func_type = func.getFunctionType();
     auto& block = func.getFunctionBody().getBlocks().front();
     auto input_num = block.getNumArguments();

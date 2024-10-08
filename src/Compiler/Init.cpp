@@ -21,6 +21,7 @@
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
+#include "mlir/Conversion/UBToLLVM/UBToLLVM.h"
 #include "mlir/Dialect/Arith/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Bufferization/Transforms/FuncBufferizableOpInterfaceImpl.h"
@@ -63,6 +64,8 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
   mlir::registerBuiltinDialectTranslation(registry);
   mlir::registerLLVMDialectTranslation(registry);
+  mlir::ub::registerConvertUBToLLVMInterface(registry);
+  mlir::registerConvertMemRefToLLVMInterface(registry);
 }
 
 void init_logger(const logger::LoggerOption& logger_option) {

@@ -154,7 +154,7 @@ struct replaceTorchSymbolicIntOp
 struct replaceSymbolicBindOp : public LLHOpRewritePattern<SymbolicBindOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(SymbolicBindOp op) const final {
-    if (op->hasAttr(llc::StopRun)) return llvm::failure();
+    if (op->hasAttr(llc::StopRunAttr)) return llvm::failure();
     return llvm::success();
   }
 

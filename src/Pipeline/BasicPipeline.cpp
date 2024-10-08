@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Enums.h"
@@ -30,6 +31,7 @@
 #include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
 #include "mlir/Conversion/ControlFlowToSPIRV/ControlFlowToSPIRVPass.h"
+#include "mlir/Conversion/ConvertToLLVM/ToLLVMPass.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
 #include "mlir/Conversion/Passes.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
@@ -311,13 +313,13 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::memref::createExpandOpsPass());
   // 规范化
   pm.addPass(mlir::createCanonicalizerPass());
-
+  // 去重重复的func
+  pm.addPass(mlir::func::createDuplicateFunctionEliminationPass());
   //===----------------------------------------------------------------------===//
   // lowing scf
   //===----------------------------------------------------------------------===//
   // lowing to scf to cf
   pm.addPass(mlir::createConvertSCFToCFPass());
-
   //===----------------------------------------------------------------------===//
   // lowing to llvm
   //===----------------------------------------------------------------------===//
@@ -338,9 +340,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // LLVM opt
   //===----------------------------------------------------------------------===//
-
-  // 去重重复的func
-  pm.addPass(mlir::func::createDuplicateFunctionEliminationPass());
+  // 适配执行引擎
+  pm.addPass(mlir::LLVM::ex::createAdaptEntryParmsForEnginePass());
   // 合法化
   pm.addPass(mlir::LLVM::createLegalizeForExportPass());
   // 内存转寄存器
