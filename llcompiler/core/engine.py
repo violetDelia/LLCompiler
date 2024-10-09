@@ -36,10 +36,6 @@ class Torch_ExecutionEngine:
                 raise TypeError(f"Unsupported type: {type(arg)}")
         return inputs
 
-    def trans_to_torch(self, outs: list[Tensor]):
-        i = outs[0]
-        a = torch.Tensor(i.data)
-        a.shape = i.size
 
     def run(self, *args) -> Any:
         inputs = self.trans_to_tensor(*args)

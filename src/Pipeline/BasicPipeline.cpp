@@ -170,6 +170,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
       mlir::scf::SCFDialect>();
   // func Bufferize  for remove the memref.copy before one-shot
   pm.addPass(mlir::func::createFuncBufferizePass());
+  // maipm.addPass(mlir::llh::createSinkBindEncoding());
+  pm.addPass(mlir::llh::createRemoveSymbolPass());
   // Bufferize
   pm.addPass(
       mlir::bufferization::createOneShotBufferizePass(bufferization_opts));

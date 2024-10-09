@@ -15,6 +15,7 @@
 
 #include <cstdint>
 
+#include "llcompiler/Compiler/Tensor.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "mlir/ExecutionEngine/RunnerUtils.h"
@@ -28,8 +29,8 @@ struct Tensor_D {
   void* ptr;
   void* base;
   int64_t offset;
-  int64_t* sizes;
-  int64_t* strides;
+  int64_t sizes[4];
+  int64_t strides[4];
 };
 
 std::vector<Tensor*> Engine::run(std::vector<Tensor*>& inputs) {
@@ -38,10 +39,11 @@ std::vector<Tensor*> Engine::run(std::vector<Tensor*>& inputs) {
   auto& func = maybe_func.get();
   auto in = inputs[0];
   in->print();
-  auto run =
-      func.toPtr<Tensor_D(void*, void*, int, int, int, int, int, int, int)>();
+  auto run = func.toPtr<Tensor_D(void*, void*, int, int, int, int, int, int,
+                                 int, int, int)>();
   auto c = run(in->data, in->base, in->offset, in->size[0], in->size[1],
-               in->size[2], in->stride[0], in->stride[1], in->stride[2]);
+               in->size[2], in->size[3], in->stride[0], in->stride[1],
+               in->stride[2], in->stride[3]);
   DINFO << c.ptr;
   DINFO << c.base;
   DINFO << c.sizes[0];
@@ -50,7 +52,20 @@ std::vector<Tensor*> Engine::run(std::vector<Tensor*>& inputs) {
   DINFO << c.strides[0];
   DINFO << c.strides[1];
   DINFO << c.strides[2];
-  return inputs;
+  DINFO << static_cast<float*>(c.base)[0];
+  auto res = new Tensor();
+  res->data = c.ptr;
+  res->base = c.base;
+  res->offset = c.offset;
+  res->type = Type::FLOAT32;
+  for (int i = 0; i < 4; i++) {
+    res->size.push_back(c.sizes[i]);
+    res->stride.push_back(c.strides[i]);
+  }
+  DINFO << c.strides[2];
+  std::vector<Tensor*> out;
+  out.push_back(res);
+  return out;
 };
 
 }  // namespace llc::compiler

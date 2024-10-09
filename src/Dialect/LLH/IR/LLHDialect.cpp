@@ -18,6 +18,7 @@
 // using namespace ::mlir;
 
 #include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
+#include "mlir/Target/LLVMIR/LLVMTranslationInterface.h"
 #include "mlir/Transforms/InliningUtils.h"
 
 namespace mlir::llh {
@@ -52,6 +53,7 @@ void LLHDialect::initialize() {
   registerTypes();
   registerAttributes();
   addInterfaces<LLHInlinerInterface>();
+  addInterfaces<LLVMTranslationDialectInterface>();
 }
 
 }  // namespace mlir::llh

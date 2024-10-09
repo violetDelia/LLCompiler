@@ -107,7 +107,21 @@ def UnloadAndBindEncoding : Pass<"unload-and-bind-encoding","ModuleOp">{
   let description = [{
     1.防止与其他第三方库和标准MLIR不兼容。
   }];
+}
 
+def SinkBindEncoding : Pass<"sink-bind-encoding","ModuleOp">{
+  let summary = "Bufferize的预处理";
+  let description = [{
+    
+  }];
+
+}
+
+def RemoveSymbolPass : Pass<"remove-symbol","ModuleOp">{
+  let summary = "去除符号";
+  let description = [{
+    
+  }];
 
 }
 

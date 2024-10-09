@@ -7,6 +7,8 @@ llcompiler_add_library(MLIRLLHTransforms
   RemoveRedundantOps.cpp
   ReshapeBeforeBraodcast.cpp
   UnloadAndBindEncoding.cpp
+  SinkBindEncoding.cpp
+  RemoveSymbol.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen

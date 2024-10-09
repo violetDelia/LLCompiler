@@ -10,7 +10,7 @@ class Broadcast(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = x.reshape(x.shape[0], x.shape[2], x.shape[1], x.shape[3])
-        x1 = torch.empty(x.shape[3])
+        x1 = torch.empty(x.shape[0],x.shape[1],x.shape[2],x.shape[3])
         x = x + x1
         x2 = torch.empty(x.shape[2], x.shape[3])
         x = x + x2

@@ -30,13 +30,13 @@ import typing
 
 
 module_dict = {
-    #Add: [torch.randn((2, 1, 4), device="cpu")],
+    Add: [torch.randn((2, 2, 1, 4), device="cpu")],
     # Multi_Add: [
-    #     torch.randn((1, 3, 224, 224), device="cpu"),
-    #     torch.randn((1, 3, 224, 224), device="cpu"),
+    #     torch.randn((2,2,4,4), device="cpu"),
+    #     torch.randn((2,2,4,4), device="cpu"),
     # ],
-    # Base: torch.randn((2, 3, 224, 224), device="cpu"),
-    Broadcast: [torch.randn((2, 3, 224, 224), device="cpu")],
+    Base: [torch.randn((2, 3, 224, 224), device="cpu")],
+    #Broadcast: [torch.randn((2, 2, 5, 5), device="cpu")],
     # torchvision.models.resnet18: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -56,7 +56,7 @@ def run_model_dict(dict):
                 os.path.dirname(__file__), "ir_tree", "fx", func.__name__, "log"
             ),
             log_level="debug",
-            symbol_infer=False,
+            symbol_infer=True,
         )
         model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
             model=func(),
@@ -65,7 +65,9 @@ def run_model_dict(dict):
             fullgraph=True,
         )
         res = model(*inputs)
+
         print(res)
+        print(func()(*inputs))
 
 
 if __name__ == "__main__":

@@ -80,12 +80,12 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
       .def_readwrite("stride", &Tensor::stride)
       .def("print", &Tensor::print)
       .def_buffer([](Tensor &self) -> py::buffer_info {
-        return py::buffer_info(self.data, get_itemsize(self.type),
+        return py::buffer_info(self.base, get_itemsize(self.type),
                                get_format(self.type), self.size.size(),
                                self.size, get_stride_in(&self));
       })
       .def("to_numpy", [](Tensor *self) {
-        auto bufer = py::buffer_info(self->data, get_itemsize(self->type),
+        auto bufer = py::buffer_info(self->base, get_itemsize(self->type),
                                      get_format(self->type), self->size.size(),
                                      self->size, get_stride_in(self));
         return py::array(bufer);
