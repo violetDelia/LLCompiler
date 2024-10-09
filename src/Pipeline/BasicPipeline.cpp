@@ -156,25 +156,24 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::bufferization::createEmptyTensorEliminationPass());
   pm.addPass(mlir::bufferization::createEmptyTensorToAllocTensorPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::bufferization::createBufferHoistingPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::bufferization::createBufferLoopHoistingPass());
+  pm.addPass(mlir::llh::createRemoveSymbolPass());
   mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
   bufferization_opts.bufferizeFunctionBoundaries = true;
+  bufferization_opts.allowReturnAllocsFromLoops = true;
+  bufferization_opts.copyBeforeWrite = true;
   bufferization_opts.analysisHeuristic = mlir::bufferization::
-      OneShotBufferizationOptions::AnalysisHeuristic::TopDown;
+      OneShotBufferizationOptions::AnalysisHeuristic::BottomUpFromTerminators;
   bufferization_opts.opFilter.allowDialect<
       mlir::tensor::TensorDialect, mlir::bufferization::BufferizationDialect,
-      mlir::linalg::LinalgDialect, mlir::arith::ArithDialect,
-      mlir::scf::SCFDialect>();
-  // func Bufferize  for remove the memref.copy before one-shot
+      mlir::arith::ArithDialect, mlir::scf::SCFDialect,
+      mlir::linalg::LinalgDialect>();
+  // func Bufferize  for remove the memref.copy before one-shot,
   pm.addPass(mlir::func::createFuncBufferizePass());
-  // maipm.addPass(mlir::llh::createSinkBindEncoding());
-  pm.addPass(mlir::llh::createRemoveSymbolPass());
   // Bufferize
   pm.addPass(
       mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
+  pm.addPass(mlir::bufferization::createDropEquivalentBufferResultsPass());
+
   mlir::bufferization::BufferResultsToOutParamsOpts buffer_result_opts;
   buffer_result_opts.filterFn = [](mlir::func::FuncOp *func) {
     auto name = func->getSymName();
@@ -188,6 +187,10 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 内存inpalce
   pm.addPass(mlir::bufferization::createBufferResultsToOutParamsPass(
       buffer_result_opts));
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::bufferization::createBufferHoistingPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::bufferization::createBufferLoopHoistingPass());
 
   //===----------------------------------------------------------------------===//
   // lowing linalg
@@ -332,6 +335,9 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // lowing to llvm
   //===----------------------------------------------------------------------===//
   if (options.target == TARGET::CPU) {
+    pm.addPass(mlir::createConvertFuncToLLVMPass(
+        {.useBarePtrCallConv = false, .indexBitwidth = options.indexBitWidth}));
+    pm.addPass(mlir::createLiftControlFlowToSCFPass());
     pm.addPass(mlir::createConvertControlFlowToLLVMPass(
         {.indexBitwidth = options.indexBitWidth}));
     pm.addPass(mlir::createConvertIndexToLLVMPass(
@@ -342,8 +348,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
         {.useAlignedAlloc = false,
          .indexBitwidth = options.indexBitWidth,
          .useGenericFunctions = false}));
-    pm.addPass(mlir::createConvertFuncToLLVMPass(
-        {.useBarePtrCallConv = false, .indexBitwidth = options.indexBitWidth}));
+
     // lowing to scf to cf
   } else {
     FATAL(llc::MLIR);
