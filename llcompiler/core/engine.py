@@ -11,6 +11,7 @@ TORCH_DTYPE_TO_TYPE = {torch.float32: 4}
 class ExecutionEngine:
     def __init__(self, ExecutionEngine):
         self.engine = ExecutionEngine
+        self.gen_outs_call = None
         
     def debug_info(self):
         self.engine.debug_info()
@@ -22,7 +23,7 @@ class ExecutionEngine:
         return self.run(*args)
     
 
-
+# TODO 检测输入tensor的target是否合法，不合法转为合法的
 class Torch_ExecutionEngine(ExecutionEngine):
 
     def __init__(self, ExecutionEngine):
@@ -30,7 +31,6 @@ class Torch_ExecutionEngine(ExecutionEngine):
         print("init")
     
     def trans_to_tensor(self, *args):
-        print(args)
         inputs = []
         for arg in args:
             if isinstance(arg, torch.Tensor):
@@ -51,5 +51,6 @@ class Torch_ExecutionEngine(ExecutionEngine):
 
     def run(self, *args) -> Any:
         inputs = self.trans_to_tensor(*args)
-        res = [torch.as_tensor(out.to_numpy()) for out in self.engine.run(inputs,[])]
+        outputs = self.gen_outs_call(*args)
+        res = [torch.as_tensor(out.to_numpy()) for out in self.engine.run(inputs,outputs)]
         return res
