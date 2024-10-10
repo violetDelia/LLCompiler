@@ -13,6 +13,7 @@
 //    limitations under the License.
 #ifndef INCLUDE_LLCOMPILER_DIALECT_UTILITY_FILE_H_
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_FILE_H_
+#include "llvm/IR/Module.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 namespace llc::file {
@@ -23,6 +24,7 @@ void str_to_mlir_module(mlir::MLIRContext& context,
 void file_to_mlir_module(mlir::MLIRContext& context,
                          mlir::OwningOpRef<mlir::ModuleOp>& module,
                          const char* file);
+void llvm_module_to_file(llvm::Module* module, const char* file);
 }  // namespace llc::file
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_FILE_H_

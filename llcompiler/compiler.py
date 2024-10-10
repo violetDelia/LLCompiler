@@ -83,7 +83,7 @@ class LLCompiler(llcompiler.core.Importer):
         compiler_options.log_root = self.log_root
         compiler_options.log_level = self.log_level
         compiler_options.log_llvm = self.log_llvm
-
+        #初始化环境
         engine = do_compile(self._mlir_module.__str__(), compiler_options)
         print("meke engine")
         return llcompiler.core.engine.Torch_ExecutionEngine(engine).run

@@ -337,7 +337,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   if (options.target == TARGET::CPU) {
     pm.addPass(mlir::createConvertFuncToLLVMPass(
         {.useBarePtrCallConv = false, .indexBitwidth = options.indexBitWidth}));
-    pm.addPass(mlir::createLiftControlFlowToSCFPass());
     pm.addPass(mlir::createConvertControlFlowToLLVMPass(
         {.indexBitwidth = options.indexBitWidth}));
     pm.addPass(mlir::createConvertIndexToLLVMPass(

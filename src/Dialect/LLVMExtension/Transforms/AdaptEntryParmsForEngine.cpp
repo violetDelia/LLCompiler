@@ -25,6 +25,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
+#include "llvm/IR/Function.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -56,13 +57,34 @@ namespace {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-
+struct AdaptReturnOp : public OpRewritePattern<LLVM::ReturnOp> {
+  using OpRewritePattern::OpRewritePattern;
+  LogicalResult match(LLVM::ReturnOp op) const final {
+    auto func = op->getParentOfType<LLVM::LLVMFuncOp>();
+    CHECK(llc::MLIR_PASS, func);
+    if (func->hasAttr(llc::EntranceAttr)) return llvm::success();
+    return llvm::failure();
+  }
+  void rewrite(LLVM::ReturnOp op, PatternRewriter& rewriter) const final {
+    auto loc = op->getLoc();
+    auto operands = op.getOperands();
+    auto new_operand = llvm::SmallVector<mlir::Value>();
+    for(auto operand : operands){
+      auto out_op = operand.getDefiningOp();
+      out_op->dump();
+      auto types = out_op->getOperandTypes();
+      for( auto type:types ){
+        type.dump();
+      }
+    }
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateAdaptEntryParmsForEnginePassPassPatterns(
-    RewritePatternSet& patterns) {
+void populateAdaptEntryParmsForEnginePassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
+  //patterns.add<AdaptReturnOp>(context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -83,17 +105,9 @@ void AdaptEntryParmsForEnginePass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  auto funcs = module.getOps<LLVM::LLVMFuncOp>();
-  for (auto func : funcs) {
-    if (!func->hasAttr(llc::EntranceAttr)) continue;
-    auto &blocks = func.getFunctionBody().getBlocks();
-    for( auto &block : blocks){
-      if (!block.isEntryBlock()) continue;
-      auto termina = block.getTerminator();
-      termina->dump();
-    }
-    
-    
-  }
+  RewritePatternSet patterns(context);
+  populateAdaptEntryParmsForEnginePassPatterns(patterns);
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+    signalPassFailure();
   LLC_RUN_OUT_PASS
 }

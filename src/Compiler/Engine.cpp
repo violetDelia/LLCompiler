@@ -33,7 +33,7 @@ struct Tensor_D {
   int64_t strides[4];
 };
 
-std::vector<Tensor*> Engine::run(std::vector<Tensor*>& inputs) {
+std::vector<Tensor*> Engine::run(std::vector<Tensor*>& inputs,std::vector<Tensor*>& outs) {
   auto maybe_func = engine->lookup("main");
   CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
   auto& func = maybe_func.get();

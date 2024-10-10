@@ -43,6 +43,7 @@ enum Type : size_t {
   INT1 = 6,
 };
 
+//这个类只是个包装，不负责分配内存，只是记录从python传入的tensor信息。
 extern "C" struct Tensor {
   Tensor();
   Tensor(size_t data_ptr, size_t base_ptr, size_t type, size_t offset,

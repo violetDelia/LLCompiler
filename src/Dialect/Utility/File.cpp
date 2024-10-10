@@ -76,4 +76,11 @@ void str_to_mlir_module(mlir::MLIRContext& context,
   return;
 }
 
+void llvm_module_to_file(llvm::Module* module, const char* file) {
+  std::error_code ec;
+  llvm::raw_fd_ostream outs(file, ec);
+  module->print(outs, nullptr);
+  outs.close();
+}
+
 }  // namespace llc::file

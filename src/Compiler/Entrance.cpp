@@ -27,6 +27,7 @@
 #include <system_error>
 #include <utility>
 
+#include "llcompiler/Compiler/Engine.h"
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Dialect/Utility/File.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
@@ -86,16 +87,9 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   auto llvm_context = std::make_unique<llvm::LLVMContext>();
   auto llvm_module = mlir::translateModuleToLLVMIR(module.get(), *llvm_context);
   CHECK(llc::GLOBAL, llvm_module) << "Failed to emit LLVM IR\n";
-  if (options.log_llvm) {
-    if (options.log_root == "") {
-      WARN(llc::GLOBAL) << " could not find log root!";
-    } else {
-      auto module_file = options.log_root + "/original.ll";
-      std::error_code ec;
-      llvm::raw_fd_ostream outs(module_file, ec);
-      llvm_module->print(outs, nullptr);
-      outs.close();
-    }
+  if (options.log_llvm && options.log_root != "") {
+    file::llvm_module_to_file(llvm_module.get(),
+                              (options.log_root + "/original.ll").c_str());
   }
   llvm::InitializeNativeTarget();
   llvm::InitializeNativeTargetAsmPrinter();
@@ -113,16 +107,9 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   CHECK(llc::GLOBAL, !optPipeline(llvm_module.get()))
       << "Failed to optimize LLVM IR "
       << "\n";
-  if (options.log_llvm) {
-    if (options.log_root == "") {
-      WARN(llc::GLOBAL) << " could not find log root!";
-    } else {
-      auto module_file = options.log_root + "/final.ll";
-      std::error_code ec;
-      llvm::raw_fd_ostream outs(module_file, ec);
-      llvm_module->print(outs, nullptr);
-      outs.close();
-    }
+  if (options.log_llvm && options.log_root != "") {
+    file::llvm_module_to_file(llvm_module.get(),
+                              (options.log_root + "/final.ll").c_str());
   }
   // ********* engine *********//
   auto maybe_jit = llvm::orc::LLJITBuilder().setNumCompileThreads(8).create();
@@ -130,6 +117,7 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   auto& jit = maybe_jit.get();
   auto error = jit->addIRModule(llvm::orc::ThreadSafeModule(
       std::move(llvm_module), std::move(llvm_context)));
+  DINFO <<"init";
   CHECK(llc::GLOBAL, !error) << "Failed to add module!";
   // auto maybe_func = jit->lookup("main");
   // CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
