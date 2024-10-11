@@ -21,9 +21,10 @@
 #include "mlir/ExecutionEngine/RunnerUtils.h"
 namespace llc::compiler {
 
-Engine::Engine(llvm::orc::LLJIT* engine) : engine(engine){};
+Engine::Engine(std::unique_ptr<llvm::orc::LLJIT> engine)
+    : engine(std::move(engine)){};
 
-void Engine::debug_info() { DINFO << engine; }
+void Engine::debug_info() { DINFO << engine.get(); }
 
 struct Tensor_D {
   void* ptr;
@@ -33,39 +34,25 @@ struct Tensor_D {
   int64_t strides[4];
 };
 
-std::vector<Tensor*> Engine::run(std::vector<Tensor*>& inputs,std::vector<Tensor*>& outs) {
+int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
+  DINFO << "in";
   auto maybe_func = engine->lookup("main");
+  DINFO << "find";
   CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
   auto& func = maybe_func.get();
   auto in = inputs[0];
-  in->print();
-  auto run = func.toPtr<Tensor_D(void*, void*, int, int, int, int, int, int,
-                                 int, int, int)>();
-  auto c = run(in->data, in->base, in->offset, in->size[0], in->size[1],
-               in->size[2], in->size[3], in->stride[0], in->stride[1],
-               in->stride[2], in->stride[3]);
-  DINFO << c.ptr;
-  DINFO << c.base;
-  DINFO << c.sizes[0];
-  DINFO << c.sizes[1];
-  DINFO << c.sizes[2];
-  DINFO << c.strides[0];
-  DINFO << c.strides[1];
-  DINFO << c.strides[2];
-  DINFO << static_cast<float*>(c.base)[0];
-  auto res = new Tensor();
-  res->data = c.ptr;
-  res->base = c.base;
-  res->offset = c.offset;
-  res->type = Type::FLOAT32;
-  for (int i = 0; i < 4; i++) {
-    res->size.push_back(c.sizes[i]);
-    res->stride.push_back(c.strides[i]);
-  }
-  DINFO << c.strides[2];
-  std::vector<Tensor*> out;
-  out.push_back(res);
-  return out;
+  auto out = outs[0];
+  out->print();
+  auto run = func.toPtr<void(void*, void*, int, int, int, int, int, int, int,
+                             int, int, void*, void*, int, int, int, int, int,
+                             int, int, int, int)>();
+  run(in->data, in->base, in->offset, in->size[0], in->size[1], in->size[2],
+      in->size[3], in->stride[0], in->stride[1], in->stride[2], in->stride[3],
+      out->data, out->base, out->offset, out->size[0], out->size[1],
+      out->size[2], out->size[3], out->stride[0], out->stride[1],
+      out->stride[2], out->stride[3]);
+
+  return 0;
 };
 
 }  // namespace llc::compiler

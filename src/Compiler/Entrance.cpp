@@ -117,14 +117,10 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   auto& jit = maybe_jit.get();
   auto error = jit->addIRModule(llvm::orc::ThreadSafeModule(
       std::move(llvm_module), std::move(llvm_context)));
-  DINFO <<"init";
   CHECK(llc::GLOBAL, !error) << "Failed to add module!";
-  // auto maybe_func = jit->lookup("main");
-  // CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
-  // auto& func = maybe_func.get();
-  // auto run = func.toPtr<StridedMemRefType<float, 3>()>();
-  // auto c = run();
-  Engine engine(jit.release());
+  auto maybe_func = jit->lookup("main");
+  CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
+  Engine engine(std::move(jit));
   return engine;
 }
 

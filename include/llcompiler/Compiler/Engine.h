@@ -33,16 +33,15 @@
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 namespace llc::compiler {
 
-
 // note: 执行的输出的分配不应该由编译器负责,需要调用方预先分配
 extern "C" struct Engine {
-  Engine(llvm::orc::LLJIT* engine);
+  Engine(std::unique_ptr<llvm::orc::LLJIT> engine);
 
   void debug_info();
 
-  std::vector<Tensor*> run(std::vector<Tensor*>& inputs,std::vector<Tensor*>& outs);
+  int run(std::vector<Tensor*> &inputs, std::vector<Tensor*>& outs);
 
-  llvm::orc::LLJIT* engine;
+  std::unique_ptr<llvm::orc::LLJIT> engine;
 };
 
 }  // namespace llc::compiler

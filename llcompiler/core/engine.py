@@ -7,7 +7,7 @@ import numpy as np
 
 TORCH_DTYPE_TO_TYPE = {torch.float32: 4}
 
-
+#负责执行c++的执行器
 class ExecutionEngine:
     def __init__(self, ExecutionEngine):
         self.engine = ExecutionEngine
@@ -28,11 +28,12 @@ class Torch_ExecutionEngine(ExecutionEngine):
 
     def __init__(self, ExecutionEngine):
         super().__init__(ExecutionEngine)
-        print("init")
     
     def trans_to_tensor(self, *args):
         inputs = []
         for arg in args:
+            print(arg.storage_offset())
+            print(arg.data_ptr())
             if isinstance(arg, torch.Tensor):
                 tensor = Tensor(
                     arg.data_ptr(),
@@ -52,5 +53,8 @@ class Torch_ExecutionEngine(ExecutionEngine):
     def run(self, *args) -> Any:
         inputs = self.trans_to_tensor(*args)
         outputs = self.gen_outs_call(*args)
-        res = [torch.as_tensor(out.to_numpy()) for out in self.engine.run(inputs,outputs)]
-        return res
+        outputs_ = self.trans_to_tensor(*outputs)
+        for out in outputs_:
+            out.print()
+        self.engine.run(inputs,outputs_)
+        return outputs

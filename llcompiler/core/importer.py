@@ -17,8 +17,7 @@ import torch.fx
 from torch.fx import symbolic_trace
 from ..importer import MLIR_Builder
 import onnx
-
-
+from torch._export.passes.replace_sym_size_ops_pass import _replace_sym_size_ops_pass
 class Importer:
     """
     import model to MLIR module.
@@ -45,6 +44,7 @@ class Importer:
         return self._importer_fx_module(model, **kwargs)
 
     def _importer_fx_module(self, model: torch.fx.GraphModule, **kwargs):
+        _replace_sym_size_ops_pass(model)
         builder = MLIR_Builder(**kwargs)
         return builder.mlir_gen(model)
 

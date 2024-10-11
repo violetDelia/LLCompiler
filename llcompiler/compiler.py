@@ -10,13 +10,14 @@ from llcompiler_.entrance import do_compile, CompilerOptions
 import os
 import onnx
 from torch._subclasses.fake_tensor import FakeTensor
+from .importer.fx_graph import get_result_type
 
 
 def empty_call(*args, **kwargs):
     return 1
 
 
-class LLCompiler(llcompiler.core.Importer):
+class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
     """
     LLCompiler
 
@@ -41,7 +42,7 @@ class LLCompiler(llcompiler.core.Importer):
         log_root: str = "",  # 日志保存路径
         log_level: str = "debug",  # 日志级别
         log_llvm: bool = True,  #
-        **kwargs
+        **kwargs,
     ) -> None:
         """
         args:
@@ -68,70 +69,6 @@ class LLCompiler(llcompiler.core.Importer):
         self.ir_tree_dir = ir_tree_dir
         self.log_llvm = log_llvm
 
-    def get_out_call(self, model):
-        if isinstance(model, torch.nn.Module):
-            return self._torch_get_out_call(model)
-        if isinstance(model, torch.fx.GraphModule):
-            return self._fx_get_out_call(model)
-        if isinstance(model, onnx.ModelProto):
-            raise NotImplementedError
-        if isinstance(model, onnx.GraphModule):
-            raise NotImplementedError
-        raise NotImplementedError
-
-    def _fx_get_out_call(self, model: torch.fx.GraphModule):
-        inputs_fake = []
-        outputs_fake = []
-        for node in model.graph.nodes:
-            if node.op == "placeholder":
-                if node.type is torch.Tensor:
-                    fake_tensor = node.meta["example_value"]
-                elif node.type is None:
-                    val = node.meta["val"]
-                    if isinstance(val, FakeTensor):
-                        fake_tensor = node.meta["val"]
-                        inputs_fake.append(fake_tensor)
-                    # 符号输入
-                    elif isinstance(val, torch.SymInt):
-                        pass
-                    else:
-                        print("unimplemented placeholder type: ", type(val))
-                # 符号输入
-                elif node.type is torch.SymInt:
-                    pass
-                else:
-                    print("unimplemented placeholder type: ", node.type)
-            elif node.op == "output":
-
-                def trav_args(args):
-                    for arg in args:
-                        if isinstance(arg, tuple):
-                            trav_args(arg)
-                        elif isinstance(arg, list):
-                            trav_args(arg)
-                        elif isinstance(arg, torch.fx.node.Node):
-                            outputs_fake.append(arg.meta["val"])
-                        else:
-                            raise NotImplementedError(type(arg))
-
-                trav_args(node.args)
-
-        def _get_out_form_inputs(*args):
-            outs = []
-            for arg in args:
-                if isinstance(arg, torch.Tensor):
-                   print(arg.shape)
-                elif isinstance(arg, int):
-                    pass
-                else:
-                    raise TypeError(f"Unsupported type: {type(arg)}")
-            raise ValueError
-            return outs
-        return _get_out_form_inputs
-
-    def _torch_get_out_call(self, model: torch.nn.Module):
-        return self._fx_get_out_call(model)
-
     def compiler(self, model: Any, inputs: List[torch.Tensor]):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
@@ -151,7 +88,6 @@ class LLCompiler(llcompiler.core.Importer):
         compiler_options.log_llvm = self.log_llvm
         # 初始化环境
         engine = do_compile(self._mlir_module.__str__(), compiler_options)
-        print("meke engine")
         execut = llcompiler.core.engine.Torch_ExecutionEngine(engine)
         execut.gen_outs_call = self.get_out_call(model)
         return execut

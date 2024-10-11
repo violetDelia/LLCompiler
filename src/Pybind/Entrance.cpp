@@ -92,8 +92,6 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
       });
 
   pybind11::class_<Engine>(entrance, "EngineInternel")
-      .def(pybind11::init<llvm::orc::LLJIT *>(),
-           py::arg("execution_engine_ptr"))
       .def("debug_info", &Engine::debug_info)
       .def("run", &Engine::run);
 

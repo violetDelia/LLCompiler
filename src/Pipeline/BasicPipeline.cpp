@@ -175,10 +175,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::bufferization::createDropEquivalentBufferResultsPass());
 
   mlir::bufferization::BufferResultsToOutParamsOpts buffer_result_opts;
-  buffer_result_opts.filterFn = [](mlir::func::FuncOp *func) {
-    auto name = func->getSymName();
-    return (name != "main");
-  };
+  buffer_result_opts.hoistStaticAllocs = true;
+  buffer_result_opts.addResultAttribute = true;
   // Bufferize规范化
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createFinalizingBufferizePass());
