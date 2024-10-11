@@ -22,16 +22,16 @@
 namespace llc::compiler {
 
 Engine::Engine(std::unique_ptr<llvm::orc::LLJIT> engine)
-    : engine(std::move(engine)){};
+    : engine(std::move(engine)) {}
 
 void Engine::debug_info() { DINFO << engine.get(); }
 
-struct Tensor_D {
-  void* ptr;
+struct MemerefDiscript {
   void* base;
-  int64_t offset;
-  int64_t sizes[4];
-  int64_t strides[4];
+  void* data;
+  void* offset;
+  void* sizes;
+  void* strides;
 };
 
 int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
@@ -42,7 +42,25 @@ int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
   auto& func = maybe_func.get();
   auto in = inputs[0];
   auto out = outs[0];
-  out->print();
+  std::vector<MemerefDiscript> params;
+  for (auto tensor : inputs) {
+    MemerefDiscript memref;
+    memref.base = static_cast<void*>(tensor->base);
+    memref.data = static_cast<void*>(tensor->data);
+    memref.offset = static_cast<void*>(&tensor->offset);
+    memref.sizes = static_cast<void*>(tensor->size.data());
+    memref.strides = static_cast<void*>(tensor->stride.data());
+    params.push_back(memref);
+  }
+  for (auto tensor : outs) {
+    MemerefDiscript memref;
+    memref.base = static_cast<void*>(tensor->base);
+    memref.data = static_cast<void*>(tensor->data);
+    memref.offset = static_cast<void*>(&tensor->offset);
+    memref.sizes = static_cast<void*>(tensor->size.data());
+    memref.strides = static_cast<void*>(tensor->stride.data());
+    params.push_back(memref);
+  }
   auto run = func.toPtr<void(void*, void*, int, int, int, int, int, int, int,
                              int, int, void*, void*, int, int, int, int, int,
                              int, int, int, int)>();
@@ -53,6 +71,6 @@ int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
       out->stride[2], out->stride[3]);
 
   return 0;
-};
+}
 
 }  // namespace llc::compiler

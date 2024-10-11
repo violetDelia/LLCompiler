@@ -69,7 +69,8 @@ struct FoldCastOp : public OpRewritePattern<CastOp> {
 
 struct ConstOpToArith : public OpRewritePattern<ConstantOp> {
   using OpRewritePattern<ConstantOp>::OpRewritePattern;
-  LogicalResult matchAndRewrite(ConstantOp op, PatternRewriter& rewriter) const {
+  LogicalResult matchAndRewrite(ConstantOp op,
+                                PatternRewriter& rewriter) const {
     auto value = op.getValue();
   }
 };

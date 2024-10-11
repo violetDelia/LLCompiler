@@ -220,16 +220,16 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //   pm.addNestedPass<mlir::func::FuncOp>(
   //       mlir::affine::createAffineDataCopyGenerationPass(0, 3, 0, 1024,
   //                                                        options.L3CacheSize));
-  //简化dma
+  // 简化dma
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::affine::createPipelineDataTransferPass());
   // loop融合
   pm.addPass(mlir::affine::createLoopFusionPass(
       0, 1024, false, mlir::affine::FusionMode::Greedy));
-  //去除冗余内存操作
+  // 去除冗余内存操作
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::affine::createAffineScalarReplacementPass());
-  //循环展开+融合
+  // 循环展开+融合
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::affine::createLoopUnrollAndJamPass());
   // 循环合并

@@ -43,7 +43,7 @@ size_t get_itemsize(llc::compiler::Type type) {
       return sizeof(int64_t);
   }
   UNIMPLEMENTED(llc::UTILITY);
-};
+}
 
 std::string get_format(llc::compiler::Type type) {
   switch (type) {
@@ -71,7 +71,7 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
   entrance.doc() = "entrance for compiler";  // optional module docstring
   pybind11::class_<Tensor>(entrance, "Tensor", py::buffer_protocol())
       .def_readwrite("data", &Tensor::data)
-      .def(pybind11::init<size_t, size_t, size_t, size_t,std::vector<size_t> &,
+      .def(pybind11::init<size_t, size_t, size_t, size_t, std::vector<size_t> &,
                           std::vector<size_t> &>())
       .def_readwrite("data", &Tensor::data)
       .def_readwrite("base", &Tensor::base)

@@ -174,33 +174,33 @@ struct replaceTorchSymbolicIntOp
   }
   void rewrite(TorchSymbolicIntOp op,
                LLHPatternRewriter& rewriter) const final {
-    rewriter.eraseOp(op);
-    // auto func = op->getParentOfType<func::FuncOp>();
-    // CHECK(llc::MLIR, func);
-    // auto loc = op->getLoc();
-    // auto symbol = op.getSymName().str();
-    // auto& blocks = func.getBlocks();
-    // for (auto& block : blocks) {
-    //   if (!block.isEntryBlock()) continue;
-    //   for (auto arg : block.getArguments()) {
-    //     auto type = arg.getType();
-    //     if (!isa<RankedTensorType>(type)) continue;
-    //     auto has_encode = llvm::cast<RankedTensorType>(type).getEncoding();
-    //     if (!has_encode) continue;
-    //     if (isa<DictionaryAttr>(has_encode)) {
-    //       auto dim_dict = cast<DictionaryAttr>(has_encode);
-    //       for (auto key : dim_dict.getValue()) {
-    //         auto name = cast<StringAttr>(key.getValue()).str();
-    //         if (name != symbol) continue;
-    //         auto dim = stoi(key.getName().str());
-    //         auto dim_op = llh::buildTensorDim(arg, &rewriter, dim);
-    //         rewriter.replaceOp(op, dim_op);
-    //         return;
-    //       }
-    //     }
-    //   }
-    // }
-    // WARN(llc::MLIR) << "not find symbol dim!";
+    // rewriter.eraseOp(op);
+    auto func = op->getParentOfType<func::FuncOp>();
+    CHECK(llc::MLIR, func);
+    auto loc = op->getLoc();
+    auto symbol = op.getSymName().str();
+    auto& blocks = func.getBlocks();
+    for (auto& block : blocks) {
+      if (!block.isEntryBlock()) continue;
+      for (auto arg : block.getArguments()) {
+        auto type = arg.getType();
+        if (!isa<RankedTensorType>(type)) continue;
+        auto has_encode = llvm::cast<RankedTensorType>(type).getEncoding();
+        if (!has_encode) continue;
+        if (isa<DictionaryAttr>(has_encode)) {
+          auto dim_dict = cast<DictionaryAttr>(has_encode);
+          for (auto key : dim_dict.getValue()) {
+            auto name = cast<StringAttr>(key.getValue()).str();
+            if (name != symbol) continue;
+            auto dim = stoi(key.getName().str());
+            auto dim_op = llh::buildTensorDim(arg, &rewriter, dim);
+            rewriter.replaceOp(op, dim_op);
+            return;
+          }
+        }
+      }
+    }
+    WARN(llc::MLIR) << "not find symbol dim!";
   }
 };
 

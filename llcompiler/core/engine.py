@@ -32,8 +32,6 @@ class Torch_ExecutionEngine(ExecutionEngine):
     def trans_to_tensor(self, *args):
         inputs = []
         for arg in args:
-            print(arg.storage_offset())
-            print(arg.data_ptr())
             if isinstance(arg, torch.Tensor):
                 tensor = Tensor(
                     arg.data_ptr(),
@@ -54,7 +52,5 @@ class Torch_ExecutionEngine(ExecutionEngine):
         inputs = self.trans_to_tensor(*args)
         outputs = self.gen_outs_call(*args)
         outputs_ = self.trans_to_tensor(*outputs)
-        for out in outputs_:
-            out.print()
         self.engine.run(inputs,outputs_)
         return outputs

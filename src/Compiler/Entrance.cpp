@@ -47,7 +47,7 @@
 
 namespace llc::compiler {
 
-CompilerOptions::CompilerOptions(){};
+CompilerOptions::CompilerOptions() {}
 
 Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* init logger *********//

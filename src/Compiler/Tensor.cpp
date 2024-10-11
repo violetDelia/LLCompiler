@@ -16,7 +16,8 @@
 #include <iostream>
 namespace llc::compiler {
 
-Tensor::Tensor(){};
+Tensor::Tensor() {}
+
 Tensor::Tensor(size_t data_ptr, size_t base_ptr, size_t type, size_t offset,
                std::vector<size_t>& size, std::vector<size_t>& stride)
     : offset(offset),
