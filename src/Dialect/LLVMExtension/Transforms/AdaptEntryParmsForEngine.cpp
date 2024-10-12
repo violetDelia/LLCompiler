@@ -191,6 +191,48 @@ void transformBlockArgs(Block& block, IRRewriter* rewriter,
   }
   block.eraseArguments(0, arg_size);
 }
+
+void transformBlockArgsFinal(Block& block, IRRewriter* rewriter) {
+  auto context = block.back().getContext();
+  auto loc = block.back().getLoc();
+  auto arg_size = block.getNumArguments();
+  auto new_arg_ptr =
+      block.addArgument(LLVM::LLVMPointerType::get(context), loc);
+  for (int i = 0; i < arg_size; ++i) {
+    auto arg_ptr = block.getArgument(i);
+    auto const_op = rewriter->create<LLVM::ConstantOp>(
+        loc, rewriter->getI64Type(), rewriter->getIndexAttr(i));
+    auto get_element_ptr = rewriter->create<LLVM::GEPOp>(
+        loc,
+        LLVM::LLVMPointerType::get(
+            context, cast<LLVM::LLVMPointerType>(new_arg_ptr.getType())
+                         .getAddressSpace()),
+        LLVM::LLVMPointerType::get(
+            context,
+            cast<LLVM::LLVMPointerType>(arg_ptr.getType()).getAddressSpace()),
+        new_arg_ptr, ArrayRef<Value>{const_op}, true);
+    auto new_arg = rewriter->create<LLVM::LoadOp>(
+        loc,
+        LLVM::LLVMPointerType::get(
+            context, cast<LLVM::LLVMPointerType>(new_arg_ptr.getType())
+                         .getAddressSpace()),
+        get_element_ptr);
+    block.push_front(new_arg);
+    block.push_front(get_element_ptr);
+    block.push_front(const_op);
+    rewriter->replaceAllUsesWith(arg_ptr, new_arg);
+  }
+  block.eraseArguments(0, arg_size);
+}
+
+void transformFunctionTypeFinal(LLVM::LLVMFuncOp& enter_func) {
+  auto new_params = llvm::SmallVector<Type>();
+  auto contxt = enter_func->getContext();
+  new_params.push_back(LLVM::LLVMPointerType::get(contxt));
+  auto new_enter_type = LLVM::LLVMFunctionType::get(
+      enter_func.getFunctionType().getReturnType(), new_params);
+  enter_func.setType(new_enter_type);
+}
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
@@ -233,5 +275,7 @@ void AdaptEntryParmsForEnginePass::runOnOperation() {
   transformBlockArgs(block, &rewriter, original_memref_start,
                      original_memref_rank);
   transformFunctionType(enter_func, original_memref_rank);
+  transformBlockArgsFinal(block, &rewriter);
+  transformFunctionTypeFinal(enter_func);
   LLC_RUN_OUT_PASS
 }

@@ -13,7 +13,9 @@
 //    limitations under the License.
 #include "llcompiler/Compiler/Engine.h"
 
+#include <cstddef>
 #include <cstdint>
+#include <vector>
 
 #include "llcompiler/Compiler/Tensor.h"
 #include "llcompiler/Support/Logger.h"
@@ -42,34 +44,23 @@ int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
   auto& func = maybe_func.get();
   auto in = inputs[0];
   auto out = outs[0];
-  std::vector<MemerefDiscript> params;
+  std::vector<void*> params;
   for (auto tensor : inputs) {
-    MemerefDiscript memref;
-    memref.base = static_cast<void*>(tensor->base);
-    memref.data = static_cast<void*>(tensor->data);
-    memref.offset = static_cast<void*>(&tensor->offset);
-    memref.sizes = static_cast<void*>(tensor->size.data());
-    memref.strides = static_cast<void*>(tensor->stride.data());
-    params.push_back(memref);
+    params.push_back(static_cast<void*>(tensor->base));
+    params.push_back(static_cast<void*>(tensor->data));
+    params.push_back(static_cast<void*>(&tensor->offset));
+    params.push_back(static_cast<void*>(tensor->size.data()));
+    params.push_back(static_cast<void*>(tensor->stride.data()));
   }
   for (auto tensor : outs) {
-    MemerefDiscript memref;
-    memref.base = static_cast<void*>(tensor->base);
-    memref.data = static_cast<void*>(tensor->data);
-    memref.offset = static_cast<void*>(&tensor->offset);
-    memref.sizes = static_cast<void*>(tensor->size.data());
-    memref.strides = static_cast<void*>(tensor->stride.data());
-    params.push_back(memref);
+    params.push_back(static_cast<void*>(tensor->base));
+    params.push_back(static_cast<void*>(tensor->data));
+    params.push_back(static_cast<void*>(&tensor->offset));
+    params.push_back(static_cast<void*>(tensor->size.data()));
+    params.push_back(static_cast<void*>(tensor->stride.data()));
   }
-  auto run = func.toPtr<void(void*, void*, int, int, int, int, int, int, int,
-                             int, int, void*, void*, int, int, int, int, int,
-                             int, int, int, int)>();
-  run(in->data, in->base, in->offset, in->size[0], in->size[1], in->size[2],
-      in->size[3], in->stride[0], in->stride[1], in->stride[2], in->stride[3],
-      out->data, out->base, out->offset, out->size[0], out->size[1],
-      out->size[2], out->size[3], out->stride[0], out->stride[1],
-      out->stride[2], out->stride[3]);
-
+  auto run = func.toPtr<void(void**)>();
+  run(static_cast<void**>(params.data()));
   return 0;
 }
 

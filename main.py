@@ -30,7 +30,7 @@ import typing
 
 
 module_dict = {
-    #Add: [torch.randn((2, 2, 1, 4), device="cpu")],
+    Add: [torch.randn((2, 2, 1, 4), device="cpu")],
     # Multi_Add: [
     #     torch.randn((2,2,4,4), device="cpu"),
     #     torch.randn((2,2,4,4), device="cpu"),
@@ -61,7 +61,7 @@ def run_model_dict(dict):
         model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
             model=func(),
             backend=compiler,
-            dynamic=True,
+            dynamic=False,
             fullgraph=True,
         )
         res = model(*inputs)
