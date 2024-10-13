@@ -31,6 +31,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Traits.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -69,7 +70,7 @@ ConstantOp buildConstTensorFromScalar(ConstantOp op,
       auto data_attr = llvm::dyn_cast_or_null<IntegerAttr>(op.getValueAttr());
       CHECK(llc::MLIR_PASS, data_attr);
       auto data = data_attr.getValue();
-      new_value = DenseElementsAttr::get(tensor_type, {data});
+      new_value = DenseElementsAttr::get(tensor_type, {(*data.getRawData())});
     } else {
       auto data_attr = llvm::dyn_cast_or_null<FloatAttr>(op.getValueAttr());
       CHECK(llc::MLIR_PASS, data_attr);
@@ -82,7 +83,7 @@ ConstantOp buildConstTensorFromScalar(ConstantOp op,
       auto data_attr = llvm::dyn_cast_or_null<IntegerAttr>(op.getValueAttr());
       CHECK(llc::MLIR_PASS, data_attr);
       auto data = data_attr.getValue();
-      auto float_attr = FloatAttr::get(user_ele_type, data.bitsToDouble());
+      auto float_attr = FloatAttr::get(user_ele_type, *data.getRawData());
       new_value = DenseElementsAttr::get(tensor_type, {float_attr.getValue()});
     } else {
       auto data_attr = llvm::dyn_cast_or_null<FloatAttr>(op.getValueAttr());
@@ -104,7 +105,7 @@ struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
     if (op.use_empty()) return llvm::failure();
     if (!op->getResult(0).getType().isIntOrFloat()) return llvm::failure();
     for (auto user : op->getUsers()) {
-      if (user->hasTrait<OpTrait::ResultsBroadcastableShape>()) {
+      if (user->hasTrait<::mlir::BraodcastableOpInterface::Trait>()) {
         return llvm::success();
       }
     }
@@ -113,7 +114,7 @@ struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
   void rewrite(ConstantOp op, LLHPatternRewriter& rewriter) const final {
     auto loc = op->getLoc();
     for (auto user : op->getUsers()) {
-      if (user->hasTrait<OpTrait::ResultsBroadcastableShape>()) {
+      if (user->hasTrait<::mlir::BraodcastableOpInterface::Trait>()) {
         auto operand_num = user->getNumOperands();
         auto const_tensor = buildConstTensorFromScalar(op, &rewriter, user);
         for (int i = 0; i < operand_num; i++) {

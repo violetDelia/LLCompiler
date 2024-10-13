@@ -19,25 +19,23 @@ torch.nn.Transformer
 from transformers import BertTokenizer, BertModel, BertForMaskedLM
 import typing
 
-# @run_time
-# def compiler_onnx(model, inputs):
-#     compiler = LLC.LLCompiler(
-#         mode="inference", ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "onnx")
-#     )
-#     onnx_model = torch.onnx.export(model, inputs, dynamo=True).model_proto
-#     compiler.compiler(onnx_model)
-#     return model(inputs)
+
+@run_time
+def log_run_time(model, *inputs):
+    return model(*inputs)
 
 
 module_dict = {
-    Add: [torch.randn((2, 2, 1, 4), device="cpu")],
+    Add: [torch.randn((200, 3, 224, 224), device="cpu")],
+    Div: [torch.randn((200, 3, 224, 224), device="cpu")],
+    Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
+    Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Multi_Add: [
     #     torch.randn((2,2,4,4), device="cpu"),
     #     torch.randn((2,2,4,4), device="cpu"),
     # ],
-    #Base: [torch.randn((2, 3, 224, 224), device="cpu")],
-    Broadcast: [torch.randn((2, 2, 5, 5), device="cpu")],
-    #torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
+    # Base: [torch.randn((2, 3, 224, 224), device="cpu")],
+    # torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -48,41 +46,38 @@ module_dict = {
 
 
 def run_model_dict(dict):
-    for func, inputs in dict.items():
-        compiler = LLC.LLCompiler(
-            mode="training",
-            ir_tree_dir=os.path.join(os.getcwd(), "ir_tree", "fx", func.__name__),
-            log_root=os.path.join(
-                os.path.dirname(__file__), "ir_tree", "fx", func.__name__, "log"
-            ),
-            log_level="debug",
-            symbol_infer=True,
-        )
-        model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
-            model=func(),
-            backend=compiler,
-            dynamic=False,
-            fullgraph=True,
-        )
-        res = model(*inputs)
-
-        print(res)
-        print(func()(*inputs))
+    modes = ["training", "inference"]
+    for mode in modes:
+        for func, inputs in dict.items():
+            print(func.__name__,": ", mode)
+            compiler = LLC.LLCompiler(
+                mode=mode,
+                ir_tree_dir=os.path.join(
+                    os.getcwd(), "ir_tree", mode, "fx", func.__name__
+                ),
+                log_root=os.path.join(
+                    os.path.dirname(__file__),
+                    "ir_tree",
+                    mode,
+                    "fx",
+                    func.__name__,
+                    "log",
+                ),
+                log_level="debug",
+                symbol_infer=True,
+            )
+            model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
+                model=func(),
+                backend=compiler,
+                dynamic=False,
+                fullgraph=True,
+            )
+            engine_res = log_run_time(model, *inputs)
+            torch_res = log_run_time(func(), *inputs)
+            is_same = check_same(engine_res, torch_res)
+            if not is_same:
+                print(func.__name__, " in ", mode, " is incorrect!")
 
 
 if __name__ == "__main__":
     run_model_dict(module_dict)
-
-    # model = Net()
-    # model = torchvision.models.googlenet()
-    # input = (torch.rand((10, 32, 512)), torch.rand((20, 32, 512)))
-    # model = Net()
-    # input = torch.randn((2, 3, 224, 224), device="cpu")
-
-    # onnx_model = torch.onnx.dynamo_export(
-    #     model, input, export_options=torch.onnx.ExportOptions(dynamic_shapes=True)
-    # )
-
-    # compiler_fx(model, input)
-
-    # torch_compiler(model, input)

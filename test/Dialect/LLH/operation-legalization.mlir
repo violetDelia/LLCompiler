@@ -10,5 +10,3 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
   return 
   }
 }
-
-

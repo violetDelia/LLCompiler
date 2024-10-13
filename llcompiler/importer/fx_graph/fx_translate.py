@@ -335,7 +335,12 @@ def torch_build_func(
             # 张量输入
             if node.type is torch.Tensor:
                 fake_tensor = node.meta["example_value"]
-                tensor_type = torch_fake_tensor_translate(fake_tensor)
+                base_tensor_type = torch_fake_tensor_translate(fake_tensor)
+                tensor_type = TensorType(
+                    base_tensor_type.element_type,
+                    base_tensor_type.shape,
+                    torch_fake_tensor_encoding(fake_tensor),
+                )
                 arg_value = block.insert_arg(tensor_type, len(input_types))
                 value_map[node.name] = [arg_value]
                 input_types.append(tensor_type)

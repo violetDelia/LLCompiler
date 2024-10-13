@@ -3,6 +3,7 @@ import torch.fx
 from typing import Any, Union, List, Dict
 import ctypes
 import numpy as np
+from time import time
 
 
 TORCH_DTYPE_TO_TYPE = {torch.float32: 4}
