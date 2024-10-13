@@ -15,6 +15,7 @@
 
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
+#include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
 #include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Conversion/Passes.h"
@@ -69,6 +70,9 @@
 #include "mlir/Pass/PassRegistry.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/Passes.h"
+#include "stablehlo/conversions/linalg/transforms/Passes.h"
+#include "stablehlo/conversions/tosa/transforms/Passes.h"
+#include "stablehlo/transforms/Passes.h"
 namespace llc::pipleline {
 
 void buildBasicPipeline(::mlir::OpPassManager &pm,
@@ -83,9 +87,9 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 广播前插入reshape
   pm.addPass(mlir::llh::createReshapeBeforeBraodcastPass());
   // 符号推导和shapeinfer
-  if (options.symbolInfer) {
-    pm.addPass(mlir::llh::createInferSymbolShapePass());
-  }
+  pm.addPass(mlir::llh::createInferSymbolShapePass());
+  // 插入广播
+  pm.addPass(mlir::llh::createInsertBroadCastPass());
   // 规范化
   pm.addPass(mlir::createCanonicalizerPass());
   // 将WeightOp转换为constant
@@ -102,9 +106,36 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::createConvertLLHToArithPass());
   pm.addPass(mlir::createConvertLLHToTensorPass());
+  pm.addPass(mlir::createConvertLLHToHLOPass());
   pm.addPass(mlir::createConvertLLHToTosaPass());
   pm.addPass(mlir::createCanonicalizerPass());
   pm.addPass(mlir::index_ex::createFoldIndexCastPass());
+
+  //===----------------------------------------------------------------------===//
+  //  hlo opt
+  //===----------------------------------------------------------------------===//
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::stablehlo::createStablehloAggressiveFolderPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::stablehlo::createStablehloAggressiveSimplificationPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::stablehlo::createStablehloCanonicalizeDynamismPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::stablehlo::createStablehloCompatibilityExpanderPass());  //分解
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::stablehlo::createStablehloLegalizeDeprecatedOpsPass());
+  pm.addPass(mlir::stablehlo::createStablehloConvertToSignlessPass());
+
+  //===----------------------------------------------------------------------===//
+  //  lowing hlo
+  //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::stablehlo::createStablehloLegalizeToLinalgPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::tosa::createStablehloPrepareForTosaPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::tosa::createStablehloLegalizeToTosaPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::tosa::createStablehloQuantLegalizeToTosaRescalePass());
 
   //===----------------------------------------------------------------------===//
   //  tosa opt
@@ -126,6 +157,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
       {.preferConv2DKernelLayoutHWCF = false}));
+
   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalg());
   pm.addPass(mlir::tosa::createTosaToArith(true));
 

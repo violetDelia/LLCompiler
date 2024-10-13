@@ -50,7 +50,7 @@ module_dict = {
 
 
 def run_model_dict(dict):
-    modes = ["training", "inference"]
+    modes = ["inference","training"]
     for mode in modes:
         for func, inputs in dict.items():
             print("模型: ", func.__name__, ", 模式: ", mode)
@@ -73,11 +73,11 @@ def run_model_dict(dict):
             model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=func(),
                 backend=compiler,
-                dynamic=False,
+                dynamic=True,
                 fullgraph=True,
             )
-            engine_res = llcompiler_run_time(model, *inputs)
             torch_res = torch_run_time(func(), *inputs)
+            engine_res = llcompiler_run_time(model, *inputs)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")

@@ -54,4 +54,33 @@ def ConvertLLHToTensorPass : Pass<"convert-llh-to-tensor"> {
                             "::mlir::index::IndexDialect"];
 }
 
+//===----------------------------------------------------------------------===//
+// LLH --> hlo
+//===----------------------------------------------------------------------===//
+def ConvertLLHToHLOPass : Pass<"convert-llh-to-hlo"> {
+  let summary = "convert LLH IR to hlo IR";
+  let description = [{
+
+  }];
+  let dependentDialects = [ "::mlir::tensor::TensorDialect",
+                            "::mlir::func::FuncDialect",
+                            "::mlir::index::IndexDialect",
+                            "::mlir::stablehlo::StablehloDialect"
+                            ];
+}
+
+//===----------------------------------------------------------------------===//
+// tosa --> linalg
+//===----------------------------------------------------------------------===//
+def ConvertTosaToLinalgExtensionPass : Pass<"convert-tosa-to-linalg-extension"> {
+  let summary = "convert tosa to linalg IR";
+  let description = [{
+
+  }];
+  let dependentDialects = [ "::mlir::tensor::TensorDialect",
+                            "::mlir::func::FuncDialect",
+                            "::mlir::index::IndexDialect",
+                            "::mlir::linalg::LinalgDialect",
+                            ];
+}
 #endif // INCLUDE_LLCOMPILER_CONVERSION_PASSES_TD_

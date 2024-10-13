@@ -99,7 +99,13 @@ def ReshapeBeforeBraodcastPass : Pass<"reshape-before-braodcast","ModuleOp">{
   let description = [{
     1.为了方便lowing到tosa,需要lowing前做融合。broadcast == reshape + tile;
   }];
+}
 
+def InsertBroadCastPass : Pass<"insert-broadcast","ModuleOp">{
+  let summary = "插入braodcast";
+  let description = [{
+    
+  }];
 }
 
 def UnloadAndBindEncoding : Pass<"unload-and-bind-encoding","ModuleOp">{

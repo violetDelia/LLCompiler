@@ -4,7 +4,7 @@
 
 ## MLIR To LLVM
 
-    现在我们经过mlir的一系列pass获得的是一张llvm dialect'的IR图：
+现在我们经过mlir的一系列pass获得的是一张llvm dialect'的IR图：
 
 ```
 module attributes {builtin.gloabal_layout = "NCHW"} {
@@ -252,14 +252,14 @@ int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
 }
 ```
 
-之前的IR：
+参数转换之前的IR：
 
 ```
 llvm.func @main(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: i64, %arg3: i64, %arg4: i64, %arg5: i64, %arg6: i64, %arg7: i64, %arg8: i64, %arg9: i64, %arg10: i64, %arg11: !llvm.ptr, %arg12: !llvm.ptr, %arg13: i64, %arg14: i64, %arg15: i64, %arg16: i64, %arg17: i64, %arg18: i64, %arg19: i64, %arg20: i64, %arg21: i64) attributes {entrance} {
     %0 = llvm.mlir.undef : !llvm.struct<(ptr, ptr, i64, array<4 x i64>, array<4 x i64>)>
 ```
 
-转变后的为：
+参数转变后的为：
 
 ```
 llvm.func @main(%arg0: !llvm.ptr) attributes {entrance} {
@@ -393,7 +393,8 @@ def run(self, *args) -> Any:
 
 ## 执行
 
-现在，编译器已经具备执行模型的功能了，定义一个简单的模型：
+现在，编译器已经具备执行模型的能力了，定义一个简单的模型：
+
 ```python
 class ElementaryArithmetic(nn.Module):
     def __init__(self):
@@ -460,7 +461,9 @@ tensor([[[[3., 3., 3., 3., 3.],
           [3., 3., 3., 3., 3.]]]])
 '''
 ```
-现在编译器已经具备了简单运算和广播的能力，但是其性能与高性能算子大约有5~10倍的差距，之后会逐步的介绍编译器的优化和模型的优化，来提高编译器的运行效率。
+
+如今编译器已经具备了简单运算和广播的能力，但是其性能与高性能算子大约有5~10倍的差距，之后会逐步的介绍编译器的优化和模型的优化，来提高编译器的运行效率。
+
 ```python
 模型:  Add , 模式:  training
 llcompiler_run_time : time is 1.957s

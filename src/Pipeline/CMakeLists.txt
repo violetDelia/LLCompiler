@@ -15,9 +15,14 @@ llcompiler_add_library(LLCPipelines
     MLIRLLHToTosa
     MLIRLLHToArith
     MLIRLLHToTensor
+    MLIRLLHToHLO
+    StablehloPasses
+    StablehloTOSATransforms
+    StablehloLinalgTransforms
     MLIRLLVMExtensionTransforms
     MLIRIndexExtensionTransforms
     MLIRTosaTransforms
+    MLIRTosaToLinalgExtension
     MLIRTosaToArith
     MLIRTosaToTensor
     MLIRTosaToLinalg

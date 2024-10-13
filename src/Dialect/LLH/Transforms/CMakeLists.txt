@@ -9,6 +9,7 @@ llcompiler_add_library(MLIRLLHTransforms
   UnloadAndBindEncoding.cpp
   SinkBindEncoding.cpp
   RemoveSymbol.cpp
+  InsetBraodCastPass.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen

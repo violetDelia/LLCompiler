@@ -12,19 +12,17 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
-#define INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
-#include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
-#include "llcompiler/Conversion/TosaToLinalgExtension/TosaToLinalgExtension.h"
-#include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
-#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
-#include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
-#include "mlir/Pass/PassRegistry.h"
+#ifndef INCLUDE_LLCOMPILER_CONVERSION_LLHTOHLO_LLHTOHLO_H_
+#define INCLUDE_LLCOMPILER_CONVERSION_LLHTOHLO_LLHTOHLO_H_
+#include <memory>
 namespace mlir {
-
-#define GEN_PASS_REGISTRATION
+class MLIRContext;
+class TypeConverter;
+class Pass;
+class RewritePatternSet;
+class ConversionTarget;
+#define GEN_PASS_DECL_CONVERTLLHTOHLOPASS
 #include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
-
-#endif  // INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
+#endif  // INCLUDE_LLCOMPILER_CONVERSION_LLHTOHLO_LLHTOHLO_H_

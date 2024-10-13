@@ -323,11 +323,6 @@ void configConvertLLHToTosaPassTarget(ConversionTarget& target) {
   target.addIllegalOp<SubOp>();
   target.addIllegalOp<MulOp>();
   target.addIllegalOp<DivOp>();
-  //  target.addIllegalOp<WeightOp>();
-  //  target.addIllegalOp<ReluOp>();
-  //  target.addIllegalOp<TransposeOp>();
-  //  target.addDynamicallyLegalOp<MatMulOp>(check_matmal_illegal);
-  //  target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mlir::tosa::TosaDialect>();
   target.addLegalDialect<mlir::func::FuncDialect>();
 }

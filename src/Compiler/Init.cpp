@@ -41,6 +41,7 @@
 #include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Target/SPIRV/Target.h"
+#include "stablehlo/dialect/StablehloOps.h"
 
 namespace llc::compiler {
 
@@ -51,6 +52,7 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::tosa::TosaDialect>();
   context.getOrLoadDialect<mlir::index::IndexDialect>();
   context.getOrLoadDialect<mlir::bufferization::BufferizationDialect>();
+  context.getOrLoadDialect<mlir::stablehlo::StablehloDialect>();
 }
 
 void add_extension_and_interface(mlir::DialectRegistry& registry) {

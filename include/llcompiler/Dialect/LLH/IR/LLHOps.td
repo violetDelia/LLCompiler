@@ -158,6 +158,17 @@ def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike]>{
     //let hasCanonicalizer = 1;
 }
 
+def LLH_BroadCastToOp          : LLH_SymbolOp<"broadcast_to",[]>{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        Variadic<LLH_Int64>:$out_shapes,
+        DenseI64ArrayAttr:$cast_dims
+        );
+    let results = (outs 
+        LLH_Tensor);
+
+}
+
 def LLH_WeightOp : LLH_SymbolOp<"weight">{
     let description = [{
         WeightOp is the constant weight only contain weight file;
@@ -307,7 +318,7 @@ def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{
         LLH_Tensor:$result);
 }
 
-// def LLH_CastOp          : LLH_UnaryOp<"cast", [Elementwise], LLH_Tensor, LLH_Tensor, (ins DefaultValuedAttr<SI64Attr, "1">:$saturate, SI64Attr:$to)>;
+
 
 // def LLH_CeluOp        : LLH_UnaryElementwiseOp<"celu", [], LLH_FloatTensor, LLH_FloatTensor, (ins DefaultValuedAttr<F64Attr, "1">:$alpha)>;
 

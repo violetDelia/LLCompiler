@@ -1,3 +1,5 @@
 add_subdirectory(LLHToTosa)
 add_subdirectory(LLHToArith)
 add_subdirectory(LLHToTensor)
+add_subdirectory(LLHToHLO)
+add_subdirectory(TosaToLinalgExtension)

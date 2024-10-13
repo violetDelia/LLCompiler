@@ -45,6 +45,7 @@
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
+#include "stablehlo/dialect/StablehloOps.h"
 
 //  -pass-pipeline=
 //    "builtin.module(  inline,
@@ -67,6 +68,7 @@ int main(int argc, char **argv) {
   registry.insert<mlir::scf::SCFDialect>();
   registry.insert<mlir::index::IndexDialect>();
   registry.insert<mlir::LLVM::LLVMDialect>();
+  registry.insert<mlir::stablehlo::StablehloDialect>();
   mlir::tensor::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
       registry);
