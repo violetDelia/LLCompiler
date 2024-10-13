@@ -61,4 +61,4 @@ class WeightOp(IRDLOperation):
     result = result_def(TensorType)
 ```
 
-    另一个不足之处在于，xDSL和MLIR实际上是两套系统。这种方式要求在两者中各自定义相同的一组opset，而由于xDSL的运行效率较低，可以选择定义得简单一些，而在MLIR中则需要更完整的定义，这增加了维护的复杂性。
+    另一个不足之处在于，xDSL和MLIR实际上是两套系统。这种方式要求在两者中各自定义相同的一组opset，而由于xDSL的运行效率较低，可以选择定义得简单一些，而在MLIR中则需要更完整的定义，增加了维护的复杂性。

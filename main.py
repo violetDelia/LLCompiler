@@ -21,15 +21,19 @@ import typing
 
 
 @run_time
-def log_run_time(model, *inputs):
+def llcompiler_run_time(model, *inputs):
     return model(*inputs)
 
+@run_time
+def torch_run_time(model, *inputs):
+    return model(*inputs)
 
 module_dict = {
     Add: [torch.randn((200, 3, 224, 224), device="cpu")],
     Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
+    ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     # Multi_Add: [
     #     torch.randn((2,2,4,4), device="cpu"),
     #     torch.randn((2,2,4,4), device="cpu"),
@@ -49,7 +53,7 @@ def run_model_dict(dict):
     modes = ["training", "inference"]
     for mode in modes:
         for func, inputs in dict.items():
-            print(func.__name__,": ", mode)
+            print("模型: ", func.__name__, ", 模式: ", mode)
             compiler = LLC.LLCompiler(
                 mode=mode,
                 ir_tree_dir=os.path.join(
@@ -72,8 +76,8 @@ def run_model_dict(dict):
                 dynamic=False,
                 fullgraph=True,
             )
-            engine_res = log_run_time(model, *inputs)
-            torch_res = log_run_time(func(), *inputs)
+            engine_res = llcompiler_run_time(model, *inputs)
+            torch_res = torch_run_time(func(), *inputs)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")
@@ -81,3 +85,19 @@ def run_model_dict(dict):
 
 if __name__ == "__main__":
     run_model_dict(module_dict)
+    # model = ElementaryArithmetic()
+    # input = torch.ones(2, 2, 2, 5)
+    # compiler = LLC.LLCompiler(
+    #     mode="inference",
+    #     symbol_infer=True,
+    # )
+    # opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
+    #     model=model,
+    #     backend=compiler,
+    #     dynamic=False,
+    #     fullgraph=True,
+    # )
+    # print("llcompiler")
+    # print(opt_model(input))
+    # print("torch")
+    # print(model(input))

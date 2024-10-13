@@ -190,17 +190,18 @@ attributes #1 = { mustprogress nofree nounwind willreturn memory(write, argmem: 
 
 ```cpp
 extern "C" struct Engine {
-  Engine(llvm::orc::LLJIT* engine);
+  Engine(std::unique_ptr<llvm::orc::LLJIT> engine);
 
   void debug_info();
 
-  std::vector<Tensor*> run(std::vector<Tensor*>& inputs);
+  int run(std::vector<Tensor*> &inputs, std::vector<Tensor*>& outs);
 
-  llvm::orc::LLJIT* engine;
+  std::unique_ptr<llvm::orc::LLJIT> engine;
 };
 ```
 
 其中Tensor的数据结构是用来描述Tensor张量信息的，它的结构很像mlir的memref，很适合当作传入参数来调用定义如下：
+
 ```
 extern "C" struct Tensor {
   Tensor();
@@ -215,4 +216,283 @@ extern "C" struct Tensor {
   std::vector<size_t> size;
   std::vector<size_t> stride;
 };
+```
+
+## 统一执行的参数
+
+为了将不规则的tensor信息传递同意的形式，添加一个pass将参数统一改为void ** 的形式传入，这样无论输入的形状和类型，都可以 viod （void **） 的方式对其进行调用。
+
+在实际运行时，找到编译好的入口函数，将输入输出以统一的格式封装起来，传到到编译好的模型中。
+
+```cpp
+int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
+  auto maybe_func = engine->lookup("main");
+  CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
+  auto& func = maybe_func.get();
+  auto in = inputs[0];
+  auto out = outs[0];
+  std::vector<void*> params;
+  for (auto tensor : inputs) {
+    params.push_back(static_cast<void*>(tensor->base));
+    params.push_back(static_cast<void*>(tensor->data));
+    params.push_back(static_cast<void*>(&tensor->offset));
+    params.push_back(static_cast<void*>(tensor->size.data()));
+    params.push_back(static_cast<void*>(tensor->stride.data()));
+  }
+  for (auto tensor : outs) {
+    params.push_back(static_cast<void*>(tensor->base));
+    params.push_back(static_cast<void*>(tensor->data));
+    params.push_back(static_cast<void*>(&tensor->offset));
+    params.push_back(static_cast<void*>(tensor->size.data()));
+    params.push_back(static_cast<void*>(tensor->stride.data()));
+  }
+  auto run = func.toPtr<void(void**)>(); // 入口函数
+  run(static_cast<void**>(params.data()));
+  return 0;
+}
+```
+
+之前的IR：
+
+```
+llvm.func @main(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: i64, %arg3: i64, %arg4: i64, %arg5: i64, %arg6: i64, %arg7: i64, %arg8: i64, %arg9: i64, %arg10: i64, %arg11: !llvm.ptr, %arg12: !llvm.ptr, %arg13: i64, %arg14: i64, %arg15: i64, %arg16: i64, %arg17: i64, %arg18: i64, %arg19: i64, %arg20: i64, %arg21: i64) attributes {entrance} {
+    %0 = llvm.mlir.undef : !llvm.struct<(ptr, ptr, i64, array<4 x i64>, array<4 x i64>)>
+```
+
+转变后的为：
+
+```
+llvm.func @main(%arg0: !llvm.ptr) attributes {entrance} {
+    %0 = llvm.mlir.constant(9 : index) : i64
+    %1 = llvm.getelementptr inbounds %arg0[%0] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %2 = llvm.load %1 : !llvm.ptr -> !llvm.ptr
+    %3 = llvm.mlir.constant(8 : index) : i64
+    %4 = llvm.getelementptr inbounds %arg0[%3] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %5 = llvm.load %4 : !llvm.ptr -> !llvm.ptr
+    %6 = llvm.mlir.constant(7 : index) : i64
+    %7 = llvm.getelementptr inbounds %arg0[%6] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %8 = llvm.load %7 : !llvm.ptr -> !llvm.ptr
+    %9 = llvm.mlir.constant(6 : index) : i64
+    %10 = llvm.getelementptr inbounds %arg0[%9] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %11 = llvm.load %10 : !llvm.ptr -> !llvm.ptr
+    %12 = llvm.mlir.constant(5 : index) : i64
+    %13 = llvm.getelementptr inbounds %arg0[%12] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %14 = llvm.load %13 : !llvm.ptr -> !llvm.ptr
+    %15 = llvm.mlir.constant(4 : index) : i64
+    %16 = llvm.getelementptr inbounds %arg0[%15] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %17 = llvm.load %16 : !llvm.ptr -> !llvm.ptr
+    %18 = llvm.mlir.constant(3 : index) : i64
+    %19 = llvm.getelementptr inbounds %arg0[%18] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %20 = llvm.load %19 : !llvm.ptr -> !llvm.ptr
+    %21 = llvm.mlir.constant(2 : index) : i64
+    %22 = llvm.getelementptr inbounds %arg0[%21] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %23 = llvm.load %22 : !llvm.ptr -> !llvm.ptr
+    %24 = llvm.mlir.constant(1 : index) : i64
+    %25 = llvm.getelementptr inbounds %arg0[%24] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %26 = llvm.load %25 : !llvm.ptr -> !llvm.ptr
+    %27 = llvm.mlir.constant(0 : index) : i64
+    %28 = llvm.getelementptr inbounds %arg0[%27] : (!llvm.ptr, i64) -> !llvm.ptr, !llvm.ptr
+    %29 = llvm.load %28 : !llvm.ptr -> !llvm.ptr
+    %30 = llvm.mlir.constant(3 : index) : i64
+    %31 = llvm.getelementptr inbounds %2[%30] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %32 = llvm.load %31 : !llvm.ptr -> i64
+    %33 = llvm.mlir.constant(2 : index) : i64
+    %34 = llvm.getelementptr inbounds %2[%33] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %35 = llvm.load %34 : !llvm.ptr -> i64
+    %36 = llvm.mlir.constant(1 : index) : i64
+    %37 = llvm.getelementptr inbounds %2[%36] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %38 = llvm.load %37 : !llvm.ptr -> i64
+    %39 = llvm.mlir.constant(0 : index) : i64
+    %40 = llvm.getelementptr inbounds %2[%39] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %41 = llvm.load %40 : !llvm.ptr -> i64
+    %42 = llvm.mlir.constant(3 : index) : i64
+    %43 = llvm.getelementptr inbounds %5[%42] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %44 = llvm.load %43 : !llvm.ptr -> i64
+    %45 = llvm.mlir.constant(2 : index) : i64
+    %46 = llvm.getelementptr inbounds %5[%45] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %47 = llvm.load %46 : !llvm.ptr -> i64
+    %48 = llvm.mlir.constant(1 : index) : i64
+    %49 = llvm.getelementptr inbounds %5[%48] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %50 = llvm.load %49 : !llvm.ptr -> i64
+    %51 = llvm.mlir.constant(0 : index) : i64
+    %52 = llvm.getelementptr inbounds %5[%51] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %53 = llvm.load %52 : !llvm.ptr -> i64
+    %54 = llvm.mlir.constant(0 : index) : i64
+    %55 = llvm.getelementptr inbounds %8[%54] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %56 = llvm.load %55 : !llvm.ptr -> i64
+    %57 = llvm.mlir.constant(3 : index) : i64
+    %58 = llvm.getelementptr inbounds %17[%57] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %59 = llvm.load %58 : !llvm.ptr -> i64
+    %60 = llvm.mlir.constant(2 : index) : i64
+    %61 = llvm.getelementptr inbounds %17[%60] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %62 = llvm.load %61 : !llvm.ptr -> i64
+    %63 = llvm.mlir.constant(1 : index) : i64
+    %64 = llvm.getelementptr inbounds %17[%63] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %65 = llvm.load %64 : !llvm.ptr -> i64
+    %66 = llvm.mlir.constant(0 : index) : i64
+    %67 = llvm.getelementptr inbounds %17[%66] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %68 = llvm.load %67 : !llvm.ptr -> i64
+    %69 = llvm.mlir.constant(3 : index) : i64
+    %70 = llvm.getelementptr inbounds %20[%69] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %71 = llvm.load %70 : !llvm.ptr -> i64
+    %72 = llvm.mlir.constant(2 : index) : i64
+    %73 = llvm.getelementptr inbounds %20[%72] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %74 = llvm.load %73 : !llvm.ptr -> i64
+    %75 = llvm.mlir.constant(1 : index) : i64
+    %76 = llvm.getelementptr inbounds %20[%75] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %77 = llvm.load %76 : !llvm.ptr -> i64
+    %78 = llvm.mlir.constant(0 : index) : i64
+    %79 = llvm.getelementptr inbounds %20[%78] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %80 = llvm.load %79 : !llvm.ptr -> i64
+    %81 = llvm.mlir.constant(0 : index) : i64
+    %82 = llvm.getelementptr inbounds %23[%81] : (!llvm.ptr, i64) -> !llvm.ptr, i64
+    %83 = llvm.load %82 : !llvm.ptr -> i64
+```
+
+## 在python和C++中进行Tensor的传递
+
+为了将python的tensor张量传递到C++中执行，在pybind 中指定了Tensor和numpy的转换规则：
+
+```cpp
+pybind11::class_<Tensor>(entrance, "Tensor", py::buffer_protocol())
+      .def_readwrite("data", &Tensor::data)
+      .def(pybind11::init<size_t, size_t, size_t, size_t, std::vector<size_t> &,
+                          std::vector<size_t> &>())
+      .def_readwrite("data", &Tensor::data)
+      .def_readwrite("base", &Tensor::base)
+      .def_readwrite("offset", &Tensor::offset)
+      .def_readwrite("size", &Tensor::size)
+      .def_readwrite("stride", &Tensor::stride)
+      .def("print", &Tensor::print)
+      .def_buffer([](Tensor &self) -> py::buffer_info {
+        return py::buffer_info(self.base, get_itemsize(self.type),
+                               get_format(self.type), self.size.size(),
+                               self.size, get_stride_in(&self));
+      })
+      .def("to_numpy", [](Tensor *self) {
+        auto bufer = py::buffer_info(self->base, get_itemsize(self->type),
+                                     get_format(self->type), self->size.size(),
+                                     self->size, get_stride_in(self));
+        return py::array(bufer);
+      });
+```
+
+之后再python端封装一个执行器，用来将数据结构进行转换，以及推导输出的tensor信息。
+
+```python
+def run(self, *args) -> Any:
+        inputs = self.trans_to_tensor(*args)  # 将torch.Tensor 转变为C++定义的Tensor
+        outputs = self.gen_outs_call(*args)  # 推导输出的tensor信息，并分配好内存
+        outputs_ = self.trans_to_tensor(
+            *outputs
+        )  # 输出的torch.Tensor 转变为C++定义的Tensor
+        self.engine.run(inputs, outputs_)  # 调用执行函数
+        return outputs
+
+```
+
+## 执行
+
+现在，编译器已经具备执行模型的功能了，定义一个简单的模型：
+```python
+class ElementaryArithmetic(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x: torch.Tensor):
+        x1 = x.reshape(x.shape[3], x.shape[2], x.shape[0], x.shape[1])
+        x1 = x1 + x1
+        x1 = x - 2
+        x1 = x1 * 2
+        x1 = x1 / 2
+        x2 = x.reshape(x.shape[3], x.shape[0], x.shape[2], x.shape[1])
+        x2 = x2 + x2
+        x2 = x2.reshape(x.shape[0], x.shape[1], x.shape[2], x.shape[3])
+        x = x2 - x1
+        return x
+```
+
+```python
+if __name__ == "__main__":
+    # run_model_dict(module_dict)
+    model = ElementaryArithmetic()
+    input = torch.ones(2, 2, 2, 5)
+    compiler = LLC.LLCompiler(
+        mode="inference",
+        symbol_infer=True,
+    )
+    opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
+        model=model,
+        backend=compiler,
+        dynamic=False,
+        fullgraph=True,
+    )
+    print("llcompiler")
+    print(opt_model(input))
+    print("torch")
+    print(model(input))
+'''
+llcompiler
+tensor([[[[3., 3., 3., 3., 3.],
+          [3., 3., 3., 3., 3.]],
+
+         [[3., 3., 3., 3., 3.],
+          [3., 3., 3., 3., 3.]]],
+
+
+        [[[3., 3., 3., 3., 3.],
+          [3., 3., 3., 3., 3.]],
+
+         [[3., 3., 3., 3., 3.],
+          [3., 3., 3., 3., 3.]]]])
+torch
+tensor([[[[3., 3., 3., 3., 3.],
+          [3., 3., 3., 3., 3.]],
+
+         [[3., 3., 3., 3., 3.],
+          [3., 3., 3., 3., 3.]]],
+
+
+        [[[3., 3., 3., 3., 3.],
+          [3., 3., 3., 3., 3.]],
+
+         [[3., 3., 3., 3., 3.],
+          [3., 3., 3., 3., 3.]]]])
+'''
+```
+现在编译器已经具备了简单运算和广播的能力，但是其性能与高性能算子大约有5~10倍的差距，之后会逐步的介绍编译器的优化和模型的优化，来提高编译器的运行效率。
+```python
+模型:  Add , 模式:  training
+llcompiler_run_time : time is 1.957s
+torch_run_time : time is 0.015s
+模型:  Div , 模式:  training
+llcompiler_run_time : time is 0.106s
+torch_run_time : time is 0.015s
+Div  in  training  is incorrect!
+模型:  Sub , 模式:  training
+llcompiler_run_time : time is 0.104s
+torch_run_time : time is 0.015s
+模型:  Mul , 模式:  training
+llcompiler_run_time : time is 0.106s
+torch_run_time : time is 0.013s
+模型:  ElementaryArithmetic , 模式:  training
+llcompiler_run_time : time is 0.196s
+torch_run_time : time is 0.041s
+模型:  Add , 模式:  inference
+llcompiler_run_time : time is 0.100s
+torch_run_time : time is 0.016s
+模型:  Div , 模式:  inference
+llcompiler_run_time : time is 0.102s
+torch_run_time : time is 0.017s
+Div  in  inference  is incorrect!
+模型:  Sub , 模式:  inference
+llcompiler_run_time : time is 0.102s
+torch_run_time : time is 0.016s
+模型:  Mul , 模式:  inference
+llcompiler_run_time : time is 0.103s
+torch_run_time : time is 0.014s
+模型:  ElementaryArithmetic , 模式:  inference
+llcompiler_run_time : time is 0.190s
+torch_run_time : time is 0.046s
+
 ```

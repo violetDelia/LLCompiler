@@ -8,37 +8,39 @@ from time import time
 
 TORCH_DTYPE_TO_TYPE = {torch.float32: 4}
 
-#负责执行c++的执行器
+
+# 负责执行c++的执行器
 class ExecutionEngine:
     def __init__(self, ExecutionEngine):
         self.engine = ExecutionEngine
         self.gen_outs_call = None
-        
+
     def debug_info(self):
         self.engine.debug_info()
-    
+
     def run(self, *args) -> Any:
         pass
 
     def __call__(self, *args) -> Any:
         return self.run(*args)
-    
+
 
 # TODO 检测输入tensor的target是否合法，不合法转为合法的
 class Torch_ExecutionEngine(ExecutionEngine):
 
     def __init__(self, ExecutionEngine):
         super().__init__(ExecutionEngine)
-    
+
     def trans_to_tensor(self, *args):
         inputs = []
         for arg in args:
             if isinstance(arg, torch.Tensor):
+                offset = arg.storage_offset()
                 tensor = Tensor(
                     arg.data_ptr(),
-                    arg.data_ptr(),
+                    arg.data_ptr()+offset,
                     TORCH_DTYPE_TO_TYPE[arg.dtype],
-                    arg.storage_offset(),
+                    offset,
                     arg.shape,
                     arg.stride(),
                 )
@@ -50,8 +52,10 @@ class Torch_ExecutionEngine(ExecutionEngine):
         return inputs
 
     def run(self, *args) -> Any:
-        inputs = self.trans_to_tensor(*args)
-        outputs = self.gen_outs_call(*args)
-        outputs_ = self.trans_to_tensor(*outputs)
-        self.engine.run(inputs,outputs_)
+        inputs = self.trans_to_tensor(*args)  # 将torch.Tensor 转变为C++定义的Tensor
+        outputs = self.gen_outs_call(*args)  # 推导输出的tensor信息，并分配好内存
+        outputs_ = self.trans_to_tensor(
+            *outputs
+        )  # 输出的torch.Tensor 转变为C++定义的Tensor
+        self.engine.run(inputs, outputs_)  # 调用执行函数
         return outputs
