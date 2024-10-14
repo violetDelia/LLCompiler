@@ -30,8 +30,19 @@
 
 namespace mlir::llh {
 
+int getSpaceIndex(Layout layout) {
+  switch (layout) {
+    case Layout::NCHW:
+      return 2;
+    case Layout::NHWC:
+      return 1;
+  }
+  UNIMPLEMENTED(llc::SymbolInfer);
+  return -1;
+}
+
 bool isLayoutSensitive(Operation* op) {
-  return llvm::isa<llh::ConvOp, ConvBiasOp>(op);
+  return llvm::isa<llh::ConvOp, ConvBiasOp, MaxPoolOp>(op);
 }
 
 void checkAndInferSymbol(Operation* op) {

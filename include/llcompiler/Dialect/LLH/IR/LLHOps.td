@@ -313,7 +313,8 @@ def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{
         DenseI64ArrayAttr:$dilation,
         DenseI64ArrayAttr:$kernel_shape,
         DenseI64ArrayAttr:$pad,
-        DenseI64ArrayAttr:$stride);
+        DenseI64ArrayAttr:$stride,
+        OptionalAttr<LLH_LayoutAttr>:$layout);
     let results = (outs 
         LLH_Tensor:$result);
 }

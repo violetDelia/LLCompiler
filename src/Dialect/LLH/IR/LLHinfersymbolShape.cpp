@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -45,6 +46,17 @@ namespace mlir::llh {
     checkIsReturnOperand(res);                    \
   }
 namespace {
+
+int getChannelOutIndex(Layout layout, int rank) {
+  switch (layout) {
+    case Layout::NCHW:
+      return 1;
+    case Layout::NHWC:
+      return rank - 1;
+  }
+  UNIMPLEMENTED(llc::SymbolInfer);
+  return -1;
+}
 
 void checkIsReturnOperand(Value& value) {
   for (auto user : value.getUsers()) {
@@ -160,12 +172,21 @@ void simplyBinarySymbolInfer(Value& value) {
 }
 
 void ConvSymbolInfer(Operation* op) {
+  // first compute the space shape
+  size_t space_index = 0;
+  auto layout_attr =
+      llvm::cast_or_null<LayoutAttr>(op->getAttr(llc::LayoutAttr));
+  CHECK(llc::SymbolInfer, layout_attr);
+  auto layout = layout_attr.getValue();
+  if (layout == Layout::NCHW) {
+    space_index = 2;
+  } else if (layout == Layout::NHWC) {
+    UNIMPLEMENTED(llc::SymbolInfer);
+    space_index = 1;
+  }
   auto input_type =
       llvm::cast_or_null<RankedTensorType>(op->getOperand(0).getType());
   CHECK(llc::SymbolInfer, input_type);
-  auto weight_type =
-      llvm::cast_or_null<RankedTensorType>(op->getOperand(1).getType());
-  CHECK(llc::SymbolInfer, weight_type);
   auto kernel_shape_attr =
       llvm::cast_or_null<DenseI64ArrayAttr>(op->getAttr(llc::KernelShapeAttr));
   CHECK(llc::SymbolInfer, kernel_shape_attr);
@@ -177,10 +198,6 @@ void ConvSymbolInfer(Operation* op) {
   auto stride_attr =
       llvm::cast_or_null<DenseI64ArrayAttr>(op->getAttr(llc::StrideAtt));
   auto strides = stride_attr.asArrayRef();
-  auto layout_attr =
-      llvm::cast_or_null<LayoutAttr>(op->getAttr(llc::LayoutAttr));
-  CHECK(llc::SymbolInfer, layout_attr);
-  auto layout = layout_attr.getValue();
   auto dilation_attr =
       llvm::cast_or_null<DenseI64ArrayAttr>(op->getAttr(llc::DilationAttr));
   CHECK(llc::SymbolInfer, dilation_attr);
@@ -188,14 +205,6 @@ void ConvSymbolInfer(Operation* op) {
   auto rank = input_type.getRank();
   auto new_shape = llvm::SmallVector<int64_t>();
   auto new_shape_symbol = llvm::SmallVector<StringRef>();
-  size_t space_index = 0;
-  // first compute the space shape
-  if (layout == Layout::NCHW) {
-    space_index = 2;
-  } else if (layout == Layout::NHWC) {
-    UNIMPLEMENTED(llc::SymbolInfer);
-    space_index = 1;
-  }
   auto space_rank = kernel_shape.size();
   auto input_shape = input_type.getShape();
   for (int i = 0; i < space_rank; ++i) {
@@ -238,6 +247,9 @@ void ConvSymbolInfer(Operation* op) {
     weight_index = 0;
     channel_out_index = rank - 1;
   }
+  auto weight_type =
+      llvm::cast_or_null<RankedTensorType>(op->getOperand(1).getType());
+  CHECK(llc::SymbolInfer, weight_type);
   auto weight_has_encoding = weight_type.getEncoding();
   auto weight_shape = weight_type.getShape();
   CHECK(llc::SymbolInfer, weight_has_encoding);
@@ -330,8 +342,71 @@ UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
 UNIMPLEMENTED_INFER_FUNCTION(BroadCastToOp)
 
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
-UNIMPLEMENTED_INFER_FUNCTION(MaxPoolOp)
 UNIMPLEMENTED_INFER_FUNCTION(AdaptiveAvgPoolOp)
+
+INFER_FUNCTION(MaxPoolOp) {
+  auto layout_attr =
+      llvm::cast_or_null<LayoutAttr>(getOperation()->getAttr(llc::LayoutAttr));
+  CHECK(llc::SymbolInfer, layout_attr);
+  auto layout = layout_attr.getValue();
+  size_t space_index = mlir::llh::getSpaceIndex(layout);
+  auto input_type = llc::getRankTensorFrom(getInput());
+  auto kernel_shape = getKernelShape();
+  auto pad = getPad();
+  auto strides = getStride();
+  auto dilations = getDilation();
+  auto rank = input_type.getRank();
+  auto new_shape = llvm::SmallVector<int64_t>();
+  auto new_shape_symbol = llvm::SmallVector<StringRef>();
+  auto space_rank = kernel_shape.size();
+  auto input_shape = input_type.getShape();
+  for (int i = 0; i < space_rank; ++i) {
+    if (!input_type.isDynamicDim(i + space_index)) {
+      auto in = input_shape[i + space_rank];
+      auto pad_h = pad[i];
+      auto pad_l = pad[i + space_rank];
+      auto dilation = dilations[i];
+      auto stride = strides[i];
+      auto kernel_size = kernel_shape[i];
+      auto out =
+          (in + pad_h + pad_l - dilation * (kernel_size - 1) - 1) / stride + 1;
+      new_shape.push_back(out);
+      new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+    } else {
+      auto out = ShapedType::kDynamic;
+      new_shape.push_back(out);
+      new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+    }
+  }
+  // batch shape
+  auto has_encoding = input_type.getEncoding();
+  CHECK(llc::SymbolInfer, has_encoding);
+  auto encoding = cast_or_null<EncodingAttr>(has_encoding);
+  CHECK(llc::SymbolInfer, encoding);
+  auto input_symbols = encoding.getShapeSymbols();
+  auto batch_index = 0;
+  new_shape.insert(new_shape.begin(), input_shape[batch_index]);
+  auto batch_symbol_attr = input_symbols[batch_index];
+  auto batch_symbol = batch_symbol_attr.getAttr().str();
+  new_shape_symbol.insert(new_shape_symbol.begin(), batch_symbol);
+  // channel_shape
+  size_t channel_out_index = getChannelOutIndex(layout, rank);
+  size_t weight_index = 0;
+  new_shape.insert(new_shape.begin() + channel_out_index,
+                   input_shape[channel_out_index]);
+  auto channel_out_symbol_attr = input_symbols[weight_index];
+  auto channel_out_symbol = channel_out_symbol_attr.getAttr().str();
+  new_shape_symbol.insert(new_shape_symbol.begin() + channel_out_index,
+                          channel_out_symbol);
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto new_tensor =
+      RankedTensorType::get(new_shape, input_type.getElementType());
+  getResult().setType(new_tensor);
+  auto res = getResult();
+  symbol_analsis->addEncoding(res, new_shape_symbol);
+  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  return llvm::success();
+}
 
 INFER_FUNCTION(ReshapeOp) {
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());

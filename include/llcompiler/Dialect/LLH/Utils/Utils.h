@@ -24,10 +24,10 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
 namespace mlir::llh {
+
+int getSpaceIndex(Layout layout);
 bool isLayoutSensitive(Operation* op);
-
 void checkAndInferSymbol(Operation* op);
-
 llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
                           size_t dim);
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,

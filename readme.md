@@ -1,4 +1,5 @@
 # install
+
 node:默认生成器是ninja ，其他生成器自行设置
 
 安装
@@ -11,14 +12,13 @@ node:默认生成器是ninja ，其他生成器自行设置
 测试:
 ninja check-llcompiler
 ninja check-llc-python
-# note
 
-编译器不进行内存的分配，因此运行的内存由Engine获取，编译器只考虑L2，L1内存的数据流。
+# Todo
 
-Engine 负责执行编译好的模型文件。而且一个engine只负责运行一个函数。
-
-python端的ExecutionEngine只具有内存预分配和执行Engine的功能。
-
-python端的importer 负责构建xdsl 的mlir
-
-do_compiler 负责将xdsl mlir 编译好，返回Engine
+* 运行resnet
+* 量化指令调研和实现   L3 i4 --> L1/L2 f16
+* affine -> vector -> x86/riscv
+* 权重重排，推理优化 【类似dma合并？】
+* tosa 基于symbol  的   to linalg 扩展
+* 华为的自动融合策略实现
+* gcu 以及luanch/ 线程选择？

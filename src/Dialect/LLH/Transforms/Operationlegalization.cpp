@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -128,13 +129,27 @@ struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
   }
 };
 
+struct WeightOpRefine : public LLHOpRewritePattern<WeightOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+  LogicalResult match(WeightOp op) const final {
+    auto tensor = llc::getRankTensorFrom(op);
+    if (tensor.getShape().empty()) return llvm::success();
+    return llvm::failure();
+  }
+  void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {
+    auto res = op->getResult(0);
+    auto tensor = llc::getRankTensorFrom(op);
+    res.setType(RankedTensorType::get({1}, tensor.getElementType()));
+  }
+};
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<BraodcastableScalarToTensor>(context);
-  // patterns.add<replaceSymbolicBindOp>(context);
+  patterns.add<WeightOpRefine>(context);
 }
 
 //===----------------------------------------------------------------------===//
