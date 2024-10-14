@@ -72,6 +72,7 @@ class MLIR_Builder:
             **dict(model.named_parameters(remove_duplicate=False)),
             **dict(model.named_buffers(remove_duplicate=False)),
         }
+        model.graph.print_tabular()
         value_map: dict[str, list[SSAValue]] = dict()
         symbol_map: dict[str, TorchSymbolicIntOp] = dict()
         block = Block()
@@ -99,6 +100,7 @@ class MLIR_Builder:
             [func],
             attributes={"builtin.gloabal_layout": StringAttr("NCHW")},
         )
+        print(module)
         return module
 
     def _onnx_mlir_gen(self, model: onnx.GraphProto, **kwargs):

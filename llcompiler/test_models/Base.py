@@ -7,8 +7,8 @@ class ElementaryArithmetic(nn.Module):
         super().__init__()
 
     def forward(self, x: torch.Tensor):
+        x = x + x
         x1 = x.reshape(x.shape[3], x.shape[2], x.shape[0], x.shape[1])
-        x1 = x1 + x1
         x1 = x - 2
         x1 = x1 * 2
         x1 = x1 / 2

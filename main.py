@@ -29,10 +29,10 @@ def torch_run_time(model, *inputs):
     return model(*inputs)
 
 module_dict = {
-    Add: [torch.randn((200, 3, 224, 224), device="cpu")],
-    Div: [torch.randn((200, 3, 224, 224), device="cpu")],
-    Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
-    Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
+    # Add: [torch.randn((200, 3, 224, 224), device="cpu")],
+    # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
+    # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
+    # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     # Multi_Add: [
     #     torch.randn((2,2,4,4), device="cpu"),

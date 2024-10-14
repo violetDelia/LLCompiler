@@ -14,7 +14,7 @@ func.func @replaceFlattenOp(%arg2: tensor<?x512x1x1xf32>) ->() {
 #map1 = affine_map<()[s0, s1, s2] -> (s0, s1, s2, s1)>
 module attributes {builtin.gloabal_layout = "NCHW"}{
   // CHECK-LABEL: replaceTorchSymbolicIntOp
-  // CHECK-SAME: (%arg0: tensor<?x?x?x?xf32>)
+  // CHECK-SAME: (%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>)
   func.func @replaceTorchSymbolicIntOp(%arg0: tensor<?x?x?x?xf32, {"0" = "s0", "1" = "s1", "2" = "s2", "3" = "s2"}>) ->() attributes {entrance}{
   // CHECK-NOT: llh.torch_symbolic_int
   // CHECK-NOT: llh.symbolic_bind

@@ -18,9 +18,11 @@
 #include <regex>
 #include <string>
 
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
@@ -93,8 +95,25 @@ void removeEntranceTensorEncoding(ModuleOp module) {
       auto arg = block.getArgument(i);
       if (isa<RankedTensorType>(arg.getType())) {
         auto tensor = llvm::cast<RankedTensorType>(arg.getType());
-        auto new_tensor =
-            RankedTensorType::get(tensor.getShape(), tensor.getElementType());
+        auto has_encode = tensor.getEncoding();
+        RankedTensorType new_tensor;
+        if (!has_encode || !isa<DictionaryAttr>(has_encode)) {
+          new_tensor =
+              RankedTensorType::get(tensor.getShape(), tensor.getElementType());
+        } else {
+          auto symbols_system = SymbolAnalysis::getInstance(module);
+          auto dictionary = llvm::cast<DictionaryAttr>(has_encode);
+          auto symbols = dictionary.getValue();
+          auto encoding_symbols = SmallVector<StringRef>();
+          for (auto symbol : symbols) {
+            auto name = llvm::cast<StringAttr>(symbol.getValue());
+            symbols_system->getOrBuildSymbolFrom(arg, name.str());
+            encoding_symbols.push_back(name);
+          }
+          auto encoding_attr = EncodingAttr::get(context, encoding_symbols);
+          new_tensor = RankedTensorType::get(
+              tensor.getShape(), tensor.getElementType(), encoding_attr);
+        }
         arg.setType(new_tensor);
       }
       new_input.push_back(arg.getType());

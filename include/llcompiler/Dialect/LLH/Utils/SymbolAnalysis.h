@@ -48,6 +48,7 @@ class SymbolAnalysis {
   static SymbolAnalysis *getInstance(Value value);
 
   SymbolicIntOp buildNewSymbolFrom(Value &value);
+  SymbolicIntOp getOrBuildSymbolFrom(Value &value, std::string val);
   SymbolicIntOp getOrBuildConstSymbolFrom(Value &value, size_t val);
   Value &addEncoding(Value &value, size_t result_pos = 0);
   Value &addEncoding(Value &value, llvm::ArrayRef<llvm::StringRef> symbols,

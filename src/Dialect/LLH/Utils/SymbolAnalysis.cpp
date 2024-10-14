@@ -128,9 +128,8 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbolFrom(Value& value) {
   return symbol_op;
 }
 
-SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbolFrom(Value& value,
-                                                        size_t val) {
-  std::string symbol = "c" + std::to_string(val);
+SymbolicIntOp SymbolAnalysis::getOrBuildSymbolFrom(Value& value,
+                                                   std::string symbol) {
   LLHPatternRewriter builder(value.getContext());
   if (symbols_table_.count(symbol)) {
     return llvm::cast<SymbolicIntOp>(symbols_table_[symbol]);
@@ -140,6 +139,12 @@ SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbolFrom(Value& value,
   _insertOp(&builder, symbol_op, value);
   symbols_table_[symbol_op.getSymName().str()] = symbol_op;
   return symbol_op;
+};
+
+SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbolFrom(Value& value,
+                                                        size_t val) {
+  std::string symbol = "c" + std::to_string(val);
+  return getOrBuildSymbolFrom(value, symbol);
 }
 
 SymbolRelationsOp SymbolAnalysis::buildRelations(

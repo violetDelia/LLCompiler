@@ -44,7 +44,6 @@ class Importer:
         return self._importer_fx_module(model, **kwargs)
 
     def _importer_fx_module(self, model: torch.fx.GraphModule, **kwargs):
-        _replace_sym_size_ops_pass(model)
         builder = MLIR_Builder(**kwargs)
         return builder.mlir_gen(model)
 
