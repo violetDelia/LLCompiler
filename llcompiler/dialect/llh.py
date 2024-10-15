@@ -334,7 +334,9 @@ class MaxPoolOp(IRDLOperation):
 class AdaptiveAvgPoolOp(IRDLOperation):
     name = "llh.adaptive_average_pool"
     input = operand_def(TensorType)
+    out_size = attr_def(ArrayAttr)
     result = result_def(TensorType)
+    
 
 
 LLH = Dialect(

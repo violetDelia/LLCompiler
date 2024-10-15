@@ -3,8 +3,9 @@ import torch.fx.experimental
 import torch.nn as nn
 import torch.nn.functional as F
 import torchvision
-input1 = torch.empty(3,4,224,224)
-input2 = torch.empty(224,1)
-print(input1.matmul(input2).shape)
 
+input = torch.randn(2,64,9,17)
+# target output size of 7x7 (square)
+m = nn.MaxPool2d(7,2,(3,1),(2,1))
+print(m(input).shape)
 

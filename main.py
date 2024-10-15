@@ -35,7 +35,7 @@ module_dict = {
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
-    # torchvision.models.googlenet: torch.randn((2, 3, 224, 224), device="cpu"),
+    #torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.vit_b_16: torch.randn((2, 3, 224, 224), device="cpu")
@@ -80,19 +80,4 @@ def run_model_dict(dict):
 
 if __name__ == "__main__":
     run_model_dict(module_dict)
-    # model = ElementaryArithmetic()
-    # input = torch.ones(2, 2, 2, 5)
-    # compiler = LLC.LLCompiler(
-    #     mode="inference",
-    #     symbol_infer=True,
-    # )
-    # opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
-    #     model=model,
-    #     backend=compiler,
-    #     dynamic=False,
-    #     fullgraph=True,
-    # )
-    # print("llcompiler")
-    # print(opt_model(input))
-    # print("torch")
-    # print(model(input))
+    

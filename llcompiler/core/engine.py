@@ -4,6 +4,7 @@ from typing import Any, Union, List, Dict
 import ctypes
 import numpy as np
 from time import time
+from llcompiler.core.utility import run_time
 
 
 TORCH_DTYPE_TO_TYPE = {torch.float32: 4}
@@ -50,7 +51,7 @@ class Torch_ExecutionEngine(ExecutionEngine):
             else:
                 raise TypeError(f"Unsupported type: {type(arg)}")
         return inputs
-
+    @run_time
     def run(self, *args) -> Any:
         inputs = self.trans_to_tensor(*args)  # 将torch.Tensor 转变为C++定义的Tensor
         outputs = self.gen_outs_call(*args)  # 推导输出的tensor信息，并分配好内存

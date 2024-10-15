@@ -12,23 +12,3 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_
-
-#include <memory>
-
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "mlir/Pass/Pass.h"
-
-namespace mlir::llh {
-
-
-#define GEN_PASS_DECL
-#define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
-
-}  // namespace mlir::llh
-
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_TRANSFORMS_PASSES_H_

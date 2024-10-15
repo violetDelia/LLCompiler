@@ -3,8 +3,9 @@ function(build_llvm lib_path)
     message("************* build llvm *****************")
     message("******************************************")
     set(LLVM_TARGETS_TO_BUILD
-        #AArch64
-        #AMDGPU
+
+        # AArch64
+        # AMDGPU
         ARM
         AVR
         BPF
@@ -16,13 +17,14 @@ function(build_llvm lib_path)
         NVPTX
         PowerPC
         RISCV
-        #Sparc
+
+        # Sparc
         SystemZ
         VE
         WebAssembly
         X86
         XCore)
-    set(LLVM_ENABLE_PROJECTS "mlir")
+    set(LLVM_ENABLE_PROJECTS "mlir;clang") # bolt;clang;clang-tools-extra;compiler-rt;cross-project-tests;libc;libclc;lld;lldb;mlir;openmp;polly;pstl;flang.
     set(LLVM_ENABLE_RTTI ON)
     set(LLVM_ENABLE_ASSERTIONS ON)
     set(LLVM_BUILD_TOOLS ON)

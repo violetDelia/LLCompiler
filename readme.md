@@ -22,3 +22,4 @@ ninja check-llc-python
 * tosa 基于symbol  的   to linalg 扩展
 * 华为的自动融合策略实现
 * gcu 以及luanch/ 线程选择？
+* flashattension + kv chach 编译器表达？

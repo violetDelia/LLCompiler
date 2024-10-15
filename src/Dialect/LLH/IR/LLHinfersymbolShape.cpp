@@ -72,6 +72,7 @@ void checkIsReturnOperand(Value& value) {
 void checkIsIfOperand(Value value) { UNIMPLEMENTED(llc::SymbolInfer); }
 void checkIsWhileOperand(Value value) { UNIMPLEMENTED(llc::SymbolInfer); }
 
+//遍历shapes ()
 void getSymbolsAndShapesFrom(mlir::OperandRange& shapes,
                              llvm::SmallVector<llvm::StringRef>& symbols,
                              llvm::SmallVector<int64_t>& new_shapes) {
@@ -342,7 +343,31 @@ UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
 UNIMPLEMENTED_INFER_FUNCTION(BroadCastToOp)
 
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
-UNIMPLEMENTED_INFER_FUNCTION(AdaptiveAvgPoolOp)
+INFER_FUNCTION(AdaptiveAvgPoolOp) {
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto out_size = getOutSize();
+  auto symbols = llvm::SmallVector<StringRef>();
+  auto new_shapes = llvm::SmallVector<int64_t>();
+  auto input_type = llc::getRankTensorFrom(getInput());
+  auto input_symbols = llc::getEncodingFrom(input_type).getShapeSymbols();
+  auto out_size_len = out_size.size();
+  auto remind_len = input_type.getRank() - out_size_len;
+  for (int i = 0; i < remind_len; i++) {
+    new_shapes.push_back(input_type.getDimSize(i));
+    symbols.push_back(input_symbols[i].getValue());
+  }
+  for (int i = 0; i < out_size_len; i++) {
+    new_shapes.push_back(out_size[i]);
+    symbols.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+  }
+  auto new_tensor =
+      RankedTensorType::get(new_shapes, input_type.getElementType());
+  getResult().setType(new_tensor);
+  auto res = getResult();
+  symbol_analsis->addEncoding(res, symbols);
+  COMMON_CHECK
+  return llvm::success();
+}
 
 INFER_FUNCTION(MaxPoolOp) {
   auto layout_attr =
@@ -390,13 +415,13 @@ INFER_FUNCTION(MaxPoolOp) {
   auto batch_symbol = batch_symbol_attr.getAttr().str();
   new_shape_symbol.insert(new_shape_symbol.begin(), batch_symbol);
   // channel_shape
-  size_t channel_out_index = getChannelOutIndex(layout, rank);
+  size_t channel_index = getChannelOutIndex(layout, rank);
   size_t weight_index = 0;
-  new_shape.insert(new_shape.begin() + channel_out_index,
-                   input_shape[channel_out_index]);
-  auto channel_out_symbol_attr = input_symbols[weight_index];
+  new_shape.insert(new_shape.begin() + channel_index,
+                   input_shape[channel_index]);
+  auto channel_out_symbol_attr = input_symbols[channel_index];
   auto channel_out_symbol = channel_out_symbol_attr.getAttr().str();
-  new_shape_symbol.insert(new_shape_symbol.begin() + channel_out_index,
+  new_shape_symbol.insert(new_shape_symbol.begin() + channel_index,
                           channel_out_symbol);
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto new_tensor =

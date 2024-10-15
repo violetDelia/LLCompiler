@@ -28,7 +28,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 namespace mlir::llh {
-#define GEN_PASS_DEF_TRANSFORMLAYOUTTONHWC
+#define GEN_PASS_DEF_TRANSFORMLAYOUTTONHWCPASS
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -95,7 +95,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-// #include "llcompiler/Dialect/LLH/Transforms/TransformLayoutToNHWC.inc"
+// #include "llcompiler/Dialect/LLH/Transforms/TransformLayoutToNHWCPass.inc"
 // struct ConvOpToNHWC : public OpRewritePattern<ConvOp> {
 //   using OpRewritePattern::OpRewritePattern;
 //   void rewrite(ConvOp op, PatternRewriter& rewriter) const final { ; }
@@ -107,7 +107,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateTransformLayoutToNHWCPatterns(RewritePatternSet& patterns) {
+void populateTransformLayoutToNHWCPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   // populateWithGenerated(patterns);
 }
@@ -116,8 +116,8 @@ void populateTransformLayoutToNHWCPatterns(RewritePatternSet& patterns) {
 // pass defination
 //===----------------------------------------------------------------------===//
 namespace {
-struct TransformLayoutToNHWC
-    : llh::impl::TransformLayoutToNHWCBase<TransformLayoutToNHWC> {
+struct TransformLayoutToNHWCPass
+    : llh::impl::TransformLayoutToNHWCPassBase<TransformLayoutToNHWCPass> {
   void runOnOperation() override;
   void markOpsNeedTranspose(ModuleOp module);
 };
@@ -125,7 +125,7 @@ struct TransformLayoutToNHWC
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
-void TransformLayoutToNHWC::markOpsNeedTranspose(ModuleOp module) {
+void TransformLayoutToNHWCPass::markOpsNeedTranspose(ModuleOp module) {
   auto layout = cast<StringAttr>(module->getAttr(llc::GloabalLayoutAttr));
   CHECK(llc::MLIR, layout);
   // if (layout == llc::layout_to_str(llc::LAYOUT::NHWC)) return;
@@ -137,21 +137,14 @@ void TransformLayoutToNHWC::markOpsNeedTranspose(ModuleOp module) {
   // module->walk(mark_op);
 }
 }  // namespace
-void TransformLayoutToNHWC::runOnOperation() {
+void TransformLayoutToNHWCPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   RewritePatternSet patterns(context);
-  populateTransformLayoutToNHWCPatterns(patterns);
+  populateTransformLayoutToNHWCPassPatterns(patterns);
   auto op = getOperation();
   markOpsNeedTranspose(op);
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS
-}
-
-//===----------------------------------------------------------------------===//
-// pass create
-//===----------------------------------------------------------------------===//
-std::unique_ptr<Pass> mlir::llh::createTransformLayoutToNHWCPass() {
-  return std::make_unique<TransformLayoutToNHWC>();
 }

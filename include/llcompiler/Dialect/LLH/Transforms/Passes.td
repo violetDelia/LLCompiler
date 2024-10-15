@@ -17,11 +17,10 @@
 
 include "mlir/Pass/PassBase.td"
 
-def TransformLayoutToNHWC : Pass<"transform-layout-to-nhwc","ModuleOp"> {
+def TransformLayoutToNHWCPass : Pass<"transform-layout-to-nhwc","ModuleOp"> {
   let summary = "trans some llh op layout to nhwc for lowing to tosa";
   let description = [{
   }];
-  let constructor = "mlir::llh::createTransformLayoutToNHWCPass()";
   let dependentDialects = [ "mlir::ex::IRExtensionDialect"];
 }
 
@@ -128,7 +127,13 @@ def RemoveSymbolPass : Pass<"remove-symbol","ModuleOp">{
   let description = [{
     
   }];
+}
 
+def MarkAotPass : Pass<"mark-aot","ModuleOp">{
+  let summary = "标记aot算子";
+  let description = [{
+    
+  }];
 }
 
 #endif // LLH_PASS

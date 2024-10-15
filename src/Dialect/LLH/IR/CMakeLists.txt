@@ -1,3 +1,4 @@
+
 llcompiler_add_library(MLIRLLHDialect
     SRC_FILES
     LLHTypes.cpp
@@ -10,6 +11,7 @@ llcompiler_add_library(MLIRLLHDialect
     LLHBraodcastableOpInterfaces.cpp
     LLHEnums.cpp
     LLHVerfy.cpp
+    LLHCanonicalize.cpp
 
     DEPENDS
     MLIRLLHDialectIncGen
@@ -19,8 +21,6 @@ llcompiler_add_library(MLIRLLHDialect
     LLCSupport
     MLIRSymbolShapeOpInterfaces
     MLIRBraodcastableOpInterfaces
-
-    
 )
 
 # add_mlir_dialect_library(MLIRLLHDialect

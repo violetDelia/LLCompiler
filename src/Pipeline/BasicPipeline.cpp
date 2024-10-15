@@ -90,6 +90,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createInferSymbolShapePass());
   // 插入广播
   pm.addPass(mlir::llh::createInsertBroadCastPass());
+  //标记Aot算子
+  pm.addPass(mlir::llh::createMarkAotPass());
   // 规范化
   pm.addPass(mlir::createCanonicalizerPass());
   // 将WeightOp转换为constant

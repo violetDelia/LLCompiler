@@ -60,6 +60,22 @@ func.func @conv(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1,
 }
 
 
+// -----
+"llh.symbolic_int"() <{sym_name = "c64"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c7"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c224"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c2"}> : () -> ()
+// CHECK-LABEL: conv_static
+func.func @conv_static(%arg0: tensor<2x3x224x224xf32, #llh.encoding<shapes = @c2, @c3, @c224, @c224>>) ->() attributes {entrance}{
+  %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:46.139597+08:00/L__self___conv1.weight.npy"}> : () -> tensor<64x3x7x7xf32, #llh.encoding<shapes = @c64, @c3, @c7, @c7>>
+  // CHECK: llh.conv
+  // CHECK-SAME:-> tensor<2x64x109x210xf32, #llh.encoding<shapes = @c2, @c64, @c109, @c210>>
+  %126 = "llh.conv"(%arg0, %4) <{dilation = array<i64: 2, 3>, group = 1 : i64, kernel_shape = array<i64: 7, 7>, layout = #llh.Layout<NCHW>, pad = array<i64: 3, 2, 3, 2>, stride = array<i64: 2, 1>}> : (tensor<2x3x224x224xf32, #llh.encoding<shapes = @c2, @c3, @c224, @c224>>, tensor<64x3x7x7xf32, #llh.encoding<shapes = @c64, @c3, @c7, @c7>>) -> tensor<2x64x109x210xf32, #llh.encoding<shapes = @c2, @c64, @c109, @c210>>
+  return 
+}
+
 
 // -----
 "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
@@ -137,8 +153,39 @@ func.func @empty(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2
 // CHECK-LABEL: max_pool
 func.func @max_pool(%arg0: tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s1, @s3>>) -> () attributes {entrance} {
  // CHECK: llh.max_pool
- // CHECK-SAME: -> tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @s0, @s2, @s4>>
+ // CHECK-SAME: -> tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s2, @s4>>
  %129 = "llh.max_pool"(%arg0) <{ceil_mode = false, dilation = array<i64: 1, 1>, kernel_shape = array<i64: 3, 3>, layout = #llh.Layout<NCHW>, pad = array<i64: 1, 1, 1, 1>, stride = array<i64: 2, 2>}> : (tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s1, @s3>>) -> tensor<?x64x?x?xf32>
+  return 
+}
+
+
+
+// -----
+"llh.symbolic_int"() <{sym_name = "c9"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c64"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c17"}> : () -> ()
+
+// CHECK-LABEL: max_pool_static
+func.func @max_pool_static(%arg0: tensor<2x64x9x17xf32, #llh.encoding<shapes = @c2, @c64, @c9, @c17>>) -> () attributes {entrance} {
+ // CHECK: llh.max_pool
+ // CHECK-SAME: -> tensor<2x64x2x7xf32, #llh.encoding<shapes = @c2, @c64, @c2, @c7>>
+ %129 = "llh.max_pool"(%arg0) <{ceil_mode = false, dilation = array<i64: 2, 1>, kernel_shape = array<i64: 7, 7>, layout = #llh.Layout<NCHW>, pad = array<i64: 3, 1, 3, 1>, stride = array<i64: 2, 2>}> : (tensor<2x64x9x17xf32, #llh.encoding<shapes = @c2, @c64, @c9, @c17>>) -> tensor<?x?x?x?xf32>
+  return 
+}
+
+// -----
+
+"llh.symbolic_int"() <{sym_name = "c9"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c64"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c17"}> : () -> ()
+
+// CHECK-LABEL: adaptive_average_pool
+func.func @adaptive_average_pool(%arg0: tensor<2x64x9x17xf32, #llh.encoding<shapes = @c2, @c64, @c9, @c17>>) -> () attributes {entrance} {
+ // CHECK: llh.adaptive_average_pool
+ // CHECK-SAME: -> tensor<2x64x1x1xf32, #llh.encoding<shapes = @c2, @c64, @c1, @c1>>
+  %192 = "llh.adaptive_average_pool"(%arg0) <{out_size = array<i64: 1, 1>}> : (tensor<2x64x9x17xf32, #llh.encoding<shapes = @c2, @c64, @c9, @c17>>) -> tensor<*xf32>
   return 
 }
 

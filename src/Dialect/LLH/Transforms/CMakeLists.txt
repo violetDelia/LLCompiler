@@ -1,3 +1,4 @@
+
 llcompiler_add_library(MLIRLLHTransforms
   SRC_FILES
   TransformLayoutToNHWC.cpp
@@ -10,6 +11,7 @@ llcompiler_add_library(MLIRLLHTransforms
   SinkBindEncoding.cpp
   RemoveSymbol.cpp
   InsetBraodCastPass.cpp
+  MarkAot.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen

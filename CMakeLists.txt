@@ -61,6 +61,7 @@ add_compile_options(-fPIC)
 
 # #---------- define absolute path ----------##
 set(LLCOMPILER_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(LLCOMPILER_OPS_DIR "${CMAKE_CURRENT_SOURCE_DIR}/ops")
 set(LLCOMPILER_GENERATE_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/include")
 set(LLCOMPILER_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/src")
 set(LLCOMPILER_CMAKE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
@@ -114,6 +115,7 @@ include_directories(${SPDLOG_INCLUDE_DIR})
 include_directories(${STABLEHLO_INCLUDE_DIR})
 include_directories(${STABLEHLO_INCLUDE_GENERATE_DIR})
 
+add_subdirectory(${LLCOMPILER_OPS_DIR})
 add_subdirectory("${LLCOMPILER_INCLUDE_DIR}/llcompiler")
 add_subdirectory(${LLCOMPILER_SOURCE_DIR})
 add_subdirectory(${LLCOMPILER_TOOLS_DIR})

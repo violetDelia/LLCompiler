@@ -211,8 +211,8 @@ def torch_adaptive_avgpool_convert(
     module: torch.nn.modules.pooling.AdaptiveAvgPool2d,
     block: Block,
 ):
-
-    return commond_build_op(AdaptiveAvgPoolOp.build, 1, node, value_map, block)
+    attrs = {"out_size": DenseArrayBase.from_list(i64, module.output_size)}
+    return commond_build_op(AdaptiveAvgPoolOp.build, 1, node, value_map, block, attrs)
 
 
 @TORCH_MODULE_TRANSLATE(torch.nn.modules.batchnorm.BatchNorm2d)
