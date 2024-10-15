@@ -273,9 +273,12 @@ void ConvSymbolInfer(Operation* op) {
 }
 }  // namespace
 
-// checkIsIfOperand(res);                    \
-  // checkIsWhileOperand(res);                     \
-  }  // namespace mlir::llh
+#define HAS_ENCODING_RETURN(value) \
+  if (llc::hasEncoding(value)) return llvm::failure();
+
+#define NO_ENCODING_RETURN(value) \
+  if (!llc::hasEncoding(value)) return llvm::failure();
+
 #define UNIMPLEMENTED_INFER_FUNCTION(OP)                                      \
   llvm::LogicalResult OP::inferSymbolicShape() {                              \
     WARN_UNIMPLEMENTED(llc::MLIR) << " op name:" << getOperationName().str(); \
@@ -285,28 +288,37 @@ void ConvSymbolInfer(Operation* op) {
 #define INFER_FUNCTION(OP) llvm::LogicalResult OP::inferSymbolicShape()
 
 // 一元op
-#define INFER_UNARY_OP(OP)       \
-  INFER_FUNCTION(OP) {           \
-    auto res = getResult();      \
-    simplyUnarySymbolInfer(res); \
-    COMMON_CHECK                 \
-    return llvm::success();      \
+#define INFER_UNARY_OP(OP)                            \
+  INFER_FUNCTION(OP) {                                \
+    NO_ENCODING_RETURN(getOperation()->getOperand(0)) \
+    HAS_ENCODING_RETURN(getOperation()->getResult(0)) \
+    auto res = getResult();                           \
+    simplyUnarySymbolInfer(res);                      \
+    COMMON_CHECK                                      \
+    return llvm::success();                           \
   }
 // binary op
-#define INFER_BINARY(OP)          \
-  INFER_FUNCTION(OP) {            \
-    auto res = getResult();       \
-    simplyBinarySymbolInfer(res); \
-    COMMON_CHECK                  \
-    return llvm::success();       \
+#define INFER_BINARY(OP)                              \
+  INFER_FUNCTION(OP) {   dump();                             \
+    NO_ENCODING_RETURN(getOperation()->getOperand(0)) \
+    NO_ENCODING_RETURN(getOperation()->getOperand(1)) \
+    HAS_ENCODING_RETURN(getOperation()->getResult(0)) dump(); \
+    auto res = getResult();                           \
+    simplyBinarySymbolInfer(res);                     \
+    COMMON_CHECK                                      \
+    return llvm::success();                           \
   }
 
 // conv类op
-#define INFER_CONV(OP)               \
-  INFER_FUNCTION(OP) {               \
-    ConvSymbolInfer(getOperation()); \
-    COMMON_CHECK                     \
-    return llvm::success();          \
+#define INFER_CONV(OP)                                \
+  INFER_FUNCTION(OP) {                                \
+    NO_ENCODING_RETURN(getOperation()->getOperand(0)) \
+    NO_ENCODING_RETURN(getOperation()->getOperand(1)) \
+    HAS_ENCODING_RETURN(getOperation()->getResult(0)) \
+    auto res = getResult();                           \
+    ConvSymbolInfer(getOperation());                  \
+    COMMON_CHECK                                      \
+    return llvm::success();                           \
   }
 // 没有操作数的op
 #define INFER_NO_OPERAND(OP)                                           \
@@ -343,7 +355,20 @@ UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
 UNIMPLEMENTED_INFER_FUNCTION(BroadCastToOp)
 
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
+
+INFER_FUNCTION(DimOp) {
+  NO_ENCODING_RETURN(getOperation()->getOperand(0))
+  if (getOperation()->hasAttr("symbol")) return llvm::failure();
+  auto input_symbols = llc::getEncodingFrom(getInput()).getShapeSymbols();
+  auto dim_value = getDim();
+  auto real_dim = getConstIntegerValue(dim_value);
+  setSymbolAttr(input_symbols[real_dim]);
+  return llvm::success();
+}
+
 INFER_FUNCTION(AdaptiveAvgPoolOp) {
+  NO_ENCODING_RETURN(getOperation()->getOperand(0))
+  HAS_ENCODING_RETURN(getOperation()->getResult(0))
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto out_size = getOutSize();
   auto symbols = llvm::SmallVector<StringRef>();
@@ -370,6 +395,8 @@ INFER_FUNCTION(AdaptiveAvgPoolOp) {
 }
 
 INFER_FUNCTION(MaxPoolOp) {
+  NO_ENCODING_RETURN(getOperation()->getOperand(0))
+  HAS_ENCODING_RETURN(getOperation()->getResult(0))
   auto layout_attr =
       llvm::cast_or_null<LayoutAttr>(getOperation()->getAttr(llc::LayoutAttr));
   CHECK(llc::SymbolInfer, layout_attr);
@@ -434,6 +461,8 @@ INFER_FUNCTION(MaxPoolOp) {
 }
 
 INFER_FUNCTION(ReshapeOp) {
+  NO_ENCODING_RETURN(getOperation()->getOperand(0))
+  HAS_ENCODING_RETURN(getOperation()->getResult(0))
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto shapes = getShapes();
   auto input = getInput();
@@ -452,6 +481,7 @@ INFER_FUNCTION(ReshapeOp) {
 }
 
 INFER_FUNCTION(EmptyOp) {
+  HAS_ENCODING_RETURN(getOperation()->getResult(0))
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   llvm::SmallVector<int64_t> new_shape;
   auto shapes = getShapes();
@@ -470,6 +500,8 @@ INFER_FUNCTION(EmptyOp) {
 }
 
 INFER_FUNCTION(TransposeOp) {
+  NO_ENCODING_RETURN(getOperation()->getOperand(0))
+  HAS_ENCODING_RETURN(getOperation()->getResult(0))
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto prem = getPerms();
   auto input_type = getInput().getType();

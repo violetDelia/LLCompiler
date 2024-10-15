@@ -150,6 +150,7 @@ func.func @empty(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2
 "llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c64"}> : () -> ()
 // CHECK-LABEL: max_pool
 func.func @max_pool(%arg0: tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s1, @s3>>) -> () attributes {entrance} {
  // CHECK: llh.max_pool
@@ -188,4 +189,32 @@ func.func @adaptive_average_pool(%arg0: tensor<2x64x9x17xf32, #llh.encoding<shap
   %192 = "llh.adaptive_average_pool"(%arg0) <{out_size = array<i64: 1, 1>}> : (tensor<2x64x9x17xf32, #llh.encoding<shapes = @c2, @c64, @c9, @c17>>) -> tensor<*xf32>
   return 
 }
+
+
+// -----
+
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c512"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
+// CHECK-LABEL: dim
+func.func @dim(%arg0: tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>) -> () attributes {entrance} {
+  %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
+  %1 = "llh.constant"() <{value = 2 : i64}> : () -> i64
+  %2 = "llh.constant"() <{value = 0 : i64}> : () -> i64
+  %3 = "llh.constant"() <{value = 1 : i64}> : () -> i64
+  // CHECK: llh.dim
+  // CHECK-SAME: <{symbol = @s0}>
+  // CHECK: llh.dim
+  // CHECK-SAME: <{symbol = @c512}>
+  // CHECK: llh.dim
+  // CHECK-SAME: <{symbol = @c1}>
+  // CHECK: llh.dim
+  // CHECK-SAME: <{symbol = @c1}>
+  %193 = "llh.dim"(%arg0, %2) : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
+  %194 = "llh.dim"(%arg0, %3) : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
+  %195 = "llh.dim"(%arg0, %1) : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
+  %196 = "llh.dim"(%arg0, %0) : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
+  return 
+}
+
 

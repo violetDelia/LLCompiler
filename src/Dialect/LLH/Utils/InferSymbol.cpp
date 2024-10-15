@@ -12,15 +12,17 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#include "llcompiler/Dialect/Utility/RewritePattern.h"
 
-#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
-#include "llcompiler/Support/Logger.h"
-namespace mlir {
-void LLHPatternRewriter::processWileBuildOperation(Operation *op) {
-  llh::checkAndInferSymbol(op);
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
+namespace mlir::llh {
+
+void checkAndInferSymbol(Operation* op) {
+  if (!SymbolAnalysis::symbol_enable) return;
+  auto symbol_op = llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op);
+  if (symbol_op) {
+    symbol_op.inferSymbolicShape();
+    return;
+  }
 }
-
-bool LLHPatternRewriter::canRecoverFromRewriteFailure()const { return false; }
-
-}  // namespace mlir
+}  // namespace mlir::llh

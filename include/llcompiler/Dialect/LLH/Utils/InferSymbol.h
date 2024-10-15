@@ -12,15 +12,12 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#include "llcompiler/Dialect/Utility/RewritePattern.h"
 
-#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
-#include "llcompiler/Support/Logger.h"
-namespace mlir {
-void LLHPatternRewriter::processWileBuildOperation(Operation *op) {
-  llh::checkAndInferSymbol(op);
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_INDERSYMBOL_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_INDERSYMBOL_H_
+#include "mlir/IR/Operation.h"
+namespace mlir::llh {
+void checkAndInferSymbol(mlir::Operation* op);
+
 }
-
-bool LLHPatternRewriter::canRecoverFromRewriteFailure()const { return false; }
-
-}  // namespace mlir
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_INDERSYMBOL_H_

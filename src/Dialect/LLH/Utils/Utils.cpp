@@ -21,12 +21,15 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/Value.h"
 
 namespace mlir::llh {
 
@@ -45,65 +48,12 @@ bool isLayoutSensitive(Operation* op) {
   return llvm::isa<llh::ConvOp, ConvBiasOp, MaxPoolOp>(op);
 }
 
-void checkAndInferSymbol(Operation* op) {
-  if (!SymbolAnalysis::symbol_enable) return;
-  auto symbol_op = llvm::dyn_cast_or_null<SymbolicInferShapeOpInterface>(op);
-  if (!symbol_op) return;
-  bool need_infer_symbol = false;
-  for (auto res_type : op->getResultTypes()) {
-    if (llvm::isa<UnrankedTensorType>(res_type)) {
-      need_infer_symbol = true;
-      continue;
-    }
-    if (isa<RankedTensorType>(res_type)) {
-      auto tensor = llvm::dyn_cast<RankedTensorType>(res_type);
-      auto has_encodeing = tensor.getEncoding();
-      if (!has_encodeing) {
-        need_infer_symbol = true;
-        continue;
-      }
-      if (!isa<EncodingAttr>(has_encodeing)) {
-        need_infer_symbol = true;
-        continue;
-      }
-    }
-  }
-
-  if (!need_infer_symbol) return;
-  for (auto type : symbol_op->getOperandTypes()) {
-    if (!llvm::isa<RankedTensorType>(type)) continue;
-    if (llvm::isa<UnrankedTensorType>(type)) {
-      need_infer_symbol = false;
-      break;
-    }
-    auto ranked_type = llvm::cast<RankedTensorType>(type);
-    auto encodeing = ranked_type.getEncoding();
-    if (!encodeing) {
-      need_infer_symbol = false;
-      break;
-    }
-    if (!llvm::isa<mlir::llh::EncodingAttr>(encodeing)) {
-      need_infer_symbol = false;
-      break;
-    }
-  }
-
-  if (need_infer_symbol) {
-    symbol_op.inferSymbolicShape();
-    DEBUG(llc::SymbolInfer)
-        << "Inferred symbolic shape " << op->getName().getStringRef().str();
-  } else {
-    DEBUG(llc::SymbolInfer) << "Invalid operand to infer symbol "
-                            << op->getName().getStringRef().str();
-  }
-}
-
 llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
                           size_t dim) {
   auto loc = operand.getLoc();
   auto dim_const = rewrite->create<ConstantOp>(
       loc, IntegerAttr::get(rewrite->getI64Type(), dim));
-  return rewrite->create<DimOp>(loc, operand, dim_const);
+  return rewrite->create<DimOp>(loc, ValueRange{operand, dim_const});
 }
 
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
