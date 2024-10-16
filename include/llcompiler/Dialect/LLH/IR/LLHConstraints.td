@@ -77,6 +77,10 @@ def LLH_Computable_Type    : AnyTypeOf<[LLH_Tensor, LLH_Float, LLH_Int]>;
 def LLH_Symbolic_Type     : AnyTypeOf<[LLH_Tensor, LLH_Int64]>;
 
 
+def LLH_1DTensor : AnyTypeOf<[AnyUnrankedTensor, TensorRankOf<[LLH_Float, LLH_Int], [1]>]>;
+def LLH_2DTensor : AnyTypeOf<[AnyUnrankedTensor, TensorRankOf<[LLH_Float, LLH_Int], [2]>]>;
+
+
 def LLH_Eencoding_Bind_Type : AnyTypeOf<[AnyNon0RankedMemRef, LLH_Tensor]>;
 
 def LLH_StringAttr : StringBasedAttr<CPred<"::llvm::isa<::mlir::StringAttr>($_self)">,

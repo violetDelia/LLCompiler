@@ -88,6 +88,7 @@ def LLH_EncodingBindOp : Op<LLH_Dialect,"encoding_bind">{
         LLH_Eencoding_Bind_Type:$operand ,
         LLH_Encoding:$encoding
     );
+    let hasCanonicalizer = 1;
 }
 
 def LLH_SymbolBindOp : Op<LLH_Dialect, "symbol_bind">{
@@ -97,7 +98,7 @@ def LLH_SymbolBindOp : Op<LLH_Dialect, "symbol_bind">{
     let arguments = (ins 
        AnySignlessIntegerOrIndex:$operand ,
        FlatSymbolRefAttr:$symbol);
-
+    let hasCanonicalizer = 1;
 }
 
 
@@ -186,6 +187,7 @@ def LLH_DimOp : LLH_Op<"dim">{
         );
     let results = (outs 
         LLH_Int64);
+    let hasCanonicalizer = 1;
 }
 
 def LLH_ReshapeOp : LLH_SymbolOp<"reshape",[]>{
@@ -279,10 +281,10 @@ def LLH_ConvOp : LLH_SymbolOp<"conv">{
 
 def LLH_MatMulOp          : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
     let arguments = (ins
-        LLH_Tensor:$lhs,
-        LLH_Tensor:$rhs);
+        LLH_2DTensor:$lhs,
+        LLH_2DTensor:$rhs);
     let results = (outs 
-        LLH_Tensor:$result);
+        LLH_2DTensor:$result);
 }
 
 def LLH_LayerNormOp     : LLH_SymbolOp<"layer_norm">{

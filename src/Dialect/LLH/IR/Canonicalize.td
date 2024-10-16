@@ -90,10 +90,6 @@ class EqualString<string s> : Constraint<CPred<"$0 == \"" # s # "\"">>;
 //===----------------------------------------------------------------------===//
 // Canonicalization for AdaptiveAvgPoolOp
 //===----------------------------------------------------------------------===//
-def AdaptiveAvgPoolOpDecomposePattern: Pat<
-  (LLH_AdaptiveAvgPoolOp $x),
-  (ONNXReduceMeanV13Op $x, (createArrayAttrOfTwoToRankOf $x), (GetNullAttr))
->;
 
 
 #endif // LLH_CANONICALIZE
