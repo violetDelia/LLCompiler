@@ -35,6 +35,7 @@
 #include "mlir/Dialect/Traits.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
@@ -132,14 +133,14 @@ struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
 struct WeightOpRefine : public LLHOpRewritePattern<WeightOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(WeightOp op) const final {
-    auto tensor = llc::getRankTensorFrom(op);
-    if (tensor.getShape().empty()) return llvm::success();
+    auto res = llvm::cast<RankedTensorType>(op->getResult(0).getType());
+    if (res.getRank() == 0) return llvm::success(); 
     return llvm::failure();
   }
   void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {
     auto res = op->getResult(0);
-    auto tensor = llc::getRankTensorFrom(op);
-    res.setType(RankedTensorType::get({1}, tensor.getElementType()));
+    auto shape_type = llvm::cast<ShapedType>(res.getType());
+    res.setType(RankedTensorType::get({1}, shape_type.getElementType()));
   }
 };
 

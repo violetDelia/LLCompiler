@@ -26,26 +26,24 @@
 #include "mlir/Support/LLVM.h"
 
 namespace llc {
-std::vector<int64_t> getShapeFrom(const mlir::Type& shapeType);
-std::vector<int64_t> getShapeFrom(const mlir::Value& value);
-mlir::RankedTensorType getRankTensorFrom(const mlir::Type& type);
-mlir::RankedTensorType getRankTensorFrom(const mlir::Value& value);
-bool hasEncoding(const mlir::Type& type);
-bool hasEncoding(const mlir::Value& value);
-::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Type& type);
-::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Value& value);
-int64_t getElementSizeFrom(const mlir::ShapedType& shapeType);
+std::vector<int64_t> getShapeFrom(mlir::Type shapeType);
+std::vector<int64_t> getShapeFrom(mlir::Value value);
+mlir::RankedTensorType getRankTensorFrom(mlir::Type type);
+mlir::RankedTensorType getRankTensorFrom(mlir::Value value);
+bool hasEncoding(mlir::Type type);
+bool hasEncoding(mlir::Value value);
+::mlir::llh::EncodingAttr getEncodingFrom(mlir::Type type);
+::mlir::llh::EncodingAttr getEncodingFrom(mlir::Value value);
+int64_t getElementSizeFrom(mlir::ShapedType shapeType);
 mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value);
-// mlir::ex::Layout getLayoutFrom(const mlir::RankedTensorType& value);
+// mlir::ex::Layout getLayoutFrom(mlir::RankedTensorType value);
 // mlir::RankedTensorType cloneTensorWithEncoding(
-//     const mlir::RankedTensorType& value, mlir::ex::Layout layout);
-std::vector<int64_t> getUnsqueezeShape(const mlir::ShapedType& shapeType,
-                                       int dim = 0);
-std::vector<int64_t> getSqueezeShape(const mlir::ShapedType& shapeType,
-                                     int dim = 0);
-mlir::RankedTensorType getUnsqueezeTensor(const mlir::RankedTensorType& tensor,
+//     mlir::RankedTensorType value, mlir::ex::Layout layout);
+std::vector<int64_t> getUnsqueezeShape(mlir::ShapedType shapeType, int dim = 0);
+std::vector<int64_t> getSqueezeShape(mlir::ShapedType shapeType, int dim = 0);
+mlir::RankedTensorType getUnsqueezeTensor(mlir::RankedTensorType tensor,
                                           int dim = 0);
-mlir::RankedTensorType getSqueezeTensor(const mlir::RankedTensorType& tensor,
+mlir::RankedTensorType getSqueezeTensor(mlir::RankedTensorType tensor,
                                         int dim = 0);
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_

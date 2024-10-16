@@ -13,6 +13,7 @@
 //    limitations under the License.
 //
 
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 namespace mlir::llh {
@@ -23,6 +24,9 @@ void checkAndInferSymbol(Operation* op) {
   if (symbol_op) {
     symbol_op.inferSymbolicShape();
     return;
+  }
+  if (SymbolAnalysis::isExtraSymbolicInferOp(op)) {
+    SymbolAnalysis::getInstance(op)->getOrBuildSymbolBind(op);
   }
 }
 }  // namespace mlir::llh

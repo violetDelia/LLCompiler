@@ -179,11 +179,10 @@ def LLH_WeightOp : LLH_SymbolOp<"weight">{
         LLH_Tensor);
 }
 
-def LLH_DimOp : LLH_SymbolOp<"dim">{
+def LLH_DimOp : LLH_Op<"dim">{
     let arguments = (ins 
         LLH_Tensor:$input,
-        LLH_Int64:$dim,
-        OptionalAttr<SymbolRefAttr>:$symbol
+        LLH_Int64:$dim
         );
     let results = (outs 
         LLH_Int64);

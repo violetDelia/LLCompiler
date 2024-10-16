@@ -69,37 +69,26 @@ void checkIsReturnOperand(Value& value) {
     }
   }
 }
-void checkIsIfOperand(Value value) { UNIMPLEMENTED(llc::SymbolInfer); }
-void checkIsWhileOperand(Value value) { UNIMPLEMENTED(llc::SymbolInfer); }
-
 //遍历shapes ()
-void getSymbolsAndShapesFrom(mlir::OperandRange& shapes,
-                             llvm::SmallVector<llvm::StringRef>& symbols,
-                             llvm::SmallVector<int64_t>& new_shapes) {
-  for (auto shape : shapes) {
-    auto shape_op = shape.getDefiningOp();
-    if (isa<ConstantOp>(shape_op)) {
-      auto const_op = llvm::dyn_cast<ConstantOp>(shape_op);
-      symbols.push_back(SymbolAnalysis::UNKOW_SYMBOL);
-      auto dim = llvm::dyn_cast_or_null<IntegerAttr>(const_op.getValueAttr());
-      CHECK(llc::MLIR, dim);
-      new_shapes.push_back(dim.getInt());
-    } else if (isa<DimOp>(shape_op)) {
-      auto dim_op = llvm::dyn_cast<DimOp>(shape_op);
-      auto tensor =
-          llvm::dyn_cast<RankedTensorType>(dim_op.getInput().getType());
-      auto encoding =
-          llvm::dyn_cast_if_present<EncodingAttr>(tensor.getEncoding());
-      CHECK(llc::SymbolInfer, encoding);
-      CHECK(llc::SymbolInfer, isConstIntegerValue(dim_op.getDim()))
-          << "dim must be a constant for symbol infer";
-      auto dim = getConstIntegerValue(dim_op.getDim());
-      new_shapes.push_back(tensor.getShape()[dim]);
-      symbols.push_back(encoding.getShapeSymbols()[dim].getValue());
+void encodingWithDims(mlir::Operation* op, OperandRange dims,
+                      ShapedType input_type) {
+  auto symbol_analsis = SymbolAnalysis::getInstance(op);
+  auto symbols = llvm::SmallVector<StringRef>();
+  auto new_shapes = llvm::SmallVector<int64_t>();
+  for (auto dim : dims) {
+    auto bind = symbol_analsis->getOrBuildSymbolBind(dim);
+    symbols.push_back(bind.getSymbol());
+    if (llh::isConstIntegerValue(dim)) {
+      new_shapes.push_back(llh::getConstIntegerValue(dim));
     } else {
-      UNIMPLEMENTED(llc::MLIR);
+      new_shapes.push_back(ShapedType::kDynamic);
     }
   }
+  auto new_tensor =
+      RankedTensorType::get(new_shapes, input_type.getElementType());
+  op->getResult(0).setType(new_tensor);
+  auto res = op->getResult(0);
+  symbol_analsis->addEncoding(res, symbols);
 }
 
 void simplyUnarySymbolInfer(Value& value) {
@@ -299,10 +288,10 @@ void ConvSymbolInfer(Operation* op) {
   }
 // binary op
 #define INFER_BINARY(OP)                              \
-  INFER_FUNCTION(OP) {   dump();                             \
+  INFER_FUNCTION(OP) {                                \
     NO_ENCODING_RETURN(getOperation()->getOperand(0)) \
     NO_ENCODING_RETURN(getOperation()->getOperand(1)) \
-    HAS_ENCODING_RETURN(getOperation()->getResult(0)) dump(); \
+    HAS_ENCODING_RETURN(getOperation()->getResult(0)) \
     auto res = getResult();                           \
     simplyBinarySymbolInfer(res);                     \
     COMMON_CHECK                                      \
@@ -321,16 +310,16 @@ void ConvSymbolInfer(Operation* op) {
     return llvm::success();                           \
   }
 // 没有操作数的op
-#define INFER_NO_OPERAND(OP)                                           \
-  INFER_FUNCTION(OP) {                                                 \
-    auto symbol_analsis = SymbolAnalysis::getInstance(getOperation()); \
-    for (auto res : getOperation()->getResults()) {                    \
-      if (!isa<RankedTensorType>(res.getType())) continue;             \
-      auto new_res = symbol_analsis->addEncoding(res);                 \
-      res.setType(new_res.getType());                                  \
-    }                                                                  \
-    COMMON_CHECK                                                       \
-    return llvm::success();                                            \
+#define INFER_NO_OPERAND(OP)                                            \
+  INFER_FUNCTION(OP) {                                                  \
+    auto symbol_analysis = SymbolAnalysis::getInstance(getOperation()); \
+    for (auto res : getOperation()->getResults()) {                     \
+      if (isa<RankedTensorType>(res.getType())) continue;               \
+      auto new_res = symbol_analysis->addEncoding(res);                 \
+      res.setType(new_res.getType());                                   \
+    }                                                                   \
+    COMMON_CHECK                                                        \
+    return llvm::success();                                             \
   }
 
 INFER_UNARY_OP(BatchNormOp)
@@ -344,27 +333,38 @@ INFER_BINARY(SubOp)
 
 INFER_CONV(ConvBiasOp)
 INFER_CONV(ConvOp)
-
 INFER_NO_OPERAND(WeightOp)
-INFER_NO_OPERAND(ConstantOp)
+INFER_FUNCTION(ConstantOp) {
+  auto res = getResult();
+  HAS_ENCODING_RETURN(res)
+  auto value = getValueAttr();
+  if (isa<IntegerAttr>(value)) {
+    auto int_attr = llvm::cast<IntegerAttr>(value);
+    auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
+    symbol_analysis->getOrBuildSymbolBind(res);
+    COMMON_CHECK
+    return llvm::success();
+  }
+  if (isa<DenseElementsAttr>(value)) {
+    auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
+    auto dense_attr = llvm::cast<DenseElementsAttr>(value);
+    auto shape = dense_attr.getType();
+    auto new_res_type =
+        RankedTensorType::get(shape.getShape(), shape.getElementType());
+    res.setType(new_res_type);
+    auto res = getResult();
+    symbol_analysis->addEncoding(res);
+    COMMON_CHECK return llvm::success();
+  }
+  return llvm::failure();
+}
 
 UNIMPLEMENTED_INFER_FUNCTION(MatMulOp)
 UNIMPLEMENTED_INFER_FUNCTION(LayerNormOp)
 UNIMPLEMENTED_INFER_FUNCTION(CatOp)
 UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
-UNIMPLEMENTED_INFER_FUNCTION(BroadCastToOp)
 
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
-
-INFER_FUNCTION(DimOp) {
-  NO_ENCODING_RETURN(getOperation()->getOperand(0))
-  if (getOperation()->hasAttr("symbol")) return llvm::failure();
-  auto input_symbols = llc::getEncodingFrom(getInput()).getShapeSymbols();
-  auto dim_value = getDim();
-  auto real_dim = getConstIntegerValue(dim_value);
-  setSymbolAttr(input_symbols[real_dim]);
-  return llvm::success();
-}
 
 INFER_FUNCTION(AdaptiveAvgPoolOp) {
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
@@ -460,41 +460,32 @@ INFER_FUNCTION(MaxPoolOp) {
   return llvm::success();
 }
 
+INFER_FUNCTION(BroadCastToOp) {
+  HAS_ENCODING_RETURN(getResult())
+  auto dims = getOutShapes();
+  auto input_type = llc::getRankTensorFrom(getInput());
+  encodingWithDims(getOperation(), dims, input_type);
+  COMMON_CHECK
+  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  return llvm::success();
+}
+
 INFER_FUNCTION(ReshapeOp) {
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
-  HAS_ENCODING_RETURN(getOperation()->getResult(0))
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
-  auto shapes = getShapes();
-  auto input = getInput();
-  auto input_type = cast<ShapedType>(input.getType());
-  auto symbols = llvm::SmallVector<StringRef>();
-  auto new_shapes = llvm::SmallVector<int64_t>();
-  getSymbolsAndShapesFrom(shapes, symbols, new_shapes);
-  auto new_tensor =
-      RankedTensorType::get(new_shapes, input_type.getElementType());
-  getResult().setType(new_tensor);
-  auto res = getResult();
-  symbol_analsis->addEncoding(res, symbols);
+  HAS_ENCODING_RETURN(getResult())
+  auto dims = getShapes();
+  auto input_type = llc::getRankTensorFrom(getInput());
+  encodingWithDims(getOperation(), dims, input_type);
   COMMON_CHECK
   INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
   return llvm::success();
 }
 
 INFER_FUNCTION(EmptyOp) {
-  HAS_ENCODING_RETURN(getOperation()->getResult(0))
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
-  llvm::SmallVector<int64_t> new_shape;
-  auto shapes = getShapes();
-  auto res_type = cast<ShapedType>(getResult().getType());
-  CHECK(llc::MLIR, res_type);
-  auto symbols = llvm::SmallVector<StringRef>();
-  getSymbolsAndShapesFrom(shapes, symbols, new_shape);
-  auto new_res_type =
-      RankedTensorType::get(new_shape, res_type.getElementType(),
-                            EncodingAttr::get(getContext(), symbols));
-  getResult().setType(new_res_type);
-  auto res = getResult();
-  symbol_analsis->addEncoding(res, symbols);
+  HAS_ENCODING_RETURN(getResult())
+  auto dims = getShapes();
+  auto input_type = llc::getRankTensorFrom(getResult());
+  encodingWithDims(getOperation(), dims, input_type);
   COMMON_CHECK
   return llvm::success();
 }

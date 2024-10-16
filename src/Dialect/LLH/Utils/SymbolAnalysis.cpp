@@ -21,11 +21,14 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -38,6 +41,41 @@
 #include "mlir/Support/LLVM.h"
 
 namespace mlir::llh {
+namespace {
+
+SymbolBindOp BuildShapedWithConstSymbolBind(Operation* op, Value shape_value,
+                                            Value const_value) {
+  if (!llc::hasEncoding(shape_value)) return nullptr;
+  LLHPatternRewriter builder(op->getContext());
+  auto shape_symbols = llc::getEncodingFrom(shape_value).getShapeSymbols();
+  auto dim = llh::getConstIntegerValue(const_value);
+  auto symbol_bind = builder.create<SymbolBindOp>(
+      builder.getUnknownLoc(), op->getResult(0), shape_symbols[dim]);
+  op->getBlock()->push_back(symbol_bind);
+  builder.moveOpAfter(symbol_bind, op);
+  return symbol_bind;
+}
+
+SymbolBindOp BuildConstSymbolBind(Operation* op) {
+  auto res = op->getResult(0);
+  if (!llvm::isa<IndexType, IntegerType>(res.getType())) return nullptr;
+  size_t val;
+  if (isa<ConstantOp>(op)) {
+    val = llvm::cast<IntegerAttr>(op->getAttr("value")).getInt();
+  } else {
+    UNIMPLEMENTED(llc::UTILITY);
+  }
+  LLHPatternRewriter builder(op->getContext());
+  auto symbol_analysis = SymbolAnalysis::getInstance(op);
+  auto symbol_dim_op = symbol_analysis->getOrBuildConstSymbolFrom(res, val);
+  auto symbol_bind = builder.create<SymbolBindOp>(builder.getUnknownLoc(), res,
+                                                  symbol_dim_op.getSymName());
+  op->getBlock()->push_back(symbol_bind);
+  builder.moveOpAfter(symbol_bind, op);
+  return symbol_bind;
+}
+
+}  // namespace
 
 SymbolAnalysisManager* SymbolAnalysisManager::instance_ =
     new (std::nothrow) SymbolAnalysisManager;
@@ -97,7 +135,7 @@ SymbolAnalysis* SymbolAnalysis::getInstance(Value value) {
 }
 
 void SymbolAnalysis::_insertOp(LLHPatternRewriter* builder, Operation* op,
-                               Value& value) const {
+                               Value value) const {
   ModuleOp module;
   if (llvm::isa<BlockArgument>(value)) {
     module = value.getParentBlock()->getParent()->getParentOfType<ModuleOp>();
@@ -110,7 +148,7 @@ void SymbolAnalysis::_insertOp(LLHPatternRewriter* builder, Operation* op,
   block.push_front(op);
 }
 
-SymbolicIntOp SymbolAnalysis::buildNewSymbolFrom(Value& value) {
+SymbolicIntOp SymbolAnalysis::buildNewSymbolFrom(Value value) {
   // std::lock_guard<std::mutex> lock(mutex_);
   auto module = value.getParentRegion()->getParentOfType<ModuleOp>();
   CHECK(llc::MLIR, llvm::isa<ModuleOp>(module));
@@ -128,7 +166,7 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbolFrom(Value& value) {
   return symbol_op;
 }
 
-SymbolicIntOp SymbolAnalysis::getOrBuildSymbolFrom(Value& value,
+SymbolicIntOp SymbolAnalysis::getOrBuildSymbolFrom(Value value,
                                                    std::string symbol) {
   LLHPatternRewriter builder(value.getContext());
   if (symbols_table_.count(symbol)) {
@@ -141,19 +179,13 @@ SymbolicIntOp SymbolAnalysis::getOrBuildSymbolFrom(Value& value,
   return symbol_op;
 };
 
-SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbolFrom(Value& value,
+SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbolFrom(Value value,
                                                         size_t val) {
   std::string symbol = "c" + std::to_string(val);
   return getOrBuildSymbolFrom(value, symbol);
 }
 
-SymbolRelationsOp SymbolAnalysis::buildRelations(
-    LLHPatternRewriter* builder, llvm::StringRef symbol,
-    llvm::ArrayRef<llvm::StringRef> relations, AffineExpr expr) {
-  UNIMPLEMENTED(llc::MLIR);
-}
-
-Value& SymbolAnalysis::addEncoding(Value& value, size_t result_pos) {
+Value SymbolAnalysis::addEncoding(Value value, size_t result_pos) {
   IRRewriter builder(value.getContext());
   auto type = value.getType();
   if (!isa<RankedTensorType>(type)) return value;
@@ -183,9 +215,9 @@ Value& SymbolAnalysis::addEncoding(Value& value, size_t result_pos) {
   return value;
 }
 
-Value& SymbolAnalysis::addEncoding(Value& value,
-                                   llvm::ArrayRef<llvm::StringRef> symbols,
-                                   size_t result_pos) {
+Value SymbolAnalysis::addEncoding(Value value,
+                                  llvm::ArrayRef<llvm::StringRef> symbols,
+                                  size_t result_pos) {
   IRRewriter builder(value.getContext());
   auto type = value.getType();
   if (!isa<RankedTensorType>(type)) return value;
@@ -223,6 +255,51 @@ Value& SymbolAnalysis::addEncoding(Value& value,
   return value;
 }
 
+bool SymbolAnalysis ::isExtraSymbolicInferOp(Operation* op) {
+  return isa<DimOp, ConstantOp>(op);
+}
+
+bool SymbolAnalysis::hasSymbolBind(Operation* op) {
+  for (auto user : op->getUsers()) {
+    if (isa<SymbolicBindOp>(user)) return true;
+  }
+  return false;
+}
+bool SymbolAnalysis::hasSymbolBind(Value value) {
+  auto op = value.getDefiningOp();
+  return hasSymbolBind(op);
+}
+
+SymbolBindOp SymbolAnalysis::getSymbolBind(Operation* op) {
+  for (auto user : op->getUsers()) {
+    if (isa<SymbolBindOp>(user)) return llvm::cast<SymbolBindOp>(user);
+  }
+  return nullptr;
+}
+SymbolBindOp SymbolAnalysis::getSymbolBind(Value value) {
+  auto op = value.getDefiningOp();
+  return getSymbolBind(op);
+}
+
+SymbolBindOp SymbolAnalysis::getOrBuildSymbolBind(Operation* op) {
+  if (!isExtraSymbolicInferOp(op)) return nullptr;
+  auto symbol_bind = getSymbolBind(op);
+  if (symbol_bind) return symbol_bind;
+  if (isa<DimOp>(op)) {
+    return BuildShapedWithConstSymbolBind(op, op->getOperand(0),
+                                          op->getOperand(1));
+  }
+  if (isa<mlir::arith::ConstantIntOp, mlir::arith::ConstantOp,
+          mlir::arith::ConstantIndexOp,llh::ConstantOp>(op)) {
+    return BuildConstSymbolBind(op);
+  }
+  return nullptr;
+}
+
+SymbolBindOp SymbolAnalysis::getOrBuildSymbolBind(Value value) {
+  auto op = value.getDefiningOp();
+  return getOrBuildSymbolBind(op);
+}
 void SymbolAnalysis::debugPrintSymbols() {
   for (auto pair : symbols_table_) {
     pair.second->dump();

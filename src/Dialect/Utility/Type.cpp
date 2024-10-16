@@ -31,27 +31,27 @@
 
 namespace llc {
 
-std::vector<int64_t> getShapeFrom(const mlir::Type& type) {
+std::vector<int64_t> getShapeFrom(mlir::Type type) {
   CHECK(::llc::UTILITY, mlir::isa<mlir::ShapedType>(type));
   return mlir::cast<mlir::ShapedType>(type).getShape().vec();
 }
 
-std::vector<int64_t> getShapeFrom(const mlir::Value& value) {
+std::vector<int64_t> getShapeFrom(mlir::Value value) {
   auto type = value.getType();
   return getShapeFrom(type);
 }
 
-mlir::RankedTensorType getRankTensorFrom(const mlir::Type& type) {
+mlir::RankedTensorType getRankTensorFrom(mlir::Type type) {
   CHECK(::llc::UTILITY, mlir::isa<mlir::RankedTensorType>(type));
   return mlir::cast<mlir::RankedTensorType>(type);
 }
 
-mlir::RankedTensorType getRankTensorFrom(const mlir::Value& value) {
+mlir::RankedTensorType getRankTensorFrom(mlir::Value value) {
   auto type = value.getType();
   return getRankTensorFrom(type);
 }
 
-bool hasEncoding(const mlir::Type& type) {
+bool hasEncoding(mlir::Type type) {
   auto tensor = mlir::dyn_cast_or_null<mlir::RankedTensorType>(type);
   if (!tensor) return false;
   auto has_encoding =
@@ -60,24 +60,24 @@ bool hasEncoding(const mlir::Type& type) {
   return true;
 }
 
-bool hasEncoding(const mlir::Value& value) {
+bool hasEncoding(mlir::Value value) {
   auto type = value.getType();
   return hasEncoding(type);
 }
 
-::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Type& type) {
+::mlir::llh::EncodingAttr getEncodingFrom(mlir::Type type) {
   CHECK(llc::UTILITY, llvm::isa<mlir::RankedTensorType>(type));
   auto tensor = mlir::dyn_cast<mlir::RankedTensorType>(type);
   auto encoding = tensor.getEncoding();
   CHECK(llc::UTILITY, llvm::isa<mlir::llh::EncodingAttr>(encoding));
   return llvm::dyn_cast<mlir::llh::EncodingAttr>(encoding);
 }
-::mlir::llh::EncodingAttr getEncodingFrom(const mlir::Value& value) {
+::mlir::llh::EncodingAttr getEncodingFrom(mlir::Value value) {
   auto type = value.getType();
   return getEncodingFrom(type);
 }
 
-int64_t getElementSizeFrom(const mlir::ShapedType& shapeType) {
+int64_t getElementSizeFrom(mlir::ShapedType shapeType) {
   auto rank = shapeType.getRank();
   if (rank == 0) return 0;
   int64_t element_size = 1;
@@ -114,7 +114,7 @@ mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value) {
 }
 
 #undef BUILD_ATTR
-// mlir::ex::Layout getLayoutFrom(const mlir::RankedTensorType& tensor) {
+// mlir::ex::Layout getLayoutFrom(mlir::RankedTensorType tensor) {
 //   auto encode =
 //       mlir::cast_or_null<mlir::ex::EncodingAttr>(tensor.getEncoding());
 //   CHECK(UTILITY, encode) << "tensor not have mlir::ex::EncodingAttr";
@@ -122,28 +122,28 @@ mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value) {
 // }
 
 // mlir::RankedTensorType cloneTensorWithEncoding(
-//     const mlir::RankedTensorType& tensor, mlir::ex::Layout layout) {
+//     mlir::RankedTensorType tensor, mlir::ex::Layout layout) {
 //   auto type = tensor.getElementType();
 //   auto shape = tensor.getShape();
 //   auto encode = mlir::ex::EncodingAttr::get(tensor.getContext(), layout);
 //   return mlir::RankedTensorType::get(shape, type, encode);
 // }
 
-std::vector<int64_t> getUnsqueezeShape(const mlir::ShapedType& shapeType,
+std::vector<int64_t> getUnsqueezeShape(mlir::ShapedType shapeType,
                                        int dim) {
   auto shape = shapeType.getShape().vec();
   shape.insert(shape.begin() + dim, 1);
   return shape;
 }
 
-std::vector<int64_t> getSqueezeShape(const mlir::ShapedType& shapeType,
+std::vector<int64_t> getSqueezeShape(mlir::ShapedType shapeType,
                                      int dim) {
   auto shape = shapeType.getShape().vec();
   CHECK_GT(UTILITY, shape.size(), 0);
   shape.erase(shape.begin() + dim);
   return shape;
 }
-mlir::RankedTensorType getUnsqueezeTensor(const mlir::RankedTensorType& tensor,
+mlir::RankedTensorType getUnsqueezeTensor(mlir::RankedTensorType tensor,
                                           int dim) {
   // auto encode =
   //     mlir::ex::EncodingAttr::get(tensor.getContext(),
@@ -151,7 +151,7 @@ mlir::RankedTensorType getUnsqueezeTensor(const mlir::RankedTensorType& tensor,
   return mlir::RankedTensorType::get(getUnsqueezeShape(tensor),
                                      tensor.getElementType());
 }
-mlir::RankedTensorType getSqueezeTensor(const mlir::RankedTensorType& tensor,
+mlir::RankedTensorType getSqueezeTensor(mlir::RankedTensorType tensor,
                                         int dim) {
   // auto encode =
   //     mlir::ex::EncodingAttr::get(tensor.getContext(),

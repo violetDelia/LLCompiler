@@ -64,6 +64,7 @@ struct SimplyBinaryOp : public LLHOpRewritePattern<BinaryOp> {
   LogicalResult match(BinaryOp op) const final {
     auto lhs = op->getOperand(0);
     auto rhs = op->getOperand(1);
+    if (!isa<RankedTensorType>(lhs.getType())) return ::failure();
     auto lhs_type = llc::getRankTensorFrom(lhs);
     auto rhs_type = llc::getRankTensorFrom(rhs);
     if (lhs_type == rhs_type) return llvm::failure();

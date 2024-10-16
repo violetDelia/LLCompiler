@@ -84,10 +84,10 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());
   // 内联
   pm.addPass(::mlir::createInlinerPass());
-  // 广播前插入reshape
-  pm.addPass(mlir::llh::createReshapeBeforeBraodcastPass());
   // 符号推导和shapeinfer
   pm.addPass(mlir::llh::createInferSymbolShapePass());
+  // 广播前插入reshape
+  pm.addPass(mlir::llh::createReshapeBeforeBraodcastPass());
   // 插入广播
   pm.addPass(mlir::llh::createInsertBroadCastPass());
   //标记Aot算子

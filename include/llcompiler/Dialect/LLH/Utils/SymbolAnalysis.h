@@ -47,23 +47,25 @@ class SymbolAnalysis {
   static SymbolAnalysis *getInstance(Operation *op);
   static SymbolAnalysis *getInstance(Value value);
 
-  SymbolicIntOp buildNewSymbolFrom(Value &value);
-  SymbolicIntOp getOrBuildSymbolFrom(Value &value, std::string val);
-  SymbolicIntOp getOrBuildConstSymbolFrom(Value &value, size_t val);
-  Value &addEncoding(Value &value, size_t result_pos = 0);
-  Value &addEncoding(Value &value, llvm::ArrayRef<llvm::StringRef> symbols,
-                     size_t result_pos = 0);
+  SymbolicIntOp buildNewSymbolFrom(Value value);
+  SymbolicIntOp getOrBuildSymbolFrom(Value value, std::string val);
+  SymbolicIntOp getOrBuildConstSymbolFrom(Value value, size_t val);
+  static bool hasSymbolBind(Operation *op);
+  static bool hasSymbolBind(Value value);
+  static SymbolBindOp getSymbolBind(Operation *op);
+  static SymbolBindOp getSymbolBind(Value value);
+  static bool isExtraSymbolicInferOp(Operation *op);
+  SymbolBindOp getOrBuildSymbolBind(Operation *op);
+  SymbolBindOp getOrBuildSymbolBind(Value value);
+  Value addEncoding(Value value, size_t result_pos = 0);
+  Value addEncoding(Value value, llvm::ArrayRef<llvm::StringRef> symbols,
+                    size_t result_pos = 0);
 
-  SymbolRelationsOp buildRelations(LLHPatternRewriter *builder,
-                                   llvm::StringRef symbol,
-                                   llvm::ArrayRef<llvm::StringRef> relations,
-                                   AffineExpr expr);
   void debugPrintSymbols();
 
  private:
   Operation *_getMainFunc(Operation *op);
-  void _insertOp(LLHPatternRewriter *builder, Operation *op,
-                 Value &value) const;
+  void _insertOp(LLHPatternRewriter *builder, Operation *op, Value value) const;
 
  public:
   static llvm::StringRef UNKOW_SYMBOL;
