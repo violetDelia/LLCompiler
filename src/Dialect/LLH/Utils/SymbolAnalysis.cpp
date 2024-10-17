@@ -20,8 +20,10 @@
 #include <string>
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
@@ -29,6 +31,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -43,36 +46,57 @@
 namespace mlir::llh {
 namespace {
 
-SymbolBindOp BuildShapedWithConstSymbolBind(Operation* op, Value shape_value,
-                                            Value const_value) {
-  if (!llc::hasEncoding(shape_value)) return nullptr;
+llvm::StringRef BuildBinaryOpSymbolBind(Operation* op) {
+  auto analysis = SymbolAnalysis::getInstance(op);
+  auto lhs = op->getOperand(0);
+  if (!SymbolAnalysis::hasSymbolAttr(lhs)) return SymbolAnalysis::UNKOW_SYMBOL;
+  auto rhs = op->getOperand(1);
+  if (!SymbolAnalysis::hasSymbolAttr(rhs)) return SymbolAnalysis::UNKOW_SYMBOL;
+  auto maybe_new_symbol = analysis->buildNewSymbolFrom(op->getResult(0));
+  llc::add_symbol_attr(op, maybe_new_symbol.getSymName());
+  llh::SymbolRelation relation;
+  if (isa<MulOp>(op)) {
+    relation = SymbolRelation::Mul;
+  } else if (isa<AddOp>(op)) {
+    relation = SymbolRelation::Add;
+  } else if (isa<SubOp>(op)) {
+    relation = SymbolRelation::Sub;
+  } else if (isa<DivOp>(op)) {
+    relation = SymbolRelation::FloorDiv;
+  } else {
+    UNIMPLEMENTED(llc::SymbolInfer);
+  }
+  analysis->buildSymbolRelation(op->getResult(0), lhs, rhs,
+                                llh::SymbolRelation::Mul);
+  analysis->buildSymbolRelation(op->getResult(0), rhs, lhs,
+                                llh::SymbolRelation::Mul);
+  return maybe_new_symbol.getSymName();
+}
+
+llvm::StringRef BuildShapedWithConstSymbolBind(Operation* op, Value shape_value,
+                                               Value const_value) {
+  if (!llc::hasEncoding(shape_value)) return SymbolAnalysis::UNKOW_SYMBOL;
   LLHPatternRewriter builder(op->getContext());
   auto shape_symbols = llc::getEncodingFrom(shape_value).getShapeSymbols();
   auto dim = llh::getConstIntegerValue(const_value);
-  auto symbol_bind = builder.create<SymbolBindOp>(
-      builder.getUnknownLoc(), op->getResult(0), shape_symbols[dim]);
-  op->getBlock()->push_back(symbol_bind);
-  builder.moveOpAfter(symbol_bind, op);
-  return symbol_bind;
+  op->setAttr(llc::SymbolIntAttr, shape_symbols[dim]);
+  return shape_symbols[dim].getValue();
 }
 
-SymbolBindOp BuildConstSymbolBind(Operation* op) {
+llvm::StringRef BuildConstSymbolBind(Operation* op) {
   auto res = op->getResult(0);
-  if (!llvm::isa<IndexType, IntegerType>(res.getType())) return nullptr;
+  if (!llvm::isa<IndexType, IntegerType>(res.getType()))
+    return SymbolAnalysis::UNKOW_SYMBOL;
   size_t val;
   if (isa<ConstantOp>(op)) {
     val = llvm::cast<IntegerAttr>(op->getAttr("value")).getInt();
   } else {
     UNIMPLEMENTED(llc::UTILITY);
   }
-  LLHPatternRewriter builder(op->getContext());
   auto symbol_analysis = SymbolAnalysis::getInstance(op);
   auto symbol_dim_op = symbol_analysis->getOrBuildConstSymbolFrom(res, val);
-  auto symbol_bind = builder.create<SymbolBindOp>(builder.getUnknownLoc(), res,
-                                                  symbol_dim_op.getSymName());
-  op->getBlock()->push_back(symbol_bind);
-  builder.moveOpAfter(symbol_bind, op);
-  return symbol_bind;
+  llc::add_symbol_attr(op, symbol_dim_op.getSymName());
+  return symbol_dim_op.getSymName().str();
 }
 
 }  // namespace
@@ -85,6 +109,8 @@ std::mutex SymbolAnalysisManager::mutex_;
 std::mutex SymbolAnalysis::mutex_;
 
 StringRef SymbolAnalysis::UNKOW_SYMBOL = "UNKOW";
+
+mlir::StringRef SymbolAnalysis::symbol_module_name = "__symbol__";
 
 bool SymbolAnalysis::symbol_enable = true;
 
@@ -102,6 +128,17 @@ SymbolAnalysis::SymbolAnalysis(Operation* op) {
     auto symbol = symbol_int.getSymName();
     symbols_table_[symbol.str()] = symbol_int;
   }
+  auto symbol_module = SymbolTable::lookupNearestSymbolFrom(
+      module.getOperation(),
+      StringAttr::get(module->getContext(), symbol_module_name));
+  if (!symbol_module) {
+    LLHPatternRewriter builder(module);
+    symbol_module =
+        builder.create<ModuleOp>(module->getLoc(), symbol_module_name);
+    module->getRegion(0).getBlocks().front().push_back(symbol_module);
+  }
+  CHECK(llc::SymbolInfer, symbol_module);
+  symbol_module_ = symbol_module;
 }
 SymbolAnalysis::~SymbolAnalysis() {}
 
@@ -134,14 +171,24 @@ SymbolAnalysis* SymbolAnalysis::getInstance(Value value) {
   return SymbolAnalysisManager::instance_->analysis_map_[module];
 }
 
-void SymbolAnalysis::_insertOp(LLHPatternRewriter* builder, Operation* op,
-                               Value value) const {
+void SymbolAnalysis::_insertInModule(LLHPatternRewriter* builder, Operation* op,
+                                     Value value) const {
   ModuleOp module;
   if (llvm::isa<BlockArgument>(value)) {
     module = value.getParentBlock()->getParent()->getParentOfType<ModuleOp>();
   } else {
     module = value.getDefiningOp()->getParentOfType<ModuleOp>();
   }
+  CHECK(llc::MLIR, module);
+  auto& block = module->getRegion(0).getBlocks().front();
+  op->remove();
+  block.push_front(op);
+}
+
+void SymbolAnalysis::_insertToSymbolModule(LLHPatternRewriter* builder,
+                                           Operation* op) const {
+  auto symbol_module = getSymbolModule();
+  ModuleOp module = llvm::cast_or_null<ModuleOp>(symbol_module_);
   CHECK(llc::MLIR, module);
   auto& block = module->getRegion(0).getBlocks().front();
   op->remove();
@@ -161,7 +208,7 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbolFrom(Value value) {
   LLHPatternRewriter builder(value.getContext());
   auto symbol_op =
       builder.create<SymbolicIntOp>(builder.getUnknownLoc(), symbol);
-  _insertOp(&builder, symbol_op, value);
+  _insertInModule(&builder, symbol_op, value);
   symbols_table_[symbol_op.getSymName().str()] = symbol_op;
   return symbol_op;
 }
@@ -174,7 +221,7 @@ SymbolicIntOp SymbolAnalysis::getOrBuildSymbolFrom(Value value,
   }
   auto symbol_op =
       builder.create<SymbolicIntOp>(builder.getUnknownLoc(), symbol);
-  _insertOp(&builder, symbol_op, value);
+  _insertInModule(&builder, symbol_op, value);
   symbols_table_[symbol_op.getSymName().str()] = symbol_op;
   return symbol_op;
 };
@@ -256,50 +303,88 @@ Value SymbolAnalysis::addEncoding(Value value,
 }
 
 bool SymbolAnalysis ::isExtraSymbolicInferOp(Operation* op) {
-  return isa<DimOp, ConstantOp>(op);
+  return isa<DimOp, ConstantOp, DivOp, AddOp, MulOp, SubOp>(op);
 }
 
-bool SymbolAnalysis::hasSymbolBind(Operation* op) {
-  for (auto user : op->getUsers()) {
-    if (isa<SymbolicBindOp>(user)) return true;
-  }
-  return false;
+bool SymbolAnalysis ::isSymbolicInferOp(Operation* op) {
+  return isExtraSymbolicInferOp(op) || isa<SymbolicInferShapeOpInterface>(op);
 }
-bool SymbolAnalysis::hasSymbolBind(Value value) {
+
+bool SymbolAnalysis::hasSymbolAttr(Operation* op) {
+  if (!isSymbolicInferOp(op)) return false;
+  return op->hasAttr(llc::SymbolIntAttr);
+}
+bool SymbolAnalysis::hasSymbolAttr(Value value) {
   auto op = value.getDefiningOp();
-  return hasSymbolBind(op);
+  return hasSymbolAttr(op);
 }
 
-SymbolBindOp SymbolAnalysis::getSymbolBind(Operation* op) {
-  for (auto user : op->getUsers()) {
-    if (isa<SymbolBindOp>(user)) return llvm::cast<SymbolBindOp>(user);
-  }
-  return nullptr;
+llvm::StringRef SymbolAnalysis::getSymbolAttr(Operation* op) {
+  if (!hasSymbolAttr(op)) return UNKOW_SYMBOL;
+  return llvm::cast<FlatSymbolRefAttr>(op->getAttr(llc::SymbolIntAttr))
+      .getValue();
 }
-SymbolBindOp SymbolAnalysis::getSymbolBind(Value value) {
+llvm::StringRef SymbolAnalysis::getSymbolAttr(Value value) {
   auto op = value.getDefiningOp();
-  return getSymbolBind(op);
+  return getSymbolAttr(op);
 }
 
-SymbolBindOp SymbolAnalysis::getOrBuildSymbolBind(Operation* op) {
-  if (!isExtraSymbolicInferOp(op)) return nullptr;
-  auto symbol_bind = getSymbolBind(op);
-  if (symbol_bind) return symbol_bind;
+llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttr(Operation* op) {
+  if (hasSymbolAttr(op)) return getSymbolAttr(op);
   if (isa<DimOp>(op)) {
     return BuildShapedWithConstSymbolBind(op, op->getOperand(0),
                                           op->getOperand(1));
   }
   if (isa<mlir::arith::ConstantIntOp, mlir::arith::ConstantOp,
-          mlir::arith::ConstantIndexOp,llh::ConstantOp>(op)) {
+          mlir::arith::ConstantIndexOp, llh::ConstantOp>(op)) {
     return BuildConstSymbolBind(op);
   }
-  return nullptr;
+  if (isa<DivOp, MulOp, SubOp, AddOp>(op)) {
+    return BuildBinaryOpSymbolBind(op);
+  }
+  return SymbolAnalysis::UNKOW_SYMBOL;
 }
 
-SymbolBindOp SymbolAnalysis::getOrBuildSymbolBind(Value value) {
+llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttr(Value value) {
   auto op = value.getDefiningOp();
-  return getOrBuildSymbolBind(op);
+  return getOrBuildSymbolAttr(op);
 }
+
+SymbolRelationOp SymbolAnalysis::buildSymbolRelation(
+    Value symbol, Value relation, SymbolRelation relation_kind) {
+  if (!hasSymbolAttr(symbol)) return nullptr;
+  if (!hasSymbolAttr(relation)) return nullptr;
+  auto symbol_name = getSymbolAttr(symbol);
+  auto relation_name = getSymbolAttr(relation);
+  LLHPatternRewriter builder(symbol.getContext());
+  auto relation_op = builder.create<SymbolRelationOp>(
+      builder.getUnknownLoc(), symbol_name, relation_name, relation_kind);
+  _insertToSymbolModule(&builder, relation_op);
+  UNIMPLEMENTED(llc::SymbolInfer) << "stored relation";
+  return relation_op;
+}
+
+SymbolBinaryRelationOp SymbolAnalysis::buildSymbolRelation(
+    Value symbol, Value relation_lhs, Value relation_rhs,
+    SymbolRelation relation_kind) {
+  if (!hasSymbolAttr(symbol)) return nullptr;
+  if (!hasSymbolAttr(relation_lhs)) return nullptr;
+  if (!hasSymbolAttr(relation_rhs)) return nullptr;
+  auto symbol_name = getSymbolAttr(symbol);
+  auto lhs_name = getSymbolAttr(relation_lhs);
+  auto rhs_name = getSymbolAttr(relation_rhs);
+  LLHPatternRewriter builder(symbol.getContext());
+  auto relation_op = builder.create<SymbolBinaryRelationOp>(
+      builder.getUnknownLoc(), symbol_name, lhs_name, rhs_name, relation_kind);
+  _insertToSymbolModule(&builder, relation_op);
+  UNIMPLEMENTED(llc::SymbolInfer) << "stored relation";
+  return relation_op;
+}
+
+ModuleOp SymbolAnalysis::getSymbolModule() const {
+  return cast<ModuleOp>(symbol_module_);
+}
+
 void SymbolAnalysis::debugPrintSymbols() {
   for (auto pair : symbols_table_) {
     pair.second->dump();

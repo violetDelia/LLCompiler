@@ -1,5 +1,4 @@
 //    Copyright 2024 时光丶人爱
-
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
@@ -76,9 +75,8 @@ bool encodingWithDims(mlir::Operation* op, OperandRange dims,
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
   for (auto dim : dims) {
-    auto bind = symbol_analsis->getOrBuildSymbolBind(dim);
-    if (!bind) return false;
-    symbols.push_back(bind.getSymbol());
+    auto symbol = symbol_analsis->getOrBuildSymbolAttr(dim);
+    symbols.push_back(symbol);
     if (llh::isConstIntegerValue(dim)) {
       new_shapes.push_back(llh::getConstIntegerValue(dim));
     } else {
@@ -267,6 +265,9 @@ void ConvSymbolInfer(Operation* op) {
 #define HAS_ENCODING_RETURN(value) \
   if (llc::hasEncoding(value)) return llvm::failure();
 
+#define HAS_SYMBOLATTR_RETURN(op) \
+  if (op->hasAttr(llc::SymbolIntAttr)) return llvm::failure();
+
 #define NO_ENCODING_RETURN(value) \
   if (!llc::hasEncoding(value)) return llvm::failure();
 
@@ -289,15 +290,21 @@ void ConvSymbolInfer(Operation* op) {
     return llvm::success();                           \
   }
 // binary op
-#define INFER_BINARY(OP)                              \
-  INFER_FUNCTION(OP) {                                \
-    NO_ENCODING_RETURN(getOperation()->getOperand(0)) \
-    NO_ENCODING_RETURN(getOperation()->getOperand(1)) \
-    HAS_ENCODING_RETURN(getOperation()->getResult(0)) \
-    auto res = getResult();                           \
-    simplyBinarySymbolInfer(res);                     \
-    COMMON_CHECK                                      \
-    return llvm::success();                           \
+#define INFER_BINARY(OP)                                                 \
+  INFER_FUNCTION(OP) {                                                   \
+    HAS_ENCODING_RETURN(getOperation()->getResult(0))                    \
+    HAS_SYMBOLATTR_RETURN(getOperation())                                \
+    if (isa<IntegerType, IntegerType>(getOperand(0).getType())) {        \
+      auto symbol_analsis = SymbolAnalysis::getInstance(getOperation()); \
+      symbol_analsis->getOrBuildSymbolAttr(getOperation());              \
+      return llvm::success();                                            \
+    }                                                                    \
+    NO_ENCODING_RETURN(getOperation()->getOperand(0))                    \
+    NO_ENCODING_RETURN(getOperation()->getOperand(1))                    \
+    auto res = getResult();                                              \
+    simplyBinarySymbolInfer(res);                                        \
+    COMMON_CHECK                                                         \
+    return llvm::success();                                              \
   }
 
 // conv类op
@@ -339,11 +346,11 @@ INFER_NO_OPERAND(WeightOp)
 INFER_FUNCTION(ConstantOp) {
   auto res = getResult();
   HAS_ENCODING_RETURN(res)
+  HAS_SYMBOLATTR_RETURN(getOperation())
   auto value = getValueAttr();
   if (isa<IntegerAttr>(value)) {
-    auto int_attr = llvm::cast<IntegerAttr>(value);
     auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
-    symbol_analysis->getOrBuildSymbolBind(res);
+    symbol_analysis->getOrBuildSymbolAttr(res);
     COMMON_CHECK
     return llvm::success();
   }
@@ -421,6 +428,7 @@ INFER_FUNCTION(AdaptiveAvgPoolOp) {
 }
 
 INFER_FUNCTION(MaxPoolOp) {
+  dump();
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
   HAS_ENCODING_RETURN(getOperation()->getResult(0))
   auto layout_attr =
@@ -487,6 +495,7 @@ INFER_FUNCTION(MaxPoolOp) {
 }
 
 INFER_FUNCTION(BroadCastToOp) {
+  dump();
   NO_ENCODING_RETURN(getInput())
   HAS_ENCODING_RETURN(getResult())
   auto dims = getOutShapes();
@@ -561,4 +570,7 @@ INFER_FUNCTION(TransposeOp) {
 #undef INFER_CONV
 #undef COMMON_CHECK
 #undef UNIMPLEMENTED_INFER_FUNCTION
+#undef HAS_ENCODING_RETURN
+#undef HAS_SYMBOLATTR_RETURN
+#undef NO_ENCODING_RETURN
 }  // namespace mlir::llh

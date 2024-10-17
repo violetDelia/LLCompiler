@@ -31,22 +31,28 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
 
 namespace mlir::llh {
-LogicalResult SymbolRelationsOp::verifySymbolUses(
-    SymbolTableCollection &symbolTable) {
-  auto symbol = (*this)->getAttrOfType<SymbolRefAttr>("symbol");
-  LLC_EMITERROR(symbol);
-  SymbolicIntOp symbol_root =
-      symbolTable.lookupNearestSymbolFrom<SymbolicIntOp>(*this, symbol);
-  LLC_EMITERROR(symbol_root);
-  auto relations = (*this)->getAttrOfType<ArrayAttr>("relations");
-  for (auto attr : relations) {
-    auto relation_symbol = llvm::cast<StringAttr>(attr);
-    LLC_EMITERROR(relation_symbol);
-    SymbolicIntOp relation_root =
-        symbolTable.lookupNearestSymbolFrom<SymbolicIntOp>(*this,
-                                                           relation_symbol);
-    LLC_EMITERROR(relation_root);
-  }
-  return llvm::success();
-}
+
+#define CHECK_STMBOL(name)                                             \
+  auto name = (*this)->getAttrOfType<SymbolRefAttr>(#name);            \
+  LLC_EMITERROR(name);                                                 \
+  SymbolicIntOp name##_root =                                          \
+      symbolTable.lookupNearestSymbolFrom<SymbolicIntOp>(*this, name); \
+  LLC_EMITERROR(name##_root);
+
+// LogicalResult SymbolRelationOp::verifySymbolUses(
+//     SymbolTableCollection &symbolTable) {
+//   CHECK_STMBOL(symbol)
+//   CHECK_STMBOL(relation)
+//   return llvm::success();
+// }
+
+// LogicalResult SymbolBinaryRelationOp::verifySymbolUses(
+//     SymbolTableCollection &symbolTable) {
+//   CHECK_STMBOL(symbol)
+//   CHECK_STMBOL(relations_lhs)
+//   CHECK_STMBOL(relations_rhs)
+//   return llvm::success();
+// }
+
+#undef CHECK_STMBOL
 }  // namespace mlir::llh

@@ -37,6 +37,7 @@ ADD_ATTR_FUNC(array_i1, llvm::ArrayRef<bool>, mlir::DenseBoolArrayAttr)
 ADD_ATTR_FUNC(bool, bool, mlir::BoolAttr)
 ADD_ATTR_FUNC(string, llvm::StringRef, mlir::StringAttr)
 ADD_ATTR_FUNC(string, const char*, mlir::StringAttr)
+ADD_ATTR_FUNC(flat_symbol, llvm::StringRef, mlir::FlatSymbolRefAttr)
 #undef ADD_ATTR_FUNC
 void add_unit_attr(mlir::Operation* op, llvm::StringRef attr_name) {
   op->setAttr(attr_name, mlir::UnitAttr::get(op->getContext()));
@@ -52,6 +53,16 @@ void add_unit_attr(mlir::Operation* op, llvm::StringRef attr_name) {
   void add_##name##_attr(mlir::Operation* op, const char* value) {     \
     add_string_attr(op, Key, value);                                   \
   }
+
+#define ADD_SYMBOL_ATTR(name, Key)                                     \
+  DEF_ATTR(name, Key)                                                  \
+  void add_##name##_attr(mlir::Operation* op, llvm::StringRef value) { \
+    add_flat_symbol_attr(op, Key, value);                                   \
+  }                                                                    \
+  void add_##name##_attr(mlir::Operation* op, const char* value) {     \
+    add_flat_symbol_attr(op, Key, value);                                   \
+  }
+
 
 #define ADD_DENSE_I64_ATTR(name, Key)                                          \
   DEF_ATTR(name, Key)                                                          \
@@ -69,9 +80,12 @@ void add_unit_attr(mlir::Operation* op, llvm::StringRef attr_name) {
     op->setAttr(Key, ::mlir::llh::LayoutAttr::get(op->getContext(), value)); \
   }
 
+
+
 const char* GloabalLayoutAttr = "builtin.gloabal_layout";
 ADD_LAYOUT_ATTR(layout, LayoutAttr)
 ADD_STRING_ATTR(op_name, OperationNameAttr)
+ADD_SYMBOL_ATTR(symbol, SymbolIntAttr)
 ADD_DENSE_I64_ATTR(group, GroupAttr)
 ADD_DENSE_I64_ATTR(kernel_shape, KernelShapeAttr)
 ADD_DENSE_I64_ATTR(stride, StrideAtt)

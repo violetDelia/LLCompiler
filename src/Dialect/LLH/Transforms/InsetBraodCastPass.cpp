@@ -40,6 +40,7 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
+#include "mlir/IR/ValueRange.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -107,9 +108,11 @@ struct SimplyBinaryOp : public LLHOpRewritePattern<BinaryOp> {
         loc, target_type, will_be_broadcast,
         llh::buildTensorDims(target_operand, &rewriter), cast_dims);
     if (lhs_type == result_type) {
-      rewriter.replaceOpWithNewOp<BinaryOp>(op, result_type, lhs, cast_op);
+      rewriter.replaceOpWithNewOp<BinaryOp>(op, result_type,
+                                            ValueRange{lhs, cast_op});
     } else {
-      rewriter.replaceOpWithNewOp<BinaryOp>(op, result_type, cast_op, rhs);
+      rewriter.replaceOpWithNewOp<BinaryOp>(op, result_type,
+                                            ValueRange{cast_op, rhs});
     }
   }
 };

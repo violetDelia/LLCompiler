@@ -42,6 +42,7 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
+#include "mlir/IR/ValueRange.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
@@ -159,8 +160,8 @@ struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
       bool is_dynamic = false;
       index++;
       while (index < dims.size()) {
-        rear_dim_sum = rewriter.create<MulOp>(loc, rewriter.getI64Type(),
-                                              rear_dim_sum, dims[index]);
+        rear_dim_sum = rewriter.create<MulOp>(
+            loc, rewriter.getI64Type(), ValueRange{rear_dim_sum, dims[index]});
         index++;
       }
       reshape_operands.push_back(rear_dim_sum);

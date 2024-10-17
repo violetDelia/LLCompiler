@@ -65,7 +65,8 @@ struct RemoveOp : public LLHOpRewritePattern<Op> {
 void populateRemoveSymbolPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<RemoveOp<SymbolicIntOp>>(context);
-  patterns.add<RemoveOp<SymbolRelationsOp>>(context);
+  patterns.add<RemoveOp<SymbolRelationOp>>(context);
+  patterns.add<RemoveOp<SymbolBinaryRelationOp>>(context);
   patterns.add<RemoveOp<SymbolicCastOp>>(context);
   patterns.add<RemoveOp<SymbolBindOp>>(context);
   patterns.add<RemoveOp<EncodingBindOp>>(context);

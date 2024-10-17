@@ -18,6 +18,7 @@
 #include <initializer_list>
 #include <utility>
 
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Support/Core.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
@@ -25,13 +26,17 @@
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/Support/LLVM.h"
-#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 
 namespace llc {
 
 #define DEF_ATTR(name, Key) extern const char* Key;
 
 #define ADD_STRING_ATTR(name, Key)                                    \
+  DEF_ATTR(name, Key)                                                 \
+  void add_##name##_attr(mlir::Operation* op, llvm::StringRef value); \
+  void add_##name##_attr(mlir::Operation* op, const char* value);
+
+#define ADD_SYMBOL_ATTR(name, Key)                                    \
   DEF_ATTR(name, Key)                                                 \
   void add_##name##_attr(mlir::Operation* op, llvm::StringRef value); \
   void add_##name##_attr(mlir::Operation* op, const char* value);
@@ -48,9 +53,12 @@ namespace llc {
   DEF_ATTR(name, Key)              \
   void add_##name##_attr(mlir::Operation* op, ::mlir::llh::Layout value);
 
+
+extern  const char* SymbolModule;
 extern const char* GloabalLayoutAttr;
 ADD_LAYOUT_ATTR(layout, LayoutAttr)
 ADD_STRING_ATTR(op_name, OperationNameAttr)
+ADD_SYMBOL_ATTR(symbol, SymbolIntAttr)
 ADD_DENSE_I64_ATTR(group, GroupAttr)
 ADD_DENSE_I64_ATTR(kernel_shape, KernelShapeAttr)
 ADD_DENSE_I64_ATTR(stride, StrideAtt)

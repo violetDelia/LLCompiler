@@ -95,7 +95,7 @@ ConstantOp buildConstTensorFromScalar(ConstantOp op,
       new_value = DenseElementsAttr::get(tensor_type, {float_attr.getValue()});
     }
   }
-  return rewriter->create<ConstantOp>(loc, tensor_type, new_value);
+  return rewriter->create<ConstantOp>(loc, new_value);
 }
 
 //===----------------------------------------------------------------------===//
@@ -134,7 +134,7 @@ struct WeightOpRefine : public LLHOpRewritePattern<WeightOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(WeightOp op) const final {
     auto res = llvm::cast<RankedTensorType>(op->getResult(0).getType());
-    if (res.getRank() == 0) return llvm::success(); 
+    if (res.getRank() == 0) return llvm::success();
     return llvm::failure();
   }
   void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {

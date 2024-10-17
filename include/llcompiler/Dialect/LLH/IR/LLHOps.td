@@ -117,14 +117,27 @@ def LLH_SymbolicCastOp: Op<LLH_Dialect,"symbolic_cast",[DeclareOpInterfaceMethod
         LLH_Tensor);
 }
 
-def LLH_SymbolRelationsOp: LLH_Op<"symbol_relations",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
+def LLH_SymbolBinaryRelationOp : LLH_Op<"symbol_relation",[]>{
     let description = [{
         描述符号关系的op
     }];
     let arguments = (ins 
-       SymbolRefAttr:$symbol,
-       SymbolRefArrayAttr:$relations,
-       AffineMapAttr:$expressions);
+       FlatSymbolRefAttr:$symbol,
+       FlatSymbolRefAttr:$relations_lhs,
+       FlatSymbolRefAttr:$relations_rhs,
+       LLH_SymbolRelationsAttr:$relation_kind
+       );
+}
+
+def LLH_SymbolRelationOp: LLH_Op<"symbol_binary_relation",[]>{
+    let description = [{
+        描述符号关系的op
+    }];
+    let arguments = (ins 
+       FlatSymbolRefAttr:$symbol,
+       FlatSymbolRefAttr:$relation,
+       LLH_SymbolRelationsAttr:$relation_kind
+       );
 }
 
 def LLH_AotOp : LLH_Op<"aot", []>{
@@ -136,7 +149,8 @@ def LLH_AotOp : LLH_Op<"aot", []>{
 
 def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike]>{
     let arguments = (ins 
-      LLH_ConstantAttr:$value);
+      LLH_ConstantAttr:$value,
+      OptionalAttr<FlatSymbolRefAttr>:$symbol);
     let results = (outs LLH_Computable_Type);
     let builders = [
         OpBuilder<(ins "DenseElementsAttr":$value),
@@ -183,7 +197,8 @@ def LLH_WeightOp : LLH_SymbolOp<"weight">{
 def LLH_DimOp : LLH_Op<"dim">{
     let arguments = (ins 
         LLH_Tensor:$input,
-        LLH_Int64:$dim
+        LLH_Int64:$dim,
+        OptionalAttr<FlatSymbolRefAttr>:$symbol
         );
     let results = (outs 
         LLH_Int64);
@@ -238,16 +253,16 @@ def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor,
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type>{
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
 }
-def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type>{
+def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
 }
-def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type>{
+def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
 }
-def LLH_SubOp           : LLH_BinaryElementwiseOp<"sub", [ResultsBroadcastableShape], LLH_Computable_Type>{
+def LLH_SubOp           : LLH_BinaryElementwiseOp<"sub", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
 }
 

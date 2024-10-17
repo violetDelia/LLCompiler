@@ -71,4 +71,25 @@ def LLH_LayoutAttr : EnumAttr<LLH_Dialect, LLH_Layout, "Layout">{
   let assemblyFormat = "`<` $value `>`";
 }
 
+def LLH_SYMBOL_EXP_ADD        : I32EnumAttrCase<"Add", 0>; 
+def LLH_SYMBOL_EXP_SUB         : I32EnumAttrCase<"Sub", 1>;
+def LLH_SYMBOL_EXP_MUL         : I32EnumAttrCase<"Mul", 2>;
+def LLH_SYMBOL_EXP_FloorDiv         : I32EnumAttrCase<"FloorDiv", 3>;
+def LLH_SYMBOL_EXP_EQ         : I32EnumAttrCase<"EQ", 4>;
+def LLH_SYMBOL_EXP_GE         : I32EnumAttrCase<"GE", 5>;
+def LLH_SYMBOL_EXP_LE         : I32EnumAttrCase<"LE", 6>;
+def LLH_SYMBOL_EXP_GT         : I32EnumAttrCase<"GT", 7>;
+def LLH_SYMBOL_EXP_LT         : I32EnumAttrCase<"LT", 8>;
+
+def LLH_SymbolRelation : I32EnumAttr<"SymbolRelation",
+    "SymbolRelation",
+    [LLH_SYMBOL_EXP_ADD , LLH_SYMBOL_EXP_SUB, LLH_SYMBOL_EXP_MUL, LLH_SYMBOL_EXP_FloorDiv, LLH_SYMBOL_EXP_EQ, LLH_SYMBOL_EXP_GE, LLH_SYMBOL_EXP_LE, LLH_SYMBOL_EXP_GT, LLH_SYMBOL_EXP_LT]> {
+  let genSpecializedAttr = 0;
+  let cppNamespace = "::mlir::llh";
+}
+
+def LLH_SymbolRelationsAttr : EnumAttr<LLH_Dialect, LLH_SymbolRelation, "SymbolRelation">{
+  let assemblyFormat = "`<` $value `>`";
+}
+
 #endif //
