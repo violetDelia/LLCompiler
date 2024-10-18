@@ -26,7 +26,7 @@ void checkAndInferSymbol(Operation* op) {
     return;
   }
   if (SymbolAnalysis::isExtraSymbolicInferOp(op)) {
-    SymbolAnalysis::getInstance(op)->getOrBuildSymbolAttr(op);
+    SymbolAnalysis::getInstance(op)->getOrBuildSymbolAttrFrom(op);
   }
 }
 }  // namespace mlir::llh

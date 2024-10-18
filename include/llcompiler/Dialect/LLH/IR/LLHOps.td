@@ -117,7 +117,7 @@ def LLH_SymbolicCastOp: Op<LLH_Dialect,"symbolic_cast",[DeclareOpInterfaceMethod
         LLH_Tensor);
 }
 
-def LLH_SymbolBinaryRelationOp : LLH_Op<"symbol_relation",[]>{
+def LLH_SymbolBinaryRelationOp : LLH_Op<"symbol_relation",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
     let description = [{
         描述符号关系的op
     }];
@@ -129,7 +129,7 @@ def LLH_SymbolBinaryRelationOp : LLH_Op<"symbol_relation",[]>{
        );
 }
 
-def LLH_SymbolRelationOp: LLH_Op<"symbol_binary_relation",[]>{
+def LLH_SymbolRelationOp: LLH_Op<"symbol_binary_relation",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
     let description = [{
         描述符号关系的op
     }];

@@ -75,7 +75,7 @@ bool encodingWithDims(mlir::Operation* op, OperandRange dims,
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
   for (auto dim : dims) {
-    auto symbol = symbol_analsis->getOrBuildSymbolAttr(dim);
+    auto symbol = symbol_analsis->getOrBuildSymbolAttrFrom(dim);
     symbols.push_back(symbol);
     if (llh::isConstIntegerValue(dim)) {
       new_shapes.push_back(llh::getConstIntegerValue(dim));
@@ -116,6 +116,7 @@ void simplyBinarySymbolInfer(Value& value) {
     value.setType(base_type);
     return;
   }
+  auto symbol_analsis = SymbolAnalysis::getInstance(op);
   auto rank = input1_type.getRank();
   auto new_shape = llvm::SmallVector<int64_t>();
   auto new_shape_symbol = llvm::SmallVector<StringRef>();
@@ -149,16 +150,16 @@ void simplyBinarySymbolInfer(Value& value) {
     if (symbol_1.str() == symbol_2.str()) {
       new_shape_symbol.push_back(symbol_1);
     } else {
-      new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+      new_shape_symbol.push_back(symbol_1);
+      symbol_analsis->buildSymbolRelation(symbol_1, symbol_2,
+                                          SymbolRelation::EQ);
     }
   }
   auto new_tensor =
       RankedTensorType::get(new_shape, input1_type.getElementType());
   op->getResult(0).setType(new_tensor);
   auto res = op->getResult(0);
-  auto symbol_analsis = SymbolAnalysis::getInstance(op);
   symbol_analsis->addEncoding(res, new_shape_symbol);
-  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
 }
 
 void ConvSymbolInfer(Operation* op) {
@@ -296,7 +297,7 @@ void ConvSymbolInfer(Operation* op) {
     HAS_SYMBOLATTR_RETURN(getOperation())                                \
     if (isa<IntegerType, IntegerType>(getOperand(0).getType())) {        \
       auto symbol_analsis = SymbolAnalysis::getInstance(getOperation()); \
-      symbol_analsis->getOrBuildSymbolAttr(getOperation());              \
+      symbol_analsis->getOrBuildSymbolAttrFrom(getOperation());          \
       return llvm::success();                                            \
     }                                                                    \
     NO_ENCODING_RETURN(getOperation()->getOperand(0))                    \
@@ -350,7 +351,7 @@ INFER_FUNCTION(ConstantOp) {
   auto value = getValueAttr();
   if (isa<IntegerAttr>(value)) {
     auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
-    symbol_analysis->getOrBuildSymbolAttr(res);
+    symbol_analysis->getOrBuildSymbolAttrFrom(res);
     COMMON_CHECK
     return llvm::success();
   }
@@ -375,9 +376,9 @@ UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
 
 INFER_FUNCTION(MatMulOp) {
-  NO_ENCODING_RETURN(getResult())
-  HAS_ENCODING_RETURN(getLhs())
-  HAS_ENCODING_RETURN(getRhs())
+  HAS_ENCODING_RETURN(getResult())
+  NO_ENCODING_RETURN(getLhs())
+  NO_ENCODING_RETURN(getRhs())
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
@@ -395,7 +396,12 @@ INFER_FUNCTION(MatMulOp) {
   auto res = getResult();
   symbol_analsis->addEncoding(res, symbols);
   COMMON_CHECK
-  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  symbol_analsis->buildSymbolRelation(lhs_symbols[1].getAttr().strref(),
+                                      rhs_symbols[0].getAttr().strref(),
+                                      SymbolRelation::EQ);
+  symbol_analsis->buildSymbolRelation(rhs_symbols[0].getAttr().strref(),
+                                      lhs_symbols[1].getAttr().strref(),
+                                      SymbolRelation::EQ);
   return llvm::success();
 }
 
@@ -428,7 +434,6 @@ INFER_FUNCTION(AdaptiveAvgPoolOp) {
 }
 
 INFER_FUNCTION(MaxPoolOp) {
-  dump();
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
   HAS_ENCODING_RETURN(getOperation()->getResult(0))
   auto layout_attr =
@@ -495,7 +500,6 @@ INFER_FUNCTION(MaxPoolOp) {
 }
 
 INFER_FUNCTION(BroadCastToOp) {
-  dump();
   NO_ENCODING_RETURN(getInput())
   HAS_ENCODING_RETURN(getResult())
   auto dims = getOutShapes();

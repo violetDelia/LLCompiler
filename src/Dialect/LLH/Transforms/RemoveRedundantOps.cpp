@@ -108,7 +108,7 @@ void removeEntranceTensorEncoding(ModuleOp module) {
           auto encoding_symbols = SmallVector<StringRef>();
           for (auto symbol : symbols) {
             auto name = llvm::cast<StringAttr>(symbol.getValue());
-            symbols_system->getOrBuildSymbolFrom(arg, name.str());
+            symbols_system->getOrBuildSymbol( name.str());
             encoding_symbols.push_back(name);
           }
           auto encoding_attr = EncodingAttr::get(context, encoding_symbols);

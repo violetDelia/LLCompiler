@@ -1,5 +1,4 @@
 //    Copyright 2024 时光丶人爱
-
 //    Licensed under the Apache License, Version 2.0 (the "License");
 //    you may not use this file except in compliance with the License.
 //    You may obtain a copy of the License at
@@ -23,6 +22,7 @@
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
@@ -32,27 +32,14 @@
 
 namespace mlir::llh {
 
-#define CHECK_STMBOL(name)                                             \
-  auto name = (*this)->getAttrOfType<SymbolRefAttr>(#name);            \
-  LLC_EMITERROR(name);                                                 \
-  SymbolicIntOp name##_root =                                          \
-      symbolTable.lookupNearestSymbolFrom<SymbolicIntOp>(*this, name); \
-  LLC_EMITERROR(name##_root);
+LogicalResult SymbolRelationOp::verifySymbolUses(
+    SymbolTableCollection& symbolTable) {
+  return llvm::success();
+}
 
-// LogicalResult SymbolRelationOp::verifySymbolUses(
-//     SymbolTableCollection &symbolTable) {
-//   CHECK_STMBOL(symbol)
-//   CHECK_STMBOL(relation)
-//   return llvm::success();
-// }
+LogicalResult SymbolBinaryRelationOp::verifySymbolUses(
+    SymbolTableCollection& symbolTable) {
+  return llvm::success();
+}
 
-// LogicalResult SymbolBinaryRelationOp::verifySymbolUses(
-//     SymbolTableCollection &symbolTable) {
-//   CHECK_STMBOL(symbol)
-//   CHECK_STMBOL(relations_lhs)
-//   CHECK_STMBOL(relations_rhs)
-//   return llvm::success();
-// }
-
-#undef CHECK_STMBOL
 }  // namespace mlir::llh

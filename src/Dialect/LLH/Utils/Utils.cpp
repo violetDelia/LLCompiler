@@ -83,6 +83,10 @@ bool isConstIntegerValue(Value value) {
     auto constant_op = llvm::cast<ConstantOp>(op);
     return llvm::isa<IntegerAttr>(constant_op.getValueAttr());
   }
+  if (isa<MulOp>(op)) {
+    return isConstIntegerValue(op->getOperand(0)) &&
+           isConstIntegerValue(op->getOperand(1));
+  }
   UNIMPLEMENTED(llc::UTILITY) << "unsupport check operator is const: "
                               << op->getName().getStringRef().str();
   return false;
@@ -107,6 +111,12 @@ size_t getConstIntegerValue(Value value) {
     auto constant_op = llvm::cast<arith::ConstantOp>(op);
     if (!llvm::isa<IntegerAttr>(constant_op.getValueAttr())) FATAL(llc::MLIR);
     return llvm::cast<IntegerAttr>(constant_op.getValueAttr()).getInt();
+  }
+  if (isa<MulOp>(op)) {
+    CHECK(llc::MLIR, isConstIntegerValue(op->getOperand(0)));
+    CHECK(llc::MLIR, isConstIntegerValue(op->getOperand(1)));
+    return getConstIntegerValue(op->getOperand(0)) *
+           getConstIntegerValue(op->getOperand(1));
   }
   UNIMPLEMENTED(llc::UTILITY) << "unsupport get operator const value: "
                               << op->getName().getStringRef().str();

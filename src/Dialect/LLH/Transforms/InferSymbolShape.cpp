@@ -118,5 +118,6 @@ void InferSymbolShapePass::runOnOperation() {
   module.walk([](Operation* op) {
     checkAndInferSymbol(op);
   });
+  SymbolAnalysis::getInstance(module)->debugPrintSymbols();
   LLC_RUN_OUT_PASS
 }

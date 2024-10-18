@@ -45,7 +45,18 @@ func.func @mul(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
   %194 = "llh.dim"(%arg0, %3) : (tensor<?x512x1x1xf32>, i64) -> i64
   %195 = "llh.dim"(%arg0, %1) : (tensor<?x512x1x1xf32>, i64) -> i64
   %196 = "llh.dim"(%arg0, %0) : (tensor<?x512x1x1xf32>, i64) -> i64
-  %197 = "llh.mul"(%194, %195) : (i64, i64) -> i64
+  // CHECK: llh.mul
+  // CHECK-SAME: symbol = @s1
+  // CHECK: llh.mul
+  // CHECK-SAME: symbol = @c512
+  // CHECK: llh.mul
+  // CHECK-SAME: symbol = @c1
+  %197 = "llh.mul"(%193, %195) : (i64, i64) -> i64
   %198 = "llh.mul"(%194, %195) : (i64, i64) -> i64
+  %199 = "llh.mul"(%196, %195) : (i64, i64) -> i64
   return 
 }
+// CHECK: llh.symbol_relation
+// CHECK-SAME: relation_kind = #llh.SymbolRelation<Mul>
+// CHECK: llh.symbol_relation
+// CHECK-SAME: relation_kind = #llh.SymbolRelation<Mul>
