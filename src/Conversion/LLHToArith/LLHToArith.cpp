@@ -27,6 +27,8 @@
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Index/IR/IndexDialect.h"
+#include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
@@ -34,6 +36,7 @@
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/TypeRange.h"
+#include "mlir/IR/ValueRange.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -55,15 +58,47 @@ namespace {
 // legal func
 //===----------------------------------------------------------------------===//
 bool check_const_legal(Operation* op) {
-  auto const_op = llvm::cast_or_null<ConstantOp>(op);
-  if (!const_op) return false;
-  auto type = const_op.getResult().getType();
+  auto type = op->getResult(0).getType();
   return isa<RankedTensorType>(type);
+}
+
+bool check_binary_legal(Operation* op) {
+  auto res_type = op->getResult(0).getType();
+  auto lhs_type = op->getOperand(0).getType();
+  auto rhs_type = op->getOperand(1).getType();
+  if (isa<IntegerType>(lhs_type) && isa<IntegerType>(rhs_type) &&
+      isa<IntegerType>(res_type))
+    return false;
+  return true;
 }
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
+template <class FromOp, class ToOp>
+struct SimplyBinaryOpLowing : public OpConversionPattern<FromOp> {
+  using OpConversionPattern<FromOp>::OpConversionPattern;
+  using OpAdaptor = typename FromOp::Adaptor;
 
+  LogicalResult match(FromOp op) const final { return success(); }
+
+  void rewrite(FromOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const final {
+    auto loc = op.getLoc();
+    auto res = op->getResult(0);
+    auto lhs = op->getOperand(0);
+    auto rhs = op->getOperand(1);
+    auto index_lhs =
+        rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), lhs);
+    auto index_rhs =
+        rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), rhs);
+    auto new_add = rewriter.create<ToOp>(
+        loc, TypeRange{rewriter.getIndexType()},
+        ValueRange{index_lhs, index_rhs}, op->getAttrDictionary().getValue());
+    auto index_res =
+        rewriter.create<index::CastUOp>(loc, res.getType(), new_add);
+    rewriter.replaceOp(op, index_res);
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -72,6 +107,10 @@ void populateConvertLLHToArithPassPatterns(TypeConverter& converter,
   auto context = patterns.getContext();
   patterns.add<SimplyFullLowing<ConstantOp, arith::ConstantOp>>(converter,
                                                                 context);
+  patterns.add<SimplyBinaryOpLowing<AddOp, arith::AddIOp>>(converter, context);
+  patterns.add<SimplyBinaryOpLowing<MulOp, arith::MulIOp>>(converter, context);
+  patterns.add<SimplyBinaryOpLowing<SubOp, arith::SubIOp>>(converter, context);
+  patterns.add<SimplyBinaryOpLowing<DivOp, arith::DivUIOp>>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -79,8 +118,10 @@ void populateConvertLLHToArithPassPatterns(TypeConverter& converter,
 //===----------------------------------------------------------------------===//
 void configConvertLLHToArithPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
+  target.addDynamicallyLegalOp<AddOp, MulOp, DivOp, SubOp>(check_binary_legal);
   target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::func::FuncDialect>();
+  target.addLegalDialect<mlir::index::IndexDialect>();
 }
 
 //===----------------------------------------------------------------------===//
@@ -88,9 +129,11 @@ void configConvertLLHToArithPassTarget(ConversionTarget& target) {
 //===----------------------------------------------------------------------===//
 void initConvertLLHToArithPassTypeConverter(TypeConverter& converter) {
   auto shaped_repalce = [](ShapedType type) { return type; };
+  auto int_repalce = [](IntegerType type) { return type; };
   auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
   converter.addConversion(ranked_tensor_replace);
   converter.addConversion(shaped_repalce);
+  converter.addConversion(int_repalce);
 }
 
 //===----------------------------------------------------------------------===//

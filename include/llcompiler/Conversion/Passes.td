@@ -38,7 +38,8 @@ def ConvertLLHToArithPass : Pass<"convert-llh-to-arith"> {
 
   }];
   let dependentDialects = [ "::mlir::arith::ArithDialect",
-                            "::mlir::func::FuncDialect"];
+                            "::mlir::func::FuncDialect",
+                            "::mlir::index::IndexDialect"];
 }
 
 //===----------------------------------------------------------------------===//
