@@ -15,7 +15,6 @@
 
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_
-
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"

@@ -56,6 +56,10 @@ def InferSymbolShapePass : Pass<"infer-symbol-shape","ModuleOp"> {
       ```
   }];
   let dependentDialects = ["mlir::llh::LLHDialect"];
+  let options = [
+    Option<"CleanSymbolCache", "clean-symbol-cache", "bool", /*default=*/"true",
+           "测试用,防止多个相同地址的module.">,
+  ];
 }
 
 def OperationlegalizationPass : Pass<"operation-legalization","ModuleOp"> {

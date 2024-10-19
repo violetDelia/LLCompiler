@@ -56,7 +56,8 @@ func.func @mul(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
   %199 = "llh.mul"(%196, %195) : (i64, i64) -> i64
   return 
 }
-// CHECK: llh.symbol_relation
+// CHECK-LABEL: __symbol__
+// CHECK: llh.symbol_binary_relation
 // CHECK-SAME: relation_kind = #llh.SymbolRelation<Mul>
-// CHECK: llh.symbol_relation
+// CHECK: llh.symbol_binary_relation
 // CHECK-SAME: relation_kind = #llh.SymbolRelation<Mul>

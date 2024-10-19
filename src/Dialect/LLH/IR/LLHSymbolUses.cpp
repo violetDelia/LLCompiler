@@ -12,7 +12,6 @@
 //    limitations under the License.
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-
 #include "llcompiler/Dialect/Utility/Macro.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
@@ -27,10 +26,20 @@
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
 
-#define GET_OP_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
-
 namespace mlir::llh {
 
+LogicalResult SymbolRelationOp::verifySymbolUses(
+    SymbolTableCollection& symbolTable) {
+  return llvm::success();
+}
+
+LogicalResult SymbolBinaryRelationOp::verifySymbolUses(
+    SymbolTableCollection& symbolTable) {
+  return llvm::success();
+}
+
+LogicalResult AddOp::verifySymbolUses(SymbolTableCollection& symbolTable) {
+  return llvm::success();
+}
 
 }  // namespace mlir::llh

@@ -23,33 +23,26 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/AffineExpr.h"
-#include "mlir/IR/AffineExprVisitor.h"
-#include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Diagnostics.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
-#include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
-#include "mlir/Pass/AnalysisManager.h"
-#include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-
 namespace mlir::llh {
 #define GEN_PASS_DEF_INFERSYMBOLSHAPEPASS
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
@@ -103,21 +96,24 @@ void populateInferSymbolShapePassPatterns(RewritePatternSet& patterns) {
 
 struct InferSymbolShapePass
     : llh::impl::InferSymbolShapePassBase<InferSymbolShapePass> {
+  using InferSymbolShapePassBase::InferSymbolShapePassBase;
   void runOnOperation() override;
 };
 }  // namespace
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
-
+#include <iostream>
 void InferSymbolShapePass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
   generateEntranceSymbol(module);
-  module.walk([](Operation* op) {
-    checkAndInferSymbol(op);
-  });
-  SymbolAnalysis::getInstance(module)->debugPrintSymbols();
+  module.walk([](Operation* op) { checkAndInferSymbol(op); });
+  if (CleanSymbolCache) {
+    INFO(llc::SymbolInfer) << "CleanSymbolCache";
+    auto analysis =  SymbolAnalysis::getInstance(module);
+    analysis->cleanCache();
+  }
   LLC_RUN_OUT_PASS
 }

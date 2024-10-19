@@ -56,30 +56,6 @@ func.func @conv_static(%arg0: tensor<2x3x224x224xf32, #llh.encoding<shapes = @c2
 
 
 // -----
-"llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
-// CHECK-LABEL: binary
-func.func @binary(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, %arg2: tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s3, @s1, @s3>>) ->() attributes {entrance}{
-  %4 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<1xf32, #llh.encoding<shapes = @c1>>
-  // CHECK: llh.add
-  // CHECK-SAME: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>> 
-  %126 = "llh.add"(%arg0, %4): (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, tensor<1xf32, #llh.encoding<shapes = @c1>>) -> tensor<?x3x?x?xf32>
-  // CHECK: llh.sub
-  // CHECK-SAME: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s4, @s1, @s5>>
-  %127 = "llh.sub"(%arg0, %arg2): (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s3, @s1, @s3>>) -> tensor<?x?x?x?xf32>
-
-  // CHECK: llh.add
-  // CHECK-SAME: tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>
-  %6 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>
-  %125 = "llh.add"(%6, %6): (tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>, tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>) -> tensor<1x3xf32>
-  return 
-}
-
-// -----
 "llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
@@ -152,6 +128,7 @@ func.func @reshape(%arg0: tensor<?x?x224x226xf32, #llh.encoding<shapes = @s0, @s
 "llh.symbolic_int"() <{sym_name = "c224"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
 func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>) ->() attributes {entrance} {
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = 1 : i64}> : () -> i64
@@ -206,5 +183,29 @@ func.func @adaptive_average_pool(%arg0: tensor<2x64x9x17xf32, #llh.encoding<shap
  // CHECK: llh.adaptive_average_pool
  // CHECK-SAME: -> tensor<2x64x1x1xf32, #llh.encoding<shapes = @c2, @c64, @c1, @c1>>
   %192 = "llh.adaptive_average_pool"(%arg0) <{out_size = array<i64: 1, 1>}> : (tensor<2x64x9x17xf32, #llh.encoding<shapes = @c2, @c64, @c9, @c17>>) -> tensor<*xf32>
+  return 
+}
+
+// -----
+"llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+// CHECK-LABEL: binary
+func.func @binary(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, %arg2: tensor<1x1x?x?xf32, #llh.encoding<shapes = @c1, @c1, @s1, @s3>>) ->() attributes {entrance}{
+  %4 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<1xf32, #llh.encoding<shapes = @c1>>
+  // CHECK: llh.add
+  // CHECK-SAME: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>> 
+  %126 = "llh.add"(%arg0, %4): (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, tensor<1xf32, #llh.encoding<shapes = @c1>>) -> tensor<?x3x?x?xf32>
+  // CHECK: llh.sub
+  // CHECK-SAME: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>
+  %127 = "llh.sub"(%arg0, %arg2): (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, tensor<1x1x?x?xf32, #llh.encoding<shapes = @c1, @c1, @s1, @s3>>) -> tensor<?x?x?x?xf32>
+
+  // CHECK: llh.add
+  // CHECK-SAME: tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>
+  %6 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>
+  %125 = "llh.add"(%6, %6): (tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>, tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>) -> tensor<1x3xf32>
   return 
 }

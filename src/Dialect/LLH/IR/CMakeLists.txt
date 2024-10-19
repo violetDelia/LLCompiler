@@ -12,6 +12,7 @@ llcompiler_add_library(MLIRLLHDialect
     LLHEnums.cpp
     LLHVerfy.cpp
     LLHCanonicalize.cpp
+    LLHSymbolUses
 
     DEPENDS
     MLIRLLHDialectIncGen

@@ -17,12 +17,13 @@ include "llcompiler/Dialect/LLH/IR/LLHAttrs.td"
 include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
-include "llcompiler/Interfaces/SymbolShapeOpInterfaces.td"
 include "llcompiler/Interfaces/BraodcastableOpInterfaces.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
-include "mlir/IR/SymbolInterfaces.td"
-
 include "mlir/Interfaces/CastInterfaces.td"
+include "mlir/IR/SymbolInterfaces.td"
+include "llcompiler/Interfaces/SymbolShapeOpInterfaces.td"
+
+
 class LLH_Op<string mnemonic, list<Trait> traits = [Pure]> :
         Op<LLH_Dialect, mnemonic, traits>{
     let summary = cppNamespace#opName#" op";
@@ -117,7 +118,7 @@ def LLH_SymbolicCastOp: Op<LLH_Dialect,"symbolic_cast",[DeclareOpInterfaceMethod
         LLH_Tensor);
 }
 
-def LLH_SymbolBinaryRelationOp : LLH_Op<"symbol_relation",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
+def LLH_SymbolBinaryRelationOp : LLH_Op<"symbol_binary_relation",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
     let description = [{
         描述符号关系的op
     }];
@@ -127,9 +128,10 @@ def LLH_SymbolBinaryRelationOp : LLH_Op<"symbol_relation",[DeclareOpInterfaceMet
        FlatSymbolRefAttr:$relations_rhs,
        LLH_SymbolRelationsAttr:$relation_kind
        );
+    let hasCanonicalizer = 1;
 }
 
-def LLH_SymbolRelationOp: LLH_Op<"symbol_binary_relation",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
+def LLH_SymbolRelationOp: LLH_Op<"symbol_relation",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
     let description = [{
         描述符号关系的op
     }];
@@ -138,6 +140,7 @@ def LLH_SymbolRelationOp: LLH_Op<"symbol_binary_relation",[DeclareOpInterfaceMet
        FlatSymbolRefAttr:$relation,
        LLH_SymbolRelationsAttr:$relation_kind
        );
+    let hasCanonicalizer = 1;
 }
 
 def LLH_AotOp : LLH_Op<"aot", []>{
@@ -253,7 +256,7 @@ def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor,
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape, DeclareOpInterfaceMethods<SymbolUserOpInterface>], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
 }
 def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{

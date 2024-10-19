@@ -31,6 +31,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/IR/AffineExpr.h"
@@ -47,48 +48,60 @@ namespace mlir::llh {
 
 class SymbolAnalysis {
  public:
-  explicit SymbolAnalysis(Operation *op);
-  virtual ~SymbolAnalysis();
   static SymbolAnalysis *getInstance(Operation *op);
   static SymbolAnalysis *getInstance(Value value);
-
-  SymbolicIntOp buildNewSymbol();
-  SymbolicIntOp getOrBuildSymbol(std::string val);
-  SymbolicIntOp getOrBuildConstSymbol(size_t val);
+  bool cleanCache();
+  static bool isExtraSymbolicInferOp(Operation *op);
+  static bool isSymbolicInferOp(Operation *op);
   static bool hasSymbolAttr(Operation *op);
   static bool hasSymbolAttr(Value value);
   static llvm::StringRef getSymbolAttr(Operation *op);
   static llvm::StringRef getSymbolAttr(Value value);
-  static bool isExtraSymbolicInferOp(Operation *op);
-  static bool isSymbolicInferOp(Operation *op);
-  llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
-  llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
-  SymbolRelationOp buildSymbolRelation(llvm::StringRef symbol,
-                                       llvm::StringRef relation,
-                                       SymbolRelation relation_kind);
-  SymbolBinaryRelationOp buildSymbolRelation(llvm::StringRef symbol,
-                                             llvm::StringRef relation_lhs,
-                                             llvm::StringRef relation_rhs,
-                                             SymbolRelation relation_kind);
+
+  SymbolicIntOp buildNewSymbol();
+  SymbolicIntOp getOrBuildSymbol(const llvm::StringRef val);
+  SymbolicIntOp getOrBuildConstSymbol(size_t val);
   Value addEncoding(Value value, size_t result_pos = 0);
   Value addEncoding(Value value, llvm::ArrayRef<llvm::StringRef> symbols,
                     size_t result_pos = 0);
+
+  llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
+  llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
+  SymbolRelationOp buildSymbolRelation(const llvm::StringRef symbol,
+                                       const llvm::StringRef relation,
+                                       SymbolRelation relation_kind);
+  SymbolBinaryRelationOp buildSymbolRelation(const llvm::StringRef symbol,
+                                             const llvm::StringRef relation_lhs,
+                                             const llvm::StringRef relation_rhs,
+                                             SymbolRelation relation_kind);
+
+  bool replaceSymbol(const llvm::StringRef old_symbol,
+                     const llvm::StringRef new_symbol);
   ModuleOp getSymbolModule() const;
-  bool hasSymbol(llvm::StringRef symbol) const;
+  ModuleOp getRootModule() const;
+  bool hasSymbol(const llvm::StringRef symbol) const;
 
   void debugPrintSymbols();
 
  private:
+  explicit SymbolAnalysis(Operation *op);
+  virtual ~SymbolAnalysis();
   Operation *_getMainFunc(Operation *op);
   void _insertInModule(LLHPatternRewriter *builder, Operation *op) const;
   void _insertToSymbolModule(LLHPatternRewriter *builder, Operation *op) const;
   bool _isConst(Operation *op);
   bool _isConst(Value value);
   bool _isConst(llvm::StringRef name);
+  bool _remove(llvm::StringRef symbol);
+  ModuleOp _getRootModule(Operation *op);
+  ModuleOp _getRootModule(Value value);
 
  public:
+  //未知symbol的标记
   static llvm::StringRef UNKOW_SYMBOL;
+  //弃用
   static bool symbol_enable;
+  //symbol module 的名字
   static mlir::StringRef symbol_module_name;
 
  private:
@@ -96,8 +109,8 @@ class SymbolAnalysis {
   std::map<Operation *, size_t> module_map_;
   std::map<std::string, Operation *> symbols_table_;
   Operation *symbol_module_;
-  int next_symbol_id_ = 0;
-  int next_module_id_ = 0;
+  std::atomic<int> next_symbol_id_ = 0;
+  std::atomic<int> next_module_id_ = 0;
 
  private:
   // TODO:
@@ -112,11 +125,19 @@ class SymbolAnalysis {
   std::map<std::string, std::unordered_set<std::string>> Mul_table;
 };
 
+//防止多个Module同时infersymbol
 class SymbolAnalysisManager {
   friend SymbolAnalysis;
-  static SymbolAnalysisManager *instance_;
-  std::map<ModuleOp, SymbolAnalysis *> analysis_map_;
+  static SymbolAnalysisManager &getInstance();
   static std::mutex mutex_;
+
+ private:
+  SymbolAnalysisManager() = default;
+  SymbolAnalysisManager(const SymbolAnalysisManager &other) = delete;
+  SymbolAnalysisManager &operator=(const SymbolAnalysisManager &) = delete;
+
+ private:
+  std::map<ModuleOp, SymbolAnalysis *> analysis_map_;
 };
 }  // namespace mlir::llh
 #endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_SYMBOLANALYSIS_H_
