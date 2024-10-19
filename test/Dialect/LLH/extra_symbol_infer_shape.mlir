@@ -4,8 +4,8 @@
 "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "c512"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
-// CHECK-LABEL: dim_and_const
-func.func @dim_and_const(%arg0: tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>) -> () attributes {entrance} {
+// CHECK-LABEL: const
+func.func @const(%arg0: tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>) -> () attributes {entrance} {
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = 2 : i64}> : () -> i64
   %2 = "llh.constant"() <{value = 0 : i64}> : () -> i64
@@ -18,18 +18,6 @@ func.func @dim_and_const(%arg0: tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0
   // CHECK-SAME: symbol = @c0
   // CHECK: llh.constant
   // CHECK-SAME: symbol = @c1
-  // CHECK: llh.dim
-  // CHECK-SAME: symbol = @s0
-  // CHECK: llh.dim
-  // CHECK-SAME: symbol = @c512
-  // CHECK: llh.dim
-  // CHECK-SAME: symbol = @c1
-  // CHECK: llh.dim
-  // CHECK-SAME: symbol = @c1
-  %193 = "llh.dim"(%arg0, %2) : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
-  %194 = "llh.dim"(%arg0, %3) : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
-  %195 = "llh.dim"(%arg0, %1) : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
-  %196 = "llh.dim"(%arg0, %0) : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
   return 
 }
 

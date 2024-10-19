@@ -74,7 +74,7 @@ func.func @transpose(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3,
 "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
 // CHECK-LABEL: empty
-func.func @empty(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> () attributes {entrance} {
+func.func @empty(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> (tensor<?x?xf32>) attributes {entrance} {
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %2 = "llh.constant"() <{value = 1 : i64}> : () -> i64
   %3 = "llh.constant"() <{value = 2 : i64}> : () -> i64
@@ -86,19 +86,15 @@ func.func @empty(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2
   // CHECK: llh.empty
   // CHECK-SAME: -> tensor<?x?xf32, #llh.encoding<shapes = @s2, @s1>>
   %22 = "llh.empty"(%6, %7) : (i64, i64) -> tensor<?x?xf32>
-  return 
+  return  %22: tensor<?x?xf32>
 }
 
 // -----
-"llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "c64"}> : () -> ()
 // CHECK-LABEL: max_pool
-func.func @max_pool(%arg0: tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s1, @s3>>) -> () attributes {entrance} {
+func.func @max_pool(%arg0: tensor<?x64x?x?xf32>) -> () attributes {entrance} {
  // CHECK: llh.max_pool
- // CHECK-SAME: -> tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s2, @s4>>
- %129 = "llh.max_pool"(%arg0) <{ceil_mode = false, dilation = array<i64: 1, 1>, kernel_shape = array<i64: 3, 3>, layout = #llh.Layout<NCHW>, pad = array<i64: 1, 1, 1, 1>, stride = array<i64: 2, 2>}> : (tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s1, @s3>>) -> tensor<?x64x?x?xf32>
+ // CHECK-SAME: -> tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s3, @s4>>
+ %129 = "llh.max_pool"(%arg0) <{ceil_mode = false, dilation = array<i64: 1, 1>, kernel_shape = array<i64: 3, 3>, layout = #llh.Layout<NCHW>, pad = array<i64: 1, 1, 1, 1>, stride = array<i64: 2, 2>}> : (tensor<?x64x?x?xf32>) -> tensor<*xf32>
   return 
 }
 

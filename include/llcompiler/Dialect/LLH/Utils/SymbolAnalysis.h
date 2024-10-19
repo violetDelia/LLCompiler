@@ -50,21 +50,22 @@ class SymbolAnalysis {
  public:
   static SymbolAnalysis *getInstance(Operation *op);
   static SymbolAnalysis *getInstance(Value value);
-  bool cleanCache();
   static bool isExtraSymbolicInferOp(Operation *op);
   static bool isSymbolicInferOp(Operation *op);
   static bool hasSymbolAttr(Operation *op);
   static bool hasSymbolAttr(Value value);
   static llvm::StringRef getSymbolAttr(Operation *op);
   static llvm::StringRef getSymbolAttr(Value value);
+  static bool isConst(const llvm::StringRef name);
 
+ public:
+  bool cleanCache();
   SymbolicIntOp buildNewSymbol();
   SymbolicIntOp getOrBuildSymbol(const llvm::StringRef val);
   SymbolicIntOp getOrBuildConstSymbol(size_t val);
   Value addEncoding(Value value, size_t result_pos = 0);
   Value addEncoding(Value value, llvm::ArrayRef<llvm::StringRef> symbols,
                     size_t result_pos = 0);
-
   llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
   llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
   SymbolRelationOp buildSymbolRelation(const llvm::StringRef symbol,
@@ -74,13 +75,11 @@ class SymbolAnalysis {
                                              const llvm::StringRef relation_lhs,
                                              const llvm::StringRef relation_rhs,
                                              SymbolRelation relation_kind);
-
   bool replaceSymbol(const llvm::StringRef old_symbol,
                      const llvm::StringRef new_symbol);
   ModuleOp getSymbolModule() const;
   ModuleOp getRootModule() const;
   bool hasSymbol(const llvm::StringRef symbol) const;
-
   void debugPrintSymbols();
 
  private:
@@ -91,10 +90,7 @@ class SymbolAnalysis {
   void _insertToSymbolModule(LLHPatternRewriter *builder, Operation *op) const;
   bool _isConst(Operation *op);
   bool _isConst(Value value);
-  bool _isConst(llvm::StringRef name);
   bool _remove(llvm::StringRef symbol);
-  ModuleOp _getRootModule(Operation *op);
-  ModuleOp _getRootModule(Value value);
 
  public:
   //未知symbol的标记

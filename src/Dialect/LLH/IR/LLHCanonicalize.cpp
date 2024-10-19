@@ -79,14 +79,38 @@ void EncodingBindOp::getCanonicalizationPatterns(
 //===----------------------------------------------------------------------===//
 // SymbolBinaryRelationOp
 //===----------------------------------------------------------------------===//
+namespace {
+//如果symbol表示常量就去除
+struct RemoveSymbolBinaryRelationIfAllConst
+    : public LLHOpRewritePattern<SymbolBinaryRelationOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(SymbolBinaryRelationOp op) const final {
+    auto symbol = op.getSymbol();
+    if (!SymbolAnalysis::isConst(symbol)) return llvm::failure();
+    auto relation_lhs = op.getRelationsLhs();
+    if (!SymbolAnalysis::isConst(relation_lhs)) return llvm::failure();
+    auto relation_rhs = op.getRelationsRhs();
+    if (!SymbolAnalysis::isConst(relation_rhs)) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(SymbolBinaryRelationOp op,
+               LLHPatternRewriter &rewriter) const final {
+    rewriter.eraseOp(op);
+  }
+};
+}  // namespace
+
 void SymbolBinaryRelationOp::getCanonicalizationPatterns(
-    mlir::RewritePatternSet &results, MLIRContext *context) {}
+    mlir::RewritePatternSet &results, MLIRContext *context) {
+  results.add<RemoveSymbolBinaryRelationIfAllConst>(context);
+}
 
 //===----------------------------------------------------------------------===//
 // SymbolRelationOp
 //===----------------------------------------------------------------------===//
 namespace {
-
+// 替换相等的符号
 struct ReplaceSymbolIfEquel : public LLHOpRewritePattern<SymbolRelationOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
 
@@ -99,28 +123,42 @@ struct ReplaceSymbolIfEquel : public LLHOpRewritePattern<SymbolRelationOp> {
     auto relation = op.getRelation();
     auto analysis = SymbolAnalysis::getInstance(op);
     if (symbol.str() != relation.str()) {
-      auto symbol_module = op->getParentOfType<ModuleOp>();
-      auto module = symbol_module->getParentOfType<ModuleOp>();
-      AttrTypeReplacer replacer;
-      replacer.addReplacement([&relation, &symbol](FlatSymbolRefAttr attr)
-                                  -> std::pair<Attribute, WalkResult> {
-        if (attr.getValue().str() == relation.str())
-          return {FlatSymbolRefAttr::get(attr.getContext(), symbol),
-                  WalkResult::skip()};
-        return {attr, WalkResult::skip()};
-      });
-
-      module->walk([&replacer](Operation *op) {
-        replacer.replaceElementsIn(op, true, false, true);
-      });
-      // module->walk(
-      //     [&replacer](Block* op) { op->dump(); });
+      analysis->replaceSymbol(relation, symbol);
+      auto old_symbol = analysis->getOrBuildSymbol(relation);
+      rewriter.eraseOp(old_symbol);
     }
     rewriter.eraseOp(op);
   }
 };
+
+// 如果symbol表示常量就去除
+struct RemoveSymbolRelationIfAllConst
+    : public LLHOpRewritePattern<SymbolRelationOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(SymbolRelationOp op) const final {
+    auto symbol = op.getSymbol();
+    if (!SymbolAnalysis::isConst(symbol)) return llvm::failure();
+    auto relation = op.getRelation();
+    if (!SymbolAnalysis::isConst(relation)) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(SymbolRelationOp op, LLHPatternRewriter &rewriter) const final {
+    rewriter.eraseOp(op);
+  }
+};
+
 }  // namespace
 void SymbolRelationOp::getCanonicalizationPatterns(
     mlir::RewritePatternSet &results, MLIRContext *context) {
   results.add<ReplaceSymbolIfEquel>(context);
+  results.add<RemoveSymbolRelationIfAllConst>(context);
 }
+
+void mlir::llh::populateSymbolCanonicalizePatterns(
+    RewritePatternSet &patterns) {
+  auto context = patterns.getContext();
+  patterns.add<ReplaceSymbolIfEquel>(context);
+  patterns.add<RemoveSymbolRelationIfAllConst>(context);
+  patterns.add<RemoveSymbolBinaryRelationIfAllConst>(context);
+};

@@ -16,11 +16,11 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
-#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
-#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "llcompiler/Interfaces/BraodcastableOpInterfaces.h"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
@@ -50,3 +50,8 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"
 #undef PLACEHOLD_FOR_FIX_HEADER
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
+
+namespace mlir::llh {
+void populateSymbolCanonicalizePatterns(RewritePatternSet& patterns);
+}
+

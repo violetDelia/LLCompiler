@@ -115,5 +115,9 @@ void InferSymbolShapePass::runOnOperation() {
     auto analysis =  SymbolAnalysis::getInstance(module);
     analysis->cleanCache();
   }
+  RewritePatternSet patterns(context);
+  populateSymbolCanonicalizePatterns(patterns);
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+    signalPassFailure();
   LLC_RUN_OUT_PASS
 }

@@ -393,7 +393,7 @@ SymbolRelationOp SymbolAnalysis::buildSymbolRelation(
     WRONG(llc::SymbolInfer) << "unknown symbol: " << relation.str();
     return nullptr;
   }
-  if (_isConst(symbol) && _isConst(relation)) return nullptr;
+  if (isConst(symbol) && isConst(relation)) return nullptr;
   LLHPatternRewriter builder(symbol_module_->getContext());
   auto relation_op = builder.create<SymbolRelationOp>(
       builder.getUnknownLoc(), symbol, relation, relation_kind);
@@ -470,6 +470,25 @@ SymbolBinaryRelationOp SymbolAnalysis::buildSymbolRelation(
 #undef Q_UNARY_INSERT
 #undef QIUCK_INSERT
 
+bool SymbolAnalysis::replaceSymbol(const llvm::StringRef old_symbol,
+                                   const llvm::StringRef new_symbol) {
+  CHECK(llc::SymbolInfer, hasSymbol(old_symbol));
+  CHECK(llc::SymbolInfer, hasSymbol(new_symbol));
+  if (old_symbol.str() == new_symbol.str()) return true;
+  auto module = getRootModule();
+  AttrTypeReplacer replacer;
+  replacer.addReplacement([&old_symbol, &new_symbol](FlatSymbolRefAttr attr)
+                              -> std::pair<Attribute, WalkResult> {
+    if (attr.getValue().str() == old_symbol.str())
+      return {FlatSymbolRefAttr::get(attr.getContext(), new_symbol),
+              WalkResult::skip()};
+    return {attr, WalkResult::skip()};
+  });
+  module->walk([&replacer](Operation* op) {
+    replacer.replaceElementsIn(op, true, false, true);
+  });
+  return true;
+}
 ModuleOp SymbolAnalysis::getSymbolModule() const {
   return cast<ModuleOp>(symbol_module_);
 }
@@ -506,7 +525,7 @@ void SymbolAnalysis::debugPrintSymbols() {
 
 void SymbolAnalysis::_insertInModule(LLHPatternRewriter* builder,
                                      Operation* op) const {
-  ModuleOp module = symbol_module_->getParentOfType<ModuleOp>();
+  ModuleOp module = getRootModule();
   CHECK(llc::SymbolInfer, module);
   auto& block = module->getRegion(0).getBlocks().front();
   op->remove();
@@ -524,19 +543,13 @@ void SymbolAnalysis::_insertToSymbolModule(LLHPatternRewriter* builder,
 }
 
 bool SymbolAnalysis::_isConst(Operation* op) {
-  return _isConst(getSymbolAttr(op));
+  return isConst(getSymbolAttr(op));
 }
 bool SymbolAnalysis::_isConst(Value value) {
-  return _isConst(getSymbolAttr(value));
+  return isConst(getSymbolAttr(value));
 };
-bool SymbolAnalysis::_isConst(const llvm::StringRef name) {
+bool SymbolAnalysis::isConst(const llvm::StringRef name) {
   return name.starts_with("c");
 };
-ModuleOp SymbolAnalysis::_getRootModule(Operation* op) {
-  ModuleOp module;
-
-  return module;
-}
-ModuleOp SymbolAnalysis::_getRootModule(Value value) {}
 #undef PRINT_TABLE
 }  // namespace mlir::llh

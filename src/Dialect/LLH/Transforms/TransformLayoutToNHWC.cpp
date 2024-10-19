@@ -142,6 +142,7 @@ void TransformLayoutToNHWCPass::runOnOperation() {
   auto* context = &getContext();
   RewritePatternSet patterns(context);
   populateTransformLayoutToNHWCPassPatterns(patterns);
+  populateSymbolCanonicalizePatterns(patterns);
   auto op = getOperation();
   markOpsNeedTranspose(op);
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))

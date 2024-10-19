@@ -153,6 +153,7 @@ void InsertBroadCastPass::runOnOperation() {
   auto module = getOperation();
   RewritePatternSet patterns(context);
   populateInsertBroadCastPassPatterns(patterns);
+  populateSymbolCanonicalizePatterns(patterns);
   if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS
