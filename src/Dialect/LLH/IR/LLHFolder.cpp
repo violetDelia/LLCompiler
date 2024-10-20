@@ -11,6 +11,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
+#include <functional>
 #include <iostream>
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
@@ -53,9 +54,21 @@ static bool isSplatZero(Type elemType, DenseElementsAttr val) {
   return false;
 }
 
-template <typename IntFolder, typename FloatFolder>
-DenseElementsAttr binaryFolder(DenseElementsAttr lhs, DenseElementsAttr rhs,
-                               RankedTensorType returnTy) {
+static bool isSplatOne(Type elemType, DenseElementsAttr val) {
+  if (llvm::isa<FloatType>(elemType)) {
+    return val && val.isSplat() &&
+           (val.getSplatValue<APFloat>().convertToDouble() == 1);
+  }
+  if (llvm::isa<IntegerType>(elemType)) {
+    return val && val.isSplat() && val.getSplatValue<APInt>().isAllOnes();
+  }
+  return false;
+}
+
+DenseElementsAttr splatDenseBinaryFolder(
+    DenseElementsAttr lhs, DenseElementsAttr rhs, RankedTensorType returnTy,
+    function_ref<APInt(llvm::APInt, llvm::APInt)> int_calculate,
+    function_ref<APFloat(llvm::APFloat, llvm::APFloat)> float_calculate) {
   if (rhs && lhs && rhs.isSplat() && lhs.isSplat()) {
     auto lhs_ele_type = llvm::cast<ShapedType>(lhs.getType()).getElementType();
     auto rhs_ele_type = llvm::cast<ShapedType>(rhs.getType()).getElementType();
@@ -63,13 +76,13 @@ DenseElementsAttr binaryFolder(DenseElementsAttr lhs, DenseElementsAttr rhs,
     if (llvm::isa<IntegerType>(lhs_ele_type)) {
       APInt l = lhs.getSplatValue<APInt>();
       APInt r = rhs.getSplatValue<APInt>();
-      auto result = IntFolder()(l, r);
+      auto result = int_calculate(l, r);
       return DenseElementsAttr::get(returnTy, result);
     }
     if (llvm::isa<FloatType>(lhs_ele_type)) {
       APFloat l = lhs.getSplatValue<APFloat>();
       APFloat r = rhs.getSplatValue<APFloat>();
-      auto result = FloatFolder()(l, r);
+      auto result = float_calculate(l, r);
       auto c = DenseElementsAttr::get(returnTy, result);
       return DenseElementsAttr::get(returnTy, result);
     }
@@ -130,8 +143,11 @@ OpFoldResult AddOp::fold(FoldAdaptor adaptor) {
     if (rhs_type == result_type &&
         isSplatZero(result_type.getElementType(), lhs_attr))
       return getRhs();
-    return binaryFolder<::std::plus<APInt>, ::std::plus<APFloat>>(
-        lhs_attr, rhs_attr, result_type);
+    if (!lhs_attr || !rhs_attr) return {};
+    return splatDenseBinaryFolder(
+        lhs_attr, rhs_attr, result_type,
+        [](const APInt &a, const APInt &b) { return a + b; },
+        [](const APFloat &a, const APFloat &b) { return a + b; });
   }
   return {};
 };
@@ -154,7 +170,7 @@ OpFoldResult SubOp::fold(FoldAdaptor adaptor) {
     }
     return constFoldBinaryOp<IntegerAttr, IntegerAttr::ValueType, void>(
         adaptor.getOperands(),
-        [](APInt a, const APInt &b) { return std::move(a) - b; });
+        [](const APInt &a, const APInt &b) { return a - b; });
   }
   if (isa<FloatType>(res_type)) {
     // sub(x,x) -> 0
@@ -170,7 +186,7 @@ OpFoldResult SubOp::fold(FoldAdaptor adaptor) {
     }
     return constFoldBinaryOp<FloatAttr, FloatAttr::ValueType, void>(
         adaptor.getOperands(),
-        [](APFloat a, const APFloat &b) { return std::move(a) - b; });
+        [](const APFloat &a, const APFloat &b) { return a - b; });
   }
   if (isa<RankedTensorType>(res_type)) {
     auto lhs_type = llvm::dyn_cast<RankedTensorType>(getLhs().getType());
@@ -187,12 +203,111 @@ OpFoldResult SubOp::fold(FoldAdaptor adaptor) {
     if (lhs_type == result_type &&
         isSplatZero(result_type.getElementType(), rhs_attr))
       return getLhs();
-    return binaryFolder<::std::plus<APInt>, ::std::plus<APFloat>>(
-        lhs_attr, rhs_attr, result_type);
+    if (!lhs_attr || !rhs_attr) return {};
+    return splatDenseBinaryFolder(
+        lhs_attr, rhs_attr, result_type,
+        [](const APInt &a, const APInt &b) { return a - b; },
+        [](const APFloat &a, const APFloat &b) { return a - b; });
   }
   return {};
 };
-OpFoldResult DivOp::fold(FoldAdaptor adaptor) { return {}; };
-OpFoldResult MulOp::fold(FoldAdaptor adaptor) { return {}; };
+
+OpFoldResult DivOp::fold(FoldAdaptor adaptor) {
+  auto res_type = getType();
+  if (!isa<IntegerType, FloatType, RankedTensorType>(res_type)) return {};
+  if (isa<IntegerType>(res_type)) {
+    // div (x, 1) -> x
+    if (matchPattern(adaptor.getRhs(), m_One())) return getLhs();
+    // skip div (x, 0)
+    if (matchPattern(adaptor.getRhs(), m_Zero())) return {};
+    return constFoldBinaryOp<IntegerAttr, IntegerAttr::ValueType, void>(
+        adaptor.getOperands(),
+        [](const APInt &a, const APInt &b) { return a.udiv(b); });
+  }
+  if (isa<FloatType>(res_type)) {
+    // div (x, 1) -> x
+    if (matchPattern(adaptor.getRhs(), m_OneFloat())) return getLhs();
+    // skip div (x, 0)
+    if (matchPattern(adaptor.getRhs(), m_AnyZeroFloat())) return {};
+    return constFoldBinaryOp<FloatAttr, FloatAttr::ValueType, void>(
+        adaptor.getOperands(),
+        [](const APFloat &a, const APFloat &b) { return a / b; });
+  }
+  if (isa<RankedTensorType>(res_type)) {
+    auto lhs_type = llvm::dyn_cast<RankedTensorType>(getLhs().getType());
+    auto rhs_type = llvm::dyn_cast<RankedTensorType>(getRhs().getType());
+    auto result_type = llvm::dyn_cast<RankedTensorType>(getType());
+    if (!lhs_type.getElementType().isIntOrIndexOrFloat() ||
+        !rhs_type.getElementType().isIntOrIndexOrFloat())
+      return {};
+    auto lhs_attr =
+        llvm::dyn_cast_if_present<DenseElementsAttr>(adaptor.getLhs());
+    auto rhs_attr =
+        llvm::dyn_cast_if_present<DenseElementsAttr>(adaptor.getRhs());
+    // div(x, 1) -> x
+    if (lhs_type == result_type &&
+        isSplatOne(result_type.getElementType(), rhs_attr))
+      return getLhs();
+    // skip 0;
+    if (isSplatZero(result_type.getElementType(), rhs_attr) ||
+        isSplatZero(result_type.getElementType(), lhs_attr))
+      return {};
+    if (!lhs_attr || !rhs_attr) return {};
+    return splatDenseBinaryFolder(
+        lhs_attr, rhs_attr, result_type,
+        [](const APInt &a, const APInt &b) { return a.udiv(b); },
+        [](const APFloat &a, const APFloat &b) { return a / b; });
+  }
+  return {};
+};
+
+OpFoldResult MulOp::fold(FoldAdaptor adaptor) {
+  auto res_type = getType();
+  if (!isa<IntegerType, FloatType, RankedTensorType>(res_type)) return {};
+  if (isa<IntegerType>(res_type)) {
+    // mul(x, 0) -> 0
+    if (matchPattern(adaptor.getRhs(), m_Zero())) return getRhs();
+    // mul(x, 1) -> x
+    if (matchPattern(adaptor.getRhs(), m_One())) return getLhs();
+    return constFoldBinaryOp<IntegerAttr, IntegerAttr::ValueType, void>(
+        adaptor.getOperands(),
+        [](const APInt &a, const APInt &b) { return a * b; });
+  }
+  if (isa<FloatType>(res_type)) {
+    // mul(x, 0) -> 0
+    if (matchPattern(adaptor.getRhs(), m_AnyZeroFloat())) return getRhs();
+    // mul(x, 1) -> x
+    if (matchPattern(adaptor.getRhs(), m_OneFloat())) return getLhs();
+    return constFoldBinaryOp<FloatAttr, FloatAttr::ValueType, void>(
+        adaptor.getOperands(),
+        [](const APFloat &a, const APFloat &b) { return a * b; });
+  }
+  if (isa<RankedTensorType>(res_type)) {
+    auto lhs_type = llvm::dyn_cast<RankedTensorType>(getLhs().getType());
+    auto rhs_type = llvm::dyn_cast<RankedTensorType>(getRhs().getType());
+    auto result_type = llvm::dyn_cast<RankedTensorType>(getType());
+    if (!lhs_type.getElementType().isIntOrIndexOrFloat() ||
+        !rhs_type.getElementType().isIntOrIndexOrFloat())
+      return {};
+    auto lhs_attr =
+        llvm::dyn_cast_if_present<DenseElementsAttr>(adaptor.getLhs());
+    auto rhs_attr =
+        llvm::dyn_cast_if_present<DenseElementsAttr>(adaptor.getRhs());
+    // mul(x, 0) -> 0
+    if (lhs_type == result_type &&
+        isSplatZero(result_type.getElementType(), rhs_attr))
+      return getRhs();
+    // mul(x, 1) -> x
+    if (lhs_type == result_type &&
+        isSplatOne(result_type.getElementType(), rhs_attr))
+      return getLhs();
+    if (!lhs_attr || !rhs_attr) return {};
+    return splatDenseBinaryFolder(
+        lhs_attr, rhs_attr, result_type,
+        [](const APInt &a, const APInt &b) { return a * b; },
+        [](const APFloat &a, const APFloat &b) { return a / b; });
+  }
+  return {};
+};
 
 }  // namespace mlir::llh

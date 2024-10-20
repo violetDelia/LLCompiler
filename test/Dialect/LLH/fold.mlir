@@ -54,22 +54,22 @@ func.func @add_sub_fold(%arg2: f32, %arg3: f32) ->(f32) attributes {entrance} {
 
 // -----
 // CHECK-LABEL: add_zore_fold
-func.func @add_zore_fold(%arg0: tensor<64xf32, #llh.encoding<shapes = @c64>>) ->(tensor<64xf32, #llh.encoding<shapes = @c64>>) attributes {entrance} {
-  %7 = "llh.constant"() <{value = dense<0.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32, #llh.encoding<shapes = @c64>>
+func.func @add_zore_fold(%arg0: tensor<64xf32>) ->(tensor<64xf32>) attributes {entrance} {
+  %7 = "llh.constant"() <{value = dense<0.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
   // CHECK-NOT: llh.add
-  %res = "llh.add"(%arg0, %7) : (tensor<64xf32, #llh.encoding<shapes = @c64>>, tensor<64xf32, #llh.encoding<shapes = @c64>>) -> tensor<64xf32, #llh.encoding<shapes = @c64>>
-  return %res: tensor<64xf32, #llh.encoding<shapes = @c64>>
+  %res = "llh.add"(%arg0, %7) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+  return %res: tensor<64xf32>
 }
 
 // -----
 // CHECK-LABEL: sub_same_fold
-func.func @sub_same_fold(%arg0: tensor<64xf32, #llh.encoding<shapes = @c64>>) ->(tensor<64xf32, #llh.encoding<shapes = @c64>>) attributes {entrance} {
-  %7 = "llh.constant"() <{value = dense<0.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32, #llh.encoding<shapes = @c64>>
-  %8 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32, #llh.encoding<shapes = @c64>>
+func.func @sub_same_fold(%arg0: tensor<64xf32>) ->(tensor<64xf32>) attributes {entrance} {
+  %7 = "llh.constant"() <{value = dense<0.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
+  %8 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
   // CHECK-NOT: llh.sub
-  %res = "llh.sub"(%7, %7) : (tensor<64xf32, #llh.encoding<shapes = @c64>>, tensor<64xf32, #llh.encoding<shapes = @c64>>) -> tensor<64xf32, #llh.encoding<shapes = @c64>>
-  %c = "llh.add"(%res, %7) : (tensor<64xf32, #llh.encoding<shapes = @c64>>, tensor<64xf32, #llh.encoding<shapes = @c64>>) -> tensor<64xf32, #llh.encoding<shapes = @c64>>
-  return %c: tensor<64xf32, #llh.encoding<shapes = @c64>>
+  %res = "llh.sub"(%7, %7) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+  %c = "llh.add"(%res, %7) : (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+  return %c: tensor<64xf32>
 }
 
 // -----
@@ -84,4 +84,42 @@ func.func @sub_add_fold() ->(i64, i64) attributes {entrance} {
   %sub = "llh.sub"(%add,%2) :(i64, i64) -> i64
   %sub2 = "llh.sub"(%add,%2) :(i64, i64) -> i64
   return %sub, %sub2 : i64, i64
+}
+
+// -----
+// CHECK-LABEL: div_fold
+func.func @div_fold() ->(i64, i64,tensor<64xf32>) attributes {entrance} {
+  %0 = "llh.constant"() <{value = 1 : i64}> : () -> i64
+  %1 = "llh.constant"() <{value = 2 : i64}> : () -> i64
+  %2 = "llh.constant"() <{value = 2 : i64}> : () -> i64
+  %3 = "llh.constant"() <{value = 0 : i64}> : () -> i64
+  %f2 = "llh.constant"() <{value = 2. : f32}> : () -> f32
+  %f1 = "llh.constant"() <{value = 1. : f32}> : () -> f32
+  %7 = "llh.constant"() <{value = dense<1.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
+  %8 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
+  %9 = "llh.constant"() <{value = dense<0.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
+  // CHECK-COUNT-1: llh.div
+  %div = "llh.div"(%2, %0): (i64, i64) -> i64
+  %div_f = "llh.div"(%f2, %f1): (f32, f32) -> f32
+  %div_tensor = "llh.div"(%8, %7): (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+  %div_zore = "llh.div"(%2, %3): (i64, i64) -> i64
+  return %div, %div_zore,%div_tensor : i64, i64,tensor<64xf32>
+}
+
+// -----
+// CHECK-LABEL: mul_fold
+func.func @mul_fold() ->(i64, f32, tensor<64xf32>, tensor<64xf32>) attributes {entrance} {
+  %i1 = "llh.constant"() <{value = 1 : i64}> : () -> i64
+  %i2 = "llh.constant"() <{value = 2 : i64}> : () -> i64
+  %f2 = "llh.constant"() <{value = 2. : f32}> : () -> f32
+  %f1 = "llh.constant"() <{value = 1. : f32}> : () -> f32
+  %tensor_1 = "llh.constant"() <{value = dense<1.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
+  %tensor = "llh.constant"() <{value = dense<2.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
+  %tensor_0 = "llh.constant"() <{value = dense<0.000000e+00> : tensor<64xf32>}> : () -> tensor<64xf32>
+  // CHECK-NOT: llh.mul
+  %mul_0 = "llh.mul"(%i2, %i1): (i64, i64) -> i64
+  %mul_1 = "llh.mul"(%f2, %f1): (f32, f32) -> f32
+  %mul_tensor_0 = "llh.mul"(%tensor, %tensor_0): (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+  %mul_tensor_1 = "llh.mul"(%tensor, %tensor_1): (tensor<64xf32>, tensor<64xf32>) -> tensor<64xf32>
+  return %mul_0, %mul_1,%mul_tensor_1,%mul_tensor_0 : i64, f32, tensor<64xf32>, tensor<64xf32>
 }
