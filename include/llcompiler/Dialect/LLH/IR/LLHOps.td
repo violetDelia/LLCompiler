@@ -206,6 +206,7 @@ def LLH_DimOp : LLH_Op<"dim">{
     let results = (outs 
         LLH_Int64);
     let hasCanonicalizer = 1;
+    let hasFolder = 1;
 }
 
 def LLH_ReshapeOp : LLH_SymbolOp<"reshape",[]>{
@@ -258,15 +259,19 @@ def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
 def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape, DeclareOpInterfaceMethods<SymbolUserOpInterface>], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
+    let hasFolder = 1;
 }
 def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
+    let hasFolder = 1;
 }
 def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
+    let hasFolder = 1;
 }
 def LLH_SubOp           : LLH_BinaryElementwiseOp<"sub", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
+    let hasFolder = 1;
 }
 
 

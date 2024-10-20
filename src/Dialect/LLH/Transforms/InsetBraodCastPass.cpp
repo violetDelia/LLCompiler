@@ -154,7 +154,9 @@ void InsertBroadCastPass::runOnOperation() {
   RewritePatternSet patterns(context);
   populateInsertBroadCastPassPatterns(patterns);
   populateSymbolCanonicalizePatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+  auto config = GreedyRewriteConfig();
+  config.useTopDownTraversal = true;
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

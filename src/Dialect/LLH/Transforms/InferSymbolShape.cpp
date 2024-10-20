@@ -110,14 +110,16 @@ void InferSymbolShapePass::runOnOperation() {
   auto module = getOperation();
   generateEntranceSymbol(module);
   module.walk([](Operation* op) { checkAndInferSymbol(op); });
-  if (CleanSymbolCache) {
-    INFO(llc::SymbolInfer) << "CleanSymbolCache";
-    auto analysis =  SymbolAnalysis::getInstance(module);
-    analysis->cleanCache();
-  }
   RewritePatternSet patterns(context);
   populateSymbolCanonicalizePatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+  auto analysis = SymbolAnalysis::getInstance(module);
+  auto config = GreedyRewriteConfig();
+  config.useTopDownTraversal = true;
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
     signalPassFailure();
+  if (CleanSymbolCache) {
+    INFO(llc::SymbolInfer) << "CleanSymbolCache";
+    analysis->cleanCache();
+  }
   LLC_RUN_OUT_PASS
 }

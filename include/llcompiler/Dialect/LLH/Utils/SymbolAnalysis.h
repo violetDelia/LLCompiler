@@ -97,7 +97,7 @@ class SymbolAnalysis {
   static llvm::StringRef UNKOW_SYMBOL;
   //弃用
   static bool symbol_enable;
-  //symbol module 的名字
+  // symbol module 的名字
   static mlir::StringRef symbol_module_name;
 
  private:

@@ -164,8 +164,10 @@ void ReshapeBeforeBraodcastPass::runOnOperation() {
   auto module = getOperation();
   RewritePatternSet patterns(context);
   populateReshapeBeforeBraodcastPassPatterns(patterns);
+  auto config = GreedyRewriteConfig();
+  config.useTopDownTraversal = true;
   populateSymbolCanonicalizePatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

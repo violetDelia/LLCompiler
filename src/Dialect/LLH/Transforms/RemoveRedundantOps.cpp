@@ -272,7 +272,9 @@ void RemoveRedundantOpsPass::runOnOperation() {
   auto module = getOperation();
   RewritePatternSet patterns(context);
   populateRemoveRedundantOpsPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+  auto config = GreedyRewriteConfig();
+  config.useTopDownTraversal = true;
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
     signalPassFailure();
   removeEntranceTensorEncoding(module);
   LLC_RUN_OUT_PASS

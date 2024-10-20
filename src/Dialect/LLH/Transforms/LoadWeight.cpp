@@ -181,7 +181,9 @@ void LoadWeightPass::runOnOperation() {
   RewritePatternSet patterns(context);
   populateLoadWeightPassPatterns(patterns);
   auto op = getOperation();
-  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
+  auto config = GreedyRewriteConfig();
+  config.useTopDownTraversal = true;
+  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns),config)))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

@@ -31,6 +31,7 @@
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
+#include "mlir/IR/TypeRange.h"
 
 using namespace mlir;
 using namespace mlir::llh;
@@ -53,11 +54,16 @@ struct DimOpToConst : public LLHOpRewritePattern<DimOp> {
   }
   void rewrite(DimOp op, LLHPatternRewriter &rewriter) const final {
     auto loc = op->getLoc();
+    auto value = llh::getConstIntegerValue(op);
+    auto new_op = rewriter.replaceOpWithNewOp<ConstantOp>(
+        op, rewriter.getI64IntegerAttr(value));
   }
 };
 }  // namespace
 void DimOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                        MLIRContext *context) {}
+                                        MLIRContext *context) {
+  results.add<DimOpToConst>(context);
+}
 
 //===----------------------------------------------------------------------===//
 // AdaptiveAvgPoolOp

@@ -57,8 +57,10 @@ void MarkAotPass::runOnOperation() {
   auto* context = &getContext();
   auto module = getOperation();
   RewritePatternSet patterns(context);
+  auto config = GreedyRewriteConfig();
+  config.useTopDownTraversal = true;
   populateMarkAotPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

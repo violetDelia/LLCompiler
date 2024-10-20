@@ -189,8 +189,10 @@ void OperationlegalizatioPass::runOnOperation() {
   };
   module->walk(add_layout_attr);
   RewritePatternSet patterns(context);
+  auto config = GreedyRewriteConfig();
+  config.useTopDownTraversal = true;
   populateOperationlegalizatioPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

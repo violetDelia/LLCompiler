@@ -15,7 +15,7 @@ ninja check-llc-python
 
 # Todo
 
-* 运行resnet  [relate] [binary infer]
+* 运行resnet  [pass 前添加符号规范化]   [llh lowing]
 * llh 基于symbol  的   to linalg 扩展
 * affine -> vector -> x86/riscv
 * gcu 以及luanch/ 线程选择？
