@@ -36,6 +36,7 @@
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/AffineMap.h"
+#include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
@@ -277,6 +278,43 @@ SymbolicIntOp SymbolAnalysis::getOrBuildSymbol(const llvm::StringRef symbol) {
 SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(size_t val) {
   std::string symbol = "c" + std::to_string(val);
   return getOrBuildSymbol(symbol);
+}
+
+SymbolBindOp SymbolAnalysis::buildSymbolBindFromAttr(Value value,
+                                                       OpBuilder* builder) {
+  if (!hasSymbolAttr(value)) return nullptr;
+  builder->setInsertionPointAfterValue(value);
+  return builder->create<SymbolBindOp>(value.getLoc(), value, getSymbolAttr(value));
+}
+
+EncodingBindOp SymbolAnalysis::buildEncodingBindFrom(Value value,
+                                                     OpBuilder* builder) {
+  if (!llc::hasEncoding(value)) return nullptr;
+  // builder->setInsertionPointAfterValue(value);
+  auto encoding = llc::getEncodingFrom(value);
+  auto encoding_bind = builder->create<EncodingBindOp>(
+      value.getLoc(), ::mlir::TypeRange{}, value, encoding);
+  return encoding_bind;
+}
+
+void SymbolAnalysis::buildEncodingBindFrom(Operation* op, OpBuilder* builder) {
+  for (auto res : op->getResults()) {
+    buildEncodingBindFrom(res, builder);
+  }
+}
+
+void SymbolAnalysis::unloadEncoding(Value value) {
+  if (!llc::hasEncoding(value)) return;
+  auto tensor = llc::getRankTensorFrom(value);
+  auto new_tensor =
+      RankedTensorType::get(tensor.getShape(), tensor.getElementType());
+  value.setType(new_tensor);
+}
+
+void SymbolAnalysis::unloadEncoding(Operation* op) {
+  for (auto res : op->getResults()) {
+    unloadEncoding(res);
+  }
 }
 
 Value SymbolAnalysis::addEncoding(Value value, size_t result_pos) {

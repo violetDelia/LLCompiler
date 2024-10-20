@@ -83,7 +83,6 @@ DenseElementsAttr splatDenseBinaryFolder(
       APFloat l = lhs.getSplatValue<APFloat>();
       APFloat r = rhs.getSplatValue<APFloat>();
       auto result = float_calculate(l, r);
-      auto c = DenseElementsAttr::get(returnTy, result);
       return DenseElementsAttr::get(returnTy, result);
     }
   }

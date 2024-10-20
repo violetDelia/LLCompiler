@@ -18,6 +18,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
@@ -128,23 +129,20 @@ void UnloadAndBindEncodingPass::runOnOperation() {
   auto unloda_and_bind_func_attr = [&builder](func::FuncOp func) {
     unloadAndBindEncodingFuncOp(func, &builder);
   };
-  auto unloda_and_bind_attr = [&builder](Operation *op) {
+  auto analysis = SymbolAnalysis::getInstance(module);
+  auto unloda_and_bind_encoding = [&analysis, &builder](Operation *op) {
     if (isa<func::FuncOp>(op)) return;
     if (op->getNumResults() == 0) return;
-    for (auto res : op->getResults()) {
-      if (llc::hasEncoding(res)) {
-        auto tensor = cast<RankedTensorType>(res.getType());
-        auto new_tensor =
-            RankedTensorType::get(tensor.getShape(), tensor.getElementType());
-        res.setType(new_tensor);
-        builder.setInsertionPointAfter(op);
-        auto encoding_bind = builder.create<EncodingBindOp>(
-            builder.getUnknownLoc(), ::mlir::TypeRange{}, res,
-            cast<EncodingAttr>(tensor.getEncoding()));
-      }
-    }
+    analysis->buildEncodingBindFrom(op, &builder);
+    analysis->unloadEncoding(op);
+  };
+  auto unloda_and_bind_symbol = [&analysis, &builder](Operation *op) {
+    if (isa<func::FuncOp>(op)) return;
+    if (op->getNumResults() != 1) return;
+    analysis->buildSymbolBindFromAttr(op->getResult(0), &builder);
   };
   module->walk(unloda_and_bind_func_attr);
-  module->walk(unloda_and_bind_attr);
+  module->walk(unloda_and_bind_encoding);
+  module->walk(unloda_and_bind_symbol);
   LLC_RUN_OUT_PASS
 }

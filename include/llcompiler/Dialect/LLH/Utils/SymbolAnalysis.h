@@ -63,6 +63,11 @@ class SymbolAnalysis {
   SymbolicIntOp buildNewSymbol();
   SymbolicIntOp getOrBuildSymbol(const llvm::StringRef val);
   SymbolicIntOp getOrBuildConstSymbol(size_t val);
+  SymbolBindOp buildSymbolBindFromAttr(Value value, OpBuilder *builder);
+  EncodingBindOp buildEncodingBindFrom(Value value, OpBuilder *builder);
+  void buildEncodingBindFrom(Operation *op, OpBuilder *builder);
+  void unloadEncoding(Value value);
+  void unloadEncoding(Operation *op);
   Value addEncoding(Value value, size_t result_pos = 0);
   Value addEncoding(Value value, llvm::ArrayRef<llvm::StringRef> symbols,
                     size_t result_pos = 0);
