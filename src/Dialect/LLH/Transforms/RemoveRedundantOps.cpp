@@ -92,30 +92,28 @@ void removeEntranceTensorEncoding(ModuleOp module) {
     auto func_type = func.getFunctionType();
     auto& block = func.getFunctionBody().getBlocks().front();
     auto input_num = block.getNumArguments();
+    auto maybe_attrs = func.getArgAttrs();
+    if (!maybe_attrs.has_value()) return;
+    auto attrs = maybe_attrs.value().getValue();
+    CHECK(llc::MLIR_PASS,
+          attrs.size() == func.getFunctionType().getNumInputs());
     for (int i{}; i < input_num; i++) {
       auto arg = block.getArgument(i);
       if (isa<RankedTensorType>(arg.getType())) {
         auto tensor = llvm::cast<RankedTensorType>(arg.getType());
         auto has_encode = tensor.getEncoding();
-        RankedTensorType new_tensor;
-        if (!has_encode || !isa<DictionaryAttr>(has_encode)) {
-          new_tensor =
-              RankedTensorType::get(tensor.getShape(), tensor.getElementType());
-        } else {
-          auto symbols_system = SymbolAnalysis::getInstance(module);
-          auto dictionary = llvm::cast<DictionaryAttr>(has_encode);
-          auto symbols = dictionary.getValue();
-          auto encoding_symbols = SmallVector<StringRef>();
-          for (auto symbol : symbols) {
-            auto name = llvm::cast<StringAttr>(symbol.getValue());
-            symbols_system->getOrBuildSymbol( name.str());
-            encoding_symbols.push_back(name);
-          }
-          auto encoding_attr = EncodingAttr::get(context, encoding_symbols);
-          new_tensor = RankedTensorType::get(
-              tensor.getShape(), tensor.getElementType(), encoding_attr);
+        auto arg_attr = llvm::cast<DictionaryAttr>(attrs[i]);
+        CHECK(llc::SymbolInfer, arg_attr);
+        auto symbols_system = SymbolAnalysis::getInstance(module);
+        SmallVector<StringRef> symbols;
+        for (size_t dim{}; dim < tensor.getRank(); dim++) {
+          auto dim_symbol_attr = arg_attr.getAs<StringAttr>(
+              "func.input_symbol_" + std::to_string(dim));
+          CHECK(llc::SymbolInfer, dim_symbol_attr);
+          symbols.push_back(dim_symbol_attr.getValue());
+          symbols_system->getOrBuildSymbol(dim_symbol_attr.getValue());
         }
-        arg.setType(new_tensor);
+        symbols_system->addEncoding(arg, symbols);
       }
       new_input.push_back(arg.getType());
     }
@@ -207,13 +205,13 @@ struct replaceTorchSymbolicIntOp
         if (!isa<RankedTensorType>(type)) continue;
         auto has_encode = llvm::cast<RankedTensorType>(type).getEncoding();
         if (!has_encode) continue;
-        if (isa<DictionaryAttr>(has_encode)) {
-          auto dim_dict = cast<DictionaryAttr>(has_encode);
-          for (auto key : dim_dict.getValue()) {
-            auto name = cast<StringAttr>(key.getValue()).str();
+        if (isa<EncodingAttr>(has_encode)) {
+          auto encoding = cast<EncodingAttr>(has_encode);
+          auto symbols = encoding.getShapeSymbols();
+          for( size_t i{}; i < symbols.size(); i++){
+            auto name = symbols[i].getValue();
             if (name != symbol) continue;
-            auto dim = stoi(key.getName().str());
-            auto dim_op = llh::buildTensorDim(arg, &rewriter, dim);
+            auto dim_op = llh::buildTensorDim(arg, &rewriter,i);
             rewriter.replaceOp(op, dim_op);
             return;
           }
@@ -270,12 +268,13 @@ void RemoveRedundantOpsPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
+  removeEntranceTensorEncoding(module);
+  module->dump();
   RewritePatternSet patterns(context);
   populateRemoveRedundantOpsPassPatterns(patterns);
   auto config = GreedyRewriteConfig();
   config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
     signalPassFailure();
-  removeEntranceTensorEncoding(module);
   LLC_RUN_OUT_PASS
 }

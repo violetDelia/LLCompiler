@@ -38,6 +38,7 @@ from xdsl.dialects.builtin import (
     SymbolNameAttr,
     SymbolRefAttr,
     DictionaryAttr,
+    ArrayAttr
 )
 from xdsl.ir.affine.affine_map import AffineMap
 from ...dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
@@ -182,7 +183,7 @@ def torch_fake_tensor_encoding(tensor: FakeTensor):
                 shape.append(str(dim))
     string_attr_dict = dict()
     for index, dim in zip(range(len(shape)), shape):
-        string_attr_dict[index] = StringAttr(dim)
+        string_attr_dict["func.input_symbol_"+str(index)] = StringAttr(dim)
     encode = DictionaryAttr(string_attr_dict)
     return encode
 
@@ -330,17 +331,14 @@ def torch_build_func(
     input_types = []
     output_types = []
     return_values = []
+    arg_attrs = []
     for node in graph.nodes:
         if node.op == "placeholder":
             # 张量输入
             if node.type is torch.Tensor:
                 fake_tensor = node.meta["example_value"]
-                base_tensor_type = torch_fake_tensor_translate(fake_tensor)
-                tensor_type = TensorType(
-                    base_tensor_type.element_type,
-                    base_tensor_type.shape,
-                    torch_fake_tensor_encoding(fake_tensor),
-                )
+                tensor_type = torch_fake_tensor_translate(fake_tensor)
+                arg_attrs.append(torch_fake_tensor_encoding(fake_tensor))
                 arg_value = block.insert_arg(tensor_type, len(input_types))
                 value_map[node.name] = [arg_value]
                 input_types.append(tensor_type)
@@ -351,12 +349,8 @@ def torch_build_func(
                 # 张量输入
                 if isinstance(val, FakeTensor):
                     fake_tensor = node.meta["val"]
-                    base_tensor_type = torch_fake_tensor_translate(fake_tensor)
-                    tensor_type = TensorType(
-                        base_tensor_type.element_type,
-                        base_tensor_type.shape,
-                        torch_fake_tensor_encoding(fake_tensor),
-                    )
+                    tensor_type = torch_fake_tensor_translate(fake_tensor)
+                    arg_attrs.append(torch_fake_tensor_encoding(fake_tensor))
                     arg_value = block.insert_arg(tensor_type, len(input_types))
                     value_map[node.name] = [arg_value]
                     input_types.append(tensor_type)
@@ -433,7 +427,7 @@ def torch_build_func(
             raise NotImplementedError(node.op, type(node.op))
     block.add_op(Return(*return_values))
     region: Region = Region(block)
-    func = FuncOp(name, (input_types, output_types), region=region)
+    func = FuncOp(name, (input_types, output_types), region=region,arg_attrs =ArrayAttr(arg_attrs))
     return func
 
 

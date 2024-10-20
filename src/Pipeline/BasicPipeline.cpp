@@ -85,7 +85,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 内联
   pm.addPass(::mlir::createInlinerPass());
   // 符号推导和shapeinfer
-  pm.addPass(mlir::llh::createInferSymbolShapePass({.CleanSymbolCache = false}));
+  pm.addPass(
+      mlir::llh::createInferSymbolShapePass({.CleanSymbolCache = false}));
   // 广播前插入reshape
   pm.addPass(mlir::llh::createReshapeBeforeBraodcastPass());
   // 插入广播
@@ -174,6 +175,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // pm.addPass(mlir::transform::createPreloadLibraryPass());
   pm.addPass(mlir::createConvertTensorToLinalgPass());
+  pm.addPass(mlir::llh::createRemoveSymbolPass());
   //===----------------------------------------------------------------------===//
   //  linalg opt
   //===----------------------------------------------------------------------===//
@@ -190,7 +192,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::bufferization::createEmptyTensorEliminationPass());
   pm.addPass(mlir::bufferization::createEmptyTensorToAllocTensorPass());
-  pm.addPass(mlir::llh::createRemoveSymbolPass());
   mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
   bufferization_opts.bufferizeFunctionBoundaries = true;
   bufferization_opts.allowReturnAllocsFromLoops = true;

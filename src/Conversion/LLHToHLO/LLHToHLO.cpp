@@ -36,8 +36,10 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
+#include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/TypeRange.h"
 #include "mlir/IR/Value.h"
+#include "mlir/IR/ValueRange.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -87,7 +89,6 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
     auto out_shapes = op.getOutShapes();
     auto cast_dims = op.getCastDims();
     auto operand = op.getInput();
-
     llvm::SmallVector<Value> out_dims;
     llvm::SmallVector<int64_t> unexpand_dims;
     llvm::SmallVector<int64_t> broadcast_dimensions;
@@ -119,6 +120,44 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
     return success();
   }
 };
+
+struct ConvOpLowing : public OpConversionPattern<ConvOp> {
+  using OpConversionPattern<ConvOp>::OpConversionPattern;
+
+  LogicalResult matchAndRewrite(ConvOp op, OpAdaptor adaptor,
+                                ConversionPatternRewriter& rewriter) const {
+    auto loc = op->getLoc();
+    auto input = op.getX();
+    auto weight = op.getW();
+    auto kernal_shape = op.getKernelShape();
+    auto pad = op.getPad();
+    auto strides = op.getStride();
+    auto dilation = op.getDilation();
+    auto res = op->getResult(0);
+    // rewriter.create<stablehlo::DynamicConvOp>(loc,res.getType(),input,weight);
+
+    return success();
+  }
+};
+
+struct ReluOpLowing : public OpConversionPattern<ReluOp> {
+  using OpConversionPattern<ReluOp>::OpConversionPattern;
+
+  LogicalResult matchAndRewrite(ReluOp op, OpAdaptor adaptor,
+                                ConversionPatternRewriter& rewriter) const {
+    auto loc = op->getLoc();
+    auto input = op.getInput();
+    auto res = op.getResult();
+    auto res_type = llc::getRankTensorFrom(res);
+    auto const_op = rewriter.create<stablehlo::ConstantOp>(
+        loc, SplatElementsAttr::get(res_type, 0.0));
+    rewriter.create<stablehlo::MaxOp>(loc, TypeRange{res.getType()},
+                                      ValueRange{input, const_op},
+                                      op->getAttrDictionary().getValue());
+
+    return success();
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -133,6 +172,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<MulOp, stablehlo::MulOp>>(converter, context);
   patterns.add<SimplyFullLowing<DivOp, stablehlo::DivOp>>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
+  patterns.add<ReluOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -145,6 +185,7 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<AddOp>();
   target.addIllegalOp<MulOp>();
   target.addIllegalOp<BroadCastToOp>();
+  target.addIllegalOp<ReluOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();
   target.addLegalDialect<mlir::index::IndexDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();
