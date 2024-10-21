@@ -14,15 +14,16 @@
 //
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 
-#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
 #include "llcompiler/Dialect/LLH/Utils/Braocast.h"
-
+#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
 #include "llcompiler/Support/Logger.h"
 namespace mlir {
+//不要再这个方法里面创建非symbolOp
 void LLHPatternRewriter::processWileBuildOperation(Operation *op) {
   llh::checkAndInferSymbol(op);
+  //llh::checkBroadcast(op);
 }
 
-bool LLHPatternRewriter::canRecoverFromRewriteFailure()const { return false; }
+bool LLHPatternRewriter::canRecoverFromRewriteFailure() const { return false; }
 
 }  // namespace mlir

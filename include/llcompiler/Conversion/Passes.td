@@ -58,6 +58,18 @@ def ConvertLLHToTensorPass : Pass<"convert-llh-to-tensor"> {
 //===----------------------------------------------------------------------===//
 // LLH --> hlo
 //===----------------------------------------------------------------------===//
+def LLHPreprocessingForHLOPass : Pass<"preprocessing-llh-to-hlo"> {
+  let summary = "convert LLH IR to hlo IR";
+  let description = [{
+      
+  }];
+  let dependentDialects = [ "::mlir::tensor::TensorDialect",
+                            "::mlir::func::FuncDialect",
+                            "::mlir::index::IndexDialect",
+                            "::mlir::stablehlo::StablehloDialect"
+                            ];
+}
+
 def ConvertLLHToHLOPass : Pass<"convert-llh-to-hlo"> {
   let summary = "convert LLH IR to hlo IR";
   let description = [{

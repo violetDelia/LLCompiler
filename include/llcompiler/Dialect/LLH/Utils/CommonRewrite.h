@@ -30,14 +30,13 @@ struct SimplyBinaryOpInsertBraodcast : public LLHOpRewritePattern<BinaryOp> {
     if (!isa<RankedTensorType>(lhs.getType())) return llvm::failure();
     auto lhs_type = llc::getRankTensorFrom(lhs);
     auto rhs_type = llc::getRankTensorFrom(rhs);
-    if (lhs_type == rhs_type) return llvm::failure();
     auto lhs_rank = lhs_type.getRank();
     auto rhs_rank = rhs_type.getRank();
     if (lhs_rank != rhs_rank) return llvm::failure();
+    if (llc::equalShape(lhs_type, rhs_type)) return llvm::failure();
     return llvm::success();
   }
   void rewrite(BinaryOp op, LLHPatternRewriter& rewriter) const final {
-    op.dump();
     auto loc = op.getLoc();
     auto lhs = op->getOperand(0);
     auto rhs = op->getOperand(1);
@@ -55,7 +54,6 @@ struct SimplyBinaryOpInsertBraodcast : public LLHOpRewritePattern<BinaryOp> {
       will_be_broadcast = lhs;
       target_operand = rhs;
     } else {
-      op.dump();
       FATAL(llc::MLIR_PASS) << "Unexpected result";
     }
     auto before_braodcast_type = llc::getRankTensorFrom(will_be_broadcast);

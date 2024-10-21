@@ -1,6 +1,7 @@
 llcompiler_add_library(MLIRLLHToHLO
   SRC_FILES
   LLHToHLO.cpp
+  LLHPreprocessingForHLO.cpp
 
   DEPENDS
   LLCConversionPassIncGen

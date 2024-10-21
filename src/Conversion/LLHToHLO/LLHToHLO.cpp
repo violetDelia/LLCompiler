@@ -140,7 +140,6 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   }
 };
 
-
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -154,6 +153,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<AddOp, stablehlo::AddOp>>(converter, context);
   patterns.add<SimplyFullLowing<MulOp, stablehlo::MulOp>>(converter, context);
   patterns.add<SimplyFullLowing<DivOp, stablehlo::DivOp>>(converter, context);
+   patterns.add<SimplyFullLowing<MaxOp, stablehlo::MaxOp>>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
 }
 
@@ -167,6 +167,8 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<AddOp>();
   target.addIllegalOp<MulOp>();
   target.addIllegalOp<BroadCastToOp>();
+  target.addIllegalOp<MaxOp>();
+  target.addIllegalOp<ReluOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();
   target.addLegalDialect<mlir::index::IndexDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

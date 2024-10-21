@@ -68,7 +68,6 @@ void populateInsertBroadCastPassPatterns(RewritePatternSet& patterns) {
 // config target
 //===----------------------------------------------------------------------===//
 void configInsertBroadCastPassConversionTarget(ConversionTarget& target) {
-  // target.addIllegalOp<llh::SymbolicBindOp>();
 }
 //===----------------------------------------------------------------------===//
 // pass defination

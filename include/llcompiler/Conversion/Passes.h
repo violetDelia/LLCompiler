@@ -19,6 +19,7 @@
 #include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
+#include "llcompiler/Conversion/LLHToHLO/LLHPreprocessingForHLO.h"
 #include "mlir/Pass/PassRegistry.h"
 namespace mlir {
 

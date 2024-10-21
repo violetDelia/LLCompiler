@@ -36,6 +36,7 @@ bool hasEncoding(mlir::Value value);
 ::mlir::llh::EncodingAttr getEncodingFrom(mlir::Value value);
 int64_t getElementSizeFrom(mlir::ShapedType shapeType);
 mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value);
+bool equalShape(mlir::ShapedType lhs,mlir::ShapedType rhs);
 // mlir::ex::Layout getLayoutFrom(mlir::RankedTensorType value);
 // mlir::RankedTensorType cloneTensorWithEncoding(
 //     mlir::RankedTensorType value, mlir::ex::Layout layout);

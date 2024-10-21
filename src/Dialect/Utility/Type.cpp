@@ -87,6 +87,16 @@ int64_t getElementSizeFrom(mlir::ShapedType shapeType) {
   return element_size;
 }
 
+bool equalShape(mlir::ShapedType lhs, mlir::ShapedType rhs) {
+  auto lhs_rank = lhs.getRank();
+  auto rhs_rank = rhs.getRank();
+  if (lhs_rank != rhs_rank) return false;
+  for (int i = 0; i < lhs_rank; i++) {
+    if (lhs.getDimSize(i) != rhs.getDimSize(i)) return false;
+  }
+  return true;
+};
+
 #define BUILD_ATTR(judge, Ty, shape)                        \
   if (judge) {                                              \
     llvm::ArrayRef<Ty> value(0);                            \
@@ -129,15 +139,13 @@ mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value) {
 //   return mlir::RankedTensorType::get(shape, type, encode);
 // }
 
-std::vector<int64_t> getUnsqueezeShape(mlir::ShapedType shapeType,
-                                       int dim) {
+std::vector<int64_t> getUnsqueezeShape(mlir::ShapedType shapeType, int dim) {
   auto shape = shapeType.getShape().vec();
   shape.insert(shape.begin() + dim, 1);
   return shape;
 }
 
-std::vector<int64_t> getSqueezeShape(mlir::ShapedType shapeType,
-                                     int dim) {
+std::vector<int64_t> getSqueezeShape(mlir::ShapedType shapeType, int dim) {
   auto shape = shapeType.getShape().vec();
   CHECK_GT(UTILITY, shape.size(), 0);
   shape.erase(shape.begin() + dim);
