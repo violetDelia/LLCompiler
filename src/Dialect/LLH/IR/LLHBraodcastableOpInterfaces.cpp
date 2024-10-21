@@ -44,7 +44,7 @@ namespace {
 void SimpleBinaryReshapeBefor(Operation* op) { op->dump(); }
 }  // namespace
 
-#define RESHAPE_FOR_FUNCTION(OP) llvm::LogicalResult OP::reshapeForBrodcast()
+#define RESHAPE_FOR_FUNCTION(OP) llvm::LogicalResult OP::reshapeAndBrodcast()
 
 #define UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(OP)                                \
   RESHAPE_FOR_FUNCTION(OP) {                                                  \
@@ -56,6 +56,8 @@ UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(DivOp)
 UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(AddOp)
 UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(SubOp)
 UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(MulOp)
+UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(MinOp)
+UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(MaxOp)
 UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(MatMulOp)
 
 #undef RESHAPE_FOR_FUNCTION

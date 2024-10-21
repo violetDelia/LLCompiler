@@ -115,7 +115,7 @@ void InferSymbolShapePass::runOnOperation() {
   auto analysis = SymbolAnalysis::getInstance(module);
   auto config = GreedyRewriteConfig();
   config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
     signalPassFailure();
   if (CleanSymbolCache) {
     INFO(llc::SymbolInfer) << "CleanSymbolCache";

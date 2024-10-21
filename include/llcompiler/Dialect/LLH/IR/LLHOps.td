@@ -37,7 +37,7 @@ class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_SymbolOp<mnemonic,traits#[]>{
+        LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultElementType, SameOperandsAndResultRank]>{
         let arguments = !con((ins
             OperandType:$input),
             attributes);
@@ -46,7 +46,7 @@ class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type R
 }
 
 class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_SymbolOp<mnemonic,traits#[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
+        LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultElementType, DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
         let arguments = !con((ins
             OperandType:$lhs,
             OperandType:$rhs),
@@ -56,7 +56,7 @@ class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type 
 }
 
 class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_UnaryOp<mnemonic,traits# [SameOperandsAndResultType, SameOperandsAndResultRank], OperandType, ResultType, attributes>;
+        LLH_UnaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
 
 class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
         LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
@@ -247,9 +247,19 @@ def LLH_ExpandOp : LLH_SymbolOp<"expand",[]>{
         LLH_Tensor);
 }
 
+def LLH_FlattenOp : LLH_SymbolOp<"flatten", []>{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        LLH_Int64:$dim);
+    let results = (outs 
+        LLH_Tensor);
+}
+
 def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
+
 def LLH_DropOp : LLH_UnaryOp<"drop", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
-def LLH_FlattenOp : LLH_UnaryOp<"flatten", [], LLH_Tensor, LLH_Tensor, (ins LLH_Int64:$dim)>;
+
+
 def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$out_size)>{
     let hasCanonicalizer = 1;
 }
@@ -260,18 +270,35 @@ def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape, DeclareOpInterfaceMethods<SymbolUserOpInterface>], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
+    let hasCanonicalizer = 1;
 }
+
 def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
+    let hasCanonicalizer = 1;
 }
+
 def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
+    let hasCanonicalizer = 1;
 }
+
 def LLH_SubOp           : LLH_BinaryElementwiseOp<"sub", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
+    let hasCanonicalizer = 1;
+}
+
+def LLH_MaxOp           : LLH_BinaryElementwiseOp<"max", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+    let hasVerifier = 1;
+    let hasCanonicalizer = 1;
+}
+
+def LLH_MinOp           : LLH_BinaryElementwiseOp<"min", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+    let hasVerifier = 1;
+    let hasCanonicalizer = 1;
 }
 
 

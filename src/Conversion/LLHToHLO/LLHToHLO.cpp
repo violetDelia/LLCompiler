@@ -140,24 +140,7 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   }
 };
 
-struct ReluOpLowing : public OpConversionPattern<ReluOp> {
-  using OpConversionPattern<ReluOp>::OpConversionPattern;
 
-  LogicalResult matchAndRewrite(ReluOp op, OpAdaptor adaptor,
-                                ConversionPatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
-    auto input = op.getInput();
-    auto res = op.getResult();
-    auto res_type = llc::getRankTensorFrom(res);
-    auto const_op = rewriter.create<stablehlo::ConstantOp>(
-        loc, SplatElementsAttr::get(res_type, 0.0));
-    rewriter.create<stablehlo::MaxOp>(loc, TypeRange{res.getType()},
-                                      ValueRange{input, const_op},
-                                      op->getAttrDictionary().getValue());
-
-    return success();
-  }
-};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -172,7 +155,6 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<MulOp, stablehlo::MulOp>>(converter, context);
   patterns.add<SimplyFullLowing<DivOp, stablehlo::DivOp>>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
-  patterns.add<ReluOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -185,7 +167,6 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<AddOp>();
   target.addIllegalOp<MulOp>();
   target.addIllegalOp<BroadCastToOp>();
-  target.addIllegalOp<ReluOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();
   target.addLegalDialect<mlir::index::IndexDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

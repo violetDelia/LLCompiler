@@ -15,6 +15,7 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
@@ -35,6 +36,57 @@
 
 using namespace mlir;
 using namespace mlir::llh;
+
+//===----------------------------------------------------------------------===//
+// MaxOp.
+//===----------------------------------------------------------------------===//
+void MaxOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<SimplyBinaryOpInsertBraodcast<MaxOp>>(context);
+  results.add<SimplyBinaryOpReshape<MaxOp>>(context, 2);
+}
+
+//===----------------------------------------------------------------------===//
+// MulOp.
+//===----------------------------------------------------------------------===//
+void MulOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<SimplyBinaryOpInsertBraodcast<MulOp>>(context);
+  results.add<SimplyBinaryOpReshape<MulOp>>(context, 2);
+}
+//===----------------------------------------------------------------------===//
+// AddOp.
+//===----------------------------------------------------------------------===//
+void AddOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<SimplyBinaryOpInsertBraodcast<AddOp>>(context);
+  results.add<SimplyBinaryOpReshape<AddOp>>(context, 2);
+}
+//===----------------------------------------------------------------------===//
+// SubOp.
+//===----------------------------------------------------------------------===//
+void SubOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<SimplyBinaryOpInsertBraodcast<SubOp>>(context);
+  results.add<SimplyBinaryOpReshape<SubOp>>(context, 2);
+}
+//===----------------------------------------------------------------------===//
+// MinOp.
+//===----------------------------------------------------------------------===//
+void MinOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<SimplyBinaryOpInsertBraodcast<MinOp>>(context);
+  results.add<SimplyBinaryOpReshape<MinOp>>(context, 2);
+}
+//===----------------------------------------------------------------------===//
+// DivOp.
+//===----------------------------------------------------------------------===//
+void DivOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<SimplyBinaryOpInsertBraodcast<DivOp>>(context);
+  results.add<SimplyBinaryOpReshape<DivOp>>(context, 2);
+}
+
 //===----------------------------------------------------------------------===//
 // DimOp.
 //===----------------------------------------------------------------------===//

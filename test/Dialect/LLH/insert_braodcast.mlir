@@ -1,4 +1,4 @@
-// RUN: llc-opt --split-input-file --insert-broadcast %s| FileCheck %s
+// RUN: llc-opt --split-input-file --canonicalize %s| FileCheck %s
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --insert-broadcast /home/lfr/LLCompiler/test/Dialect/LLH/insert_braodcast.mlir
 
 "llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()

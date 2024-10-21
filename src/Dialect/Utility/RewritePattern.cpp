@@ -15,6 +15,8 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 
 #include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
+#include "llcompiler/Dialect/LLH/Utils/Braocast.h"
+
 #include "llcompiler/Support/Logger.h"
 namespace mlir {
 void LLHPatternRewriter::processWileBuildOperation(Operation *op) {

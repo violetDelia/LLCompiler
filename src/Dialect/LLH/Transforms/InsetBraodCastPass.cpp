@@ -18,32 +18,24 @@
 #include <regex>
 #include <string>
 
-#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
-#include "llcompiler/Dialect/Utility/Attribute.h"
-#include "llcompiler/Dialect/Utility/Type.h"
-#include "llcompiler/Interfaces/BraodcastableOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
-#include "llvm/ADT/APFloat.h"
-#include "llvm/ADT/ArrayRef.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
-#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
-#include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/IR/ValueRange.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
+
 namespace mlir::llh {
 #define GEN_PASS_DEF_INSERTBROADCASTPASS
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
@@ -59,73 +51,17 @@ namespace {
 // transform patterns
 //===----------------------------------------------------------------------===//
 
-template <class BinaryOp>
-struct SimplyBinaryOp : public LLHOpRewritePattern<BinaryOp> {
-  using LLHOpRewritePattern<BinaryOp>::LLHOpRewritePattern;
-  LogicalResult match(BinaryOp op) const final {
-    auto lhs = op->getOperand(0);
-    auto rhs = op->getOperand(1);
-    if (!isa<RankedTensorType>(lhs.getType())) return ::failure();
-    auto lhs_type = llc::getRankTensorFrom(lhs);
-    auto rhs_type = llc::getRankTensorFrom(rhs);
-    if (lhs_type == rhs_type) return llvm::failure();
-    return llvm::success();
-  }
-  void rewrite(BinaryOp op, LLHPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
-    auto lhs = op->getOperand(0);
-    auto rhs = op->getOperand(1);
-    auto lhs_type = llc::getRankTensorFrom(lhs);
-    auto rhs_type = llc::getRankTensorFrom(rhs);
-    auto result = op->getResult(0);
-    auto result_type = llc::getRankTensorFrom(result);
-    Value will_be_broadcast;
-    Value target_operand;
-    if (lhs_type == result_type) {
-      will_be_broadcast = rhs;
-      target_operand = lhs;
-
-    } else if (rhs_type == result_type) {
-      will_be_broadcast = lhs;
-      target_operand = rhs;
-    } else {
-      op.dump();
-      FATAL(llc::MLIR_PASS) << "Unexpected result";
-    }
-    auto before_braodcast_type = llc::getRankTensorFrom(will_be_broadcast);
-    auto target_type = result_type;
-    llvm::SmallVector<int64_t> cast_dims;
-    auto before_encode = llc::getEncodingFrom(before_braodcast_type);
-    auto target_encode = llc::getEncodingFrom(target_type);
-    auto before_symbol = before_encode.getShapeSymbols();
-    auto target_symbol = target_encode.getShapeSymbols();
-    for (size_t i = 0; i < result_type.getRank(); i++) {
-      if (before_symbol[i] != target_symbol[i]) {
-        cast_dims.push_back(i);
-      }
-    }
-    auto cast_op = rewriter.create<BroadCastToOp>(
-        loc, target_type, will_be_broadcast,
-        llh::buildTensorDims(target_operand, &rewriter), cast_dims);
-    if (lhs_type == result_type) {
-      rewriter.replaceOpWithNewOp<BinaryOp>(op, result_type,
-                                            ValueRange{lhs, cast_op});
-    } else {
-      rewriter.replaceOpWithNewOp<BinaryOp>(op, result_type,
-                                            ValueRange{cast_op, rhs});
-    }
-  }
-};
-
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateInsertBroadCastPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<SimplyBinaryOp<AddOp>>(context);
-  patterns.add<SimplyBinaryOp<SubOp>>(context);
-  patterns.add<SimplyBinaryOp<DivOp>>(context);
-  patterns.add<SimplyBinaryOp<MulOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBraodcast<AddOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBraodcast<SubOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBraodcast<DivOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBraodcast<MulOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBraodcast<MaxOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBraodcast<MinOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -156,7 +92,7 @@ void InsertBroadCastPass::runOnOperation() {
   populateSymbolCanonicalizePatterns(patterns);
   auto config = GreedyRewriteConfig();
   config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns),config)))
+  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
     signalPassFailure();
   LLC_RUN_OUT_PASS
 }

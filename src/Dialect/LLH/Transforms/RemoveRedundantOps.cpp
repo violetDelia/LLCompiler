@@ -269,7 +269,6 @@ void RemoveRedundantOpsPass::runOnOperation() {
   auto* context = &getContext();
   auto module = getOperation();
   removeEntranceTensorEncoding(module);
-  module->dump();
   RewritePatternSet patterns(context);
   populateRemoveRedundantOpsPassPatterns(patterns);
   auto config = GreedyRewriteConfig();

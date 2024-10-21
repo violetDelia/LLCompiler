@@ -1,4 +1,4 @@
-// RUN: llc-opt --split-input-file --reshape-before-braodcast %s| FileCheck %s
+// RUN: llc-opt --split-input-file --canonicalize %s| FileCheck %s
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --reshape-before-braodcast /home/lfr/LLCompiler/test/Dialect/LLH/reshape_before_braodcast.mlir
 module attributes {builtin.gloabal_layout = "NCHW"} {
   "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()

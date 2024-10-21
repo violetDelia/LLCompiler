@@ -80,6 +80,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   mlir::llh::SymbolAnalysis::symbol_enable = options.symbolInfer;
   // 合法化非法的Op
   pm.addPass(mlir::llh::createOperationlegalizationPass());
+  //标记Aot算子
+  pm.addPass(mlir::llh::createMarkAotPass());
   // 去除冗余Op
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());
   // 内联
@@ -93,8 +95,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createInsertBroadCastPass());
   // 规范化
   pm.addPass(mlir::createCanonicalizerPass());
-  //标记Aot算子
-  pm.addPass(mlir::llh::createMarkAotPass());
   // 将WeightOp转换为constant
   pm.addPass(mlir::llh::createLoadWeightPass());
   // 规范化
@@ -125,9 +125,11 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
       mlir::stablehlo::createStablehloCanonicalizeDynamismPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloCompatibilityExpanderPass());  //分解
+  pm.addPass(mlir::createCanonicalizerPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloLegalizeDeprecatedOpsPass());
   pm.addPass(mlir::stablehlo::createStablehloConvertToSignlessPass());
+  pm.addPass(mlir::createCanonicalizerPass());
 
   //===----------------------------------------------------------------------===//
   //  lowing hlo

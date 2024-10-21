@@ -11,22 +11,18 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#ifndef INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_TD_
-#define INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_TD_
+//
 
-include "mlir/IR/OpBase.td"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/Braocast.h"
+namespace mlir::llh {
 
-def BraodcastableOpInterface: OpInterface<"BraodcastableOpInterface"> {
-  let description = [{
-    广播Op的接口.
-  }];
-
-  let cppNamespace = "::mlir";
-
-  let methods = [
-    InterfaceMethod<"reshape for brodcastable",
-                    /*retTy=*/"::llvm::LogicalResult",/*methodName=*/ "reshapeAndBrodcast">
-  ];
+void checkBroadcast(Operation* op) {
+  auto broadcast_op = llvm::dyn_cast_or_null<mlir::BraodcastableOpInterface>(op);
+  if (broadcast_op) {
+    broadcast_op.reshapeAndBrodcast();
+    return;
+  }
+  return;
 }
-
-#endif // INCLUDE_LLCOMPILER_INTERFACES_BRAODCASTABLEOPINTERFACES_TD_
+}  // namespace mlir::llh

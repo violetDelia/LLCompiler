@@ -3,6 +3,7 @@ llcompiler_add_library(MLIRLLHUtils
   Utils.cpp
   SymbolAnalysis.cpp
   InferSymbol.cpp
+  Broadcast.cpp
 
   DEPENDS
   MLIRLLHDialectIncGen
