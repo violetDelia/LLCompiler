@@ -46,13 +46,13 @@ class Mul(nn.Module):
         return x
 
 
-class Conv2D(nn.Module):
+class Conv_NCHW_FCHW(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv = nn.Conv2d(
             3,
-            1,
-            kernel_size=3,
+            4,
+            kernel_size=5,
             stride=2,
             padding=2,
             groups=1,

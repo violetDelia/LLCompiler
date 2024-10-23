@@ -99,6 +99,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::createCanonicalizerPass());
   // 卸载encodingAttr并绑定到encodingbind Op 上
   pm.addPass(mlir::llh::createUnloadAndBindEncoding());
+  pm.addPass(mlir::llh::createRemoveSymbolPass());
 
   //===----------------------------------------------------------------------===//
   //  lowing llh
@@ -114,14 +115,14 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //  hlo opt
   //===----------------------------------------------------------------------===//
   pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::stablehlo::createStablehloCanonicalizeDynamismPass());
+  pm.addPass(mlir::createCanonicalizerPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloAggressiveFolderPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloAggressiveSimplificationPass());
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::stablehlo::createStablehloCanonicalizeDynamismPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloCompatibilityExpanderPass());  //分解
-  pm.addPass(mlir::createCanonicalizerPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloLegalizeDeprecatedOpsPass());
   pm.addPass(mlir::stablehlo::createStablehloConvertToSignlessPass());
@@ -132,11 +133,11 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::stablehlo::createStablehloLegalizeToLinalgPass());
   pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::tosa::createStablehloQuantLegalizeToTosaRescalePass());
+  pm.addNestedPass<mlir::func::FuncOp>(
       mlir::tosa::createStablehloPrepareForTosaPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::tosa::createStablehloLegalizeToTosaPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createStablehloQuantLegalizeToTosaRescalePass());
 
   //===----------------------------------------------------------------------===//
   //  tosa opt
@@ -173,7 +174,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // pm.addPass(mlir::transform::createPreloadLibraryPass());
   pm.addPass(mlir::createConvertTensorToLinalgPass());
-  pm.addPass(mlir::llh::createRemoveSymbolPass());
   //===----------------------------------------------------------------------===//
   //  linalg opt
   //===----------------------------------------------------------------------===//

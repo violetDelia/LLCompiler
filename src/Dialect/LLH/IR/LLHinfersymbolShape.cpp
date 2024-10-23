@@ -442,7 +442,7 @@ INFER_FUNCTION(MaxPoolOp) {
       llvm::cast_or_null<LayoutAttr>(getOperation()->getAttr(llc::LayoutAttr));
   CHECK(llc::SymbolInfer, layout_attr);
   auto layout = layout_attr.getValue();
-  size_t space_index = mlir::llh::getSpaceIndex(layout);
+  size_t space_index = layout_attr.getFirstSpatialIndex();
   auto input_type = llc::getRankTensorFrom(getInput());
   auto kernel_shape = getKernelShape();
   auto pad = getPad();

@@ -18,7 +18,9 @@
 #include <cstdio>
 #include <iostream>
 
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
@@ -123,19 +125,60 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
 
 struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   using OpConversionPattern<ConvOp>::OpConversionPattern;
-
+  // nchw fchw -->nfhw
   LogicalResult matchAndRewrite(ConvOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
     auto loc = op->getLoc();
     auto input = op.getX();
     auto weight = op.getW();
     auto kernal_shape = op.getKernelShape();
+    auto kernel_size = kernal_shape.size();
     auto pad = op.getPad();
     auto strides = op.getStride();
     auto dilation = op.getDilation();
-    auto res = op->getResult(0);
-    // rewriter.create<stablehlo::DynamicConvOp>(loc,res.getType(),input,weight);
+    auto graph = op.getGroup();
 
+    auto layout_attr = op.getLayoutAttr();
+    auto res = op->getResult(0);
+    auto res_type = llc::getRankTensorFrom(res);
+    auto spatial_rank = res_type.getRank() - 2;
+    auto first_spatial_dim = layout_attr.getFirstSpatialIndex();
+    size_t kernel_first_spatial_dim = first_spatial_dim;
+    size_t out_first_spatial_dim = first_spatial_dim;
+    SmallVector<int64_t> input_spatial_dimensions;
+    for (int i = first_spatial_dim; i < first_spatial_dim + spatial_rank; i++) {
+      input_spatial_dimensions.push_back(i);
+    }
+    SmallVector<int64_t> kernel_dimensions;
+    for (int64_t i = kernel_first_spatial_dim;
+         i < kernel_first_spatial_dim + spatial_rank; i++) {
+      kernel_dimensions.push_back(i);
+    }
+    SmallVector<int64_t> output_spatial_dimensions;
+    for (int64_t i = out_first_spatial_dim;
+         i < out_first_spatial_dim + spatial_rank; i++) {
+      output_spatial_dimensions.push_back(i);
+    }
+
+    stablehlo::ConvDimensionNumbersAttr dimension_numbers;
+    if (layout_attr.getValue() == Layout::NCHW) {
+      dimension_numbers = stablehlo::ConvDimensionNumbersAttr::get(
+          rewriter.getContext(), layout_attr.getBatchIndex(),
+          layout_attr.getFeatureIndex(), input_spatial_dimensions, 1, 0,
+          kernel_dimensions, layout_attr.getBatchIndex(), 1,
+          output_spatial_dimensions);
+    } else {
+      UNIMPLEMENTED(llc::MLIR);
+    }
+
+    auto new_stride_attr = rewriter.getDenseI64ArrayAttr(strides);
+    auto new_pad_attr = DenseIntElementsAttr::get(
+        RankedTensorType::get({spatial_rank, 2}, rewriter.getI64Type()), pad);
+    auto new_dilation_attr = rewriter.getDenseI64ArrayAttr(dilation);
+    rewriter.replaceOpWithNewOp<stablehlo::ConvolutionOp>(
+        op, res.getType(), input, weight, new_stride_attr, new_pad_attr,
+        DenseI64ArrayAttr(), new_dilation_attr, nullptr, dimension_numbers,
+        graph, 1, nullptr);
     return success();
   }
 };
@@ -153,8 +196,9 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<AddOp, stablehlo::AddOp>>(converter, context);
   patterns.add<SimplyFullLowing<MulOp, stablehlo::MulOp>>(converter, context);
   patterns.add<SimplyFullLowing<DivOp, stablehlo::DivOp>>(converter, context);
-   patterns.add<SimplyFullLowing<MaxOp, stablehlo::MaxOp>>(converter, context);
+  patterns.add<SimplyFullLowing<MaxOp, stablehlo::MaxOp>>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
+  patterns.add<ConvOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -169,6 +213,7 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<BroadCastToOp>();
   target.addIllegalOp<MaxOp>();
   target.addIllegalOp<ReluOp>();
+  target.addIllegalOp<ConvOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();
   target.addLegalDialect<mlir::index::IndexDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

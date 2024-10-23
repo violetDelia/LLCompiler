@@ -69,6 +69,12 @@ def LLH_Layout : I32EnumAttr<"Layout",
 
 def LLH_LayoutAttr : EnumAttr<LLH_Dialect, LLH_Layout, "Layout">{
   let assemblyFormat = "`<` $value `>`";
+
+  let extraClassDeclaration = [{
+    size_t getFirstSpatialIndex();
+    size_t getBatchIndex();
+    size_t getFeatureIndex();
+  }];
 }
 
 def LLH_SYMBOL_EXP_ADD        : I32EnumAttrCase<"Add", 0>; 

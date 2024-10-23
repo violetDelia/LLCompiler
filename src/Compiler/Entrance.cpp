@@ -32,7 +32,12 @@
 #include "llcompiler/Dialect/Utility/File.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ExecutionEngine/Orc/Core.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
+#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
 #include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -111,8 +116,73 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
     file::llvm_module_to_file(llvm_module.get(),
                               (options.log_root + "/final.ll").c_str());
   }
+
+  // ********* link *********//
+  llvm::SmallVector<llvm::SmallString<256>, 4> sharedLibPaths;
+  sharedLibPaths.push_back(llvm::StringRef(
+      "/home/lfr/LLCompiler/build/third_party/llvm-project/llvm/lib/"
+      "libmlir_c_runner_utils.so"));
+  llvm::StringMap<void*> exportSymbols;
+  llvm::SmallVector<mlir::ExecutionEngine::LibraryDestroyFn> destroyFns;
+  llvm::SmallVector<llvm::StringRef> jitDyLibPaths;
+  for (auto& libPath : sharedLibPaths) {
+    auto lib = llvm::sys::DynamicLibrary::getPermanentLibrary(
+        libPath.str().str().c_str());
+    void* initSym =
+        lib.getAddressOfSymbol(mlir::ExecutionEngine::kLibraryInitFnName);
+    void* destroySim =
+        lib.getAddressOfSymbol(mlir::ExecutionEngine::kLibraryDestroyFnName);
+    if (!initSym || !destroySim) {
+      jitDyLibPaths.push_back(libPath);
+      continue;
+    }
+    auto initFn =
+        reinterpret_cast<mlir::ExecutionEngine::LibraryInitFn>(initSym);
+    initFn(exportSymbols);
+    auto destroyFn =
+        reinterpret_cast<mlir::ExecutionEngine::LibraryDestroyFn>(destroySim);
+    destroyFns.push_back(destroyFn);
+  }
+  auto objectLinkingLayerCreator = [&](llvm::orc::ExecutionSession& session,
+                                       const llvm::Triple& tt) {
+    auto objectLayer = std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(
+        session, [sectionMemoryMapper = nullptr]() {
+          return std::make_unique<llvm::SectionMemoryManager>(
+              sectionMemoryMapper);
+        });
+    llvm::Triple targetTriple(llvm::Twine(llvm_module->getTargetTriple()));
+    if (targetTriple.isOSBinFormatCOFF()) {
+      objectLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
+      objectLayer->setAutoClaimResponsibilityForObjectSymbols(true);
+    }
+
+    for (auto& libPath : jitDyLibPaths) {
+      auto mb = llvm::MemoryBuffer::getFile(libPath);
+      if (!mb) {
+        FATAL(llc::GLOBAL) << "Failed to create MemoryBuffer for: "
+                           << libPath.str()
+                           << "\nError: " << mb.getError().message() << "\n";
+        continue;
+      }
+      auto& jd = session.createBareJITDylib(std::string(libPath));
+      auto loaded = llvm::orc::DynamicLibrarySearchGenerator::Load(
+          libPath.str().c_str(),
+          llvm_module->getDataLayout().getGlobalPrefix());
+      if (!loaded) {
+        FATAL(llc::GLOBAL) << "Could not load " << libPath.str() << ":\n  "
+                           << "\n";
+        continue;
+      }
+      jd.addGenerator(std::move(*loaded));
+      cantFail(objectLayer->add(jd, std::move(mb.get())));
+    }
+    return objectLayer;
+  };
   // ********* engine *********//
-  auto maybe_jit = llvm::orc::LLJITBuilder().setNumCompileThreads(8).create();
+  auto maybe_jit = llvm::orc::LLJITBuilder()
+                       .setObjectLinkingLayerCreator(objectLinkingLayerCreator)
+                       .setNumCompileThreads(8)
+                       .create();
   CHECK(llc::GLOBAL, maybe_jit) << "Failed to create JIT";
   auto& jit = maybe_jit.get();
   auto error = jit->addIRModule(llvm::orc::ThreadSafeModule(

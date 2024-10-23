@@ -25,6 +25,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/IR/Block.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -33,6 +34,8 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/TypeRange.h"
+#include "mlir/IR/Value.h"
+#include "mlir/IR/ValueRange.h"
 
 using namespace mlir;
 using namespace mlir::llh;
@@ -126,14 +129,57 @@ void AdaptiveAvgPoolOp::getCanonicalizationPatterns(
 //===----------------------------------------------------------------------===//
 // SymbolBindOp
 //===----------------------------------------------------------------------===//
+namespace {
+struct SinkSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(SymbolBindOp op) const final {
+    auto operand = op.getOperand();
+    auto input = operand.getDefiningOp();
+    if (isa<mlir::index::CastUOp, mlir::index::CastSOp>(input))
+      return llvm::success();
+    return llvm::failure();
+  }
+  void rewrite(SymbolBindOp op, LLHPatternRewriter &rewriter) const final {
+    auto loc = op->getLoc();
+    auto befor_cast = op.getOperand();
+    auto root = befor_cast.getDefiningOp()->getOperand(0);
+    auto new_op = rewriter.replaceOpWithNewOp<SymbolBindOp>(
+        op, TypeRange{}, ValueRange{root}, op->getAttrDictionary().getValue());
+    rewriter.moveOpAfter(new_op, root.getDefiningOp());
+  }
+};
+}  // namespace
+
 void SymbolBindOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                               MLIRContext *context) {}
+                                               MLIRContext *context) {
+  results.add<SinkSymbolBindOp>(context);
+}
 //===----------------------------------------------------------------------===//
 // EncodingBindOp
 //===----------------------------------------------------------------------===//
+namespace {
+struct SinkEncodingBindOp : public LLHOpRewritePattern<EncodingBindOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(EncodingBindOp op) const final { return llvm::success(); }
+  void rewrite(EncodingBindOp op, LLHPatternRewriter &rewriter) const final {
+    auto operand = op.getOperand();
+    if (isa<BlockArgument>(operand)) {
+      auto block = op->getBlock();
+      op->remove();
+      block->push_front(op);
+    } else {
+      rewriter.moveOpAfter(op, op.getOperand().getDefiningOp());
+    }
+  }
+};
+}  // namespace
 
 void EncodingBindOp::getCanonicalizationPatterns(
-    mlir::RewritePatternSet &results, MLIRContext *context) {}
+    mlir::RewritePatternSet &results, MLIRContext *context) {
+  results.add<SinkEncodingBindOp>(context);
+}
 //===----------------------------------------------------------------------===//
 // SymbolBinaryRelationOp
 //===----------------------------------------------------------------------===//

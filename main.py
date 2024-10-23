@@ -34,8 +34,8 @@ module_dict = {
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
-    Relu :[torch.randn((2, 3, 224, 224), device="cpu")],
-    #Conv2D :[torch.randn((2, 3, 224, 224), device="cpu")],
+    # Relu :[torch.randn((2, 3, 224, 224), device="cpu")],
+    Conv_NCHW_FCHW :[torch.randn((1, 3, 7, 7), device="cpu")],
     #torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
     #torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -47,7 +47,7 @@ module_dict = {
 
 
 def run_model_dict(dict):
-    modes = ["inference","training"]
+    modes = ["training","inference"]
     for mode in modes:
         for func, inputs in dict.items():
             print("模型: ", func.__name__, ", 模式: ", mode)
@@ -75,6 +75,9 @@ def run_model_dict(dict):
             )
             torch_res = torch_run_time(func(), *inputs)
             engine_res = llcompiler_run_time(model, *inputs)
+            llcompiler_run_time(model, *inputs)
+            print(torch_res)
+            print(engine_res)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")

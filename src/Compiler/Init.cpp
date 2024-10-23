@@ -25,6 +25,7 @@
 #include "mlir/Dialect/Arith/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Bufferization/Transforms/FuncBufferizableOpInterfaceImpl.h"
+#include "mlir/Dialect/Func/Extensions/AllExtensions.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
@@ -38,6 +39,7 @@
 #include "mlir/IR/BuiltinDialect.h"
 #include "mlir/InitAllExtensions.h"
 #include "mlir/InitAllTranslations.h"
+#include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Target/SPIRV/Target.h"
@@ -71,6 +73,7 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::registerConvertMemRefToLLVMInterface(registry);
   mlir::registerConvertFuncToLLVMInterface(registry);
   mlir::index::registerConvertIndexToLLVMInterface(registry);
+  
 }
 
 void init_logger(const logger::LoggerOption& logger_option) {

@@ -20,6 +20,6 @@
 #include "mlir/IR/BuiltinAttributes.h"
 #define GET_ATTRDEF_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h.inc"
+namespace mlir::llh {}
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_
-

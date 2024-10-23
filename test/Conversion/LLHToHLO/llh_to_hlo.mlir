@@ -58,10 +58,11 @@ func.func @braodcast_to(%arg0: tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32> attri
   return %11 : tensor<1x?x?x?xf32>
 }
 
+
 // -----
 
-func.func @relu(%arg0: tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32> attributes {entrance} {
-  %0 = "llh.relu"(%arg0) : (tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32>
-  return %0 : tensor<1x?x?x?xf32>
-}
+func.func @conv_nchw_fchw(%arg0: tensor<4x3x5x5xf32> , %arg1: tensor<?x3x?x?xf32>) -> (tensor<?x4x?x?xf32>) attributes {entrance} {
+    %2 = "llh.conv"(%arg1, %arg0) <{dilation = array<i64: 2, 2>, group = 1 : i64, kernel_shape = array<i64: 5, 5>, layout = #llh.Layout<NCHW>, pad = array<i64: 2, 2, 2, 2>, stride = array<i64: 2, 2>}> : (tensor<?x3x?x?xf32>, tensor<4x3x5x5xf32>) -> tensor<?x4x?x?xf32>
+    return %2 : tensor<?x4x?x?xf32>
+  }
 

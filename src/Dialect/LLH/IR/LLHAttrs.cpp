@@ -15,8 +15,11 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 
+#include <cstddef>
+
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
@@ -26,8 +29,8 @@
 #include "mlir/Support/LLVM.h"
 #define GET_ATTRDEF_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.cpp.inc"
-
 namespace mlir::llh {
+
 //===----------------------------------------------------------------------===//
 // LLHDialect initialize method.
 //===----------------------------------------------------------------------===//
@@ -37,5 +40,41 @@ void LLHDialect::registerAttributes() {
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.cpp.inc"
       >();
 }
-}  // namespace mlir::llh
 
+size_t LayoutAttr::getFeatureIndex() {
+  auto layout = getValue();
+  switch (layout) {
+    case Layout::NCHW:
+      return 1;
+    case Layout::NHWC:
+      return 3;
+  }
+  UNIMPLEMENTED(llc::MLIR);
+  return -1;
+}
+
+size_t LayoutAttr::getFirstSpatialIndex() {
+  auto layout = getValue();
+  switch (layout) {
+    case Layout::NCHW:
+      return 2;
+    case Layout::NHWC:
+      return 1;
+  }
+  UNIMPLEMENTED(llc::MLIR);
+  return -1;
+}
+
+size_t LayoutAttr::getBatchIndex() {
+  auto layout = getValue();
+  switch (layout) {
+    case Layout::NCHW:
+      return 0;
+    case Layout::NHWC:
+      return 0;
+  }
+  UNIMPLEMENTED(llc::MLIR);
+  return -1;
+}
+
+}  // namespace mlir::llh

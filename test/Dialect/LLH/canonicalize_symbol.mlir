@@ -45,6 +45,31 @@ module @__remove_const__ {
   "llh.symbol_binary_relation"() <{relation_kind = #llh.SymbolRelation<Mul>, relations_lhs = @c512, relations_rhs = @c1, symbol = @c512}> : () -> ()
 }
 
+// -----
+
+"llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+// CHECK-LABEL: sink_symbol_bind
+func.func @sink_symbol_bind(%arg1: tensor<?x3x?x?xf32>) ->(i64,i64){
+  // CHECK : llh.encoding_bind
+  // CHECK-NEXT : index.constant
+  %idx0 = index.constant 0
+  %idx2 = index.constant 2
+  // CHECK : tensor.dim
+  // CHECK-NEXT : llh.symbol_bind
+  // CHECK : tensor.dim
+  // CHECK-NEXT : llh.symbol_bind
+  %dim = tensor.dim {symbol = @s0} %arg1, %idx0 : tensor<?x3x?x?xf32>
+  %0 = index.castu %dim : index to i64
+  %dim_0 = tensor.dim {symbol = @s2} %arg1, %idx2 : tensor<?x3x?x?xf32>
+  %1 = index.castu %dim_0 : index to i64
+  "llh.symbol_bind"(%0) <{symbol = @s0}> : (i64) -> ()
+  "llh.symbol_bind"(%1) <{symbol = @s2}> : (i64) -> ()
+  "llh.encoding_bind"(%arg1) <{encoding = #llh.encoding<shapes = @s0, @c3, @s2, @s2>}> : (tensor<?x3x?x?xf32>) -> ()
+  return %1, %0: i64,i64 
+}
+
 
 
 

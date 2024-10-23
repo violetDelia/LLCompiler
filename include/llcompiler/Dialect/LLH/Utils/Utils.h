@@ -25,7 +25,6 @@
 #include "mlir/IR/Value.h"
 namespace mlir::llh {
 
-int getSpaceIndex(Layout layout);
 bool isLayoutSensitive(Operation* op);
 llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
                           size_t dim);
