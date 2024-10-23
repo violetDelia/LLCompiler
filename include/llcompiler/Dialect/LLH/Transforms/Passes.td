@@ -17,11 +17,16 @@
 
 include "mlir/Pass/PassBase.td"
 
-def TransformLayoutToNHWCPass : Pass<"transform-layout-to-nhwc","ModuleOp"> {
+def TransformLayoutPass : Pass<"transform-layout-to-nhwc","ModuleOp"> {
   let summary = "trans some llh op layout to nhwc for lowing to tosa";
   let description = [{
   }];
   let dependentDialects = [ "mlir::ex::IRExtensionDialect"];
+  // let options = [
+  //   Option<"TargetLayout", "target-layout", "::mlir::llh::Layout", /*default=*/"::mlir::llh::Layout::NHWC",
+  //          "测试用,防止多个相同地址的module.">,
+  // ];
+
 }
 
 def LoadWeightPass : Pass<"load-weight","ModuleOp"> {

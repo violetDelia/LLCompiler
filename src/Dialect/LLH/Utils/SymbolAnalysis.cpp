@@ -281,10 +281,11 @@ SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(size_t val) {
 }
 
 SymbolBindOp SymbolAnalysis::buildSymbolBindFromAttr(Value value,
-                                                       OpBuilder* builder) {
+                                                     OpBuilder* builder) {
   if (!hasSymbolAttr(value)) return nullptr;
   builder->setInsertionPointAfterValue(value);
-  return builder->create<SymbolBindOp>(value.getLoc(), value, getSymbolAttr(value));
+  return builder->create<SymbolBindOp>(value.getLoc(), value,
+                                       getSymbolAttr(value));
 }
 
 EncodingBindOp SymbolAnalysis::buildEncodingBindFrom(Value value,

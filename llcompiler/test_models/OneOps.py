@@ -52,12 +52,12 @@ class Conv_NCHW_FCHW(nn.Module):
         self.conv = nn.Conv2d(
             3,
             4,
-            kernel_size=5,
+            kernel_size=7,
             stride=2,
-            padding=2,
+            padding=(3,3),
             groups=1,
             bias=False,
-            dilation=2,
+            dilation=(2,2),
         )
 
     def forward(self, x: torch.Tensor):

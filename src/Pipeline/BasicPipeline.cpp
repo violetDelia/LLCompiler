@@ -92,7 +92,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 将WeightOp转换为constant
   pm.addPass(mlir::llh::createLoadWeightPass());
   // 布局转换
-  pm.addPass(mlir::llh::createTransformLayoutToNHWCPass());
+  pm.addPass(mlir::llh::createTransformLayoutPass());
   // 预处理，这样lowing会方方便一点
   pm.addPass(mlir::createLLHPreprocessingForHLOPass());
   // 规范化

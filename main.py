@@ -34,8 +34,8 @@ module_dict = {
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
-    # Relu :[torch.randn((2, 3, 224, 224), device="cpu")],
-    Conv_NCHW_FCHW :[torch.randn((1, 3, 7, 7), device="cpu")],
+    Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
+    Conv_NCHW_FCHW :[torch.randn((30, 3, 224,224), device="cpu")],
     #torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
     #torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -67,17 +67,16 @@ def run_model_dict(dict):
                 log_level="debug",
                 symbol_infer=True,
             )
-            model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
-                model=func(),
+            model = func()
+            opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
+                model=model,
                 backend=compiler,
                 dynamic=True,
                 fullgraph=True,
             )
-            torch_res = torch_run_time(func(), *inputs)
-            engine_res = llcompiler_run_time(model, *inputs)
-            llcompiler_run_time(model, *inputs)
-            print(torch_res)
-            print(engine_res)
+            torch_res = torch_run_time(model, *inputs)
+            engine_res = llcompiler_run_time(opt_model, *inputs)
+            llcompiler_run_time(opt_model, *inputs)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")

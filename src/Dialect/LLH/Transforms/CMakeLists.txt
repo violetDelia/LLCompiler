@@ -1,7 +1,7 @@
 
 llcompiler_add_library(MLIRLLHTransforms
   SRC_FILES
-  TransformLayoutToNHWC.cpp
+  TransformLayout.cpp
   LoadWeight.cpp
   InferSymbolShape.cpp
   Operationlegalization.cpp

@@ -141,7 +141,7 @@ struct SimplyFullLowing : public OpConversionPattern<SourceOp> {
     auto loc = op.getLoc();
     auto types = op->getResultTypes();
     auto operands = op->getOperands();
-    auto attrs = op->getAttrs();
+    auto attrs = op->getAttrDictionary().getValue();
     auto new_op = rewriter.create<TargetOp>(loc, types, operands, attrs);
     rewriter.replaceOp(op, new_op);
   }

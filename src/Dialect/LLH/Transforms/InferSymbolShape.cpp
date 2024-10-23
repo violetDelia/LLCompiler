@@ -103,7 +103,6 @@ struct InferSymbolShapePass
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
-#include <iostream>
 void InferSymbolShapePass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
