@@ -105,8 +105,8 @@ bool equalShape(mlir::ShapedType lhs, mlir::ShapedType rhs) {
   }
 
 mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value) {
-  CHECK(llc::MLIR, isa<mlir::RankedTensorType>(value.getType()));
-  auto tensor = cast<mlir::RankedTensorType>(value.getType());
+  CHECK(llc::MLIR, llvm::isa<mlir::RankedTensorType>(value.getType()));
+  auto tensor = llvm::cast<mlir::RankedTensorType>(value.getType());
   auto type = tensor.getElementType();
   BUILD_ATTR(type.isInteger(1), bool, tensor)
   BUILD_ATTR(type.isSignedInteger(8), int8_t, tensor)

@@ -37,6 +37,7 @@ CMAKE_BUILD_DIR = os.path.join(TOP_DIR, "build")
 WINDOWS = os.name == "nt"
 CMAKE = shutil.which("cmake3") or shutil.which("cmake")
 BUILDER = shutil.which("ninja")
+COMPILER = shutil.which("clang")
 BUILD_SHARED_LIBS = True
 BUILD_TYPE = "Release"
 PYBIND_DIR = os.path.join(TOP_DIR, "src", "Pybind")
@@ -114,6 +115,7 @@ class CmakeBuild(setuptools.Command):
             cmake_args = [CMAKE, "-G Ninja"]
             cmake_args.append(f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR}")
             cmake_args.append(f"-DCMAKE_BUILD_TYPE={BUILD_TYPE}")
+            cmake_args.append(f"-DCMAKE_CXX_COMPILER={COMPILER}")
             if BUILD_SHARED_LIBS:
                 cmake_args.append("-DBUILD_SHARED_LIBS=ON")
             if BUILD_LLCOMPILER_TEST:

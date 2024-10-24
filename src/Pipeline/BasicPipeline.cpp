@@ -112,7 +112,29 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::index_ex::createFoldIndexCastPass());
 
   //===----------------------------------------------------------------------===//
-  //  hlo opt
+  //  opt mhlo
+  //===----------------------------------------------------------------------===//
+  //数据流lowing
+  //-mhlo-legalize-control-flow
+  //-mhlo-sink-constants-to-control-flow
+  //去除mhlo.map
+  //--mhlo-collapse-elementwise-map
+  //简化算子
+  //-mhlo-expand-ops-simplifier
+  //简化算子 reduce
+  // group-reduction-dimensions
+  // 规范braodcast-->broadcast-in-dim
+  //--hlo-canonicalize-dot
+  //--hlo-canonicalize-reduction
+  // hlo-legalize-broadcast-to-broadcast-in-dim
+  //算子替换
+  //--mhlo-legalize-dot-general-to-dot 
+  //算子拆解
+  //--unfuse_batch_norm
+  
+  
+  //===----------------------------------------------------------------------===//
+  //   hlo opt
   //===----------------------------------------------------------------------===//
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloCanonicalizeDynamismPass());
@@ -156,7 +178,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing tosa
   //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::stablehlo::createStablehloLegalizeToLinalgPass({.enablePrimitiveOps = true}));
+  pm.addPass(mlir::stablehlo::createStablehloLegalizeToLinalgPass(
+      {.enablePrimitiveOps = true}));
   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
       {.preferConv2DKernelLayoutHWCF = false}));
 
