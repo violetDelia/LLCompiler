@@ -58,12 +58,12 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   // options
   //===----------------------------------------------------------------------===//
   mlir::tosa::TosaValidationOptions ValidationOption;
-  if (options.runMode == MODE::Inference) {
-    ValidationOption.profile = mlir::tosa::TosaProfileEnum::MainInference;
-  }
-  if (options.runMode == MODE::Training) {
-    ValidationOption.profile = mlir::tosa::TosaProfileEnum::MainTraining;
-  }
+  // if (options.runMode == MODE::Inference) {
+  //   ValidationOption.profile = mlir::tosa::TosaProfileEnum::MainInference;
+  // }
+  // if (options.runMode == MODE::Training) {
+  //   ValidationOption.profile = mlir::tosa::TosaProfileEnum::MainTraining;
+  // }
   mlir::TosaToLinalgOptions TosaToLinalgOption{
       .disableTosaDecompositions = true, .aggressiveReduceConstant = false};
   if (options.ReduceConstant) {

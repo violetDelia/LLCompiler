@@ -181,7 +181,7 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
     auto new_pad_attr = DenseIntElementsAttr::get(
         RankedTensorType::get({spatial_rank, 2}, rewriter.getI64Type()), pad);
     auto new_dilation_attr = rewriter.getDenseI64ArrayAttr(dilation);
-    rewriter.replaceOpWithNewOp<stablehlo::DynamicConvOp>(
+    rewriter.replaceOpWithNewOp<stablehlo::ConvolutionOp>(
         op, res.getType(), input, weight, new_stride_attr, new_pad_attr,
         DenseI64ArrayAttr(), new_dilation_attr, nullptr, dimension_numbers,
         graph, 1, nullptr);

@@ -21,11 +21,13 @@
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
+#include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
+#include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
+#include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
 #include "mlir/Conversion/UBToLLVM/UBToLLVM.h"
 #include "mlir/Dialect/Arith/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Bufferization/Transforms/FuncBufferizableOpInterfaceImpl.h"
-#include "mlir/Dialect/Func/Extensions/AllExtensions.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
@@ -34,15 +36,10 @@
 #include "mlir/Dialect/MemRef/Transforms/AllocationOpInterfaceImpl.h"
 #include "mlir/Dialect/SCF/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
-#include "mlir/Dialect/Tosa/IR/ShardingInterfaceImpl.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/BuiltinDialect.h"
-#include "mlir/InitAllExtensions.h"
-#include "mlir/InitAllTranslations.h"
-#include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
-#include "mlir/Target/SPIRV/Target.h"
 #include "stablehlo/dialect/StablehloOps.h"
 
 namespace llc::compiler {
@@ -73,7 +70,6 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::registerConvertMemRefToLLVMInterface(registry);
   mlir::registerConvertFuncToLLVMInterface(registry);
   mlir::index::registerConvertIndexToLLVMInterface(registry);
-  
 }
 
 void init_logger(const logger::LoggerOption& logger_option) {
@@ -106,21 +102,21 @@ void init_frontend(const front::FrontEndOption& front_option,
 void generatePiplineOptions(
     CompilerOptions& options,
     llc::pipleline::BasicPipelineOptions& pipleline_options) {
-  if (options.L1_cache_size == 0) {
-    pipleline_options.L1CacheSize = sysconf(_SC_LEVEL1_DCACHE_SIZE);
-  } else {
-    pipleline_options.L1CacheSize = options.L1_cache_size;
-  }
-  if (options.L2_cache_size == 0) {
-    pipleline_options.L2CacheSize = sysconf(_SC_LEVEL2_CACHE_SIZE);
-  } else {
-    pipleline_options.L2CacheSize = options.L2_cache_size;
-  }
-  if (options.L3_cache_size == 0) {
-    pipleline_options.L3CacheSize = sysconf(_SC_LEVEL3_CACHE_SIZE);
-  } else {
-    pipleline_options.L3CacheSize = options.L3_cache_size;
-  }
+  // if (options.L1_cache_size == 0) {
+  //   pipleline_options.L1CacheSize = sysconf(_SC_LEVEL1_DCACHE_SIZE);
+  // } else {
+  //   pipleline_options.L1CacheSize = options.L1_cache_size;
+  // }
+  // if (options.L2_cache_size == 0) {
+  //   pipleline_options.L2CacheSize = sysconf(_SC_LEVEL2_CACHE_SIZE);
+  // } else {
+  //   pipleline_options.L2CacheSize = options.L2_cache_size;
+  // }
+  // if (options.L3_cache_size == 0) {
+  //   pipleline_options.L3CacheSize = sysconf(_SC_LEVEL3_CACHE_SIZE);
+  // } else {
+  //   pipleline_options.L3CacheSize = options.L3_cache_size;
+  // }
   INFO(llc::GLOBAL) << "L3 Cache Size: "
                     << pipleline_options.L3CacheSize.getValue();
   INFO(llc::GLOBAL) << "L2 Cache Size: "
