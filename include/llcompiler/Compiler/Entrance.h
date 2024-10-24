@@ -44,6 +44,7 @@ extern "C" struct CompilerOptions {
   uint64_t L1_cache_size;
   unsigned index_bit_width;
   std::string ir_tree_dir;
+  std::string target_layout;
   std::string log_root;
   std::string log_level;
   bool log_llvm;

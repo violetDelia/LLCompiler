@@ -34,8 +34,8 @@ module_dict = {
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
-    Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
-    Conv_NCHW_FCHW :[torch.randn((30, 3, 224,224), device="cpu")],
+    #Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
+    Conv_NCHW_FCHW :[torch.randn((200, 3, 100,100), device="cpu")],
     #torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
     #torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -83,5 +83,21 @@ def run_model_dict(dict):
 
 
 if __name__ == "__main__":
-    run_model_dict(module_dict)
+    #run_model_dict(module_dict)
+    model = Add()
+    input = torch.ones(2,2,2,2)
+    compiler = LLC.LLCompiler(
+                mode="inference",
+                log_level="debug",
+                symbol_infer=True,
+            )
+    opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
+                model=model,
+                backend=compiler,
+                dynamic=False,
+                fullgraph=True,
+            )
+    res = opt_model(input)
+    print(res)
+    
     

@@ -7,12 +7,8 @@ class Add(nn.Module):
         super().__init__()
 
     def forward(self, x: torch.Tensor):
-        x = x + 1
-        x = x + x
-        x = x + x
-        x = x + x
-        x = x + x
-        x = x + 2
+        x = x+1
+        x = x*x
         return x
 
 
@@ -51,13 +47,13 @@ class Conv_NCHW_FCHW(nn.Module):
         super().__init__()
         self.conv = nn.Conv2d(
             3,
-            4,
+            1,
             kernel_size=7,
-            stride=2,
-            padding=(3,3),
+            stride=1,
+            padding=1,
             groups=1,
             bias=False,
-            dilation=(2,2),
+            dilation=1,
         )
 
     def forward(self, x: torch.Tensor):

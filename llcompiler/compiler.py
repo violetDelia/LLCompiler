@@ -37,6 +37,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         L3_cache_size=0,
         L2_cache_size=0,
         L1_cache_size=0,
+        target_layout = "NCHW",
         vebose_first_ir=False,  # 输出构建的xdsl IR
         ir_tree_dir: str = "",  # mlir ir tree dir
         log_root: str = "",  # 日志保存路径
@@ -62,6 +63,8 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.L3_cache_size = L3_cache_size
         self.L2_cache_size = L2_cache_size
         self.L1_cache_size = L1_cache_size
+        assert target_layout in ["NCHW","NHWC"]
+        self.target_layout = target_layout
         assert opt_level > 0 and opt_level <= 3
         self.opt_level = opt_level
         if ir_tree_dir != "":
@@ -81,6 +84,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         compiler_options.L3_cache_size = self.L3_cache_size
         compiler_options.L2_cache_size = self.L2_cache_size
         compiler_options.L1_cache_size = self.L1_cache_size
+        compiler_options.target_layout = self.target_layout
         compiler_options.index_bit_width = self.index_bit_width
         compiler_options.ir_tree_dir = self.ir_tree_dir
         compiler_options.log_root = self.log_root

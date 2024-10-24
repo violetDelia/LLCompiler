@@ -126,6 +126,8 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
 struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   using OpConversionPattern<ConvOp>::OpConversionPattern;
   // nchw fchw -->nfhw
+  // nhwc fhwc -->nhwf
+  // curent only supported, need add layout attr and layout pass for more
   LogicalResult matchAndRewrite(ConvOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
     auto loc = op->getLoc();
@@ -168,14 +170,18 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
           kernel_dimensions, layout_attr.getBatchIndex(), 1,
           output_spatial_dimensions);
     } else {
-      UNIMPLEMENTED(llc::MLIR);
+      dimension_numbers = stablehlo::ConvDimensionNumbersAttr::get(
+          rewriter.getContext(), layout_attr.getBatchIndex(),
+          layout_attr.getFeatureIndex(), input_spatial_dimensions, 3, 0,
+          kernel_dimensions, layout_attr.getBatchIndex(), 3,
+          output_spatial_dimensions);
     }
 
     auto new_stride_attr = rewriter.getDenseI64ArrayAttr(strides);
     auto new_pad_attr = DenseIntElementsAttr::get(
         RankedTensorType::get({spatial_rank, 2}, rewriter.getI64Type()), pad);
     auto new_dilation_attr = rewriter.getDenseI64ArrayAttr(dilation);
-    rewriter.replaceOpWithNewOp<stablehlo::ConvolutionOp>(
+    rewriter.replaceOpWithNewOp<stablehlo::DynamicConvOp>(
         op, res.getType(), input, weight, new_stride_attr, new_pad_attr,
         DenseI64ArrayAttr(), new_dilation_attr, nullptr, dimension_numbers,
         graph, 1, nullptr);
@@ -185,7 +191,6 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
 
 struct TransposeOpLowing : public OpConversionPattern<TransposeOp> {
   using OpConversionPattern<TransposeOp>::OpConversionPattern;
-  // nchw fchw -->nfhw
   LogicalResult matchAndRewrite(TransposeOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
     auto input = op.getInput();

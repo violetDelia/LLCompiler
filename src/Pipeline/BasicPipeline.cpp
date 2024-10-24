@@ -131,7 +131,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing hlo
   //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::stablehlo::createStablehloLegalizeToLinalgPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::tosa::createStablehloQuantLegalizeToTosaRescalePass());
   pm.addNestedPass<mlir::func::FuncOp>(
@@ -157,6 +156,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing tosa
   //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::stablehlo::createStablehloLegalizeToLinalgPass({.enablePrimitiveOps = true}));
   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
       {.preferConv2DKernelLayoutHWCF = false}));
 

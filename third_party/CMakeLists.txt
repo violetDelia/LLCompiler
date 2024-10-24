@@ -13,4 +13,6 @@ build_spdlog("${CMAKE_CURRENT_SOURCE_DIR}/spdlog")
 #build_onnx("${CMAKE_CURRENT_SOURCE_DIR}/onnx")
 build_llvm("${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
 build_pybind11("${CMAKE_CURRENT_SOURCE_DIR}/pybind11")
-build_stablehlo("${CMAKE_CURRENT_SOURCE_DIR}/stablehlo" "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
+#unkown error in ../mlir-hlo/stablehlo
+#build_stablehlo("${CMAKE_CURRENT_SOURCE_DIR}/stablehlo" "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
+build_hlo("${CMAKE_CURRENT_SOURCE_DIR}/mlir-hlo" "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
