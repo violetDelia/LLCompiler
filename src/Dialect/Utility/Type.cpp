@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -96,6 +97,16 @@ bool equalShape(mlir::ShapedType lhs, mlir::ShapedType rhs) {
   }
   return true;
 };
+// one dim shape
+mlir::DenseIntElementsAttr ArrayAttrToIntElementsAttr(
+    mlir::DenseI64ArrayAttr array_attr) {
+  auto data = array_attr.asArrayRef();
+  auto shape = llvm::SmallVector<int64_t>();
+  auto ele_type = array_attr.getElementType();
+  shape.push_back(data.size());
+  auto tensor = mlir::RankedTensorType::get(shape, ele_type);
+  return mlir::DenseIntElementsAttr::get(tensor, data);
+}
 
 #define BUILD_ATTR(judge, Ty, shape)                        \
   if (judge) {                                              \

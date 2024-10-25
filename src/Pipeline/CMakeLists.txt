@@ -16,9 +16,6 @@ llcompiler_add_library(LLCPipelines
     MLIRLLHToArith
     MLIRLLHToTensor
     MLIRLLHToHLO
-    StablehloPasses
-    StablehloTOSATransforms
-    StablehloLinalgTransforms
     MLIRLLVMExtensionTransforms
     MLIRIndexExtensionTransforms
     MLIRTosaTransforms
@@ -45,6 +42,16 @@ llcompiler_add_library(LLCPipelines
     MLIRControlFlowToSCF
     MLIRBufferizationToMemRef
     MLIRIndexToLLVM
+    MhloDialect
+    MhloPasses
+    MhloToMemrefConversion
+    MhloToStandard
+    MhloToLinalg
+    DeallocationPasses
+    MLIRBufferTransforms
+    StablehloPasses
+    StablehloTOSATransforms
+    StablehloLinalgTransforms
 )
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRFuncInlinerExtension)
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRTensorInferTypeOpInterfaceImpl)

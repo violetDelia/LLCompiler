@@ -21,6 +21,7 @@
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
@@ -51,6 +52,7 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::tosa::TosaDialect>();
   context.getOrLoadDialect<mlir::index::IndexDialect>();
   context.getOrLoadDialect<mlir::bufferization::BufferizationDialect>();
+  context.getOrLoadDialect<mlir::mhlo::MhloDialect>();
   context.getOrLoadDialect<mlir::stablehlo::StablehloDialect>();
 }
 

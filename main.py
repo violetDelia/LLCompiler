@@ -83,21 +83,6 @@ def run_model_dict(dict):
 
 
 if __name__ == "__main__":
-    #run_model_dict(module_dict)
-    model = Add()
-    input = torch.ones(2,2,2,2)
-    compiler = LLC.LLCompiler(
-                mode="inference",
-                log_level="debug",
-                symbol_infer=True,
-            )
-    opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
-                model=model,
-                backend=compiler,
-                dynamic=False,
-                fullgraph=True,
-            )
-    res = opt_model(input)
-    print(res)
+    run_model_dict(module_dict)
     
     

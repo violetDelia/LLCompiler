@@ -66,7 +66,8 @@ def LLHPreprocessingForHLOPass : Pass<"preprocessing-llh-to-hlo"> {
   let dependentDialects = [ "::mlir::tensor::TensorDialect",
                             "::mlir::func::FuncDialect",
                             "::mlir::index::IndexDialect",
-                            "::mlir::stablehlo::StablehloDialect"
+                            "::mlir::stablehlo::StablehloDialect",
+                            "::mlir::mhlo::MhloDialect"
                             ];
 }
 
@@ -78,7 +79,8 @@ def ConvertLLHToHLOPass : Pass<"convert-llh-to-hlo"> {
   let dependentDialects = [ "::mlir::tensor::TensorDialect",
                             "::mlir::func::FuncDialect",
                             "::mlir::index::IndexDialect",
-                            "::mlir::stablehlo::StablehloDialect"
+                            "::mlir::stablehlo::StablehloDialect",
+                            "::mlir::mhlo::MhloDialect"
                             ];
 }
 

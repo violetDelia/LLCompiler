@@ -13,6 +13,7 @@
 //    limitations under the License.
 #include "llcompiler/Pipeline/BasicPipeline.h"
 
+#include "deallocation/transforms/passes.h"
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
 #include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
@@ -28,6 +29,8 @@
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"
+#include "mhlo/interfaces/bufferizable_op_interface_impl.h"
+#include "mhlo/transforms/passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
 #include "mlir/Conversion/BufferizationToMemRef/BufferizationToMemRef.h"
@@ -64,6 +67,7 @@
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassOptions.h"
@@ -73,6 +77,7 @@
 #include "stablehlo/conversions/linalg/transforms/Passes.h"
 #include "stablehlo/conversions/tosa/transforms/Passes.h"
 #include "stablehlo/transforms/Passes.h"
+#include "transforms/passes.h"
 namespace llc::pipleline {
 
 void buildBasicPipeline(::mlir::OpPassManager &pm,
@@ -114,77 +119,120 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  opt mhlo
   //===----------------------------------------------------------------------===//
-  //数据流lowing
-  //-mhlo-legalize-control-flow
-  //-mhlo-sink-constants-to-control-flow
-  //去除mhlo.map
-  //--mhlo-collapse-elementwise-map
-  //简化算子
-  //-mhlo-expand-ops-simplifier
-  //简化算子 reduce
-  // group-reduction-dimensions
+  pm.addPass(mlir::createCanonicalizerPass());
+  // shape  融合
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createConstraintFusionPass());
+  // lowing shape
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createShapeLegalizeToHloPass());
+  pm.addPass(mlir::mhlo::createConvertToSignlessPass());
+  // 去除tuple
+  pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createFlattenTuplePass());
+  // 简化reduce
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createGroupReductionDimensionsPass());
   // 规范braodcast-->broadcast-in-dim
-  //--hlo-canonicalize-dot
-  //--hlo-canonicalize-reduction
-  // hlo-legalize-broadcast-to-broadcast-in-dim
-  //算子替换
-  //--mhlo-legalize-dot-general-to-dot 
-  //算子拆解
-  //--unfuse_batch_norm
-  
-  
-  //===----------------------------------------------------------------------===//
-  //   hlo opt
-  //===----------------------------------------------------------------------===//
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::stablehlo::createStablehloCanonicalizeDynamismPass());
+      mlir::mhlo::createLegalizeBroadcastToBroadcastInDimPass());
+  // 规范化 dot
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createHloCanonicalizeDotPass());
+  // 规范化reduce
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createHloCanonicalizeReductionPass());
+  // 规范化 gather
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createHloCanonicalizeGatherPass());
+  // 规范化scatter
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createHloCanonicalizeScatterPass());
+  // 移动常量到控制流内部
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createSinkConstantsToControlFlowPass());
   pm.addPass(mlir::createCanonicalizerPass());
+  // 简化算子
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::stablehlo::createStablehloAggressiveFolderPass());
+      mlir::mhlo::createMhloExpandOpsSimplifierPass());
+  // 简化算子 reduce
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::stablehlo::createStablehloAggressiveSimplificationPass());
+      mlir::mhlo::createGroupReductionDimensionsPass());
+  // 算子替换
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::stablehlo::createStablehloCompatibilityExpanderPass());  //分解
+      mlir::mhlo::createLegalizeDotToDotGeneralPass());
+  // 算子拆解BatchNorm
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::stablehlo::createStablehloLegalizeDeprecatedOpsPass());
-  pm.addPass(mlir::stablehlo::createStablehloConvertToSignlessPass());
-  pm.addPass(mlir::createCanonicalizerPass());
-
-  //===----------------------------------------------------------------------===//
-  //  lowing hlo
-  //===----------------------------------------------------------------------===//
+      mlir::mhlo::createTestUnfuseBatchNormPass());
+  // 传播广播
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createStablehloQuantLegalizeToTosaRescalePass());
+      mlir::mhlo::createBroadcastPropagationPass());
+  // 简化reshape  braodcast
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createStablehloPrepareForTosaPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createStablehloLegalizeToTosaPass());
-
-  //===----------------------------------------------------------------------===//
-  //  tosa opt
-  //===----------------------------------------------------------------------===//
-  // tosa 常量折叠
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createTosaLayerwiseConstantFoldPass(
-          {.aggressiveReduceConstant = true}));
-  // 算子分解
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createTosaOptionalDecompositions());
-  // transpose 消除
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::tosa::createTosaReduceTransposes());
+      mlir::mhlo::createSymbolicShapeOptimizationPass());
   pm.addPass(mlir::createCanonicalizerPass());
 
   //===----------------------------------------------------------------------===//
-  //  lowing tosa
+  //  lowing mhlo
   //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::stablehlo::createStablehloLegalizeToLinalgPass(
-      {.enablePrimitiveOps = true}));
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
-      {.preferConv2DKernelLayoutHWCF = false}));
+  pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createLegalizeHloToLinalgPass());
+  pm.addNestedPass<mlir::ModuleOp>(mlir::mhlo::createLegalizeToMemrefPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createLegalizeControlFlowPass());
 
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalg());
-  pm.addPass(mlir::tosa::createTosaToArith(true));
+  //   //===----------------------------------------------------------------------===//
+  //   //   hlo opt
+  //   //===----------------------------------------------------------------------===//
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::stablehlo::createStablehloCanonicalizeDynamismPass());
+  //   pm.addPass(mlir::createCanonicalizerPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::stablehlo::createStablehloAggressiveFolderPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::stablehlo::createStablehloAggressiveSimplificationPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::stablehlo::createStablehloCompatibilityExpanderPass());  //分解
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::stablehlo::createStablehloLegalizeDeprecatedOpsPass());
+  //   pm.addPass(mlir::stablehlo::createStablehloConvertToSignlessPass());
+  //   pm.addPass(mlir::createCanonicalizerPass());
+
+  //   //===----------------------------------------------------------------------===//
+  //   //  lowing hlo
+  //   //===----------------------------------------------------------------------===//
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::tosa::createStablehloQuantLegalizeToTosaRescalePass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::tosa::createStablehloPrepareForTosaPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::tosa::createStablehloLegalizeToTosaPass());
+
+  //   //===----------------------------------------------------------------------===//
+  //   //  tosa opt
+  //   //===----------------------------------------------------------------------===//
+  //   // tosa 常量折叠
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::tosa::createTosaLayerwiseConstantFoldPass(
+  //           {.aggressiveReduceConstant = true}));
+  //   // 算子分解
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::tosa::createTosaOptionalDecompositions());
+  //   // transpose 消除
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::tosa::createTosaReduceTransposes());
+  //   pm.addPass(mlir::createCanonicalizerPass());
+
+  //   //===----------------------------------------------------------------------===//
+  //   //  lowing tosa
+  //   //===----------------------------------------------------------------------===//
+  //   pm.addPass(mlir::stablehlo::createStablehloLegalizeToLinalgPass(
+  //       {.enablePrimitiveOps = true}));
+  //   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalgNamed(
+  //       {.preferConv2DKernelLayoutHWCF = false}));
+
+  //   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalg());
+  //   pm.addPass(mlir::tosa::createTosaToArith(true));
 
   //===----------------------------------------------------------------------===//
   //  tensor opt
@@ -213,29 +261,31 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::bufferization::createEmptyTensorEliminationPass());
   pm.addPass(mlir::bufferization::createEmptyTensorToAllocTensorPass());
-  mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
-  bufferization_opts.bufferizeFunctionBoundaries = true;
-  bufferization_opts.allowReturnAllocsFromLoops = true;
-  bufferization_opts.copyBeforeWrite = true;
-  bufferization_opts.analysisHeuristic = mlir::bufferization::
-      OneShotBufferizationOptions::AnalysisHeuristic::BottomUpFromTerminators;
-  bufferization_opts.opFilter.allowDialect<
-      mlir::tensor::TensorDialect, mlir::bufferization::BufferizationDialect,
-      mlir::arith::ArithDialect, mlir::scf::SCFDialect,
-      mlir::linalg::LinalgDialect>();
-  // func Bufferize  for remove the memref.copy before one-shot,
-  pm.addPass(mlir::func::createFuncBufferizePass());
-  // Bufferize
-  pm.addPass(
-      mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
+  //   mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
+  //   bufferization_opts.bufferizeFunctionBoundaries = true;
+  //   bufferization_opts.allowReturnAllocsFromLoops = true;
+  //   bufferization_opts.copyBeforeWrite = true;
+  //   bufferization_opts.analysisHeuristic = mlir::bufferization::
+  //       OneShotBufferizationOptions::AnalysisHeuristic::BottomUpFromTerminators;
+  //   bufferization_opts.opFilter.allowDialect<
+  //       mlir::tensor::TensorDialect,
+  //       mlir::bufferization::BufferizationDialect, mlir::arith::ArithDialect,
+  //       mlir::scf::SCFDialect, mlir::linalg::LinalgDialect>();
+  //   // func Bufferize  for remove the memref.copy before one-shot,
+  //   pm.addPass(mlir::func::createFuncBufferizePass());
+  //   // Bufferize
+  //   pm.addPass(
+  //       mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
+  pm.addPass(mlir::hlo::createOneShotBufferizePass());
   pm.addPass(mlir::bufferization::createDropEquivalentBufferResultsPass());
-
+  // pm.addNestedPass<mlir::func::FuncOp>(
+  //   mlir::bufferization::createFinalizingBufferizePass());
+  pm.addPass(mlir::createFinalBufferizePass(64));
   mlir::bufferization::BufferResultsToOutParamsOpts buffer_result_opts;
   buffer_result_opts.hoistStaticAllocs = true;
   buffer_result_opts.addResultAttribute = true;
   // Bufferize规范化
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::bufferization::createFinalizingBufferizePass());
+
   // 规范化
   pm.addPass(mlir::createCanonicalizerPass());
   // 内存inpalce
@@ -245,7 +295,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
       mlir::bufferization::createBufferHoistingPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createBufferLoopHoistingPass());
-
+  //内存复用
+  pm.addNestedPass<mlir::func::FuncOp>(mlir::deallocation::createBufferReusePass());
   //===----------------------------------------------------------------------===//
   // lowing linalg
   //===----------------------------------------------------------------------===//

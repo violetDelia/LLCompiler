@@ -14,6 +14,7 @@
 #include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
 
 #include <algorithm>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -27,6 +28,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
@@ -60,6 +62,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+
 //===----------------------------------------------------------------------===//
 // legal func
 //===----------------------------------------------------------------------===//
@@ -113,11 +116,21 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
       broadcast_dimensions.push_back(i);
     }
     auto output_dimensions =
-        rewriter.create<tensor::FromElementsOp>(loc, out_dims);
-    auto new_op = rewriter.create<stablehlo::DynamicBroadcastInDimOp>(
-        loc, res_type, operand, output_dimensions,
-        rewriter.getDenseI64ArrayAttr(broadcast_dimensions),
-        op.getCastDimsAttr(), rewriter.getDenseI64ArrayAttr(unexpand_dims));
+        rewriter.create<tensor::FromElementsOp>(loc, out_shapes);
+    auto i64_type = rewriter.getI64Type();
+    auto broadcast_dimensions_shape = RankedTensorType::get(
+        {static_cast<int64_t>(broadcast_dimensions.size())}, i64_type);
+    auto broadcast_dimensions_attr = DenseIntElementsAttr::get(
+        broadcast_dimensions_shape, broadcast_dimensions);
+    auto unexpand_dims_shape = RankedTensorType::get(
+        {static_cast<int64_t>(unexpand_dims.size())}, i64_type);
+    auto unexpand_dims_attr =
+        DenseIntElementsAttr::get(unexpand_dims_shape, unexpand_dims);
+    auto known_expanding_dimensions_attr =
+        llc::ArrayAttrToIntElementsAttr(op.getCastDimsAttr());
+    auto new_op = rewriter.create<mhlo::DynamicBroadcastInDimOp>(
+        loc, res_type, operand, output_dimensions, broadcast_dimensions_attr,
+        known_expanding_dimensions_attr, unexpand_dims_attr);
     rewriter.replaceOp(op, new_op);
     return success();
   }
@@ -136,8 +149,8 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
     auto kernal_shape = op.getKernelShape();
     auto kernel_size = kernal_shape.size();
     auto pad = op.getPad();
-    auto strides = op.getStride();
-    auto dilation = op.getDilation();
+    auto stride_attr = op.getStrideAttr();
+    auto dilation_attr = op.getDilationAttr();
     auto graph = op.getGroup();
 
     auto layout_attr = op.getLayoutAttr();
@@ -162,28 +175,28 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
       output_spatial_dimensions.push_back(i);
     }
 
-    stablehlo::ConvDimensionNumbersAttr dimension_numbers;
+    mhlo::ConvDimensionNumbersAttr dimension_numbers;
     if (layout_attr.getValue() == Layout::NCHW) {
-      dimension_numbers = stablehlo::ConvDimensionNumbersAttr::get(
+      dimension_numbers = mhlo::ConvDimensionNumbersAttr::get(
           rewriter.getContext(), layout_attr.getBatchIndex(),
           layout_attr.getFeatureIndex(), input_spatial_dimensions, 1, 0,
           kernel_dimensions, layout_attr.getBatchIndex(), 1,
           output_spatial_dimensions);
     } else {
-      dimension_numbers = stablehlo::ConvDimensionNumbersAttr::get(
+      dimension_numbers = mhlo::ConvDimensionNumbersAttr::get(
           rewriter.getContext(), layout_attr.getBatchIndex(),
           layout_attr.getFeatureIndex(), input_spatial_dimensions, 3, 0,
           kernel_dimensions, layout_attr.getBatchIndex(), 3,
           output_spatial_dimensions);
     }
 
-    auto new_stride_attr = rewriter.getDenseI64ArrayAttr(strides);
+    auto new_stride_attr = llc::ArrayAttrToIntElementsAttr(stride_attr);
     auto new_pad_attr = DenseIntElementsAttr::get(
         RankedTensorType::get({spatial_rank, 2}, rewriter.getI64Type()), pad);
-    auto new_dilation_attr = rewriter.getDenseI64ArrayAttr(dilation);
-    rewriter.replaceOpWithNewOp<stablehlo::ConvolutionOp>(
+    auto new_dilation_attr = llc::ArrayAttrToIntElementsAttr(dilation_attr);
+    rewriter.replaceOpWithNewOp<mhlo::ConvolutionOp>(
         op, res.getType(), input, weight, new_stride_attr, new_pad_attr,
-        DenseI64ArrayAttr(), new_dilation_attr, nullptr, dimension_numbers,
+        DenseIntElementsAttr(), new_dilation_attr, nullptr, dimension_numbers,
         graph, 1, nullptr);
     return success();
   }
@@ -194,8 +207,9 @@ struct TransposeOpLowing : public OpConversionPattern<TransposeOp> {
   LogicalResult matchAndRewrite(TransposeOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
     auto input = op.getInput();
-    auto perm = op.getPerms();
-    rewriter.replaceOpWithNewOp<stablehlo::TransposeOp>(op, input, perm);
+    auto perm_attr = op.getPermsAttr();
+    auto new_perm_attr = llc::ArrayAttrToIntElementsAttr(perm_attr);
+    rewriter.replaceOpWithNewOp<mhlo::TransposeOp>(op, input, new_perm_attr);
     return success();
   }
 };
@@ -206,14 +220,13 @@ struct TransposeOpLowing : public OpConversionPattern<TransposeOp> {
 void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
                                          RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<SimplyFullLowing<ConstantOp, mlir::stablehlo::ConstantOp>>(
-      converter, context);
-  patterns.add<SimplyFullLowing<SubOp, stablehlo::SubtractOp>>(converter,
+  patterns.add<SimplyFullLowing<ConstantOp, mhlo::ConstantOp>>(converter,
                                                                context);
-  patterns.add<SimplyFullLowing<AddOp, stablehlo::AddOp>>(converter, context);
-  patterns.add<SimplyFullLowing<MulOp, stablehlo::MulOp>>(converter, context);
-  patterns.add<SimplyFullLowing<DivOp, stablehlo::DivOp>>(converter, context);
-  patterns.add<SimplyFullLowing<MaxOp, stablehlo::MaxOp>>(converter, context);
+  patterns.add<SimplyFullLowing<SubOp, mhlo::SubtractOp>>(converter, context);
+  patterns.add<SimplyFullLowing<AddOp, mhlo::AddOp>>(converter, context);
+  patterns.add<SimplyFullLowing<MulOp, mhlo::MulOp>>(converter, context);
+  patterns.add<SimplyFullLowing<DivOp, mhlo::DivOp>>(converter, context);
+  patterns.add<SimplyFullLowing<MaxOp, mhlo::MaxOp>>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(converter, context);
@@ -233,7 +246,7 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<ReluOp>();
   target.addIllegalOp<ConvOp>();
   target.addIllegalOp<TransposeOp>();
-  target.addLegalDialect<stablehlo::StablehloDialect>();
+  target.addLegalDialect<mhlo::MhloDialect>();
   target.addLegalDialect<mlir::index::IndexDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();
 }

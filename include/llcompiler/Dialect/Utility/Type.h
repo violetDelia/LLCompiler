@@ -19,6 +19,7 @@
 
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Types.h"
@@ -37,6 +38,7 @@ bool hasEncoding(mlir::Value value);
 int64_t getElementSizeFrom(mlir::ShapedType shapeType);
 mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value);
 bool equalShape(mlir::ShapedType lhs,mlir::ShapedType rhs);
+mlir::DenseIntElementsAttr ArrayAttrToIntElementsAttr(mlir::DenseI64ArrayAttr array_attr);
 // mlir::ex::Layout getLayoutFrom(mlir::RankedTensorType value);
 // mlir::RankedTensorType cloneTensorWithEncoding(
 //     mlir::RankedTensorType value, mlir::ex::Layout layout);
