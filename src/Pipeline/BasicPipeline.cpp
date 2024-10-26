@@ -112,20 +112,16 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::createConvertLLHToArithPass());
   pm.addPass(mlir::createConvertLLHToTensorPass());
   pm.addPass(mlir::createConvertLLHToHLOPass());
-  pm.addPass(mlir::createConvertLLHToTosaPass());
-  pm.addPass(mlir::createCanonicalizerPass());
   pm.addPass(mlir::index_ex::createFoldIndexCastPass());
 
   //===----------------------------------------------------------------------===//
   //  opt mhlo
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::createCanonicalizerPass());
-  // shape  融合
+  // 简化reshape  braodcast
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::mhlo::createConstraintFusionPass());
-  // lowing shape
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::mhlo::createShapeLegalizeToHloPass());
+      mlir::mhlo::createSymbolicShapeOptimizationPass());
+  // lowing shape 相关的计算
   pm.addPass(mlir::mhlo::createConvertToSignlessPass());
   // 去除tuple
   pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createFlattenTuplePass());
@@ -166,9 +162,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 传播广播
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::mhlo::createBroadcastPropagationPass());
-  // 简化reshape  braodcast
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::mhlo::createSymbolicShapeOptimizationPass());
+
   pm.addPass(mlir::createCanonicalizerPass());
 
   //===----------------------------------------------------------------------===//
@@ -296,7 +290,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createBufferLoopHoistingPass());
   //内存复用
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::deallocation::createBufferReusePass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::deallocation::createBufferReusePass());
   //===----------------------------------------------------------------------===//
   // lowing linalg
   //===----------------------------------------------------------------------===//

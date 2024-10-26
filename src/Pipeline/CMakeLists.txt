@@ -16,6 +16,7 @@ llcompiler_add_library(LLCPipelines
     MLIRLLHToArith
     MLIRLLHToTensor
     MLIRLLHToHLO
+    MLIRLLHToShape
     MLIRLLVMExtensionTransforms
     MLIRIndexExtensionTransforms
     MLIRTosaTransforms

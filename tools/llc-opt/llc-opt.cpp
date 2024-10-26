@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
+#include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Arith/Transforms/BufferizableOpInterfaceImpl.h"
@@ -86,6 +87,7 @@ int main(int argc, char **argv) {
   mlir::LLVM::ex::registerLLVMExtensionPasses();
   mlir::registerTransformsPasses();
   mlir::transform::registerInterpreterPass();
+  mlir::tosa::registerTosaToLinalgPipelines();
   mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
   return 0;

@@ -56,6 +56,20 @@ def ConvertLLHToTensorPass : Pass<"convert-llh-to-tensor"> {
 }
 
 //===----------------------------------------------------------------------===//
+// LLH --> Shape
+//===----------------------------------------------------------------------===//
+def ConvertLLHToShapePass : Pass<"convert-llh-to-shape"> {
+  let summary = "convert llh to shape IR";
+  let description = [{
+
+  }];
+  let dependentDialects = [ "::mlir::func::FuncDialect",
+                            "::mlir::index::IndexDialect",
+                            "::mlir::shape::ShapeDialect",
+                            ];
+}
+
+//===----------------------------------------------------------------------===//
 // LLH --> hlo
 //===----------------------------------------------------------------------===//
 def LLHPreprocessingForHLOPass : Pass<"preprocessing-llh-to-hlo"> {
@@ -98,4 +112,6 @@ def ConvertTosaToLinalgExtensionPass : Pass<"convert-tosa-to-linalg-extension"> 
                             "::mlir::linalg::LinalgDialect",
                             ];
 }
+
+
 #endif // INCLUDE_LLCOMPILER_CONVERSION_PASSES_TD_

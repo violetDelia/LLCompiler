@@ -138,8 +138,6 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
 
 struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   using OpConversionPattern<ConvOp>::OpConversionPattern;
-  // nchw fchw -->nfhw
-  // nhwc fhwc -->nhwf
   // curent only supported, need add layout attr and layout pass for more
   LogicalResult matchAndRewrite(ConvOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
@@ -189,7 +187,6 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
           kernel_dimensions, layout_attr.getBatchIndex(), 3,
           output_spatial_dimensions);
     }
-
     auto new_stride_attr = llc::ArrayAttrToIntElementsAttr(stride_attr);
     auto new_pad_attr = DenseIntElementsAttr::get(
         RankedTensorType::get({spatial_rank, 2}, rewriter.getI64Type()), pad);

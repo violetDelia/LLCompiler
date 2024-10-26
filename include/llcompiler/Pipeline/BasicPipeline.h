@@ -18,6 +18,8 @@
 #include <cstdint>
 #include <string>
 
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Enums.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/Pass/PassManager.h"
@@ -53,6 +55,9 @@ struct BasicPipelineOptions
   Option<uint64_t> L1CacheSize = {*this, "L1 bytes size",
                                   llvm::cl::desc("L1 bytes size"),
                                   llvm::cl::init(49152)};
+  Option<mlir::llh::Layout> targetLayout = {*this, "layout",
+                                  llvm::cl::desc("layout"),
+                                  llvm::cl::init(mlir::llh::Layout::NHWC)};
 };
 void buildBasicPipeline(mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options);

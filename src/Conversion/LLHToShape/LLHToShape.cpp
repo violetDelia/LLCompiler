@@ -30,6 +30,7 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
+#include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -44,7 +45,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir {
-#define GEN_PASS_DEF_CONVERTLLHTOTENSORPASS
+#define GEN_PASS_DEF_CONVERTLLHTOSHAPEPASS
 #include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
@@ -72,7 +73,7 @@ struct DimOpLowing : public OpConversionPattern<DimOp> {
     auto res = op->getResult(0);
     auto index_dim =
         rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), dim);
-    auto new_dim = rewriter.create<tensor::DimOp>(
+    auto new_dim = rewriter.create<shape::DimOp>(
         loc, rewriter.getIndexType(), ::mlir::ValueRange{input, index_dim},
         attrs);
     auto index_out =
@@ -81,74 +82,33 @@ struct DimOpLowing : public OpConversionPattern<DimOp> {
   }
 };
 
-struct ReshapeOpLowing : public OpConversionPattern<ReshapeOp> {
-  using OpConversionPattern::OpConversionPattern;
-  LogicalResult match(ReshapeOp op) const final { return llvm::success(); }
 
-  void rewrite(ReshapeOp op, OpAdaptor adaptor,
-               ConversionPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
-    auto input = op.getInput();
-    auto shapes = op.getShapes();
-    auto attrs = op->getAttrs();
-    auto new_shape = rewriter.create<tensor::FromElementsOp>(loc, shapes);
-    auto new_reshape = rewriter.create<tensor::ReshapeOp>(
-        loc, op->getResultTypes(), ::mlir::ValueRange{input, new_shape}, attrs);
-    rewriter.replaceOp(op, new_reshape);
-  }
-};
 
-struct EmptyOpLowing : public OpConversionPattern<EmptyOp> {
-  using OpConversionPattern::OpConversionPattern;
-  LogicalResult match(EmptyOp op) const final { return llvm::success(); }
-
-  void rewrite(EmptyOp op, OpAdaptor adaptor,
-               ConversionPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
-    auto shapes = op.getShapes();
-    auto attrs = op->getAttrs();
-    llvm::SmallVector<Value> new_shapes;
-    for (auto shape : shapes) {
-      if (llh::isConstIntegerValue(shape)) continue;
-      auto dim_val =
-          rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), shape);
-      new_shapes.push_back(dim_val);
-    }
-    auto new_reshape = rewriter.create<tensor::EmptyOp>(
-        loc, op->getResultTypes(), ::mlir::ValueRange{new_shapes}, attrs);
-    rewriter.replaceOp(op, new_reshape);
-  }
-};
 
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateConvertLLHToTensorPassPatterns(TypeConverter& converter,
+void populateConvertLLHToShapePassPatterns(TypeConverter& converter,
                                             RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  // llh.dim -> shape.dim
   patterns.add<DimOpLowing>(converter, context);
-  patterns.add<ReshapeOpLowing>(converter, context);
-  patterns.add<EmptyOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
 // config target
 //===----------------------------------------------------------------------===//
-void configConvertLLHToTensorPassTarget(ConversionTarget& target) {
+void configConvertLLHToShapePassTarget(ConversionTarget& target) {
   target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::func::FuncDialect>();
   target.addLegalDialect<mlir::index::IndexDialect>();
-  target.addLegalDialect<mlir::tensor::TensorDialect>();
+  target.addLegalDialect<mlir::shape::ShapeDialect>();
   target.addIllegalOp<DimOp>();
-  target.addIllegalOp<ReshapeOp>();
-  target.addIllegalOp<EmptyOp>();
 }
 
 //===----------------------------------------------------------------------===//
 // init typeconvert
 //===----------------------------------------------------------------------===//
-void initConvertLLHToTensorPassTypeConverter(TypeConverter& converter) {
+void initConvertLLHToShapePassTypeConverter(TypeConverter& converter) {
   auto type_replace = [](Type type) { return type; };
   auto int_replace = [](IntegerType type) { return type; };
   auto index_replace = [](IndexType type) { return type; };
@@ -160,10 +120,10 @@ void initConvertLLHToTensorPassTypeConverter(TypeConverter& converter) {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct ConvertLLHToTensorPass
-    : impl::ConvertLLHToTensorPassBase<ConvertLLHToTensorPass> {
-  using impl::ConvertLLHToTensorPassBase<
-      ConvertLLHToTensorPass>::ConvertLLHToTensorPassBase;
+struct ConvertLLHToShapePass
+    : impl::ConvertLLHToShapePassBase<ConvertLLHToShapePass> {
+  using impl::ConvertLLHToShapePassBase<
+      ConvertLLHToShapePass>::ConvertLLHToShapePassBase;
   void runOnOperation() override;
 };
 }  // namespace
@@ -171,14 +131,14 @@ struct ConvertLLHToTensorPass
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
-void ConvertLLHToTensorPass::runOnOperation() {
+void ConvertLLHToShapePass::runOnOperation() {
   LLC_RUN_IN_PASS
   ConversionTarget target(getContext());
-  configConvertLLHToTensorPassTarget(target);
+  configConvertLLHToShapePassTarget(target);
   TypeConverter converter;
-  initConvertLLHToTensorPassTypeConverter(converter);
+  initConvertLLHToShapePassTypeConverter(converter);
   RewritePatternSet patterns(&getContext());
-  populateConvertLLHToTensorPassPatterns(converter, patterns);
+  populateConvertLLHToShapePassPatterns(converter, patterns);
   if (failed(
           applyPartialConversion(getOperation(), target, std::move(patterns))))
     signalPassFailure();

@@ -17,7 +17,7 @@
 
 include "mlir/Pass/PassBase.td"
 
-def TransformLayoutPass : Pass<"transform-layout-to-nhwc","ModuleOp"> {
+def TransformLayoutPass : Pass<"transform-layout","ModuleOp"> {
   let summary = "trans some llh op layout to nhwc for lowing to tosa";
   let description = [{
   }];

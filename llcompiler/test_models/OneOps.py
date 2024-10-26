@@ -7,8 +7,10 @@ class Add(nn.Module):
         super().__init__()
 
     def forward(self, x: torch.Tensor):
-        x = x+1
-        x = x*x
+        x = x + 1
+        x = x + 2
+        x = x + x
+        x = x + 3
         return x
 
 
@@ -58,7 +60,9 @@ class Conv_NCHW_FCHW(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = self.conv(x)
+        x = x.reshape(x.shape[0],x.shape[1],96,96)
         return x
+
 
 class Relu(nn.Module):
     def __init__(self):

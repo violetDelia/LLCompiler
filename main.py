@@ -66,12 +66,13 @@ def run_model_dict(dict):
                 ),
                 log_level="debug",
                 symbol_infer=True,
+                target_layout = "NCHW"
             )
             model = func()
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
-                dynamic=True,
+                dynamic=False,
                 fullgraph=True,
             )
             torch_res = torch_run_time(model, *inputs)
