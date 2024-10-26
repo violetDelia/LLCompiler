@@ -62,7 +62,19 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-
+bool check_conv_illegal(Operation* op) {
+  return false;
+  // tosa conv2d error
+  auto conv = llvm::cast<ConvOp>(op);
+  auto layout = conv.getLayout();
+  if (layout != Layout::NHWC) return false;
+  auto res = conv->getResult(0);
+  auto tensor = llc::getRankTensorFrom(res);
+  if (tensor.getRank() != 4) return false;
+  auto graph = conv.getGroup();
+  if(graph!= 1) return false;
+  return true;
+}
 //===----------------------------------------------------------------------===//
 // legal func
 //===----------------------------------------------------------------------===//
@@ -243,6 +255,7 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<ReluOp>();
   target.addIllegalOp<ConvOp>();
   target.addIllegalOp<TransposeOp>();
+  target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mhlo::MhloDialect>();
   target.addLegalDialect<mlir::index::IndexDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

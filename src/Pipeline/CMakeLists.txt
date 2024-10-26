@@ -53,6 +53,7 @@ llcompiler_add_library(LLCPipelines
     StablehloPasses
     StablehloTOSATransforms
     StablehloLinalgTransforms
+    MhloToStablehlo
 )
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRFuncInlinerExtension)
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRTensorInferTypeOpInterfaceImpl)

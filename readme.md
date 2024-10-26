@@ -16,6 +16,7 @@ ninja check-llc-python
 # Todo
 
 * 运行resnet  relu lowing / conv lowing/ bach norm lowing  |  symbol input
+* conv 动态代码生成
 * llh 基于symbol  的   to linalg 扩展
 * affine -> vector -> x86/riscv
 * gcu 以及luanch/ 线程选择？

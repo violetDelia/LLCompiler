@@ -49,10 +49,10 @@ class Conv_NCHW_FCHW(nn.Module):
         super().__init__()
         self.conv = nn.Conv2d(
             3,
-            1,
-            kernel_size=7,
+            3,
+            kernel_size=5,
             stride=1,
-            padding=1,
+            padding=2,
             groups=1,
             bias=False,
             dilation=1,
@@ -60,7 +60,7 @@ class Conv_NCHW_FCHW(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = self.conv(x)
-        x = x.reshape(x.shape[0],x.shape[1],96,96)
+        x = self.conv(x)
         return x
 
 

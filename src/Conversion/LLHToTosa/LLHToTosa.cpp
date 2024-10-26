@@ -100,7 +100,7 @@ bool check_const_legal(Operation* op) {
   return !isa<RankedTensorType>(type);
 }
 
-bool check_matmal_illegal(Operation* op) {
+bool check_matmal_legal(Operation* op) {
   auto matmal = cast_or_null<MatMulOp>(op);
   if (!matmal) return false;
   auto left_type = cast_or_null<RankedTensorType>(matmal.getLhs().getType());
@@ -218,19 +218,24 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
                ConversionPatternRewriter& rewriter) const final {
     LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
-    auto out = op.getResult();
-    auto out_type = cast<ShapedType>(out.getType());
-    auto atrrs = op->getAttrs();
-    Operation* new_op;
-    if (out_type.getRank() == 4) {
-      new_op = rewriter.create<tosa::Conv2DOp>(loc, ::mlir::TypeRange{out},
-                                               adaptor.getOperands(), atrrs);
+    auto res = op.getResult();
+    auto res_type = cast<ShapedType>(res.getType());
+    auto res_ele_type = res_type.getElementType();
+    auto atrrs = op->getAttrDictionary().getValue();
+    auto input = op.getX();
+    auto weight = op.getW();
+    auto bias = llc::create_tosa_const(&rewriter, {1}, {0}, res_ele_type, loc);
+    auto dilation = op.getDilationAttr();
+    auto pad = op.getPadAttr();
+    auto stride = op.getStrideAttr();
+    if (res_type.getRank() == 4) {
+      rewriter.replaceOpWithNewOp<tosa::Conv2DOp>(op, res_type, input, weight,
+                                                  bias, pad, stride, dilation);
     }
-    if (out_type.getRank() == 5) {
-      new_op = rewriter.create<tosa::Conv3DOp>(loc, ::mlir::TypeRange{out},
-                                               adaptor.getOperands(), atrrs);
+    if (res_type.getRank() == 5) {
+       rewriter.replaceOpWithNewOp<tosa::Conv3DOp>(op, res_type, input, weight,
+                                                  bias, pad, stride, dilation);
     }
-    rewriter.replaceOp(op, new_op);
     LLC_RUN_OUT_PATTERN
   };
 };
@@ -306,7 +311,7 @@ void populateConvertLLHToTosaPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<ConstantOp, tosa::ConstOp>>(converter, context);
   patterns.add<MulOpLowing>(converter, context);
   patterns.add<DivOpLowing>(converter, context);
-
+  patterns.add<ConvOpLowering>(converter, context);
   // patterns.add<ConstantOpLowering>(converter, context);
   // patterns.add<MatMulOpLowering>(converter, context);
   // patterns.add<ConvOpLowering>(converter, context);
@@ -323,6 +328,7 @@ void configConvertLLHToTosaPassTarget(ConversionTarget& target) {
   target.addIllegalOp<SubOp>();
   target.addIllegalOp<MulOp>();
   target.addIllegalOp<DivOp>();
+  target.addIllegalOp<ConvOp>();
   target.addLegalDialect<mlir::tosa::TosaDialect>();
   target.addLegalDialect<mlir::func::FuncDialect>();
 }

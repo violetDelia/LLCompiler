@@ -20,4 +20,4 @@ from llcompiler.test_models import *
 if __name__ == "__main__":
     model = Conv_NCHW_FCHW()
     input = torch.randn(3, 3, 224, 224)
-    check_model(model, input)
+    check_static_model(model, input)

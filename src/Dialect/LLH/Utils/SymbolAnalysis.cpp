@@ -295,6 +295,7 @@ EncodingBindOp SymbolAnalysis::buildEncodingBindFrom(Value value,
   auto encoding = llc::getEncodingFrom(value);
   auto encoding_bind = builder->create<EncodingBindOp>(
       value.getLoc(), ::mlir::TypeRange{}, value, encoding);
+  encoding_bind->moveAfter(value.getDefiningOp());
   return encoding_bind;
 }
 
