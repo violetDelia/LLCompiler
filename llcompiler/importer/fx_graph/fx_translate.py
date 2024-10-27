@@ -404,7 +404,11 @@ def torch_build_func(
                     elif isinstance(arg, torch.fx.node.Node):
                         output_types.append(value_map[arg.name][0].type)
                         return_values.append(value_map[arg.name][0])
+                    elif arg is None:
+                        pass
                     else:
+                        print(arg)
+                        print(type(arg))
                         raise NotImplementedError(type(arg))
 
             trav_args(node.args)

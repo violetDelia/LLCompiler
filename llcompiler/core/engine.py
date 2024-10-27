@@ -48,6 +48,8 @@ class Torch_ExecutionEngine(ExecutionEngine):
                 inputs.append(tensor)
             elif isinstance(arg, int):
                 pass
+            elif isinstance(arg, torch.SymInt):
+                pass
             else:
                 raise TypeError(f"Unsupported type: {type(arg)}")
         return inputs

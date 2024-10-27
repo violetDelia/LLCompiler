@@ -71,12 +71,12 @@ struct DimOpLowing : public OpConversionPattern<DimOp> {
     auto attrs = op->getAttrs();
     auto res = op->getResult(0);
     auto index_dim =
-        rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), dim);
+        rewriter.create<mlir::arith::IndexCastOp>(loc, rewriter.getIndexType(), dim);
     auto new_dim = rewriter.create<tensor::DimOp>(
         loc, rewriter.getIndexType(), ::mlir::ValueRange{input, index_dim},
         attrs);
     auto index_out =
-        rewriter.create<index::CastUOp>(loc, op->getResultTypes(), new_dim);
+        rewriter.create<mlir::arith::IndexCastOp>(loc, op->getResultTypes(), new_dim);
     rewriter.replaceOp(op, index_out);
   }
 };
@@ -111,7 +111,7 @@ struct EmptyOpLowing : public OpConversionPattern<EmptyOp> {
     for (auto shape : shapes) {
       if (llh::isConstIntegerValue(shape)) continue;
       auto dim_val =
-          rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), shape);
+          rewriter.create<mlir::arith::IndexCastOp>(loc, rewriter.getIndexType(), shape);
       new_shapes.push_back(dim_val);
     }
     auto new_reshape = rewriter.create<tensor::EmptyOp>(

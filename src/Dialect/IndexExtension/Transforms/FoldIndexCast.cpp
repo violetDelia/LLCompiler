@@ -126,8 +126,8 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
 //===----------------------------------------------------------------------===//
 void populateFoldIndexCastPassPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<FoldCastOp<CastSOp>>(context);
-  patterns.add<FoldCastOp<CastUOp>>(context);
+  patterns.add<FoldCastOp<CastSOp>>(context,2);
+  patterns.add<FoldCastOp<CastUOp>>(context,2);
   patterns.add<ConstOpToArith>(context);
   patterns.add<FoldFromElements>(context);
 }

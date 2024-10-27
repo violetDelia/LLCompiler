@@ -64,18 +64,18 @@ class GenOutput:
         raise NotImplementedError
 
     def _fx_get_out_call(self, model: torch.fx.GraphModule):
-        inputs_fake = []
-        outputs_fake = []
+        inputs_fake_or_symbol = []
+        outputs_fake_or_symbol = []
         for node in model.graph.nodes:
             if node.op == "placeholder":
                 if node.type is torch.Tensor:
                     fake_tensor = node.meta["example_value"]
-                    inputs_fake.append(fake_tensor)
+                    inputs_fake_or_symbol.append(fake_tensor)
                 elif node.type is None:
                     val = node.meta["val"]
                     if isinstance(val, FakeTensor):
                         fake_tensor = node.meta["val"]
-                        inputs_fake.append(fake_tensor)
+                        inputs_fake_or_symbol.append(fake_tensor)
                     # 符号输入
                     elif isinstance(val, torch.SymInt):
                         pass
@@ -95,7 +95,9 @@ class GenOutput:
                         elif isinstance(arg, list):
                             trav_args(arg)
                         elif isinstance(arg, torch.fx.node.Node):
-                            outputs_fake.append(get_result_type(arg))
+                            outputs_fake_or_symbol.append(get_result_type(arg))
+                        elif arg is None:
+                            pass
                         else:
                             raise NotImplementedError(type(arg))
 
@@ -106,7 +108,7 @@ class GenOutput:
             input_fake_index = 0
             for tensor in tensors:
                 if isinstance(tensor, torch.Tensor):
-                    tensor_fake: FakeTensor = inputs_fake[input_fake_index]
+                    tensor_fake: FakeTensor = inputs_fake_or_symbol[input_fake_index]
                     input_fake_index += 1
                     for symbol, real_dim in zip(tensor_fake.shape, tensor.shape):
                         if isinstance(symbol, torch.SymInt):
@@ -120,21 +122,26 @@ class GenOutput:
                     raise TypeError(f"Unsupported type: {type(tensor)}")
             outs = []
 
-            for out_fake in outputs_fake:
-                shape = []
-                for dim in out_fake.shape:
-                    if isinstance(dim, int):
-                        shape.append(dim)
-                    elif isinstance(dim, torch.SymInt):
-                        if str(dim) in symbol_dict:
-                            shape.append(symbol_dict[str(dim)])
+            for out_fake_or_symbol in outputs_fake_or_symbol:
+                if isinstance(out_fake_or_symbol, torch.Tensor):
+                    shape = []
+                    for dim in out_fake_or_symbol.shape:
+                        if isinstance(dim, int):
+                            shape.append(dim)
+                        elif isinstance(dim, torch.SymInt):
+                            if str(dim) in symbol_dict:
+                                shape.append(symbol_dict[str(dim)])
+                            else:
+                                shape.append(
+                                    gen_outshape_form_faketensor(
+                                        dim.node.expr, symbol_dict
+                                    )
+                                )
                         else:
-                            shape.append(
-                                gen_outshape_form_faketensor(dim.node.expr, symbol_dict)
-                            )
-                    else:
-                        raise TypeError(f"Unsupported type: {type(dim)}")
-                outs.append(torch.empty(shape))
+                            raise TypeError(f"Unsupported type: {type(dim)}")
+                    outs.append(torch.empty(shape))
+                if isinstance(out_fake_or_symbol, torch.SymInt):
+                    outs.append(out_fake_or_symbol)
             return outs
 
         return _get_out_form_inputs

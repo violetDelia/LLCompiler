@@ -72,12 +72,12 @@ struct DimOpLowing : public OpConversionPattern<DimOp> {
     auto attrs = op->getAttrs();
     auto res = op->getResult(0);
     auto index_dim =
-        rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), dim);
+        rewriter.create<mlir::arith::IndexCastOp>(loc, rewriter.getIndexType(), dim);
     auto new_dim = rewriter.create<shape::DimOp>(
         loc, rewriter.getIndexType(), ::mlir::ValueRange{input, index_dim},
         attrs);
     auto index_out =
-        rewriter.create<index::CastUOp>(loc, op->getResultTypes(), new_dim);
+        rewriter.create<mlir::arith::IndexCastOp>(loc, op->getResultTypes(), new_dim);
     rewriter.replaceOp(op, index_out);
   }
 };

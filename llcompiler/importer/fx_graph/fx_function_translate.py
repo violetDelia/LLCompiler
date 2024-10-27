@@ -43,7 +43,7 @@ from ...dialect.llh import (
     ReluOp,
     AdaptiveAvgPoolOp,
     MaxPoolOp,
-    SubOp,
+    SubOp,MatmulOp
 )
 from ...dialect.llh_utility import build_llh_transpose, build_llh_constant
 from torch._subclasses.fake_tensor import FakeTensor
@@ -108,6 +108,15 @@ def aten_sym_size_int_convert(
 ):
     return commond_build_op(ReluOp.build, 1, node, value_map, block)
 
+
+@TORCH_FUNCTION_TRANSLATE("aten::mm")
+def aten_sym_size_int_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(MatmulOp, 2, node, value_map, block)
 
 @TORCH_FUNCTION_TRANSLATE("getitem")
 def builtin_getitem_convert(

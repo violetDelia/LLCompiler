@@ -168,9 +168,9 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing mhlo
   //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::mhlo::createLegalizeToMemrefPass());
   pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
   pm.addPass(mlir::mhlo::createHloLegalizeToStablehloPass());
-  pm.addNestedPass<mlir::ModuleOp>(mlir::mhlo::createLegalizeToMemrefPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::mhlo::createLegalizeControlFlowPass());
 
@@ -226,7 +226,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
 
   pm.addNestedPass<mlir::func::FuncOp>(mlir::tosa::createTosaToLinalg());
   pm.addPass(mlir::tosa::createTosaToArith(true));
-
+  pm.addPass(mlir::tosa::createTosaToTensor());
   //===----------------------------------------------------------------------===//
   //  tensor opt
   //===----------------------------------------------------------------------===//
@@ -271,28 +271,34 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //       mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
   pm.addPass(mlir::hlo::createOneShotBufferizePass());
   // pm.addPass(mlir::bufferization::createDropEquivalentBufferResultsPass());
-  // // 跑整图会出bug
+  //  // 跑整图会出bug
   //   pm.addNestedPass<mlir::func::FuncOp>(
   //       mlir::bufferization::createFinalizingBufferizePass());
+  pm.addPass(mlir::createFinalBufferizePass(64));
 
-  mlir::bufferization::BufferResultsToOutParamsOpts buffer_result_opts;
-  buffer_result_opts.hoistStaticAllocs = true;
-  buffer_result_opts.addResultAttribute = true;
   // Bufferize规范化
 
   // 规范化
   pm.addPass(mlir::createCanonicalizerPass());
   // 内存inpalce
+  mlir::bufferization::BufferResultsToOutParamsOpts buffer_result_opts;
+  buffer_result_opts.hoistStaticAllocs = true;
+  buffer_result_opts.addResultAttribute = true;
   pm.addPass(mlir::bufferization::createBufferResultsToOutParamsPass(
       buffer_result_opts));
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createBufferHoistingPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createBufferLoopHoistingPass());
-  pm.addPass(mlir::createFinalBufferizePass(64));
   //内存复用
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::deallocation::createBufferReusePass());
+  // 化简memref.dim
+  pm.addPass(mlir::memref::createResolveShapedTypeResultDimsPass());
+  // 化简memref.dim
+  pm.addPass(mlir::memref::createResolveRankedShapeTypeResultDimsPass());
+  // 内存访问转为reinterpret_cast
+  pm.addPass(mlir::memref::createExpandStridedMetadataPass());
 
   //===----------------------------------------------------------------------===//
   // lowing linalg
@@ -300,10 +306,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // convert linalg to affine
   pm.addPass(mlir::createConvertLinalgToAffineLoopsPass());
   pm.addPass(mlir::createCSEPass());
-  // 化简memref.dim
-  pm.addPass(mlir::memref::createResolveShapedTypeResultDimsPass());
-  // 化简memref.dim
-  pm.addPass(mlir::memref::createResolveRankedShapeTypeResultDimsPass());
 
   //===----------------------------------------------------------------------===//
   // affine opt
@@ -400,8 +402,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::memref::createResolveShapedTypeResultDimsPass());
   // 化简memref.dim
   pm.addPass(mlir::memref::createResolveRankedShapeTypeResultDimsPass());
-  // 内存访问转为reinterpret_cast
-  pm.addPass(mlir::memref::createExpandStridedMetadataPass());
   // 控制块alloc化简
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createBufferHoistingPass());

@@ -29,6 +29,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
@@ -97,8 +98,8 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
     llvm::SmallVector<int64_t> unexpand_dims;
     llvm::SmallVector<int64_t> broadcast_dimensions;
     for (auto shape : out_shapes) {
-      auto dim_val =
-          rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), shape);
+      auto dim_val = rewriter.create<mlir::arith::IndexCastOp>(
+          loc, rewriter.getIndexType(), shape);
       out_dims.push_back(dim_val);
     }
     auto rank = res_type.getRank();
@@ -254,10 +255,11 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<MulOp, mhlo::MulOp>>(converter, context);
   patterns.add<SimplyFullLowing<DivOp, mhlo::DivOp>>(converter, context);
   patterns.add<SimplyFullLowing<MaxOp, mhlo::MaxOp>>(converter, context);
-  patterns.add<BroadCastToOpToOpLowing>(converter, context);
+  patterns.add<SimplyFullLowing<MatMulOp, mhlo::DotOp>>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<BatchNormOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(converter, context);
+  patterns.add<BroadCastToOpToOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -276,7 +278,7 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<BroadCastToOp>();
   target.addIllegalOp<TransposeOp>();
   target.addLegalDialect<mhlo::MhloDialect>();
-  target.addLegalDialect<mlir::index::IndexDialect>();
+  target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();
 }
 

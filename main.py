@@ -36,10 +36,11 @@ module_dict = {
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
-    #Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
+    # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
     # Conv_NCHW_FCHW :[torch.randn((3, 3, 100,100), device="cpu")],
     # BatchNorm2D_Inference: [torch.randn(2, 3, 10,10), device="cpu"],
-    torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
+    Linear: [torch.randn((10,1000), device="cpu")],
+    # torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -51,8 +52,8 @@ module_dict = {
 
 def run_model_dict(dict):
     modes = [
-        "inference",
-        # "training"
+        #"inference",
+        "training"
     ]
     for mode in modes:
         for func, inputs in dict.items():
