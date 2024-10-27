@@ -5,6 +5,7 @@ from .fx_translate import (
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
+    SPECIAL_RESULT_FAKE_INDEX_MAP
 )
 import torch._ops as op
 import torch.fx
@@ -43,7 +44,8 @@ from ...dialect.llh import (
     ReluOp,
     AdaptiveAvgPoolOp,
     MaxPoolOp,
-    SubOp,MatmulOp
+    SubOp,
+    MatmulOp,
 )
 from ...dialect.llh_utility import build_llh_transpose, build_llh_constant
 from torch._subclasses.fake_tensor import FakeTensor
@@ -69,7 +71,7 @@ def builtin_add_convert(
     return commond_build_op(AddOp.build, 2, node, value_map, block)
 
 
-@TORCH_FUNCTION_TRANSLATE("sub","aten::sub.Tensor")
+@TORCH_FUNCTION_TRANSLATE("sub", "aten::sub.Tensor")
 def builtin_add_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
@@ -118,6 +120,7 @@ def aten_sym_size_int_convert(
 ):
     return commond_build_op(MatmulOp, 2, node, value_map, block)
 
+
 @TORCH_FUNCTION_TRANSLATE("getitem")
 def builtin_getitem_convert(
     node: torch.fx.node.Node,
@@ -125,6 +128,13 @@ def builtin_getitem_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
+    target_name = node.args[0].target.__str__()
+    if target_name in SPECIAL_RESULT_FAKE_INDEX_MAP:
+        if SPECIAL_RESULT_FAKE_INDEX_MAP[target_name] == node.args[1]:
+            value_map[node.name] = value_map[node.args[0].name]
+            return None
+        else:
+            raise NotImplementedError("重构一下，添加tuple op")
     inputs = value_map[node.args[0].name]
     if (len(inputs) == 1) and isinstance(inputs[0].type, TensorType):
         if isinstance(node.args[1], slice):
@@ -152,7 +162,7 @@ def aten_view_convert(
     return ReshapeOp(operands=[input, dims], result_types=[result_type])
 
 
-@TORCH_FUNCTION_TRANSLATE(F.max_pool2d)
+@TORCH_FUNCTION_TRANSLATE(F.max_pool2d, "aten::max_pool2d_with_indices")
 def aten_view_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

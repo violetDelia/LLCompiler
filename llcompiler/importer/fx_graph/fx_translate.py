@@ -38,7 +38,7 @@ from xdsl.dialects.builtin import (
     SymbolNameAttr,
     SymbolRefAttr,
     DictionaryAttr,
-    ArrayAttr
+    ArrayAttr,
 )
 from xdsl.ir.affine.affine_map import AffineMap
 from ...dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
@@ -134,7 +134,6 @@ def _generate_affine_symbolic(
 def torch_symbol_bind(
     operand: SSAValue, tensor: FakeTensor, symbol_map: dict[str, TorchSymbolicIntOp]
 ):
-
     bind_symbols: list[SSAValue] = []
     affine_expr_map: dict[str, AffineSymExpr] = dict()
     results: list[AffineSymExpr] = []
@@ -183,7 +182,7 @@ def torch_fake_tensor_encoding(tensor: FakeTensor):
                 shape.append(str(dim))
     string_attr_dict = dict()
     for index, dim in zip(range(len(shape)), shape):
-        string_attr_dict["func.input_symbol_"+str(index)] = StringAttr(dim)
+        string_attr_dict["func.input_symbol_" + str(index)] = StringAttr(dim)
     encode = DictionaryAttr(string_attr_dict)
     return encode
 
@@ -202,9 +201,24 @@ def torch_dtype_translate(dtype: torch.dtype):
     return TORCH_DTYPE_TO_MLIR_TYPE[dtype]
 
 
+def get_result_type_ext(node: torch.fx.node.Node, index: int):
+    if "val" in node.meta:
+        return node.meta["val"][index]
+    if "example_value" in node.meta:
+        return node.meta["example_value"][index]
+    raise ValueError("No example_value found in node meta")
+
+
+# 一些特殊的op,val里面有多个fake tensor，保存返回的索引
+SPECIAL_RESULT_FAKE_INDEX_MAP = {"aten.max_pool2d_with_indices.default": 0}
+
+
 def get_result_type(
     node: torch.fx.node.Node,
 ):
+    target_name = node.target.__str__()
+    if target_name in SPECIAL_RESULT_FAKE_INDEX_MAP:
+        return get_result_type_ext(node, SPECIAL_RESULT_FAKE_INDEX_MAP[target_name])
     if "val" in node.meta:
         return node.meta["val"]
     if "example_value" in node.meta:
@@ -414,9 +428,10 @@ def torch_build_func(
             trav_args(node.args)
         elif node.op == "call_function":
             op = torch_function_translate(node, value_map, symbol_map, block)
-            value_map[node.name] = op.results
-            block.add_op(op)
-            _updata_torch_symbol_bind(op, block, symbol_map, node)
+            if op is not None:
+                value_map[node.name] = op.results
+                block.add_op(op)
+                _updata_torch_symbol_bind(op, block, symbol_map, node)
         elif node.op == "call_method":
             if node.target == "size":
                 value_map[node.name] = value_map[node.args[0].name]
@@ -431,7 +446,9 @@ def torch_build_func(
             raise NotImplementedError(node.op, type(node.op))
     block.add_op(Return(*return_values))
     region: Region = Region(block)
-    func = FuncOp(name, (input_types, output_types), region=region,arg_attrs =ArrayAttr(arg_attrs))
+    func = FuncOp(
+        name, (input_types, output_types), region=region, arg_attrs=ArrayAttr(arg_attrs)
+    )
     return func
 
 

@@ -53,8 +53,8 @@ module_dict = {
 
 def run_model_dict(dict):
     modes = [
-        "inference",
-        #"training"
+        #"inference",
+        "training"
     ]
     for mode in modes:
         for func, inputs in dict.items():
