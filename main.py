@@ -40,8 +40,8 @@ module_dict = {
     # Conv_NCHW_FCHW :[torch.randn((3, 3, 224,224), device="cpu")],
     # BatchNorm2D_Inference: [torch.randn(3, 3, 224,224), device="cpu"],
     # Linear: [torch.randn((10,1000), device="cpu")],
-    MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
-    # torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
+    #MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
+    Resnet: [torch.randn((1, 3, 224, 224), device="cpu")],
     # torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -53,8 +53,8 @@ module_dict = {
 
 def run_model_dict(dict):
     modes = [
-        #"inference",
-        "training"
+        "inference",
+        #"training"
     ]
     for mode in modes:
         for func, inputs in dict.items():
@@ -83,12 +83,16 @@ def run_model_dict(dict):
                 dynamic=False,
                 fullgraph=True,
             )
-            engine_res = llcompiler_run_time(opt_model, *inputs)
             torch_res = torch_run_time(model, *inputs)
-            llcompiler_run_time(opt_model, *inputs)
+            engine_res = llcompiler_run_time(opt_model, *inputs)
+            print("torch")
+            print(torch_res)
+            print("llcompiler")
+            print(engine_res)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")
+                print((engine_res-torch_res))
 
 
 if __name__ == "__main__":

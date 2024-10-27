@@ -260,7 +260,7 @@ class ExpandOp(IRDLOperation):
 class FlattenOp(IRDLOperation):
     name = "llh.flatten"
     input = operand_def(TensorType)
-    dim = operand_def(IntegerAttr)
+    dim = operand_def(IntegerType)
     result = result_def(TensorType)
 
 

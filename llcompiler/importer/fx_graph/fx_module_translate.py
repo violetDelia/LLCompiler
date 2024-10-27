@@ -38,6 +38,7 @@ from ...dialect.llh import (
     MaxPoolOp,
     AdaptiveAvgPoolOp,
     BatchNormOp,
+    FlattenOp,
 )
 from torch._subclasses.fake_tensor import FakeTensor
 
@@ -176,6 +177,22 @@ def torch_relu_convert(
     return commond_build_op(ReluOp.build, 1, node, value_map, block)
 
 
+@TORCH_MODULE_TRANSLATE(torch.nn.modules.flatten.Flatten)
+def torch_relu_convert(
+    node: torch.fx.node.Node,
+    value_map: dict,
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    module: torch.nn.modules.flatten.Flatten,
+    block: Block,
+):
+    if module.end_dim != -1:
+        raise ValueError("改成reshape")
+    result_type = torch_fake_tensor_translate(get_result_type(node))
+    input = get_arg_value(node.args[0], value_map, block)
+    dim = get_arg_value(module.start_dim, value_map, block)
+    return FlattenOp.build(operands=[input, dim], result_types=[result_type])
+
+
 @TORCH_MODULE_TRANSLATE(torch.nn.modules.pooling.MaxPool2d)
 def torch_maxpool_convert(
     node: torch.fx.node.Node,
@@ -215,7 +232,9 @@ def torch_adaptive_avgpool_convert(
     return commond_build_op(AdaptiveAvgPoolOp.build, 1, node, value_map, block, attrs)
 
 
-@TORCH_MODULE_TRANSLATE(torch.nn.modules.batchnorm.BatchNorm2d,torch.nn.modules.batchnorm.BatchNorm1d)
+@TORCH_MODULE_TRANSLATE(
+    torch.nn.modules.batchnorm.BatchNorm2d, torch.nn.modules.batchnorm.BatchNorm1d
+)
 def torch_adaptive_avgpool_convert(
     node: torch.fx.node.Node,
     value_map: dict,
@@ -232,7 +251,7 @@ def torch_adaptive_avgpool_convert(
     attrs = {
         "epsilon": FloatAttr(module.eps, f64),
         "momentum": FloatAttr(module.momentum, f64),
-        "feature_index":IntegerAttr(1,i64)
+        "feature_index": IntegerAttr(1, i64),
     }
     return BatchNormOp.build(
         operands=[input, weight, bias, input_mean, input_var],
