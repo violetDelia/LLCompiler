@@ -356,7 +356,8 @@ def LLH_BatchNormOp     : LLH_SymbolOp<"batch_norm">{
         LLH_Tensor:$input_mean,
         LLH_Tensor:$input_var,
         F64Attr:$epsilon,
-        F64Attr:$momentum);
+        F64Attr:$momentum,
+        I64Attr:$feature_index);
     let results = (outs 
         LLH_Tensor:$result);
 }

@@ -19,12 +19,14 @@
 #include <memory>
 
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "mlir/Pass/Pass.h"
 
 namespace mlir::llh {
 
-
+std::unique_ptr<::mlir::Pass> createTransformLayoutPass();
+std::unique_ptr<::mlir::Pass> createTransformLayoutPass(llh::Layout target_layout);
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"

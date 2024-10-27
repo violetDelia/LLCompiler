@@ -74,7 +74,6 @@ class MLIR_Builder:
         }
         value_map: dict[str, list[SSAValue]] = dict()
         symbol_map: dict[str, TorchSymbolicIntOp] = dict()
-        model.graph.print_tabular()
         block = Block()
         weight_dir = os.path.join(
             os.path.dirname(__file__),

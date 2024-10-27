@@ -118,31 +118,6 @@ func.func @reshape(%arg0: tensor<?x?x224x226xf32, #llh.encoding<shapes = @s0, @s
   return 
 }
 
-
-// -----
-"llh.symbolic_int"() <{sym_name = "c226"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "c224"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
-"llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
-func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>) ->() attributes {entrance} {
-  %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
-  %1 = "llh.constant"() <{value = 1 : i64}> : () -> i64
-  %2 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32, #llh.encoding<shapes = @c1>>
-  %3 = "llh.constant"() <{value = 2 : i64}> : () -> i64
-  %4 = "llh.constant"() <{value = 0 : i64}> : () -> i64
-  %5 = "llh.mul"(%arg0, %arg0) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>, tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>
-  %6 = "llh.reshape"(%2, %1, %1, %1, %1) : (tensor<1xf32, #llh.encoding<shapes = @c1>>, i64, i64, i64, i64) -> tensor<1x1x1x1xf32, #llh.encoding<shapes = @c1, @c1, @c1, @c1>>
-  %7 = "llh.dim"(%5, %4) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>, i64) -> i64
-  %8 = "llh.dim"(%5, %1) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>, i64) -> i64
-  %9 = "llh.dim"(%5, %3) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>, i64) -> i64
-  %10 = "llh.dim"(%5, %0) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>, i64) -> i64
-  // CHECK: llh.broadcast_to
-  // CHECK-SAME:-> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s2>>
-  %11 = "llh.broadcast_to"(%6, %7, %8, %9, %10) <{cast_dims = array<i64: 0, 1, 2, 3>}> : (tensor<1x1x1x1xf32, #llh.encoding<shapes = @c1, @c1, @c1, @c1>>, i64, i64, i64, i64) -> tensor<*xf32>
-  return 
-}
-
 // -----
 "llh.symbolic_int"() <{sym_name = "c9"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "c64"}> : () -> ()
@@ -202,6 +177,25 @@ func.func @binary(%arg0: tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s
   // CHECK: llh.add
   // CHECK-SAME: tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>
   %6 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>
-  %125 = "llh.add"(%6, %6): (tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>, tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>) -> tensor<1x3xf32>
+  %125 = "llh.add"(%6, %6): (tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>, tensor<1x3xf32, #llh.encoding<shapes = @c1, @c3>>) -> tensor<*xf32>
+  return 
+}
+
+// -----
+func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
+  %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
+  %1 = "llh.constant"() <{value = 1 : i64}> : () -> i64
+  %2 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+  %3 = "llh.constant"() <{value = 2 : i64}> : () -> i64
+  %4 = "llh.constant"() <{value = 0 : i64}> : () -> i64
+  %5 = "llh.mul"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+  %6 = "llh.reshape"(%2, %1, %1, %1, %1) : (tensor<1xf32>, i64, i64, i64, i64) -> tensor<*xf32>
+  %7 = "llh.dim"(%5, %4) : (tensor<?x?x?x?xf32>, i64) -> i64
+  %8 = "llh.dim"(%5, %1) : (tensor<?x?x?x?xf32>, i64) -> i64
+  %9 = "llh.dim"(%5, %3) : (tensor<?x?x?x?xf32>, i64) -> i64
+  %10 = "llh.dim"(%5, %0) : (tensor<?x?x?x?xf32>, i64) -> i64
+  // CHECK: llh.broadcast_to
+  // CHECK-SAME:-> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
+  %11 = "llh.broadcast_to"(%6, %7, %8, %9, %10) <{cast_dims = array<i64: 0, 1, 2, 3>}> : (tensor<*xf32>, i64, i64, i64, i64) -> tensor<*xf32>
   return 
 }

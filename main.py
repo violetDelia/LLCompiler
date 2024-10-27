@@ -24,20 +24,23 @@ import typing
 def llcompiler_run_time(model, *inputs):
     return model(*inputs)
 
+
 @run_time
 def torch_run_time(model, *inputs):
     return model(*inputs)
 
+
 module_dict = {
-    #Add: [torch.randn((200, 3, 224, 224), device="cpu")],
+    # Add: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     #Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
-    Conv_NCHW_FCHW :[torch.randn((3, 3, 100,100), device="cpu")],
-    #torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
-    #torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
+    # Conv_NCHW_FCHW :[torch.randn((3, 3, 100,100), device="cpu")],
+    # BatchNorm2D_Inference: [torch.randn(2, 3, 10,10), device="cpu"],
+    torchvision.models.resnet18: [torch.randn((2, 3, 224, 224), device="cpu")],
+    # torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.vit_b_16: torch.randn((2, 3, 224, 224), device="cpu")
@@ -47,7 +50,10 @@ module_dict = {
 
 
 def run_model_dict(dict):
-    modes = ["training"]
+    modes = [
+        "inference",
+        # "training"
+    ]
     for mode in modes:
         for func, inputs in dict.items():
             print("模型: ", func.__name__, ", 模式: ", mode)
@@ -66,17 +72,17 @@ def run_model_dict(dict):
                 ),
                 log_level="debug",
                 symbol_infer=True,
-                target_layout = "NCHW"
+                target_layout="NCHW",
             )
             model = func()
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
-                dynamic=False,
+                dynamic=True,
                 fullgraph=True,
             )
-            torch_res = torch_run_time(model, *inputs)
             engine_res = llcompiler_run_time(opt_model, *inputs)
+            torch_res = torch_run_time(model, *inputs)
             llcompiler_run_time(opt_model, *inputs)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
@@ -85,5 +91,3 @@ def run_model_dict(dict):
 
 if __name__ == "__main__":
     run_model_dict(module_dict)
-    
-    

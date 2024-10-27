@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
@@ -70,6 +71,7 @@ int main(int argc, char **argv) {
   registry.insert<mlir::index::IndexDialect>();
   registry.insert<mlir::LLVM::LLVMDialect>();
   registry.insert<mlir::stablehlo::StablehloDialect>();
+  registry.insert<mlir::mhlo::MhloDialect>();
   mlir::tensor::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
       registry);

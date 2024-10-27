@@ -308,6 +308,7 @@ class BatchNormOp(IRDLOperation):
     input_var = operand_def(TensorType)
     epsilon = attr_def(FloatAttr)
     momentum = attr_def(FloatAttr)
+    feature_index = attr_def(IntAttr)
     result = result_def(TensorType)
 
 

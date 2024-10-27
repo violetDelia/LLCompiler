@@ -21,7 +21,8 @@ def AdaptEntryParmsForEnginePass: Pass<"adapt-entry-parms-for-engine","ModuleOp"
   let summary = "调整入口函数的参数, 方便执行引擎运行";
   let description = [{
   }];
-  let dependentDialects = [ "mlir::LLVM::LLVMDialect"];
+  let dependentDialects = [ "::mlir::LLVM::LLVMDialect",
+                            "::mlir::mhlo::MhloDialect"];
 }
 
 

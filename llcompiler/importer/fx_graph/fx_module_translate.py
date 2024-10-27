@@ -215,7 +215,7 @@ def torch_adaptive_avgpool_convert(
     return commond_build_op(AdaptiveAvgPoolOp.build, 1, node, value_map, block, attrs)
 
 
-@TORCH_MODULE_TRANSLATE(torch.nn.modules.batchnorm.BatchNorm2d)
+@TORCH_MODULE_TRANSLATE(torch.nn.modules.batchnorm.BatchNorm2d,torch.nn.modules.batchnorm.BatchNorm1d)
 def torch_adaptive_avgpool_convert(
     node: torch.fx.node.Node,
     value_map: dict,
@@ -232,6 +232,7 @@ def torch_adaptive_avgpool_convert(
     attrs = {
         "epsilon": FloatAttr(module.eps, f64),
         "momentum": FloatAttr(module.momentum, f64),
+        "feature_index":IntegerAttr(1,i64)
     }
     return BatchNormOp.build(
         operands=[input, weight, bias, input_mean, input_var],

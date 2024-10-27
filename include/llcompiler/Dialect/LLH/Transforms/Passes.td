@@ -22,11 +22,11 @@ def TransformLayoutPass : Pass<"transform-layout","ModuleOp"> {
   let description = [{
   }];
   let dependentDialects = [ "mlir::ex::IRExtensionDialect"];
-  // let options = [
-  //   Option<"TargetLayout", "target-layout", "::mlir::llh::Layout", /*default=*/"::mlir::llh::Layout::NHWC",
-  //          "测试用,防止多个相同地址的module.">,
-  // ];
-
+  let options = [
+    Option<"TargetLayout", "target-layout", "::mlir::llh::Layout", /*default=*/"::mlir::llh::Layout::NHWC",
+           "">,
+  ];
+  let constructor = "mlir::llh::createTransformLayoutPass()";
 }
 
 def LoadWeightPass : Pass<"load-weight","ModuleOp"> {

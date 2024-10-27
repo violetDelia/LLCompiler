@@ -140,9 +140,12 @@ Operation* buildTrnasposeOpFromLayoutTo(LLHPatternRewriter& builder,
 struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
   using LLHOpRewritePattern<ConvOp>::LLHOpRewritePattern;
 
+  explicit ConvOpConvertLayout(MLIRContext* context, Layout target_layout)
+      : LLHOpRewritePattern(context), target(target_layout) {}
+
   LogicalResult match(ConvOp op) const final {
     auto layout = op.getLayout();
-    if (layout != Layout::NHWC) return llvm::success();
+    if (layout != target) return llvm::success();
     return llvm::failure();
   }
   void rewrite(ConvOp op, LLHPatternRewriter& rewriter) const final {
@@ -155,26 +158,29 @@ struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
     auto weights = op.getW();
     auto res = op->getResult(0);
     auto new_input =
-        buildTrnasposeOpFromLayoutTo(rewriter, input, layout, Layout::NHWC);
+        buildTrnasposeOpFromLayoutTo(rewriter, input, layout, target);
     auto new_weights =
-        buildTrnasposeOpFromLayoutTo(rewriter, weights, layout, Layout::NHWC);
-    auto new_res_type = getReturnTensorFromLayoutTo(res, layout, Layout::NHWC);
+        buildTrnasposeOpFromLayoutTo(rewriter, weights, layout, target);
+    auto new_res_type = getReturnTensorFromLayoutTo(res, layout, target);
     auto new_conv = rewriter.create<ConvOp>(
         loc, new_res_type, new_input->getResult(0), new_weights->getResult(0),
         op.getDilation(), op.getKernelShape(), op.getPad(), op.getStride(),
         op.getGroup(), LayoutAttr::get(context, Layout::NHWC));
     auto res_transpose =
-        buildTrnasposeOpFromLayoutTo(rewriter, new_conv, Layout::NHWC, layout);
+        buildTrnasposeOpFromLayoutTo(rewriter, new_conv, target, layout);
     rewriter.replaceOp(op, res_transpose);
   }
+
+ protected:
+  Layout target;
 };
 
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateTransformLayoutPassPatterns(RewritePatternSet& patterns) {
+void populateTransformLayoutPassPatterns(RewritePatternSet& patterns,Layout target_layout) {
   auto context = patterns.getContext();
-  patterns.add<ConvOpConvertLayout>(context);
+  patterns.add<ConvOpConvertLayout>(context,target_layout);
 }
 }  // namespace
 //===----------------------------------------------------------------------===//
@@ -183,6 +189,8 @@ void populateTransformLayoutPassPatterns(RewritePatternSet& patterns) {
 namespace {
 struct TransformLayoutPass
     : llh::impl::TransformLayoutPassBase<TransformLayoutPass> {
+  using llh::impl::TransformLayoutPassBase<
+      TransformLayoutPass>::TransformLayoutPassBase;
   void runOnOperation() override;
 };
 
@@ -194,7 +202,7 @@ void TransformLayoutPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   RewritePatternSet patterns(context);
-  populateTransformLayoutPassPatterns(patterns);
+  populateTransformLayoutPassPatterns(patterns,TargetLayout);
   populateSymbolCanonicalizePatterns(patterns);
   auto op = getOperation();
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
@@ -204,3 +212,12 @@ void TransformLayoutPass::runOnOperation() {
 //===----------------------------------------------------------------------===//
 // create pass
 //===----------------------------------------------------------------------===//
+std::unique_ptr<::mlir::Pass> mlir::llh::createTransformLayoutPass() {
+  return std::make_unique<TransformLayoutPass>();
+};
+std::unique_ptr<::mlir::Pass> mlir::llh::createTransformLayoutPass(
+    llh::Layout target_layout) {
+  ::mlir::llh::TransformLayoutPassOptions options;
+  options.TargetLayout = target_layout;
+  return std::make_unique<TransformLayoutPass>(options);
+};

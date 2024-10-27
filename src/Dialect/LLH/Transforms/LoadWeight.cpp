@@ -151,7 +151,7 @@ struct LoadWeightOp : public LLHOpRewritePattern<WeightOp> {
     auto tensor =
         RankedTensorType::get(shape.getShape(), shape.getElementType());
     auto value = loadWeightFile(tensor, weight_file, &rewriter);
-    auto const_op = rewriter.createOrFold<llh::ConstantOp>(op->getLoc(), value);
+    auto const_op = rewriter.create<llh::ConstantOp>(op->getLoc(), value);
     rewriter.replaceOp(op, const_op);
   }
 };

@@ -79,7 +79,6 @@
 #include "stablehlo/transforms/Passes.h"
 #include "transforms/passes.h"
 namespace llc::pipleline {
-
 void buildBasicPipeline(::mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options) {
   mlir::llh::SymbolAnalysis::symbol_enable = options.symbolInfer;
@@ -97,7 +96,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 将WeightOp转换为constant
   pm.addPass(mlir::llh::createLoadWeightPass());
   // 布局转换
-  pm.addPass(mlir::llh::createTransformLayoutPass());
+  pm.addPass(mlir::llh::createTransformLayoutPass(options.targetLayout));
   // 预处理，这样lowing会方方便一点
   pm.addPass(mlir::createLLHPreprocessingForHLOPass());
   // 规范化
@@ -157,7 +156,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 算子替换
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::mhlo::createLegalizeDotToDotGeneralPass());
-  // 算子拆解BatchNorm
+  //算子拆解BatchNorm
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::mhlo::createTestUnfuseBatchNormPass());
   // 传播广播

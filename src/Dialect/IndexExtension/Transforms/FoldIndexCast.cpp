@@ -26,10 +26,14 @@
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mhlo/IR/hlo_ops.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/Attributes.h"
+#include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
@@ -69,11 +73,54 @@ struct FoldCastOp : public OpRewritePattern<CastOp> {
 
 struct ConstOpToArith : public OpRewritePattern<ConstantOp> {
   using OpRewritePattern<ConstantOp>::OpRewritePattern;
-  LogicalResult matchAndRewrite(ConstantOp op,
-                                PatternRewriter& rewriter) const {
-    auto value = op.getValue();
+
+  LogicalResult match(ConstantOp op) const { return llvm::success(); }
+
+  void rewrite(ConstantOp op, PatternRewriter& rewriter) const {
+    rewriter.replaceOpWithNewOp<arith::ConstantIndexOp>(
+        op, *op.getValue().getRawData());
   }
 };
+
+struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
+  using OpRewritePattern<tensor::FromElementsOp>::OpRewritePattern;
+
+  LogicalResult match(tensor::FromElementsOp op) const {
+    auto operands = op.getElements();
+    for (auto operand : operands) {
+      if (!isa<CastUOp, CastSOp, arith::ConstantOp>(operand.getDefiningOp()))
+        return llvm::failure();
+    }
+
+    return llvm::success();
+  }
+
+  void rewrite(tensor::FromElementsOp op, PatternRewriter& rewriter) const {
+    auto loc = op->getLoc();
+    auto elements = op.getElements();
+    llvm::SmallVector<Value, 0> new_elements;
+    for (auto operand : elements) {
+      if (isa<CastUOp, CastSOp>(operand.getDefiningOp()))
+        new_elements.push_back(operand.getDefiningOp()->getOperand(0));
+      else if (isa<arith::ConstantOp>(operand.getDefiningOp())) {
+        auto const_op = cast<arith::ConstantOp>(operand.getDefiningOp());
+        auto value = const_op.getValue();
+        CHECK(llc::MLIR_PASS, isa<IntegerAttr>(value));
+        auto int_value = cast<IntegerAttr>(value);
+        auto new_const = rewriter.create<arith::ConstantIndexOp>(
+            loc, *int_value.getValue().getRawData());
+        new_elements.push_back(new_const);
+      } else {
+        operand.dump();
+        UNIMPLEMENTED(llc::MLIR_PASS) << operand.getDefiningOp()->getName().getStringRef().str();
+      }
+    }
+    auto new_op = rewriter.create<tensor::FromElementsOp>(loc, new_elements);
+    rewriter.replaceAllUsesWith(op, new_op);
+    rewriter.replaceOp(op, new_op);
+  }
+};
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -81,6 +128,8 @@ void populateFoldIndexCastPassPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<FoldCastOp<CastSOp>>(context);
   patterns.add<FoldCastOp<CastUOp>>(context);
+  patterns.add<ConstOpToArith>(context);
+  patterns.add<FoldFromElements>(context);
 }
 
 //===----------------------------------------------------------------------===//

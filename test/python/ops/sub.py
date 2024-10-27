@@ -1,5 +1,8 @@
 # RUN: python %s| FileCheck %s
-# CHECK: The calculations are correct.
+# CHECK: static model inference are correct.
+# CHECK: static model training are correct.
+# CHECK: dynamic model inference are correct.
+# CHECK: dynamic model training are correct.
 import llcompiler.compiler as LLC
 import os.path
 import subprocess

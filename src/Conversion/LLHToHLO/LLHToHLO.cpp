@@ -62,19 +62,6 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-bool check_conv_illegal(Operation* op) {
-  return false;
-  // tosa conv2d error
-  auto conv = llvm::cast<ConvOp>(op);
-  auto layout = conv.getLayout();
-  if (layout != Layout::NHWC) return false;
-  auto res = conv->getResult(0);
-  auto tensor = llc::getRankTensorFrom(res);
-  if (tensor.getRank() != 4) return false;
-  auto graph = conv.getGroup();
-  if(graph!= 1) return false;
-  return true;
-}
 //===----------------------------------------------------------------------===//
 // legal func
 //===----------------------------------------------------------------------===//
@@ -223,6 +210,37 @@ struct TransposeOpLowing : public OpConversionPattern<TransposeOp> {
   }
 };
 
+struct BatchNormOpLowing : public OpConversionPattern<BatchNormOp> {
+  using OpConversionPattern<BatchNormOp>::OpConversionPattern;
+  LogicalResult matchAndRewrite(BatchNormOp op, OpAdaptor adaptor,
+                                ConversionPatternRewriter& rewriter) const {
+    auto res = op.getResult();
+    auto res_type = res.getType();
+    auto operand = op.getInput();
+    auto scale = op.getScale();
+    auto offset = op.getBias();
+    auto mean = op.getInputMean();
+    auto variance = op.getInputVar();
+    auto epsilon = op.getEpsilonAttr();
+    auto new_epsilon = rewriter.getF32FloatAttr(epsilon.getValueAsDouble());
+    auto feature_index = op.getFeatureIndexAttr();
+    rewriter.replaceOpWithNewOp<mhlo::BatchNormInferenceOp>(
+        op, res_type, operand, scale, offset, mean, variance, new_epsilon,
+        feature_index);
+    return success();
+  }
+};
+
+struct MatMulOpOpLowing : public OpConversionPattern<MatMulOp> {
+  using OpConversionPattern<MatMulOp>::OpConversionPattern;
+
+  LogicalResult match(MatMulOp op) const { return llvm::success(); }
+
+  void rewrite(MatMulOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const {
+    auto loc = op.getLoc();
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -238,6 +256,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<MaxOp, mhlo::MaxOp>>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
+  patterns.add<BatchNormOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(converter, context);
 }
 
@@ -250,12 +269,12 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<SubOp>();
   target.addIllegalOp<AddOp>();
   target.addIllegalOp<MulOp>();
-  target.addIllegalOp<BroadCastToOp>();
   target.addIllegalOp<MaxOp>();
   target.addIllegalOp<ReluOp>();
   target.addIllegalOp<ConvOp>();
+  target.addIllegalOp<BatchNormOp>();
+  target.addIllegalOp<BroadCastToOp>();
   target.addIllegalOp<TransposeOp>();
-  target.addDynamicallyLegalOp<ConvOp>(check_conv_illegal);
   target.addLegalDialect<mhlo::MhloDialect>();
   target.addLegalDialect<mlir::index::IndexDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Pass/Pass.h"
 
