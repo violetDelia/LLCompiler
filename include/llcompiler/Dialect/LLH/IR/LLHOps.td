@@ -312,8 +312,10 @@ def LLH_ConvBiasOp : LLH_SymbolOp<"conv_bias">{
         DenseI64ArrayAttr:$pad,
         DenseI64ArrayAttr:$stride,
         DefaultValuedAttr<I64Attr, "1">:$group,
-        OptionalAttr<LLH_LayoutAttr>:$layout);
+        OptionalAttr<LLH_LayoutAttr>:$layout,
+        OptionalAttr<LLH_LayoutAttr>:$weight_layout);
     let results = (outs LLH_FloatTensor);
+    let hasCanonicalizer = 1;
 }
 
 def LLH_ConvOp : LLH_SymbolOp<"conv">{
@@ -325,8 +327,10 @@ def LLH_ConvOp : LLH_SymbolOp<"conv">{
         DenseI64ArrayAttr:$pad,
         DenseI64ArrayAttr:$stride,
         DefaultValuedAttr<I64Attr, "1">:$group,
-        OptionalAttr<LLH_LayoutAttr>:$layout);
+        OptionalAttr<LLH_LayoutAttr>:$layout,
+        OptionalAttr<LLH_LayoutAttr>:$weight_layout);
     let results = (outs LLH_FloatTensor);
+    let hasCanonicalizer = 1;
 }
 
 def LLH_MatMulOp          : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
@@ -373,6 +377,7 @@ def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{
         OptionalAttr<LLH_LayoutAttr>:$layout);
     let results = (outs 
         LLH_Tensor:$result);
+    let hasCanonicalizer = 1;
 }
 
 

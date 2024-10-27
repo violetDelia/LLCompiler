@@ -77,4 +77,20 @@ size_t LayoutAttr::getBatchIndex() {
   return -1;
 }
 
+llvm::SmallVector<int64_t> LayoutAttr::addBatchAndFeature(
+    llvm::ArrayRef<int64_t> kernel_shape) {
+  llvm::SmallVector<int64_t> out;
+  for (auto shape : kernel_shape) {
+    out.push_back(shape);
+  }
+  if (getBatchIndex() < getFeatureIndex()) {
+    out.insert(out.begin() + getBatchIndex(), 1);
+    out.insert(out.begin() + getFeatureIndex(), 1);
+  } else {
+    out.insert(out.begin() + getFeatureIndex(), 1);
+    out.insert(out.begin() + getBatchIndex(), 1);
+  }
+  return out;
+}
+
 }  // namespace mlir::llh

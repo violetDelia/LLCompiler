@@ -84,6 +84,7 @@ void add_unit_attr(mlir::Operation* op, llvm::StringRef attr_name) {
 
 const char* GloabalLayoutAttr = "builtin.gloabal_layout";
 ADD_LAYOUT_ATTR(layout, LayoutAttr)
+ADD_LAYOUT_ATTR(weight_layout, WeightLayoutAttr)
 ADD_STRING_ATTR(op_name, OperationNameAttr)
 ADD_SYMBOL_ATTR(symbol, SymbolIntAttr)
 ADD_DENSE_I64_ATTR(group, GroupAttr)

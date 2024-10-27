@@ -18,6 +18,7 @@
 #include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
@@ -257,6 +258,92 @@ void SymbolRelationOp::getCanonicalizationPatterns(
     mlir::RewritePatternSet &results, MLIRContext *context) {
   results.add<ReplaceSymbolIfEquel>(context);
   results.add<RemoveSymbolRelationIfAllConst>(context);
+}
+
+//===----------------------------------------------------------------------===//
+// Layout Pattern
+//===----------------------------------------------------------------------===//
+namespace {
+template <class OP>
+struct AddConvLayoutAttr : public LLHOpRewritePattern<OP> {
+  using LLHOpRewritePattern<OP>::LLHOpRewritePattern;
+
+  LogicalResult match(OP op) const final {
+    auto module = op->template getParentOfType<ModuleOp>();
+    CHECK(llc::MLIR_PASS, module->hasAttr(llc::GloabalLayoutAttr));
+    if (!module->hasAttr(llc::GloabalLayoutAttr)) return llvm::failure();
+    if (!op->hasAttr(llc::LayoutAttr)) return llvm::success();
+    if (!op->hasAttr(llc::WeightLayoutAttr)) return llvm::success();
+    return llvm::failure();
+  }
+
+  void rewrite(OP op, LLHPatternRewriter &rewriter) const final {
+    auto context = op->getContext();
+    auto module = op->template getParentOfType<ModuleOp>();
+    auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
+    CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
+    auto maybe_layout =
+        symbolizeLayout(dyn_cast<StringAttr>(global_layout).getValue());
+    CHECK(llc::MLIR_PASS, maybe_layout.has_value());
+    auto layout = maybe_layout.value();
+    auto tensor = llc::getRankTensorFrom(op);
+    auto rank = tensor.getRank();
+    auto input_layout = llh::getLayoutFromGloabalLayout(layout, rank);
+    auto weight_layout = llh::getWeightLayoutFromGloabalLayout(layout, rank);
+    llc::add_layout_attr(op, input_layout);
+    llc::add_weight_layout_attr(op, weight_layout);
+  }
+};
+
+template <class OP>
+struct AddLayoutAttr : public LLHOpRewritePattern<OP> {
+  using LLHOpRewritePattern<OP>::LLHOpRewritePattern;
+
+  LogicalResult match(OP op) const final {
+    auto module = op->template getParentOfType<ModuleOp>();
+    CHECK(llc::MLIR_PASS, module->hasAttr(llc::GloabalLayoutAttr));
+    if (!module->hasAttr(llc::GloabalLayoutAttr)) return llvm::failure();
+    if (!op->hasAttr(llc::LayoutAttr)) return llvm::success();
+    return llvm::failure();
+  }
+
+  void rewrite(OP op, LLHPatternRewriter &rewriter) const final {
+    auto context = op->getContext();
+    auto module = op->template getParentOfType<ModuleOp>();
+    auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
+    CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
+    auto maybe_layout =
+        symbolizeLayout(dyn_cast<StringAttr>(global_layout).getValue());
+    CHECK(llc::MLIR_PASS, maybe_layout.has_value());
+    auto layout = maybe_layout.value();
+    auto tensor = llc::getRankTensorFrom(op);
+    auto rank = tensor.getRank();
+    auto input_layout = llh::getLayoutFromGloabalLayout(layout, rank);
+    llc::add_layout_attr(op, input_layout);
+  }
+};
+}  // namespace
+//===----------------------------------------------------------------------===//
+// ConvOp
+//===----------------------------------------------------------------------===//
+void ConvOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                         MLIRContext *context) {
+  results.add<AddConvLayoutAttr<ConvOp>>(context);
+}
+
+//===----------------------------------------------------------------------===//
+// ConvBaisOp
+//===----------------------------------------------------------------------===//
+void ConvBiasOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                             MLIRContext *context) {
+  results.add<AddConvLayoutAttr<ConvBiasOp>>(context);
+}
+//===----------------------------------------------------------------------===//
+// MaxPoolOp
+//===----------------------------------------------------------------------===//
+void MaxPoolOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                            MLIRContext *context) {
+  results.add<AddLayoutAttr<MaxPoolOp>>(context);
 }
 
 void mlir::llh::populateSymbolCanonicalizePatterns(

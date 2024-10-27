@@ -18,6 +18,7 @@
 #include <cstddef>
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
@@ -110,5 +111,28 @@ size_t getConstIntegerValue(Value value) {
   UNIMPLEMENTED(llc::UTILITY) << "unsupport get operator const value: "
                               << op->getName().getStringRef().str();
 }
+
+Layout getLayoutFromGloabalLayout(Layout global_layout, int64_t rank) {
+  if (rank == 3) {
+    if (global_layout == Layout::NCHW) return Layout::NCW;
+    if (global_layout == Layout::NHWC) return Layout::NWC;
+  } else if (rank == 4) {
+    if (global_layout == Layout::NCHW) return Layout::NCHW;
+    if (global_layout == Layout::NHWC) return Layout::NHWC;
+  } else {
+    UNIMPLEMENTED(llc::UTILITY);
+  }
+}
+Layout getWeightLayoutFromGloabalLayout(Layout global_layout, int64_t rank) {
+  if (rank == 3) {
+    if (global_layout == Layout::NCHW) return Layout::FCW;
+    if (global_layout == Layout::NHWC) return Layout::WCF;
+  } else if (rank == 4) {
+    if (global_layout == Layout::NCHW) return Layout::FCHW;
+    if (global_layout == Layout::NHWC) return Layout::FHWC;
+  } else {
+    UNIMPLEMENTED(llc::UTILITY);
+  }
+};
 
 }  // namespace mlir::llh

@@ -176,18 +176,6 @@ void OperationlegalizatioPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  // mark layout
-  auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
-  CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
-  auto layout = symbolizeLayout(dyn_cast<StringAttr>(global_layout).getValue());
-  CHECK(llc::MLIR_PASS, layout.has_value());
-  auto add_layout_attr = [&layout](Operation* op) {
-    if (!isLayoutSensitive(op)) return;
-    if (!op->hasAttr(llc::LayoutAttr)) {
-      llc::add_layout_attr(op, layout.value());
-    }
-  };
-  module->walk(add_layout_attr);
   RewritePatternSet patterns(context);
   auto config = GreedyRewriteConfig();
   config.useTopDownTraversal = true;

@@ -60,9 +60,16 @@ def LLH_ShiftDirectionAttr : EnumAttr<LLH_Dialect, LLH_ShiftDirection, "ShiftDir
 
 def LLH_LAYOUT_NCHW         : I32EnumAttrCase<"NCHW", 0>; 
 def LLH_LAYOUT_NHWC         : I32EnumAttrCase<"NHWC", 1>;//C last
+def LLH_LAYOUT_NCW          : I32EnumAttrCase<"NCW", 2>;
+def LLH_LAYOUT_NWC          : I32EnumAttrCase<"NWC", 3>;//C last
+def LLH_LAYOUT_FCHW         : I32EnumAttrCase<"FCHW", 4>; 
+def LLH_LAYOUT_HWCF         : I32EnumAttrCase<"HWCF", 5>;
+def LLH_LAYOUT_FHWC         : I32EnumAttrCase<"FHWC", 6>;
+def LLH_LAYOUT_FCW          : I32EnumAttrCase<"FCW", 7>;
+def LLH_LAYOUT_WCF          : I32EnumAttrCase<"WCF", 8>;//C last
 def LLH_Layout : I32EnumAttr<"Layout",
     "Layout of tensor",
-    [LLH_LAYOUT_NCHW, LLH_LAYOUT_NHWC]> {
+    [LLH_LAYOUT_NCHW, LLH_LAYOUT_NHWC,LLH_LAYOUT_NCW, LLH_LAYOUT_NWC, LLH_LAYOUT_FCHW, LLH_LAYOUT_HWCF, LLH_LAYOUT_FHWC,LLH_LAYOUT_FCW,LLH_LAYOUT_WCF]> {
   let genSpecializedAttr = 0;
   let cppNamespace = "::mlir::llh";
 }
@@ -74,6 +81,8 @@ def LLH_LayoutAttr : EnumAttr<LLH_Dialect, LLH_Layout, "Layout">{
     size_t getFirstSpatialIndex();
     size_t getBatchIndex();
     size_t getFeatureIndex();
+    //for reduce window
+    llvm::SmallVector<int64_t> addBatchAndFeature(llvm::ArrayRef<int64_t> kernel_shape);
   }];
 }
 

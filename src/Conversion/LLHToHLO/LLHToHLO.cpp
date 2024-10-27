@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
@@ -35,6 +36,7 @@
 #include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/IR/BuiltinAttributeInterfaces.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
@@ -232,16 +234,53 @@ struct BatchNormOpLowing : public OpConversionPattern<BatchNormOp> {
   }
 };
 
-struct MatMulOpOpLowing : public OpConversionPattern<MatMulOp> {
-  using OpConversionPattern<MatMulOp>::OpConversionPattern;
+struct MaxPoolOpLowing : public OpConversionPattern<MaxPoolOp> {
+  using OpConversionPattern<MaxPoolOp>::OpConversionPattern;
 
-  LogicalResult match(MatMulOp op) const { return llvm::success(); }
+  LogicalResult match(MaxPoolOp op) const { return llvm::success(); }
 
-  void rewrite(MatMulOp op, OpAdaptor adaptor,
+  void rewrite(MaxPoolOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const {
-    auto loc = op.getLoc();
+    auto loc = op->getLoc();
+    auto stride = op.getStrideAttr();
+    auto padding = op.getPadAttr();
+    auto kernel_shape = op.getKernelShapeAttr();
+    auto dilation = op.getDilationAttr();
+    auto res = op.getResult();
+    auto res_type = llc::getRankTensorFrom(res);
+    auto res_ele_type = res_type.getElementType();
+    auto input = op.getInput();
+    auto input_type = llc::getRankTensorFrom(input);
+    auto input_ele_type = input_type.getElementType();
+
+    auto zore_value = llc::genSplatElementAttr({}, res_ele_type, 0);
+    auto init_value = rewriter.create<mhlo::ConstantOp>(loc, zore_value);
+
+    auto layout = op.getLayoutAttr();
+    auto window_dimensions =
+        llc::GenWindowIntElementsAttr(kernel_shape, layout);
+    auto window_strides = llc::GenWindowIntElementsAttr(stride, layout);
+    auto window_dilations = llc::GenWindowIntElementsAttr(dilation, layout);
+    auto base_dilations = DenseIntElementsAttr();
+    auto window_padding = llc::GenWindowPadIntElementsAttr(padding);
+    auto reduce_winodw_op = rewriter.create<mhlo::ReduceWindowOp>(
+        loc, res_type, input, init_value, window_dimensions, window_strides,
+        base_dilations, window_dilations, window_padding);
+
+    auto& block = reduce_winodw_op.getBody().emplaceBlock();
+    auto block_arg1_type = RankedTensorType::get({}, input_ele_type);
+    auto block_arg2_type = RankedTensorType::get({}, res_ele_type);
+    block.addArgument(block_arg1_type, loc);
+    block.addArgument(block_arg2_type, loc);
+
+    rewriter.setInsertionPointToEnd(&block);
+    auto max = rewriter.create<mhlo::MaxOp>(loc, block.getArgument(0),
+                                            block.getArgument(1));
+    auto return_op = rewriter.create<mhlo::ReturnOp>(loc, ValueRange{max});
+    rewriter.replaceOp(op,reduce_winodw_op);
   }
 };
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -258,6 +297,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<MatMulOp, mhlo::DotOp>>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<BatchNormOpLowing>(converter, context);
+  patterns.add<MaxPoolOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
 }
@@ -277,9 +317,11 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<BatchNormOp>();
   target.addIllegalOp<BroadCastToOp>();
   target.addIllegalOp<TransposeOp>();
+  target.addIllegalOp<MaxPoolOp>();
   target.addLegalDialect<mhlo::MhloDialect>();
   target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();
+  target.addLegalDialect<mlir::func::FuncDialect>();
 }
 
 //===----------------------------------------------------------------------===//

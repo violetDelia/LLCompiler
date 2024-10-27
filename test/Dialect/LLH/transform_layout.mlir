@@ -1,5 +1,5 @@
 // RUN: llc-opt --split-input-file --transform-layout %s| FileCheck %s
-//  /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --transform-layout /home/lfr/LLCompiler/test/Dialect/LLH/transform_layout_to_nhwc.mlir
+//  /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --transform-layout /home/lfr/LLCompiler/test/Dialect/LLH/transform_layout.mlir
 
 
 "llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()

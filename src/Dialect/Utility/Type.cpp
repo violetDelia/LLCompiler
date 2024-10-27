@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -108,32 +109,53 @@ mlir::DenseIntElementsAttr ArrayAttrToIntElementsAttr(
   return mlir::DenseIntElementsAttr::get(tensor, data);
 }
 
-#define BUILD_ATTR(judge, Ty, shape)                        \
-  if (judge) {                                              \
-    llvm::ArrayRef<Ty> value(0);                            \
-    auto attr = mlir::DenseElementsAttr::get(shape, value); \
-    return attr;                                            \
-  }
-
-mlir::DenseElementsAttr genZoreElementAttr(mlir::Value value) {
-  CHECK(llc::MLIR, llvm::isa<mlir::RankedTensorType>(value.getType()));
-  auto tensor = llvm::cast<mlir::RankedTensorType>(value.getType());
-  auto type = tensor.getElementType();
-  BUILD_ATTR(type.isInteger(1), bool, tensor)
-  BUILD_ATTR(type.isSignedInteger(8), int8_t, tensor)
-  BUILD_ATTR(type.isSignedInteger(16), int16_t, tensor)
-  BUILD_ATTR(type.isSignedInteger(32), int32_t, tensor)
-  BUILD_ATTR(type.isSignedInteger(64), int64_t, tensor)
-  BUILD_ATTR(type.isSignlessInteger(8), uint8_t, tensor)
-  BUILD_ATTR(type.isSignlessInteger(16), uint16_t, tensor)
-  BUILD_ATTR(type.isSignlessInteger(32), uint32_t, tensor)
-  BUILD_ATTR(type.isSignlessInteger(64), uint64_t, tensor)
-  BUILD_ATTR(type.isF32(), float, tensor)
-  BUILD_ATTR(type.isF64(), double, tensor)
-  UNIMPLEMENTED(llc::MLIR);
-  return {};
+mlir::DenseIntElementsAttr GenWindowIntElementsAttr(
+    mlir::DenseI64ArrayAttr array_attr, mlir::llh::LayoutAttr layout) {
+  auto data = array_attr.asArrayRef();
+  auto new_data = layout.addBatchAndFeature(data);
+  auto shape = llvm::SmallVector<int64_t>();
+  auto ele_type = array_attr.getElementType();
+  shape.push_back(data.size()+2);
+  auto tensor = mlir::RankedTensorType::get(shape, ele_type);
+  return mlir::DenseIntElementsAttr::get(tensor, new_data);
 }
 
+mlir::DenseIntElementsAttr GenWindowPadIntElementsAttr(
+    mlir::DenseI64ArrayAttr pad_attr) {
+  auto data = pad_attr.asArrayRef();
+  int64_t rank = data.size();
+  llvm::SmallVector<int64_t> new_data(rank, 0);
+  new_data.append(data.begin(), data.end());
+  llvm::SmallVector<int64_t> shape = { rank,2};
+  auto ele_type = pad_attr.getElementType();
+  auto tensor = mlir::RankedTensorType::get(shape, ele_type);
+  return mlir::DenseIntElementsAttr::get(tensor, new_data);
+}
+
+#define BUILD_ATTR(judge, Ty, shape, val)                       \
+  if (judge) {                                                  \
+    llvm::ArrayRef<Ty> value_arr(val);                          \
+    auto attr = mlir::DenseElementsAttr::get(shape, value_arr); \
+    return attr;                                                \
+  }
+
+mlir::DenseElementsAttr genSplatElementAttr(llvm::ArrayRef<int64_t> shape,
+                                            mlir::Type element_type,
+                                            double value) {
+  auto tensor = mlir::RankedTensorType::get(shape, element_type);
+  BUILD_ATTR(element_type.isInteger(1), bool, tensor, value)
+  BUILD_ATTR(element_type.isSignedInteger(8), int8_t, tensor, value)
+  BUILD_ATTR(element_type.isSignedInteger(16), int16_t, tensor, value)
+  BUILD_ATTR(element_type.isSignedInteger(32), int32_t, tensor, value)
+  BUILD_ATTR(element_type.isSignedInteger(64), int64_t, tensor, value)
+  BUILD_ATTR(element_type.isSignlessInteger(8), uint8_t, tensor, value)
+  BUILD_ATTR(element_type.isSignlessInteger(16), uint16_t, tensor, value)
+  BUILD_ATTR(element_type.isSignlessInteger(32), uint32_t, tensor, value)
+  BUILD_ATTR(element_type.isSignlessInteger(64), uint64_t, tensor, value)
+  BUILD_ATTR(element_type.isF32(), float, tensor, value)
+  BUILD_ATTR(element_type.isF64(), double, tensor, value)
+  UNIMPLEMENTED(llc::MLIR);
+};
 #undef BUILD_ATTR
 // mlir::ex::Layout getLayoutFrom(mlir::RankedTensorType tensor) {
 //   auto encode =

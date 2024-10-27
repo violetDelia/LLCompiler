@@ -13,7 +13,6 @@ func.func @constant() ->() attributes {entrance}{
 }
 
 // -----
-
 func.func @add_and_sub(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
   // CHECK: mhlo.subtract
   %23 = "llh.sub"(%arg0, %arg0) : (tensor<?x10x?x?xf32>, tensor<?x10x?x?xf32>) -> tensor<?x10x?x?xf32>
@@ -23,7 +22,6 @@ func.func @add_and_sub(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
 }
 
 // -----
-
 func.func @mul(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
   // CHECK: mhlo.multiply
   %23 = "llh.mul"(%arg0, %arg0) : (tensor<?x10x?x?xf32>, tensor<?x10x?x?xf32>) -> tensor<?x10x?x?xf32>
@@ -31,7 +29,6 @@ func.func @mul(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
 }
 
 // -----
-
 func.func @div(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
   %98 = "llh.constant"() <{value = dense<1> : tensor<384xi32>}> : () -> tensor<384xi32>
   // CHECK: mhlo.divide
@@ -40,7 +37,6 @@ func.func @div(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
 }
 
 // -----
-
 func.func @conv_nchw_fchw(%arg0: tensor<4x3x5x5xf32> , %arg1: tensor<?x3x?x?xf32>) -> (tensor<?x4x?x?xf32>) attributes {entrance} {
     // CHECK: mhlo.convolution
     // CHECK-SAME: dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1]
@@ -49,7 +45,6 @@ func.func @conv_nchw_fchw(%arg0: tensor<4x3x5x5xf32> , %arg1: tensor<?x3x?x?xf32
 }
 
 // -----
-
 func.func @transpose(%arg0: tensor<?x?x?x4xf32>) -> () attributes {entrance} {
     // CHECK-NOT: llh.transpose
     // CHECK: mhlo.transpose
@@ -78,7 +73,6 @@ func.func @braodcast_to(%arg0: tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32> attri
 }
 
 // -----
-
 func.func @batch_norm(%arg0: tensor<3x3x100x100xf32> ) -> tensor<3x3x100x100xf32> attributes {entrance} {
     %1 = "llh.constant"() <{value = dense<[0.866779148, 0.87528336, 0.868859171]> : tensor<3xf32>}> : () -> tensor<3xf32>
     %2 = "llh.constant"() <{value = dense<[7.19547679E-5, 6.82539321E-5, 1.0772681E-4]> : tensor<3xf32>}> : () -> tensor<3xf32>
@@ -91,7 +85,6 @@ func.func @batch_norm(%arg0: tensor<3x3x100x100xf32> ) -> tensor<3x3x100x100xf32
 }
 
 // -----
-
 func.func @matmul(%arg0: tensor<?x100xf32> ) -> tensor<?x10xf32> attributes {entrance} {
     %0 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<10x100xf32>
     %c0_i64 = arith.constant {symbol = @c0} 0 : i64
@@ -101,4 +94,16 @@ func.func @matmul(%arg0: tensor<?x100xf32> ) -> tensor<?x10xf32> attributes {ent
     %2 = "llh.matmul"(%arg0, %1) : (tensor<?x100xf32>, tensor<100x10xf32>) -> tensor<?x10xf32>
     return %2 : tensor<?x10xf32>
 }
+
+// -----
+func.func @max_pool(%arg0: tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32> attributes {entrance} {
+    // CHECK: mhlo.constant
+    // CHECK: mhlo.reduce_window
+    // CHECK: mhlo.maximum
+    // CHECK: mhlo.return
+    // CHECK-NOT: llh.max_pool
+    %0 = "llh.max_pool"(%arg0) <{ceil_mode = false, dilation = array<i64: 2, 1>, kernel_shape = array<i64: 5, 5>, layout = #llh.Layout<NCHW>, pad = array<i64: 1, 2, 1, 2>, stride = array<i64: 1, 2>}> : (tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32>
+    return %0 : tensor<1x?x?x?xf32>
+}
+
 

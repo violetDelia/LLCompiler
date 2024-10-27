@@ -498,6 +498,7 @@ INFER_FUNCTION(MaxPoolOp) {
   auto res = getResult();
   symbol_analsis->addEncoding(res, new_shape_symbol);
   INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
+  COMMON_CHECK
   return llvm::success();
 }
 

@@ -17,7 +17,9 @@
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_UTILS_H_
 
 #include <cstddef>
+#include <cstdint>
 
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llvm/ADT/SmallVector.h"
@@ -34,6 +36,8 @@ RankedTensorType cloneTensorWithEncoding(RankedTensorType type,
                                          EncodingAttr encoding);
 size_t getConstIntegerValue(Value value);
 bool isConstIntegerValue(Value value);
+Layout getLayoutFromGloabalLayout(Layout global_layout,int64_t rank);
+Layout getWeightLayoutFromGloabalLayout(Layout global_layout,int64_t rank);
 }  // namespace mlir::llh
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_UTILS_H_

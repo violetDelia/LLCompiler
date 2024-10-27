@@ -136,7 +136,6 @@ Operation* buildTrnasposeOpFromLayoutTo(LLHPatternRewriter& builder,
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-// #include "llcompiler/Dialect/LLH/Transforms/TransformLayoutPass.inc"
 struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
   using LLHOpRewritePattern<ConvOp>::LLHOpRewritePattern;
 
@@ -165,7 +164,7 @@ struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
     auto new_conv = rewriter.create<ConvOp>(
         loc, new_res_type, new_input->getResult(0), new_weights->getResult(0),
         op.getDilation(), op.getKernelShape(), op.getPad(), op.getStride(),
-        op.getGroup(), LayoutAttr::get(context, Layout::NHWC));
+        op.getGroup(), LayoutAttr::get(context, Layout::NHWC),LayoutAttr::get(context, Layout::NHWC));
     auto res_transpose =
         buildTrnasposeOpFromLayoutTo(rewriter, new_conv, target, layout);
     rewriter.replaceOp(op, res_transpose);
