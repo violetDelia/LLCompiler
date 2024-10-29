@@ -49,6 +49,7 @@
 #include "mlir/Conversion/TosaToSCF/TosaToSCF.h"
 #include "mlir/Conversion/TosaToTensor/TosaToTensor.h"
 #include "mlir/Dialect/Affine/Passes.h"
+#include "mlir/Dialect/Affine/Utils.h"
 #include "mlir/Dialect/Arith/Transforms/Passes.h"
 #include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
@@ -88,6 +89,8 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createMarkAotPass());
   // 去除冗余Op
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());
+  pm.addPass(mlir::transform::createPreloadLibraryPass());
+  pm.addPass(mlir::transform::createInterpreterPass());
   // 内联
   pm.addPass(::mlir::createInlinerPass());
   // 符号推导和shapeinfer
@@ -245,10 +248,13 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  linalg fusion
   //===----------------------------------------------------------------------===//
+
+
   pm.addPass(mlir::createLinalgGeneralizeNamedOpsPass());
   pm.addPass(mlir::createConvertElementwiseToLinalgPass());
   pm.addPass(mlir::createLinalgElementwiseOpFusionPass());
   pm.addPass(mlir::createCanonicalizerPass());
+  
 
   //===----------------------------------------------------------------------===//
   // bufferization
@@ -311,45 +317,52 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // affine opt
   //===----------------------------------------------------------------------===//
-  // 简化affine表达
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createSimplifyAffineStructuresPass());
-  //   //去除affine.delinearize_index
-  //   pm.addPass(mlir::affine::createAffineExpandIndexOpsPass());
+
+  // //去除affine.delinearize_index
+  // pm.addPass(mlir::affine::createAffineExpandIndexOpsPass());
 
   //   // affine 并行化
   //   pm.addNestedPass<mlir::func::FuncOp>(
   //       mlir::affine::createAffineParallelizePass());
   // 简化loop
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createLoopCoalescingPass());
-  // dma生成
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createAffineDataCopyGenerationPass(0, 3, 0, 1024,
-  //                                                        options.L3CacheSize));
-  // 简化dma
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createPipelineDataTransferPass());
-  // loop融合
+      mlir::affine::createLoopCoalescingPass());
   pm.addPass(mlir::affine::createLoopFusionPass(
-      0, 1024, false, mlir::affine::FusionMode::Greedy));
-  // 去除冗余内存操作
+      0, 1024, true, mlir::affine::FusionMode::Greedy));
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createAffineScalarReplacementPass());
+      mlir::affine::createLoopTilingPass(options.L1CacheSize));
+  // 简化affine表达
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createSimplifyAffineStructuresPass());
   // 循环展开+融合
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::affine::createLoopUnrollAndJamPass());
-  // 循环合并
+  // dma生成
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createLoopCoalescingPass());
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createAffineDataCopyGenerationPass(3, 2, 0, 1024,
-  //                                                        options.L2CacheSize));
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::affine::createAffineDataCopyGenerationPass(2, 1, 0, 128,
-  //                                                        options.L1CacheSize));
+      mlir::affine::createAffineDataCopyGenerationPass(0, 2, 0, 1024,
+                                                       options.L2CacheSize));
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createAffineDataCopyGenerationPass(2, 1, 0, 1024,
+                                                       options.L1CacheSize));
+  pm.addPass(mlir::createCanonicalizerPass());
+  // 简化dma
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createPipelineDataTransferPass());
+  // 简化affine表达
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createSimplifyAffineStructuresPass());
+  // 标量替换
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createAffineScalarReplacementPass());
+  // loop融合
 
-  //   pm.addNestedPass<mlir::func::FuncOp>(mlir::affine::createLoopTilingPass(128));
+  // 去除冗余内存操作
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::affine::createAffineScalarReplacementPass());
+  mlir::affine::AffineVectorizeOptions vector;
+  vector.vectorSizes = {1024};
+  vector.fastestVaryingPattern ={1};
+  pm.addNestedPass<mlir::func::FuncOp>(mlir::affine::createAffineVectorize(vector));
 
   //===----------------------------------------------------------------------===//
   // lowing affine

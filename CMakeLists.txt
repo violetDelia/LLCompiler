@@ -90,6 +90,7 @@ set(STABLEHLO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mlir-hlo/stab
 set(STABLEHLO_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/mlir-hlo/stablehlo")
 set(MHLO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/mlir-hlo")
 set(MHLO_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/mlir-hlo")
+
 # set(ONNX_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/onnx")
 # set(ONNX_INCLUDE_GENERATE_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/onnx")
 # set(PROTOBUF_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_deps/protobuf-src/src")
@@ -142,13 +143,23 @@ endif()
 include(CMakePackageConfigHelpers)
 
 # # 安装头文件
-install(DIRECTORY "${LLCOMPILER_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}")
-install(DIRECTORY "${LLCOMPILER_GENERATE_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}")
+install(DIRECTORY "${LLCOMPILER_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}" FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.mlir"
+    EXCLUDE
+    PATTERN "LibraryConfig.h"
+    PATTERN "LibraryConfig.install.h"
+)
+install(DIRECTORY "${LLCOMPILER_GENERATE_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}"
+    FILES_MATCHING
+    PATTERN "*.h"
+    PATTERN "*.inc"
+    PATTERN "*.inc.d"
+)
 
 # 生成setup.cfg文件
-configure_package_config_file("${CMAKE_CURRENT_SOURCE_DIR}/setup.cfg.in"
+configure_file("${CMAKE_CURRENT_SOURCE_DIR}/setup.cfg.in"
     "${CMAKE_CURRENT_SOURCE_DIR}/setup.cfg"
-    INSTALL_DESTINATION ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 # 生成Config.cmake文件并安装

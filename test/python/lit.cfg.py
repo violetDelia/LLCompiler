@@ -33,7 +33,7 @@ config.excludes = [
     "LICENSE.txt",
     "lit.cfg.py",
     "lit.site.cfg.py",
-    "python"
+    "models"
 ]
 
 tool_dirs = [

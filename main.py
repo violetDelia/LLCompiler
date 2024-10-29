@@ -29,9 +29,12 @@ def llcompiler_run_time(model, *inputs):
 def torch_run_time(model, *inputs):
     return model(*inputs)
 
+@run_time
+def torch_compiler_time(model, *inputs):
+    return model(*inputs)
 
 module_dict = {
-    # Add: [torch.randn((200, 3, 224, 224), device="cpu")],
+    Add: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
@@ -41,7 +44,7 @@ module_dict = {
     # BatchNorm2D_Inference: [torch.randn(3, 3, 224,224), device="cpu"],
     # Linear: [torch.randn((10,1000), device="cpu")],
     #MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
-    Resnet: [torch.randn((1, 3, 224, 224), device="cpu")],
+    # Resnet: [torch.randn((1, 3, 224, 224), device="cpu")],
     # torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -83,12 +86,15 @@ def run_model_dict(dict):
                 dynamic=False,
                 fullgraph=True,
             )
+            torch_compiler: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
+                model=model,
+                dynamic=False,
+                fullgraph=True,
+            )
             torch_res = torch_run_time(model, *inputs)
+            torch_res = torch_compiler_time(torch_compiler, *inputs)
+            torch_compiler_time(torch_compiler, *inputs)
             engine_res = llcompiler_run_time(opt_model, *inputs)
-            print("torch")
-            print(torch_res)
-            print("llcompiler")
-            print(engine_res)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")
