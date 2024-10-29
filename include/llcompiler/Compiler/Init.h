@@ -36,9 +36,6 @@ void load_dialect(mlir::MLIRContext& context);
 
 void add_extension_and_interface(mlir::DialectRegistry& registry);
 
-void generatePiplineOptions(
-    CompilerOptions& options,
-    llc::pipleline::BasicPipelineOptions& pipleline_options);
 
 void init_logger(const logger::LoggerOption& logger_option);
 void init_frontend(const front::FrontEndOption& front_option,

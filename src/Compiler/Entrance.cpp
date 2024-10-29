@@ -31,7 +31,9 @@
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Dialect/Utility/File.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
+#include "llcompiler/Pipeline/TransFromPipeline.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/TransformLibrary/LibraryConfig.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -54,6 +56,108 @@ namespace llc::compiler {
 
 CompilerOptions::CompilerOptions() {}
 
+void generatePipelineOptions(
+    CompilerOptions& options,
+    llc::pipleline::BasicPipelineOptions& pipleline_options) {
+  // config env error
+  //  if (options.L1_cache_size == 0) {
+
+  //   pipleline_options.L1CacheSize = sysconf(_SC_LEVEL1_DCACHE_SIZE);
+  // } else {
+  //   pipleline_options.L1CacheSize = options.L1_cache_size;
+  // }
+  // if (options.L2_cache_size == 0) {
+  //   pipleline_options.L2CacheSize = sysconf(_SC_LEVEL2_CACHE_SIZE);
+  // } else {
+  //   pipleline_options.L2CacheSize = options.L2_cache_size;
+  // }
+  // if (options.L3_cache_size == 0) {
+  //   pipleline_options.L3CacheSize = sysconf(_SC_LEVEL3_CACHE_SIZE);
+  // } else {
+  //   pipleline_options.L3CacheSize = options.L3_cache_size;
+  // }
+  INFO(llc::GLOBAL) << "L3 Cache Size: "
+                    << pipleline_options.L3CacheSize.getValue();
+  INFO(llc::GLOBAL) << "L2 Cache Size: "
+                    << pipleline_options.L2CacheSize.getValue();
+  INFO(llc::GLOBAL) << "L1 Cache Size: "
+                    << pipleline_options.L1CacheSize.getValue();
+  pipleline_options.runMode = str_to_mode(options.mode.c_str());
+  pipleline_options.target = str_to_target(options.target.c_str());
+  pipleline_options.symbolInfer = options.symbol_infer;
+  pipleline_options.irTreeDir = options.ir_tree_dir;
+  pipleline_options.indexBitWidth = options.index_bit_width;
+  auto maybe_target_layout = mlir::llh::symbolizeLayout(options.target_layout);
+  CHECK(llc::GLOBAL, maybe_target_layout.has_value());
+  pipleline_options.targetLayout = maybe_target_layout.value();
+}
+
+void generatePipelineOptions(
+    CompilerOptions& options,
+    llc::pipleline::TransformPipelineOptions& pipleline_options) {
+  // config env error
+  //  if (options.L1_cache_size == 0) {
+
+  //   pipleline_options.L1CacheSize = sysconf(_SC_LEVEL1_DCACHE_SIZE);
+  // } else {
+  //   pipleline_options.L1CacheSize = options.L1_cache_size;
+  // }
+  // if (options.L2_cache_size == 0) {
+  //   pipleline_options.L2CacheSize = sysconf(_SC_LEVEL2_CACHE_SIZE);
+  // } else {
+  //   pipleline_options.L2CacheSize = options.L2_cache_size;
+  // }
+  // if (options.L3_cache_size == 0) {
+  //   pipleline_options.L3CacheSize = sysconf(_SC_LEVEL3_CACHE_SIZE);
+  // } else {
+  //   pipleline_options.L3CacheSize = options.L3_cache_size;
+  // }
+  INFO(llc::GLOBAL) << "L3 Cache Size: "
+                    << pipleline_options.L3CacheSize.getValue();
+  INFO(llc::GLOBAL) << "L2 Cache Size: "
+                    << pipleline_options.L2CacheSize.getValue();
+  INFO(llc::GLOBAL) << "L1 Cache Size: "
+                    << pipleline_options.L1CacheSize.getValue();
+  pipleline_options.target = str_to_target(options.target.c_str());
+  pipleline_options.symbolInfer = options.symbol_infer;
+  auto maybe_target_layout = mlir::llh::symbolizeLayout(options.target_layout);
+  CHECK(llc::GLOBAL, maybe_target_layout.has_value());
+  pipleline_options.targetLayout = maybe_target_layout.value();
+}
+
+void setIRDumpConfig(CompilerOptions& options, mlir::PassManager& pm) {
+  if (std::filesystem::exists(options.ir_tree_dir)) {
+    INFO(GLOBAL) << "mlir ir tree dir is: " << options.ir_tree_dir;
+    pm.getContext()->disableMultithreading();
+    pm.enableIRPrintingToFileTree(
+        [](mlir::Pass* pass, mlir::Operation*) { return false; },
+        [](mlir::Pass* pass, mlir::Operation*) { return true; }, false, false,
+        false, options.ir_tree_dir, mlir::OpPrintingFlags());
+  }
+}
+
+void runBasicPipeline(CompilerOptions& options,
+                      mlir::OwningOpRef<mlir::ModuleOp>& module) {
+  pipleline::BasicPipelineOptions pipleline_options;
+  generatePipelineOptions(options, pipleline_options);
+  // ********* process in mlir *********//
+  mlir::PassManager pm(module.get()->getName());
+  setIRDumpConfig(options, pm);
+  pipleline::buildBasicPipeline(pm, pipleline_options);
+  CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
+}
+
+void runTransformPipeline(CompilerOptions& options,
+                          mlir::OwningOpRef<mlir::ModuleOp>& module) {
+  pipleline::TransformPipelineOptions pipleline_options;
+  generatePipelineOptions(options, pipleline_options);
+  // ********* process in mlir *********//
+  mlir::PassManager pm(module.get()->getName());
+  setIRDumpConfig(options, pm);
+  pipleline::buildTransformPipeline(pm, pipleline_options);
+  CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
+}
+
 Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* init logger *********//
   logger::LoggerOption logger_option;
@@ -69,25 +173,14 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* load to mlir *********//
   mlir::OwningOpRef<mlir::ModuleOp> module;
   file::str_to_mlir_module(context, module, xdsl_module);
-  // ********* init pipeline options *********//
-  pipleline::BasicPipelineOptions pipleline_options;
-  generatePiplineOptions(options, pipleline_options);
-  // ********* process in mlir *********//
-  mlir::PassManager pm(module.get()->getName());
-  if (std::filesystem::exists(pipleline_options.irTreeDir.getValue())) {
-    INFO(GLOBAL) << "mlir ir tree dir is: "
-                 << pipleline_options.irTreeDir.getValue();
-    pm.getContext()->disableMultithreading();
-    pm.enableIRPrintingToFileTree(
-        [](mlir::Pass* pass, mlir::Operation*) {
-          if (pass->getName() == "Operationlegalization") return true;
-          return false;
-        },
-        [](mlir::Pass* pass, mlir::Operation*) { return true; }, false, false,
-        false, pipleline_options.irTreeDir, mlir::OpPrintingFlags());
+  // ********* run mlir *********//
+  if (options.pipeline == "basic") {
+    runBasicPipeline(options, module);
+  } else if (options.pipeline == "transform") {
+    runTransformPipeline(options, module);
+  } else {
+    UNIMPLEMENTED(llc::GLOBAL);
   }
-  pipleline::buildBasicPipeline(pm, pipleline_options);
-  CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
   // ********* convert to llvm ir *********//
   auto llvm_context = std::make_unique<llvm::LLVMContext>();
   auto llvm_module = mlir::translateModuleToLLVMIR(module.get(), *llvm_context);

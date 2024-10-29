@@ -31,6 +31,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self,
         mode: str = "inference",  # 推理/训练
         target: str = "cpu",  # 执行平台
+        pipeline:str = "basic",
         index_bit_width: int = 64,
         symbol_infer=True,
         opt_level=2,
@@ -51,6 +52,8 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         """
         super().__init__(**kwargs)
         self.vebose_first_ir = vebose_first_ir
+        assert pipeline in ["basic", "transform"]
+        self.pipeline = pipeline
         assert mode in ["training", "inference"]
         self.mode = mode
         self.log_root = log_root
@@ -77,6 +80,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         if self.vebose_first_ir:
             print(self._mlir_module)
         compiler_options = CompilerOptions()
+        compiler_options.pipeline =self.pipeline
         compiler_options.mode = self.mode
         compiler_options.target = self.target
         compiler_options.symbol_infer = self.symbol_infer

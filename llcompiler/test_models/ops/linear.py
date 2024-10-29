@@ -6,7 +6,7 @@ class Linear(nn.Module):
     def __init__(self):
         super().__init__()
         self.linear = nn.Linear(
-            1000,
+            100000,
             10,
             bias=False,
         )

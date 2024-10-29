@@ -97,6 +97,7 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
 
   pybind11::class_<llc::compiler::CompilerOptions>(entrance, "CompilerOptions")
       .def(pybind11::init<>())
+      .def_readwrite("pipeline", &CompilerOptions::pipeline)
       .def_readwrite("mode", &CompilerOptions::mode)
       .def_readwrite("target", &CompilerOptions::target)
       .def_readwrite("symbol_infer", &CompilerOptions::symbol_infer)

@@ -89,8 +89,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createMarkAotPass());
   // 去除冗余Op
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());
-  pm.addPass(mlir::transform::createPreloadLibraryPass());
-  pm.addPass(mlir::transform::createInterpreterPass());
   // 内联
   pm.addPass(::mlir::createInlinerPass());
   // 符号推导和shapeinfer
@@ -171,7 +169,6 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing mhlo
   //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::mhlo::createLegalizeToMemrefPass());
   pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::mhlo::createLegalizeHloToLinalgPass());
@@ -249,18 +246,17 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //  linalg fusion
   //===----------------------------------------------------------------------===//
 
-
   pm.addPass(mlir::createLinalgGeneralizeNamedOpsPass());
   pm.addPass(mlir::createConvertElementwiseToLinalgPass());
   pm.addPass(mlir::createLinalgElementwiseOpFusionPass());
   pm.addPass(mlir::createCanonicalizerPass());
-  
 
   //===----------------------------------------------------------------------===//
   // bufferization
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::bufferization::createEmptyTensorEliminationPass());
   pm.addPass(mlir::bufferization::createEmptyTensorToAllocTensorPass());
+
   //   mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
   //   bufferization_opts.bufferizeFunctionBoundaries = true;
   //   bufferization_opts.allowReturnAllocsFromLoops = true;
@@ -273,12 +269,13 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //       mlir::scf::SCFDialect, mlir::linalg::LinalgDialect>();
   //   // func Bufferize  for remove the memref.copy before one-shot,
   //   pm.addPass(mlir::func::createFuncBufferizePass());
-  //   // Bufferize
+  //   //Bufferize
   //   pm.addPass(
   //       mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
   pm.addPass(mlir::hlo::createOneShotBufferizePass());
-  // pm.addPass(mlir::bufferization::createDropEquivalentBufferResultsPass());
-  //  // 跑整图会出bug
+  //   pm.addPass(mlir::bufferization::createDropEquivalentBufferResultsPass());
+  //    // 跑整图会出bug
+  pm.addPass(mlir::mhlo::createLegalizeToMemrefPass());
   //   pm.addNestedPass<mlir::func::FuncOp>(
   //       mlir::bufferization::createFinalizingBufferizePass());
   pm.addPass(mlir::createFinalBufferizePass(64));
@@ -318,32 +315,32 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // affine opt
   //===----------------------------------------------------------------------===//
 
-  // //去除affine.delinearize_index
-  // pm.addPass(mlir::affine::createAffineExpandIndexOpsPass());
+  //去除affine.delinearize_index
+  pm.addPass(mlir::affine::createAffineExpandIndexOpsPass());
 
   //   // affine 并行化
   //   pm.addNestedPass<mlir::func::FuncOp>(
   //       mlir::affine::createAffineParallelizePass());
   // 简化loop
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createLoopCoalescingPass());
-  pm.addPass(mlir::affine::createLoopFusionPass(
-      0, 1024, true, mlir::affine::FusionMode::Greedy));
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createLoopTilingPass(options.L1CacheSize));
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createLoopCoalescingPass());
+  //   pm.addPass(mlir::affine::createLoopFusionPass(
+  //       0, 1024, true, mlir::affine::FusionMode::Greedy));
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createLoopTilingPass(options.L1CacheSize));
   // 简化affine表达
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::affine::createSimplifyAffineStructuresPass());
   // 循环展开+融合
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createLoopUnrollAndJamPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createLoopUnrollAndJamPass());
   // dma生成
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createAffineDataCopyGenerationPass(0, 2, 0, 1024,
-                                                       options.L2CacheSize));
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createAffineDataCopyGenerationPass(2, 1, 0, 1024,
-                                                       options.L1CacheSize));
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createAffineDataCopyGenerationPass(0, 2, 0, 1024,
+  //                                                        options.L2CacheSize));
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createAffineDataCopyGenerationPass(2, 1, 0, 1024,
+  //                                                        options.L1CacheSize));
   pm.addPass(mlir::createCanonicalizerPass());
   // 简化dma
   pm.addNestedPass<mlir::func::FuncOp>(
@@ -359,10 +356,11 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // 去除冗余内存操作
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::affine::createAffineScalarReplacementPass());
-  mlir::affine::AffineVectorizeOptions vector;
-  vector.vectorSizes = {1024};
-  vector.fastestVaryingPattern ={1};
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::affine::createAffineVectorize(vector));
+  //   mlir::affine::AffineVectorizeOptions vector;
+  //   vector.vectorSizes = {1024};
+  //   vector.fastestVaryingPattern = {1};
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::affine::createAffineVectorize(vector));
 
   //===----------------------------------------------------------------------===//
   // lowing affine
