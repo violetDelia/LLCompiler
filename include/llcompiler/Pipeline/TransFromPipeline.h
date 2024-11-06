@@ -21,7 +21,7 @@
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassOptions.h"
 
-namespace llc::pipleline {
+namespace llc::pipeline {
 struct TransformPipelineOptions
     : public mlir::PassPipelineOptions<TransformPipelineOptions> {
   Option<bool> symbolInfer{*this, "symbol-infer",
@@ -43,11 +43,18 @@ struct TransformPipelineOptions
   Option<mlir::llh::Layout> targetLayout = {
       *this, "layout", llvm::cl::desc("layout"),
       llvm::cl::init(mlir::llh::Layout::NHWC)};
+
+  ListOption<std::string> transformLibraryPaths = {
+      *this, "transform-library-path", llvm::cl::desc("transformLibraryPaths")};
+
+  ListOption<std::string> transformEntryPoint = {
+      *this, "transform-entry-point", llvm::cl::desc("transformEntryPoint")};
+    
 };
 void buildTransformPipeline(mlir::OpPassManager &pm,
                             const TransformPipelineOptions &options);
 void registerTransformPipeline();
 
-}  // namespace llc::pipleline
+}  // namespace llc::pipeline
 
 #endif  // INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_

@@ -15,13 +15,20 @@ ninja check-llc-python
 
 # Todo
 
-* 运行resnet
-  * relu tosa 生成有问题，需要写tosa max to linage extension
-* conv 动态代码生成
-* llh 基于symbol  的   to linalg 扩展
+* 动态性支持
+
+  * conv 的动态代码生成
+  * pool 动态代码生成
+  * 支持动态的linaga 融合
+* op完善
+
+  * 训练的bn
 * affine -> vector -> x86/riscv
-* gcu 以及luanch/ 线程选择？
+* 添加AOT算子
+
+  * 重写编译逻辑
+* 支持GPU后端
+* transform 自定义Pipeline
 * 华为的自动融合策略实现
 * 量化指令调研和实现   L3 i4 --> L1/L2 f16
-* 权重重排，推理优化 【类似dma合并？】
-* flashattension + kv chach 编译器表达？
+* flashattension + kv chach

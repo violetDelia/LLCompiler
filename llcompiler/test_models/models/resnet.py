@@ -24,15 +24,16 @@ class Resnet(nn.Module):
             sub.training = False
 
     def forward(self, x: torch.Tensor):
+        x = x.reshape(x.shape[0],x.shape[1],x.shape[2],x.shape[3])
         x = self.resnet.conv1(x)
         x = self.resnet.bn1(x)
         x = self.resnet.relu(x)
         x = self.resnet.maxpool(x)
         x = self.resnet.layer1(x)
-        x = self.resnet.layer2(x)
-        x = self.resnet.layer3(x)
+        # x = self.resnet.layer2(x)
+        # x = self.resnet.layer3(x)
         # x = self.resnet.layer4(x)
-        x = self.resnet.avgpool(x)
-        x = torch.flatten(x, 1)
-        x = self.resnet.fc(x)
+        # x = self.resnet.avgpool(x)
+        # x = torch.flatten(x, 1)
+        # x = self.resnet.fc(x)
         return x

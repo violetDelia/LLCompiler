@@ -1,3 +1,5 @@
-#define __LLC_TransformLibraryPath__  "@CMAKE_CURRENT_SOURCE_DIR@"
+#define __LLC_TRANSFORM_PATH__ "@CMAKE_CURRENT_SOURCE_DIR@"
 
-#define __LLC_TransformLibrary_CPU__  "@CMAKE_CURRENT_SOURCE_DIR@/cpu_transform.mlir"
+#define __LLC_TRANSFORM_LLH_OPT__  "@CMAKE_CURRENT_SOURCE_DIR@/llh_optimization.mlir"
+
+#define __LLC_TRANSFORM_LLH_OPT_ENTRYPOINT__  "llh_optimization"

@@ -25,7 +25,7 @@
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassOptions.h"
 
-namespace llc::pipleline {
+namespace llc::pipeline {
 struct BasicPipelineOptions
     : public mlir::PassPipelineOptions<BasicPipelineOptions> {
   Option<MODE> runMode{
@@ -63,5 +63,5 @@ void buildBasicPipeline(mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options);
 void registerBasicPipeline();
 
-}  // namespace llc::pipleline
+}  // namespace llc::pipeline
 #endif  // INCLUDE_LLCOMPILER_PIPELINE_BASICPIPELINE_H_

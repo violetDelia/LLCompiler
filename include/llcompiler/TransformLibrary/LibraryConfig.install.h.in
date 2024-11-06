@@ -1,3 +1,5 @@
-#define __LLC_TransformLibraryPath__ "@LLCOMPILER_TANSFORMLIB_INSTALL_DIR@"
+#define __LLC_TRANSFORM_PATH__ "@LLCOMPILER_TANSFORMLIB_INSTALL_DIR@"
 
-#define __LLC_TransformLibrary_CPU__  "@LLCOMPILER_TANSFORMLIB_INSTALL_DIR@/cpu_transform.mlir"
+#define __LLC_TRANSFORM_LLH_OPT__  "@LLCOMPILER_TANSFORMLIB_INSTALL_DIR@/llh_optimization.mlir"
+
+#define __LLC_TRANSFORM_LLH_OPT_ENTRYPOINT__  "llh_optimization"

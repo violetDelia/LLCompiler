@@ -19,6 +19,7 @@
 #include "llcompiler/Compiler/Entrance.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/TransFromPipeline.h"
@@ -33,6 +34,7 @@
 #include "mlir/Dialect/Bufferization/Transforms/FuncBufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/Func/TransformOps/FuncTransformOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/LLVMIR/Transforms/InlinerInterfaceImpl.h"
 #include "mlir/Dialect/Linalg/Transforms/BufferizableOpInterfaceImpl.h"
@@ -40,7 +42,9 @@
 #include "mlir/Dialect/SCF/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
+#include "mlir/Dialect/Transform/IR/TransformDialect.h"
 #include "mlir/IR/BuiltinDialect.h"
+#include "mlir/InitAllExtensions.h"
 #include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "stablehlo/dialect/StablehloOps.h"
@@ -56,6 +60,7 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::bufferization::BufferizationDialect>();
   context.getOrLoadDialect<mlir::mhlo::MhloDialect>();
   context.getOrLoadDialect<mlir::stablehlo::StablehloDialect>();
+  context.getOrLoadDialect<mlir::transform::TransformDialect>();
 }
 
 void add_extension_and_interface(mlir::DialectRegistry& registry) {
@@ -74,6 +79,23 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::registerConvertMemRefToLLVMInterface(registry);
   mlir::registerConvertFuncToLLVMInterface(registry);
   mlir::index::registerConvertIndexToLLVMInterface(registry);
+  mlir::func::registerTransformDialectExtension(registry);
+  
+  mlir::affine::registerTransformDialectExtension(registry);
+  mlir::bufferization::registerTransformDialectExtension(registry);
+  mlir::func::registerTransformDialectExtension(registry);
+  mlir::gpu::registerTransformDialectExtension(registry);
+  mlir::linalg::registerTransformDialectExtension(registry);
+  mlir::memref::registerTransformDialectExtension(registry);
+  mlir::scf::registerTransformDialectExtension(registry);
+  mlir::tensor::registerTransformDialectExtension(registry);
+  mlir::transform::registerDebugExtension(registry);
+  mlir::transform::registerIRDLExtension(registry);
+  mlir::transform::registerLoopExtension(registry);
+  mlir::transform::registerPDLExtension(registry);
+  mlir::vector::registerTransformDialectExtension(registry);
+
+  mlir::llh::registerMarkAotPass();
 }
 
 void init_logger(const logger::LoggerOption& logger_option) {

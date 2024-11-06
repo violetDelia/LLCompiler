@@ -19,7 +19,7 @@
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassOptions.h"
 
-namespace llc::pipleline {
+namespace llc::pipeline {
 struct CommonPipelineOptions
     : public mlir::PassPipelineOptions<CommonPipelineOptions> {
   Option<bool> printOpGraph{*this, "print-op-graph",
@@ -76,6 +76,6 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
                          const CommonPipelineOptions &options);
 void registerCommonPipeline();
 
-}  // namespace llc::pipleline
+}  // namespace llc::pipeline
 
 #endif  // INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_

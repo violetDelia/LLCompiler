@@ -50,7 +50,7 @@
 #include "mlir/Pass/PassRegistry.h"
 #include "mlir/Transforms/Passes.h"
 
-namespace llc::pipleline {
+namespace llc::pipeline {
 
 void buildCommonPipeline(::mlir::OpPassManager &pm,
                          const CommonPipelineOptions &options) {
@@ -314,4 +314,4 @@ void registerCommonPipeline() {
       "common-pipeline", "The default pipeline for LLC", buildCommonPipeline);
 }
 // namespace llc
-}  // namespace llc::pipleline
+}  // namespace llc::pipeline

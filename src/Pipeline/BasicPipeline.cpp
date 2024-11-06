@@ -79,13 +79,13 @@
 #include "stablehlo/conversions/tosa/transforms/Passes.h"
 #include "stablehlo/transforms/Passes.h"
 #include "transforms/passes.h"
-namespace llc::pipleline {
+namespace llc::pipeline {
 void buildBasicPipeline(::mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options) {
   mlir::llh::SymbolAnalysis::symbol_enable = options.symbolInfer;
   // 合法化非法的Op
   pm.addPass(mlir::llh::createOperationlegalizationPass());
-  //标记Aot算子
+  // 标记Aot算子
   pm.addPass(mlir::llh::createMarkAotPass());
   // 去除冗余Op
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());
@@ -170,8 +170,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   //  lowing mhlo
   //===----------------------------------------------------------------------===//
   pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::mhlo::createLegalizeHloToLinalgPass());
+  pm.addPass(mlir::mhlo::createHloLegalizeToStablehloPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::mhlo::createLegalizeControlFlowPass());
 
@@ -489,4 +488,4 @@ void registerBasicPipeline() {
       "basic-pipeline", "basic pipeline", buildBasicPipeline);
 }
 
-}  // namespace llc::pipleline
+}  // namespace llc::pipeline

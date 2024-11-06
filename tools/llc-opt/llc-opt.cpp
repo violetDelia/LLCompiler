@@ -81,8 +81,8 @@ int main(int argc, char **argv) {
   mlir::func::registerInlinerExtension(registry);
   mlir::LLVM::registerInlinerInterface(registry);
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
-  llc::pipleline::registerCommonPipeline();
-  llc::pipleline::registerBasicPipeline();
+  llc::pipeline::registerCommonPipeline();
+  llc::pipeline::registerBasicPipeline();
   mlir::llh::registerLLHOptPasses();
   mlir::registerLLCConversionPasses();
   mlir::index_ex::registerIndexExtensionPasses();

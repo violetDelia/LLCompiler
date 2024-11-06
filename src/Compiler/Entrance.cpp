@@ -37,6 +37,7 @@
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/CodeGen/Register.h"
 #include "llvm/ExecutionEngine/Orc/Core.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
@@ -58,7 +59,7 @@ CompilerOptions::CompilerOptions() {}
 
 void generatePipelineOptions(
     CompilerOptions& options,
-    llc::pipleline::BasicPipelineOptions& pipleline_options) {
+    llc::pipeline::BasicPipelineOptions& pipleline_options) {
   // config env error
   //  if (options.L1_cache_size == 0) {
 
@@ -94,7 +95,7 @@ void generatePipelineOptions(
 
 void generatePipelineOptions(
     CompilerOptions& options,
-    llc::pipleline::TransformPipelineOptions& pipleline_options) {
+    llc::pipeline::TransformPipelineOptions& pipleline_options) {
   // config env error
   //  if (options.L1_cache_size == 0) {
 
@@ -138,24 +139,30 @@ void setIRDumpConfig(CompilerOptions& options, mlir::PassManager& pm) {
 
 void runBasicPipeline(CompilerOptions& options,
                       mlir::OwningOpRef<mlir::ModuleOp>& module) {
-  pipleline::BasicPipelineOptions pipleline_options;
+  pipeline::BasicPipelineOptions pipleline_options;
   generatePipelineOptions(options, pipleline_options);
   // ********* process in mlir *********//
   mlir::PassManager pm(module.get()->getName());
   setIRDumpConfig(options, pm);
-  pipleline::buildBasicPipeline(pm, pipleline_options);
+  pipeline::buildBasicPipeline(pm, pipleline_options);
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
 }
 
+
+
 void runTransformPipeline(CompilerOptions& options,
                           mlir::OwningOpRef<mlir::ModuleOp>& module) {
-  pipleline::TransformPipelineOptions pipleline_options;
+  pipeline::TransformPipelineOptions pipleline_options;
   generatePipelineOptions(options, pipleline_options);
   // ********* process in mlir *********//
   mlir::PassManager pm(module.get()->getName());
   setIRDumpConfig(options, pm);
-  pipleline::buildTransformPipeline(pm, pipleline_options);
+  pipeline::buildTransformPipeline(pm, pipleline_options);
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
+}
+
+void registerPipelines(){
+
 }
 
 Engine do_compile(const char* xdsl_module, CompilerOptions options) {
