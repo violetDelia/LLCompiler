@@ -22,7 +22,12 @@
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
+#include "llvm/Support/CommandLine.h"
+#include "llvm/Support/InitLLVM.h"
+#include "llvm/Support/SourceMgr.h"
+#include "llvm/Support/ToolOutputFile.h"
 #include "mhlo/IR/hlo_ops.h"
+#include "mlir/Config/mlir-config.h"
 #include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
@@ -44,7 +49,17 @@
 #include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
+#include "mlir/IR/AsmState.h"
+#include "mlir/IR/Dialect.h"
 #include "mlir/IR/DialectRegistry.h"
+#include "mlir/IR/MLIRContext.h"
+#include "mlir/InitAllDialects.h"
+#include "mlir/InitAllExtensions.h"
+#include "mlir/InitAllPasses.h"
+#include "mlir/Pass/Pass.h"
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Support/FileUtilities.h"
+#include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
 #include "stablehlo/dialect/StablehloOps.h"
@@ -59,37 +74,14 @@ int main(int argc, char **argv) {
   registry.insert<mlir::llh::LLHDialect>();
   registry.insert<mlir::ex::IRExtensionDialect>();
   registry.insert<mlir::tosa_ex::TosaExDialect>();
-  registry.insert<mlir::func::FuncDialect>();
-  registry.insert<mlir::tosa::TosaDialect>();
-  registry.insert<mlir::tensor::TensorDialect>();
-  registry.insert<mlir::bufferization::BufferizationDialect>();
-  registry.insert<mlir::arith::ArithDialect>();
-  registry.insert<mlir::linalg::LinalgDialect>();
-  registry.insert<mlir::memref::MemRefDialect>();
-  registry.insert<mlir::affine::AffineDialect>();
-  registry.insert<mlir::scf::SCFDialect>();
-  registry.insert<mlir::index::IndexDialect>();
-  registry.insert<mlir::LLVM::LLVMDialect>();
   registry.insert<mlir::stablehlo::StablehloDialect>();
   registry.insert<mlir::mhlo::MhloDialect>();
-  mlir::tensor::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
-      registry);
-  mlir::arith::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::scf::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::func::registerInlinerExtension(registry);
-  mlir::LLVM::registerInlinerInterface(registry);
-  mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
-  llc::pipeline::registerCommonPipeline();
-  llc::pipeline::registerBasicPipeline();
+  mlir::registerAllDialects(registry);
+  mlir::registerAllPasses();
+  mlir::registerAllExtensions(registry);
   mlir::llh::registerLLHOptPasses();
-  mlir::registerLLCConversionPasses();
   mlir::index_ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
-  mlir::registerTransformsPasses();
-  mlir::transform::registerInterpreterPass();
-  mlir::tosa::registerTosaToLinalgPipelines();
   mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
   return 0;

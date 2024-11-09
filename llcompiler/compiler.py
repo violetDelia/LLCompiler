@@ -12,7 +12,6 @@ import onnx
 from torch._subclasses.fake_tensor import FakeTensor
 from .importer.fx_graph import get_result_type
 
-
 def empty_call(*args, **kwargs):
     return 1
 
@@ -31,7 +30,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self,
         mode: str = "inference",  # 推理/训练
         target: str = "cpu",  # 执行平台
-        pipeline:str = "basic",
+        pipeline: str = "transform",
         index_bit_width: int = 64,
         symbol_infer=True,
         opt_level=2,

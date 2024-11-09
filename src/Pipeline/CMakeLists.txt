@@ -11,6 +11,7 @@ llcompiler_add_library(LLCPipelines
     LINKS PUBLIC
     MLIRPass
     MLIRTransforms
+
     MLIRLLHUtils
     MLIRLLHTransforms
     MLIRLLHToTosa
@@ -18,43 +19,57 @@ llcompiler_add_library(LLCPipelines
     MLIRLLHToTensor
     MLIRLLHToHLO
     MLIRLLHToShape
+
     MLIRLLVMExtensionTransforms
     MLIRIndexExtensionTransforms
+    MLIRTosaExTransforms
+
+    MhloDialect
+    MhloPasses
+    MhloToMemrefConversion
+    MhloToStandard
+    MhloToLinalg
+    MhloToStablehlo
+
+    StablehloPasses
+    StablehloTOSATransforms
+    StablehloLinalgTransforms
+
     MLIRTosaTransforms
     MLIRTosaToLinalgExtension
     MLIRTosaToArith
     MLIRTosaToTensor
     MLIRTosaToLinalg
     MLIRTosaToSCF
-    MLIRTosaExTransforms
+
+    MLIRShapeToStandard
+
     MLIRTensorToLinalg
-    MLIRAffineToStandard
-    MLIRSCFToControlFlow
-    MLIRControlFlowToLLVM
-    MLIRMemRefToLLVM
-    MLIRReconcileUnrealizedCasts
-    MLIRControlFlowToSPIRV
-    MLIRSPIRVToLLVM
-    MLIRSCFToSPIRV
-    MLIRFuncToLLVM
-    MLIRConvertToLLVMPass
-    MLIRLLVMIRTransforms
-    MLIRConvertToSPIRVPass
     MLIRTensorToSPIRV
+
+    MLIRAffineToStandard
+
     MLIRControlFlowToSCF
-    MLIRBufferizationToMemRef
-    MLIRIndexToLLVM
-    MhloDialect
-    MhloPasses
-    MhloToMemrefConversion
-    MhloToStandard
-    MhloToLinalg
+
     DeallocationPasses
     MLIRBufferTransforms
-    StablehloPasses
-    StablehloTOSATransforms
-    StablehloLinalgTransforms
-    MhloToStablehlo
+    MLIRBufferizationToMemRef
+
+    MLIRSCFToControlFlow
+
+    MLIRLLVMIRTransforms
+    MLIRConvertToLLVMPass
+    MLIRMemRefToLLVM
+    MLIRFuncToLLVM
+    MLIRControlFlowToLLVM
+    MLIRSPIRVToLLVM
+    MLIRIndexToLLVM
+
+    MLIRConvertToSPIRVPass
+    MLIRSCFToSPIRV
+    MLIRControlFlowToSPIRV
+
+    MLIRReconcileUnrealizedCasts
 )
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRFuncInlinerExtension)
 set_property(GLOBAL APPEND PROPERTY LLCOMPILER_PIPELINE_DEPENDS MLIRTensorInferTypeOpInterfaceImpl)

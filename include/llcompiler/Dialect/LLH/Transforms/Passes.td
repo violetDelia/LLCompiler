@@ -64,6 +64,8 @@ def InferSymbolShapePass : Pass<"infer-symbol-shape","ModuleOp"> {
   let options = [
     Option<"CleanSymbolCache", "clean-symbol-cache", "bool", /*default=*/"true",
            "测试用,防止多个相同地址的module.">,
+    Option<"UseBinding", "use-binding", "bool", /*default=*/"true",
+           "use llh.encoding.">,
   ];
 }
 

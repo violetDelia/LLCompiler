@@ -79,6 +79,33 @@ void generateEntranceSymbol(ModuleOp module) {
     }
   }
 }
+
+void generateEntranceBinding(ModuleOp module) {
+  auto funcs = module.getOps<func::FuncOp>();
+  auto context = module->getContext();
+  auto builder = IRRewriter(context);
+  llvm::SmallVector<Type> new_input;
+  auto symbol_analysis = SymbolAnalysis::getInstance(module);
+  for (auto func : funcs) {
+    if (!func->hasAttr(llc::EntranceAttr)) continue;
+    auto func_type = func.getFunctionType();
+    auto& block = func.getFunctionBody().getBlocks().front();
+    auto input_num = block.getNumArguments();
+    for (int i{}; i < input_num; i++) {
+      auto arg = block.getArgument(i);
+      auto new_arg = symbol_analysis->addEncoding(arg);
+      new_input.push_back(new_arg.getType());
+    }
+    auto& blocks = func.getFunctionBody().getBlocks();
+    for (auto& block : blocks) {
+      if (block.isEntryBlock()) {
+        auto new_func_type = FunctionType::get(
+            context, new_input, block.getTerminator()->getOperandTypes());
+        func.setType(new_func_type);
+      }
+    }
+  }
+}
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
@@ -107,7 +134,12 @@ void InferSymbolShapePass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  generateEntranceSymbol(module);
+  if (UseBinding) {
+    generateEntranceSymbol(module);
+  }else{
+
+
+  }
   module.walk([](Operation* op) { checkAndInferSymbol(op); });
   RewritePatternSet patterns(context);
   populateSymbolCanonicalizePatterns(patterns);

@@ -256,21 +256,21 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::bufferization::createEmptyTensorEliminationPass());
   pm.addPass(mlir::bufferization::createEmptyTensorToAllocTensorPass());
 
-  //   mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
-  //   bufferization_opts.bufferizeFunctionBoundaries = true;
-  //   bufferization_opts.allowReturnAllocsFromLoops = true;
-  //   bufferization_opts.copyBeforeWrite = true;
-  //   bufferization_opts.analysisHeuristic = mlir::bufferization::
-  //       OneShotBufferizationOptions::AnalysisHeuristic::BottomUpFromTerminators;
-  //   bufferization_opts.opFilter.allowDialect<
-  //       mlir::tensor::TensorDialect,
-  //       mlir::bufferization::BufferizationDialect, mlir::arith::ArithDialect,
-  //       mlir::scf::SCFDialect, mlir::linalg::LinalgDialect>();
-  //   // func Bufferize  for remove the memref.copy before one-shot,
-  //   pm.addPass(mlir::func::createFuncBufferizePass());
-  //   //Bufferize
-  //   pm.addPass(
-  //       mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
+    // mlir::bufferization::OneShotBufferizationOptions bufferization_opts;
+    // bufferization_opts.bufferizeFunctionBoundaries = true;
+    // bufferization_opts.allowReturnAllocsFromLoops = true;
+    // bufferization_opts.copyBeforeWrite = true;
+    // bufferization_opts.analysisHeuristic = mlir::bufferization::
+    //     OneShotBufferizationOptions::AnalysisHeuristic::BottomUpFromTerminators;
+    // bufferization_opts.opFilter.allowDialect<
+    //     mlir::tensor::TensorDialect,
+    //     mlir::bufferization::BufferizationDialect, mlir::arith::ArithDialect,
+    //     mlir::scf::SCFDialect, mlir::linalg::LinalgDialect>();
+    // // func Bufferize  for remove the memref.copy before one-shot,
+    // pm.addPass(mlir::func::createFuncBufferizePass());
+    // //Bufferize
+    // pm.addPass(
+    //     mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
   pm.addPass(mlir::hlo::createOneShotBufferizePass());
   //   pm.addPass(mlir::bufferization::createDropEquivalentBufferResultsPass());
   //    // 跑整图会出bug

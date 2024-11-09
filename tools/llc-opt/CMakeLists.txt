@@ -8,10 +8,6 @@ llcompiler_add_executable(llc-opt
     "${CMAKE_CURRENT_SOURCE_DIR}/llc-opt.cpp"
 
     ADDITIONAL_INCLUDE_DIRS
-    ${ONNX_INCLUDE_DIR}
-    ${ONNX_INCLUDE_GENERATE_DIR}
-    ${PROTOBUF_INCLUDE_DIR}
-    ${ABSL_INCLUDE_DIR}
 
     LINKS
     LLCSupport
@@ -19,5 +15,7 @@ llcompiler_add_executable(llc-opt
     MLIROptLib
     LLCompiler 
     ${pipeline_depends}
-    MLIRTransformDialectTransforms
+    ${dialect_libs}
+    ${conversion_libs}
+    ${extension_libs}
 )

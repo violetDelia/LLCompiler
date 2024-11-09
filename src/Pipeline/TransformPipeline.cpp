@@ -43,6 +43,7 @@
 #include "mlir/Conversion/Passes.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
+#include "mlir/Conversion/ShapeToStandard/ShapeToStandard.h"
 #include "mlir/Conversion/TensorToLinalg/TensorToLinalgPass.h"
 #include "mlir/Conversion/TosaToArith/TosaToArith.h"
 #include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
@@ -63,10 +64,10 @@
 #include "mlir/Dialect/MemRef/Transforms/Passes.h"
 #include "mlir/Dialect/SCF/IR/SCF.h"
 #include "mlir/Dialect/SCF/Transforms/Passes.h"
+#include "mlir/Dialect/Shape/Transforms/Passes.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tensor/Transforms/Passes.h"
 #include "mlir/Dialect/Tosa/Transforms/Passes.h"
-#include "mlir/Dialect/Transform/Interfaces/TransformInterfaces.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -100,8 +101,8 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   // 内联
   pm.addPass(::mlir::createInlinerPass());
   // 符号推导和shapeinfer
-  pm.addPass(
-      mlir::llh::createInferSymbolShapePass({.CleanSymbolCache = false}));
+  pm.addPass(mlir::llh::createInferSymbolShapePass(
+      {.CleanSymbolCache = false, .UseBinding = true}));
   // 将WeightOp转换为constant
   pm.addPass(mlir::llh::createLoadWeightPass());
   // 布局转换
@@ -169,13 +170,45 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   // 传播广播
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::mhlo::createBroadcastPropagationPass());
-
   pm.addPass(mlir::createCanonicalizerPass());
-  
-  mlir::transform::PreloadLibraryPassOptions transform_otions;
-  transform_otions.transformLibraryPaths.push_back(__LLC_TRANSFORM_LLH_OPT__);
-  pm.addPass(mlir::transform::createPreloadLibraryPass(transform_otions));
-  applyInterpreter(pm, __LLC_TRANSFORM_LLH_OPT_ENTRYPOINT__);
+  //===----------------------------------------------------------------------===//
+  //  lowing mhlo
+  //===----------------------------------------------------------------------===//
+  pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
+  //pm.addPass(mlir::mhlo::createLegalizeToMemrefPass());
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createLegalizeHloToLinalgPass(true));
+  pm.addNestedPass<mlir::func::FuncOp>(
+      mlir::mhlo::createLegalizeControlFlowPass());
+  pm.addPass(mlir::createCanonicalizerPass());
+  //===----------------------------------------------------------------------===//
+  //  lowing shape
+  //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::createConvertShapeToStandardPass());
+  pm.addNestedPass<mlir::func::FuncOp>(mlir::createShapeToShapeLowering());
+  //===----------------------------------------------------------------------===//
+  //  tensor lowing
+  //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::tensor::createFoldTensorSubsetOpsPass());
+  pm.addPass(mlir::createConvertTensorToLinalgPass());
+  //===----------------------------------------------------------------------===//
+  //  linalg opt
+  //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::createConvertElementwiseToLinalgPass());
+  pm.addPass(mlir::createLinalgSpecializeGenericOpsPass());
+  pm.addPass(mlir::createLinalgGeneralizeNamedOpsPass());
+pm.addPass(mlir::createLinalgInlineScalarOperandsPass());
+pm.addPass(mlir::createLinalgFoldUnitExtentDimsPass());
+  pm.addPass(mlir::createLinalgElementwiseOpFusionPass());
+  pm.addPass(mlir::createCanonicalizerPass());
+  //===----------------------------------------------------------------------===//
+  // bufferization
+  //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::bufferization::createEmptyTensorEliminationPass());
+  pm.addPass(mlir::bufferization::createEmptyTensorToAllocTensorPass());
+  pm.addPass(mlir::hlo::createOneShotBufferizePass());
+  pm.addPass(mlir::createFinalBufferizePass(64));
+  pm.addPass(mlir::createCanonicalizerPass());
 }
 
 void registerTransformPipeline() {
