@@ -16,15 +16,25 @@
 #include <iostream>
 #include <string>
 
+#include "deallocation/transforms/passes.h"
 #include "llcompiler/Compiler/Entrance.h"
+#include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Conversion/Passes.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
+#include "llcompiler/Pipeline/CommonPipeline.h"
 #include "llcompiler/Pipeline/TransFromPipeline.h"
 #include "llcompiler/Support/Logger.h"
 #include "mhlo/IR/hlo_ops.h"
+#include "mhlo/IR/register.h"
+#include "mhlo/transforms/passes.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
@@ -43,11 +53,27 @@
 #include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/Dialect/Transform/IR/TransformDialect.h"
+#include "mlir/Dialect/Transform/Transforms/Passes.h"
+#include "mlir/IR/AsmState.h"
 #include "mlir/IR/BuiltinDialect.h"
+#include "mlir/IR/Dialect.h"
+#include "mlir/IR/DialectRegistry.h"
+#include "mlir/IR/MLIRContext.h"
+#include "mlir/InitAllDialects.h"
 #include "mlir/InitAllExtensions.h"
+#include "mlir/InitAllPasses.h"
+#include "mlir/Pass/Pass.h"
+#include "mlir/Pass/PassManager.h"
+#include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Target/LLVMIR/Dialect/Builtin/BuiltinToLLVMIRTranslation.h"
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
+#include "mlir/Tools/mlir-opt/MlirOptMain.h"
+#include "mlir/Transforms/Passes.h"
+#include "stablehlo/dialect/Register.h"
 #include "stablehlo/dialect/StablehloOps.h"
+#include "stablehlo_ext/transforms/passes.h"
+#include "transforms/gpu_passes.h"
+#include "transforms/passes.h"
 
 namespace llc::compiler {
 
@@ -80,7 +106,7 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::registerConvertFuncToLLVMInterface(registry);
   mlir::index::registerConvertIndexToLLVMInterface(registry);
   mlir::func::registerTransformDialectExtension(registry);
-  
+
   mlir::affine::registerTransformDialectExtension(registry);
   mlir::bufferization::registerTransformDialectExtension(registry);
   mlir::func::registerTransformDialectExtension(registry);
@@ -94,8 +120,6 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::transform::registerLoopExtension(registry);
   mlir::transform::registerPDLExtension(registry);
   mlir::vector::registerTransformDialectExtension(registry);
-
-  mlir::llh::registerMarkAotPass();
 }
 
 void init_logger(const logger::LoggerOption& logger_option) {

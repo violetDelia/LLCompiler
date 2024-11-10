@@ -1,0 +1,7 @@
+#define __LLC_TRANSFORM_PATH__ "@CMAKE_CURRENT_SOURCE_DIR@"
+
+#define __LLC_TRANSFORM_LINALG_INCLUDE__  "@CMAKE_CURRENT_SOURCE_DIR@/linalg_include.mlir"
+
+#define __LLC_TRANSFORM_MHLO_INCLUDE__  "@CMAKE_CURRENT_SOURCE_DIR@/mhlo_include.mlir"
+
+#define __LLC_TRANSFORM_TENSOR_INCLUDE__  "@CMAKE_CURRENT_SOURCE_DIR@/tensor_include.mlir"

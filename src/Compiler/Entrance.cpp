@@ -33,7 +33,6 @@
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/TransFromPipeline.h"
 #include "llcompiler/Support/Logger.h"
-#include "llcompiler/TransformLibrary/LibraryConfig.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -52,7 +51,7 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Target/LLVMIR/Export.h"
-
+#include "mhlo/transforms/passes.h"
 namespace llc::compiler {
 
 CompilerOptions::CompilerOptions() {}
@@ -148,8 +147,6 @@ void runBasicPipeline(CompilerOptions& options,
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
 }
 
-
-
 void runTransformPipeline(CompilerOptions& options,
                           mlir::OwningOpRef<mlir::ModuleOp>& module) {
   pipeline::TransformPipelineOptions pipleline_options;
@@ -161,9 +158,7 @@ void runTransformPipeline(CompilerOptions& options,
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
 }
 
-void registerPipelines(){
 
-}
 
 Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* init logger *********//
@@ -173,6 +168,7 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   init_logger(logger_option);
   INFO(llc::Entrance_Module) << "\n" << xdsl_module;
   // ********* init mlir context *********//
+ 
   mlir::DialectRegistry registry;
   add_extension_and_interface(registry);
   mlir::MLIRContext context(registry);
@@ -184,6 +180,7 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   if (options.pipeline == "basic") {
     runBasicPipeline(options, module);
   } else if (options.pipeline == "transform") {
+     mlir::mhlo::registerTestUnfuseBatchNormPass();
     runTransformPipeline(options, module);
   } else {
     UNIMPLEMENTED(llc::GLOBAL);

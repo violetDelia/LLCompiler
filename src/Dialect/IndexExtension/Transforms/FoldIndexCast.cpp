@@ -34,6 +34,7 @@
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
@@ -42,10 +43,10 @@
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
-namespace mlir::index_ex {
+namespace mlir::index::ex {
 #define GEN_PASS_DEF_FOLDINDEXCASTPASS
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h.inc"
-}  // namespace mlir::index_ex
+}  // namespace mlir::index::ex
 using namespace ::mlir;
 using namespace ::mlir::index;
 namespace {
@@ -86,10 +87,18 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
   using OpRewritePattern<tensor::FromElementsOp>::OpRewritePattern;
 
   LogicalResult match(tensor::FromElementsOp op) const {
+    auto res_type = op.getResult().getType();
+    auto ele_type = res_type.getElementType();
+    if (isa<IndexType>(ele_type)) return llvm::failure();
     auto operands = op.getElements();
     for (auto operand : operands) {
-      if (!isa<CastUOp, CastSOp, arith::ConstantOp>(operand.getDefiningOp()))
+      if (!isa<CastUOp, CastSOp, arith::ConstantOp, arith::IndexCastOp>(
+              operand.getDefiningOp()))
         return llvm::failure();
+      if (isa<CastUOp, CastSOp, arith::IndexCastOp>(operand.getDefiningOp())) {
+        auto type = operand.getDefiningOp()->getOperand(0).getType();
+        if (!isa<IndexType>(type)) return llvm::failure();
+      }
     }
 
     return llvm::success();
@@ -100,9 +109,9 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
     auto elements = op.getElements();
     llvm::SmallVector<Value, 0> new_elements;
     for (auto operand : elements) {
-      if (isa<CastUOp, CastSOp>(operand.getDefiningOp()))
+      if (isa<CastUOp, CastSOp,arith::IndexCastOp>(operand.getDefiningOp())) {
         new_elements.push_back(operand.getDefiningOp()->getOperand(0));
-      else if (isa<arith::ConstantOp>(operand.getDefiningOp())) {
+      } else if (isa<arith::ConstantOp>(operand.getDefiningOp())) {
         auto const_op = cast<arith::ConstantOp>(operand.getDefiningOp());
         auto value = const_op.getValue();
         CHECK(llc::MLIR_PASS, isa<IntegerAttr>(value));
@@ -110,9 +119,11 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
         auto new_const = rewriter.create<arith::ConstantIndexOp>(
             loc, *int_value.getValue().getRawData());
         new_elements.push_back(new_const);
+      } else if (isa<arith::ConstantOp>(operand.getDefiningOp())) {
       } else {
         operand.dump();
-        UNIMPLEMENTED(llc::MLIR_PASS) << operand.getDefiningOp()->getName().getStringRef().str();
+        UNIMPLEMENTED(llc::MLIR_PASS)
+            << operand.getDefiningOp()->getName().getStringRef().str();
       }
     }
     auto new_op = rewriter.create<tensor::FromElementsOp>(loc, new_elements);
@@ -126,8 +137,8 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
 //===----------------------------------------------------------------------===//
 void populateFoldIndexCastPassPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<FoldCastOp<CastSOp>>(context,2);
-  patterns.add<FoldCastOp<CastUOp>>(context,2);
+  patterns.add<FoldCastOp<CastSOp>>(context, 2);
+  patterns.add<FoldCastOp<CastUOp>>(context, 2);
   patterns.add<ConstOpToArith>(context);
   patterns.add<FoldFromElements>(context);
 }
@@ -137,7 +148,7 @@ void populateFoldIndexCastPassPassPatterns(RewritePatternSet& patterns) {
 //===----------------------------------------------------------------------===//
 
 struct FoldIndexCastPass
-    : ::index_ex::impl::FoldIndexCastPassBase<FoldIndexCastPass> {
+    : ::mlir::index::ex::impl::FoldIndexCastPassBase<FoldIndexCastPass> {
   void runOnOperation() override;
 };
 }  // namespace

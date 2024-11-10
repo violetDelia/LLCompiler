@@ -26,6 +26,8 @@ llcompiler_add_library(LLCPipelines
 
     MhloDialect
     MhloPasses
+    AllMhloPasses
+    MLIRHLOGPUTransforms
     MhloToMemrefConversion
     MhloToStandard
     MhloToLinalg

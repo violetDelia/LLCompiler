@@ -12,6 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
+#include "deallocation/transforms/passes.h"
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
@@ -22,31 +23,9 @@
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/InitLLVM.h"
-#include "llvm/Support/SourceMgr.h"
-#include "llvm/Support/ToolOutputFile.h"
 #include "mhlo/IR/hlo_ops.h"
-#include "mlir/Config/mlir-config.h"
-#include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
-#include "mlir/Dialect/Affine/IR/AffineOps.h"
-#include "mlir/Dialect/Arith/IR/Arith.h"
-#include "mlir/Dialect/Arith/Transforms/BufferizableOpInterfaceImpl.h"
-#include "mlir/Dialect/Bufferization/IR/Bufferization.h"
-#include "mlir/Dialect/Bufferization/Transforms/FuncBufferizableOpInterfaceImpl.h"
-#include "mlir/Dialect/Func/Extensions/InlinerExtension.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/Index/IR/IndexDialect.h"
-#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
-#include "mlir/Dialect/LLVMIR/Transforms/InlinerInterfaceImpl.h"
-#include "mlir/Dialect/Linalg/IR/Linalg.h"
-#include "mlir/Dialect/Linalg/Transforms/BufferizableOpInterfaceImpl.h"
-#include "mlir/Dialect/MemRef/IR/MemRef.h"
-#include "mlir/Dialect/MemRef/Transforms/AllocationOpInterfaceImpl.h"
-#include "mlir/Dialect/SCF/IR/SCF.h"
-#include "mlir/Dialect/SCF/Transforms/BufferizableOpInterfaceImpl.h"
-#include "mlir/Dialect/Tensor/IR/Tensor.h"
-#include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
+#include "mhlo/IR/register.h"
+#include "mhlo/transforms/passes.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
 #include "mlir/IR/AsmState.h"
@@ -58,12 +37,14 @@
 #include "mlir/InitAllPasses.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
-#include "mlir/Support/FileUtilities.h"
 #include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
+#include "stablehlo/dialect/Register.h"
 #include "stablehlo/dialect/StablehloOps.h"
-
+#include "stablehlo_ext/transforms/passes.h"
+#include "transforms/gpu_passes.h"
+#include "transforms/passes.h"
 //  -pass-pipeline=
 //    "builtin.module(  inline,
 //                      convert-llh-to-tosa,
@@ -79,9 +60,19 @@ int main(int argc, char **argv) {
   mlir::registerAllDialects(registry);
   mlir::registerAllPasses();
   mlir::registerAllExtensions(registry);
+
   mlir::llh::registerLLHOptPasses();
-  mlir::index_ex::registerIndexExtensionPasses();
+  mlir::registerLLCConversionPasses();
+  mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
+
+  mlir::deallocation::registerDeallocationPasses();
+  mlir::hlo::registerLMHLOTransformsPasses();
+  mlir::mhlo::registerAllMhloPasses();
+  mlir::registerLMHLOGPUTransformsPasses();
+  mlir::stablehlo_ext::registerPasses();
+  mlir::mhlo::registerAllMhloDialects(registry);
+  mlir::stablehlo::registerAllDialects(registry);
   mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
   return 0;

@@ -22,7 +22,7 @@
 #include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/Pass/Pass.h"
 
-namespace mlir::index_ex {
+namespace mlir::index::ex {
 
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION

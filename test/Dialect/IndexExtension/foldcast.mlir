@@ -37,11 +37,11 @@ func.func @fold_from_elements(%arg0: tensor<?x?x?x?xf32>) ->(tensor<?x?x?x?xf32>
     %cst = arith.constant dense<0.000000e+00> : tensor<1x1x1x1xf32>
     %c0 = arith.constant 0 : index
     %dim = tensor.dim {symbol = @s0} %arg0, %c0 : tensor<?x?x?x?xf32>
-    %0 = index.castu %dim : index to i64
+    %0 = arith.index_cast %dim : index to i64
     %dim_0 = tensor.dim {symbol = @s1} %arg0, %c1 : tensor<?x?x?x?xf32>
-    %1 = index.castu %dim_0 : index to i64
+    %1 = arith.index_cast %dim_0 : index to i64
     %dim_1 = tensor.dim {symbol = @s2} %arg0, %c2 : tensor<?x?x?x?xf32>
-    %2 = index.castu %dim_1 : index to i64
+    %2 = arith.index_cast %dim_1 : index to i64
     // CHECK: tensor.from_elements 
     // CHECK-SAME: tensor<4xindex>
     %from_elements = tensor.from_elements %0, %1, %2, %c3 : tensor<4xi64>
