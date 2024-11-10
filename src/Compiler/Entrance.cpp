@@ -128,7 +128,6 @@ void generatePipelineOptions(
 void setIRDumpConfig(CompilerOptions& options, mlir::PassManager& pm) {
   if (std::filesystem::exists(options.ir_tree_dir)) {
     INFO(GLOBAL) << "mlir ir tree dir is: " << options.ir_tree_dir;
-    pm.getContext()->disableMultithreading();
     pm.enableIRPrintingToFileTree(
         [](mlir::Pass* pass, mlir::Operation*) { return false; },
         [](mlir::Pass* pass, mlir::Operation*) { return true; }, false, false,
@@ -168,10 +167,9 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   init_logger(logger_option);
   INFO(llc::Entrance_Module) << "\n" << xdsl_module;
   // ********* init mlir context *********//
- 
   mlir::DialectRegistry registry;
   add_extension_and_interface(registry);
-  mlir::MLIRContext context(registry);
+  mlir::MLIRContext context(registry,mlir::MLIRContext::Threading::DISABLED);
   load_dialect(context);
   // ********* load to mlir *********//
   mlir::OwningOpRef<mlir::ModuleOp> module;
@@ -180,7 +178,6 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   if (options.pipeline == "basic") {
     runBasicPipeline(options, module);
   } else if (options.pipeline == "transform") {
-     mlir::mhlo::registerTestUnfuseBatchNormPass();
     runTransformPipeline(options, module);
   } else {
     UNIMPLEMENTED(llc::GLOBAL);

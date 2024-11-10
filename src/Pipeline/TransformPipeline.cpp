@@ -30,6 +30,7 @@
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/TransformLibrary/LibraryEntry.h"
 #include "llcompiler/TransformLibrary/LibraryPath.h"
+#include "mhlo/IR/register.h"
 #include "mhlo/interfaces/bufferizable_op_interface_impl.h"
 #include "mhlo/transforms/passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
@@ -46,6 +47,7 @@
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
 #include "mlir/Conversion/ShapeToStandard/ShapeToStandard.h"
 #include "mlir/Conversion/TensorToLinalg/TensorToLinalgPass.h"
+#include "mlir/Dialect/Bufferization/Pipelines/Passes.h"
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Func/Transforms/Passes.h"
@@ -73,18 +75,13 @@ namespace llc::pipeline {
 
 namespace {
 void registerPasses() {
-  mlir::mhlo::registerSymbolicShapeOptimization();
-  mlir::mhlo::registerConvertToSignlessPass();
-  mlir::mhlo::registerGroupReductionDimensionsPass();
-  mlir::mhlo::registerLegalizeBroadcastToBroadcastInDimPass();
-  mlir::mhlo::registerHloCanonicalizeDotPass();
-  mlir::mhlo::registerHloCanonicalizeReductionPass();
-  mlir::mhlo::registerHloCanonicalizeGatherPass();
-  mlir::mhlo::registerHloCanonicalizeScatterPass();
-  mlir::mhlo::registerSinkConstantsToControlFlowPass();
-  mlir::mhlo::registerMhloExpandOpsSimplifierPass();
-  // mlir::mhlo::registerBroadcastPropagationPass();
-  //mlir::mhlo::registerTestUnfuseBatchNormPass();
+  mlir::llh::registerLLHOptPasses();
+  mlir::registerLLCConversionPasses();
+  mlir::index::ex::registerIndexExtensionPasses();
+  mlir::LLVM::ex::registerLLVMExtensionPasses();
+  mlir::mhlo::registerAllMhloPasses();
+  mlir::bufferization::registerBufferizationPasses();
+  mlir::hlo::registerFinalBufferizePass();
 }
 
 void applyInterpreter(::mlir::OpPassManager &pm, const char *entry_point) {
@@ -96,7 +93,6 @@ void applyInterpreter(::mlir::OpPassManager &pm, const char *entry_point) {
 
 void buildTransformPipeline(::mlir::OpPassManager &pm,
                             const TransformPipelineOptions &options) {
-                      
   registerPasses();
   pm.addPass(mlir::llh::createOperationlegalizationPass());
   mlir::transform::PreloadLibraryPassOptions preload_options;
@@ -144,6 +140,14 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing mhlo
   //===----------------------------------------------------------------------===//
+    pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
+    pm.addNestedPass<mlir::func::FuncOp>(
+        mlir::mhlo::createSymbolicShapeOptimizationPass());
+    pm.addNestedPass<mlir::func::FuncOp>(
+        mlir::mhlo::createLegalizeHloToLinalgPass());
+    pm.addNestedPass<mlir::func::FuncOp>(
+        mlir::mhlo::createLegalizeControlFlowPass());
+  // NOTE: unkown error (mutithreading)
   applyInterpreter(pm, __LLC_TRANSFORM_MLHO_TO_LINALG__);
   //===----------------------------------------------------------------------===//
   //  lowing shape
@@ -170,6 +174,12 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   // bufferization
   //===----------------------------------------------------------------------===//
   applyInterpreter(pm, __LLC_TRANSFORM_MLHO_BUFFERIZE__);
+
+  //===----------------------------------------------------------------------===//
+  // lowing linalg
+  //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::createConvertLinalgToAffineLoopsPass());
+  pm.addPass(mlir::createCSEPass());
   pm.addNestedPass<mlir::func::FuncOp>(mlir::hlo::createAllocToArgPass());
 }
 

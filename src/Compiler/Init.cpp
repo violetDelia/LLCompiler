@@ -34,6 +34,7 @@
 #include "llcompiler/Support/Logger.h"
 #include "mhlo/IR/hlo_ops.h"
 #include "mhlo/IR/register.h"
+#include "mhlo/interfaces/bufferizable_op_interface_impl.h"
 #include "mhlo/transforms/passes.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
@@ -50,10 +51,13 @@
 #include "mlir/Dialect/Linalg/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/MemRef/Transforms/AllocationOpInterfaceImpl.h"
 #include "mlir/Dialect/SCF/Transforms/BufferizableOpInterfaceImpl.h"
+#include "mlir/Dialect/Shape/IR/Shape.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/Dialect/Tensor/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/Dialect/Transform/IR/TransformDialect.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
+#include "mlir/Dialect/Vector/IR/VectorOps.h"
 #include "mlir/IR/AsmState.h"
 #include "mlir/IR/BuiltinDialect.h"
 #include "mlir/IR/Dialect.h"
@@ -69,8 +73,10 @@
 #include "mlir/Target/LLVMIR/Dialect/LLVMIR/LLVMToLLVMIRTranslation.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
+#include "stablehlo/dialect/ChloOps.h"
 #include "stablehlo/dialect/Register.h"
 #include "stablehlo/dialect/StablehloOps.h"
+#include "stablehlo/dialect/VhloOps.h"
 #include "stablehlo_ext/transforms/passes.h"
 #include "transforms/gpu_passes.h"
 #include "transforms/passes.h"
@@ -82,11 +88,18 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
   context.getOrLoadDialect<mlir::func::FuncDialect>();
   context.getOrLoadDialect<mlir::tosa::TosaDialect>();
-  context.getOrLoadDialect<mlir::index::IndexDialect>();
-  context.getOrLoadDialect<mlir::bufferization::BufferizationDialect>();
   context.getOrLoadDialect<mlir::mhlo::MhloDialect>();
+  context.getOrLoadDialect<mlir::chlo::ChloDialect>();
   context.getOrLoadDialect<mlir::stablehlo::StablehloDialect>();
+  context.getOrLoadDialect<mlir::quant::QuantDialect>();
+  context.getOrLoadDialect<mlir::sparse_tensor::SparseTensorDialect>();
+  context.getOrLoadDialect<mlir::vhlo::VhloDialect>();
   context.getOrLoadDialect<mlir::transform::TransformDialect>();
+  context.getOrLoadDialect<mlir::bufferization::BufferizationDialect>();
+  context.getOrLoadDialect<mlir::shape::ShapeDialect>();
+  context.getOrLoadDialect<mlir::vector::VectorDialect>();
+  context.getOrLoadDialect<mlir::tensor::TensorDialect>();
+  context.getOrLoadDialect<mlir::index::IndexDialect>();
 }
 
 void add_extension_and_interface(mlir::DialectRegistry& registry) {
@@ -106,6 +119,13 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::registerConvertFuncToLLVMInterface(registry);
   mlir::index::registerConvertIndexToLLVMInterface(registry);
   mlir::func::registerTransformDialectExtension(registry);
+  mlir::shape::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
+      registry);
+  mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::vector::registerBufferizableOpInterfaceExternalModels(registry);
+  
+  mlir::mhlo::registerBufferizableOpInterfaceExternalModels(registry);
 
   mlir::affine::registerTransformDialectExtension(registry);
   mlir::bufferization::registerTransformDialectExtension(registry);

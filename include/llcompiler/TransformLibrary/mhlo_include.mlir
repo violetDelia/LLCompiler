@@ -19,6 +19,7 @@ transform.named_sequence @mhlo_basic_opt(%module: !transform.any_op {transform.c
       transform.apply_patterns.canonicalization
     } : !transform.any_op
     %ops_expanded_funcs = transform.apply_registered_pass "mhlo-expand-ops-simplifier" to %cf_sinked_funcs : (!transform.any_op) -> !transform.any_op
+    // NOTE: unkown assert error -> appending to the MLIRContext dialect registry while in a multi-threaded execution context" while register mhlo-test-unfuse-batch-norm
     %batch_norm_decomposed_funcs = transform.apply_registered_pass "mhlo-test-unfuse-batch-norm" to %ops_expanded_funcs : (!transform.any_op) -> !transform.any_op
     %broadcast_sinked_funcs = transform.apply_registered_pass "mhlo-broadcast-propagation" to %batch_norm_decomposed_funcs : (!transform.any_op) -> !transform.any_op
     transform.apply_patterns to %conveted_to_signless_module {
@@ -27,8 +28,7 @@ transform.named_sequence @mhlo_basic_opt(%module: !transform.any_op {transform.c
     transform.yield
   }
 
-transform.named_sequence @mhlo_to_linalg(%module: !transform.any_op {transform.consumed}) {
-  %conveted_to_signless_module = transform.apply_registered_pass "convert-to-signless" to %module : (!transform.any_op) -> !transform.any_op
+transform.named_sequence @mhlo_to_linalg(%module: !transform.any_op {transform.readeonly}) {
     %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
     %opt_shape_funcs = transform.apply_registered_pass "symbolic-shape-optimization" to %funcs : (!transform.any_op) -> !transform.any_op
     %to_std_funcs = transform.apply_registered_pass "mhlo-legalize-to-std" to %opt_shape_funcs : (!transform.any_op) -> !transform.any_op
@@ -45,9 +45,19 @@ transform.named_sequence @mhlo_one_shot_bufferize(%module: !transform.any_op {tr
     transform.bufferization.eliminate_empty_tensors %funcs : !transform.any_op
     %empty_ops = transform.structured.match ops{["tensor.empty"]} in %module : (!transform.any_op) -> !transform.op<"tensor.empty">
     transform.bufferization.empty_tensor_to_alloc_tensor %empty_ops : (!transform.op<"tensor.empty">) -> !transform.op<"bufferization.alloc_tensor">
-    %bufferized_module = transform.apply_registered_pass "computeop-and-func-bufferize" to %module : (!transform.any_op) -> !transform.any_op
-    %finnal_module = transform.apply_registered_pass "final-bufferize=alignment=128" to %bufferized_module : (!transform.any_op) -> !transform.any_op
-    %promote_buffer_module = transform.apply_registered_pass "promote-buffers-to-stack=max-alloc-size-in-bytes=64" to %finnal_module : (!transform.any_op) -> !transform.any_op
+    %bufferized_module = transform.bufferization.one_shot_bufferize %module
+      {function_boundary_type_conversion = 1 : i32,
+      allow_return_allocs_from_loops = true,
+      allow_unknown_ops = true,
+      bufferize_function_boundaries = true,
+      dump_alias_sets = false,
+      test_analysis_only = false,
+      print_conflicts = false,
+      check_parallel_regions = true,
+      memcpy_op = "memref.copy"} : (!transform.any_op) -> !transform.any_op
+    %bufferized_funcs = transform.structured.match ops{["func.func"]} in %bufferized_module : (!transform.any_op) -> !transform.any_op
+    %finnal_funcs = transform.apply_registered_pass "finalizing-bufferize" to %bufferized_funcs  : (!transform.any_op) -> !transform.any_op
+    %promote_buffer_module = transform.apply_registered_pass "promote-buffers-to-stack" to %finnal_funcs {options = "max-alloc-size-in-bytes=128"}: (!transform.any_op) -> !transform.any_op
     transform.apply_patterns to %promote_buffer_module {
       transform.apply_patterns.canonicalization
     } : !transform.any_op
