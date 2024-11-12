@@ -49,7 +49,9 @@ struct TransformPipelineOptions
 
   ListOption<std::string> transformEntryPoint = {
       *this, "transform-entry-point", llvm::cl::desc("transformEntryPoint")};
-    
+  Option<unsigned> indexBitWidth = {*this, "index bit width",
+                                    llvm::cl::desc("index bit width"),
+                                    llvm::cl::init(32)};
 };
 void buildTransformPipeline(mlir::OpPassManager &pm,
                             const TransformPipelineOptions &options);

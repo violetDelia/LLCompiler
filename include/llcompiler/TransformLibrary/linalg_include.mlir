@@ -13,4 +13,10 @@ transform.named_sequence @linalg_specialize(%module: !transform.any_op {transfor
     %specialize_ops = transform.structured.specialize %linalg_ops : (!transform.any_op) -> !transform.any_op
     transform.yield
   }
+
+transform.named_sequence @linalg_flatten_elementwise(%module: !transform.any_op {transform.readonly}) {
+    %linalg_ops = transform.structured.match interface{LinalgOp} in %module : (!transform.any_op) -> !transform.any_op
+    %specialize_ops = transform.structured.flatten_elementwise %linalg_ops : (!transform.any_op) -> !transform.any_op
+    transform.yield
+  }
 } // transform module

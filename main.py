@@ -29,14 +29,19 @@ def llcompiler_run_time(model, *inputs):
 def torch_run_time(model, *inputs):
     return model(*inputs)
 
+@run_time
+def loop_llcompiler_run_time(loop_times,model, *inputs):
+    for _ in range(0, loop_times):
+        model(*inputs)
 
 @run_time
 def torch_compiler_time(model, *inputs):
     return model(*inputs)
 
 
+
 module_dict = {
-    # Add: [torch.randn((200, 3, 224, 224), device="cpu")],
+    Add: [torch.randn((200, 3, 224, 256), device="cpu")],
     # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
@@ -47,7 +52,7 @@ module_dict = {
     # Linear: [torch.randn((10,100000), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
     # Resnet: [torch.randn((1, 3, 224, 224), device="cpu")],
-    ElewiseFusion1: [torch.randn((200, 3, 224, 224), device="cpu")],
+    # ElewiseFusion1: [torch.randn((200, 3, 224, 224), device="cpu")],
     # torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
     # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -87,7 +92,7 @@ def run_model_dict(dict):
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
-                dynamic=True,
+                dynamic=False,
                 fullgraph=True,
             )
             torch_compiler: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
@@ -99,6 +104,8 @@ def run_model_dict(dict):
             torch_res = torch_compiler_time(torch_compiler, *inputs)
             torch_compiler_time(torch_compiler, *inputs)
             engine_res = llcompiler_run_time(opt_model, *inputs)
+            llcompiler_run_time(opt_model, *inputs)
+            loop_llcompiler_run_time(100,opt_model, *inputs)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")

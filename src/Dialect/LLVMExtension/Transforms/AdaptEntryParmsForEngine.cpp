@@ -136,7 +136,7 @@ void transformMemrefOffset(size_t index, IRRewriter* rewriter, Block& block) {
           context, cast<LLVM::LLVMPointerType>(new_offset_ptr.getType())
                        .getAddressSpace()),
       rewriter->getI64Type(), new_offset_ptr, ArrayRef<Value>{const_op}, true);
-  auto new_offset = rewriter->create<LLVM::LoadOp>(loc, rewriter->getI64Type(),
+  auto new_offset = rewriter->create<LLVM::LoadOp>(loc, offset.getType(),
                                                    get_element_ptr);
   block.push_front(new_offset);
   block.push_front(get_element_ptr);
@@ -162,7 +162,7 @@ void transformMemrefSizesOrStrides(size_t index, size_t rank,
             cast<LLVM::LLVMPointerType>(new_arg.getType()).getAddressSpace()),
         rewriter->getI64Type(), new_arg, ArrayRef<Value>{const_op}, true);
     auto new_sizes_or_strides = rewriter->create<LLVM::LoadOp>(
-        loc, rewriter->getI64Type(), get_element_ptr);
+        loc, sizes_or_strides.getType(), get_element_ptr);
     block.push_front(new_sizes_or_strides);
     block.push_front(get_element_ptr);
     block.push_front(const_op);

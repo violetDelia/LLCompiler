@@ -58,6 +58,7 @@ llcompiler_add_library(LLCPipelines
     MLIRBufferizationToMemRef
 
     MLIRSCFToControlFlow
+    MLIRSCFToGPU
 
     MLIRLLVMIRTransforms
     MLIRConvertToLLVMPass
@@ -66,6 +67,8 @@ llcompiler_add_library(LLCPipelines
     MLIRControlFlowToLLVM
     MLIRSPIRVToLLVM
     MLIRIndexToLLVM
+    MLIRVectorToLLVM
+    MLIRVectorToLLVMPass
 
     MLIRConvertToSPIRVPass
     MLIRSCFToSPIRV

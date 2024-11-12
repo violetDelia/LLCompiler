@@ -36,6 +36,7 @@
 #include "mhlo/IR/register.h"
 #include "mhlo/interfaces/bufferizable_op_interface_impl.h"
 #include "mhlo/transforms/passes.h"
+#include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
@@ -85,49 +86,55 @@ namespace llc::compiler {
 
 void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::BuiltinDialect>();
-  context.getOrLoadDialect<mlir::llh::LLHDialect>();
   context.getOrLoadDialect<mlir::func::FuncDialect>();
   context.getOrLoadDialect<mlir::tosa::TosaDialect>();
-  context.getOrLoadDialect<mlir::mhlo::MhloDialect>();
-  context.getOrLoadDialect<mlir::chlo::ChloDialect>();
-  context.getOrLoadDialect<mlir::stablehlo::StablehloDialect>();
   context.getOrLoadDialect<mlir::quant::QuantDialect>();
   context.getOrLoadDialect<mlir::sparse_tensor::SparseTensorDialect>();
-  context.getOrLoadDialect<mlir::vhlo::VhloDialect>();
   context.getOrLoadDialect<mlir::transform::TransformDialect>();
   context.getOrLoadDialect<mlir::bufferization::BufferizationDialect>();
   context.getOrLoadDialect<mlir::shape::ShapeDialect>();
   context.getOrLoadDialect<mlir::vector::VectorDialect>();
   context.getOrLoadDialect<mlir::tensor::TensorDialect>();
   context.getOrLoadDialect<mlir::index::IndexDialect>();
+
+  context.getOrLoadDialect<mlir::llh::LLHDialect>();
+
+  context.getOrLoadDialect<mlir::mhlo::MhloDialect>();
+  context.getOrLoadDialect<mlir::chlo::ChloDialect>();
+  context.getOrLoadDialect<mlir::stablehlo::StablehloDialect>();
+  context.getOrLoadDialect<mlir::vhlo::VhloDialect>();
 }
 
 void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::func::registerInlinerExtension(registry);
   mlir::LLVM::registerInlinerInterface(registry);
+
   mlir::arith::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::tensor::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
       registry);
   mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::scf::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
-  mlir::registerBuiltinDialectTranslation(registry);
-  mlir::registerLLVMDialectTranslation(registry);
-  mlir::ub::registerConvertUBToLLVMInterface(registry);
-  mlir::registerConvertMemRefToLLVMInterface(registry);
-  mlir::registerConvertFuncToLLVMInterface(registry);
-  mlir::index::registerConvertIndexToLLVMInterface(registry);
-  mlir::func::registerTransformDialectExtension(registry);
   mlir::shape::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
       registry);
   mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::vector::registerBufferizableOpInterfaceExternalModels(registry);
-  
   mlir::mhlo::registerBufferizableOpInterfaceExternalModels(registry);
 
+  mlir::registerConvertMemRefToLLVMInterface(registry);
+  mlir::registerConvertFuncToLLVMInterface(registry);
+  mlir::arith::registerConvertArithToLLVMInterface(registry);
+  mlir::index::registerConvertIndexToLLVMInterface(registry);
+  mlir::cf::registerConvertControlFlowToLLVMInterface(registry);
+
+  mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
+
+  mlir::registerBuiltinDialectTranslation(registry);
+  mlir::registerLLVMDialectTranslation(registry);
+
   mlir::affine::registerTransformDialectExtension(registry);
+  mlir::func::registerTransformDialectExtension(registry);
   mlir::bufferization::registerTransformDialectExtension(registry);
   mlir::func::registerTransformDialectExtension(registry);
   mlir::gpu::registerTransformDialectExtension(registry);
@@ -135,11 +142,12 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::memref::registerTransformDialectExtension(registry);
   mlir::scf::registerTransformDialectExtension(registry);
   mlir::tensor::registerTransformDialectExtension(registry);
+  mlir::vector::registerTransformDialectExtension(registry);
+
   mlir::transform::registerDebugExtension(registry);
   mlir::transform::registerIRDLExtension(registry);
   mlir::transform::registerLoopExtension(registry);
   mlir::transform::registerPDLExtension(registry);
-  mlir::vector::registerTransformDialectExtension(registry);
 }
 
 void init_logger(const logger::LoggerOption& logger_option) {
