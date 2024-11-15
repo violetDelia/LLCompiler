@@ -1,6 +1,5 @@
 llcompiler_add_library(LLCPipelines
     SRC_FILES
-    CommonPipeline.cpp
     BasicPipeline.cpp
     TransformPipeline.cpp
 

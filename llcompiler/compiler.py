@@ -33,7 +33,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         pipeline: str = "transform",
         index_bit_width: int = 64,
         symbol_infer=True,
-        opt_level=2,
+        opt_level=3,
         L3_cache_size=0,
         L2_cache_size=0,
         L1_cache_size=0,

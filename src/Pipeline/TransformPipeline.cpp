@@ -126,7 +126,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
       __LLC_TRANSFORM_MHLO_INCLUDE__);
   preload_options.transformLibraryPaths.push_back(
       __LLC_TRANSFORM_TENSOR_INCLUDE__);
-preload_options.transformLibraryPaths.push_back(
+  preload_options.transformLibraryPaths.push_back(
       __LLC_TRANSFORM_LLVM_INCLUDE__);
   pm.addPass(mlir::transform::createPreloadLibraryPass(preload_options));
   // 合法化非法的Op
@@ -209,6 +209,7 @@ preload_options.transformLibraryPaths.push_back(
   //===----------------------------------------------------------------------===//
   // affine opt
   //===----------------------------------------------------------------------===//
+
   mlir::affine::AffineVectorizeOptions vectorize_options;
   vectorize_options.vectorSizes = {128};
   vectorize_options.vectorizeReductions = true;
@@ -263,7 +264,6 @@ preload_options.transformLibraryPaths.push_back(
   // LLVM opt
   //===----------------------------------------------------------------------===//
   applyInterpreter(pm, __LLC_TRANSFORM_LLVM_BASIC_OPT__);
-
 }
 
 void registerTransformPipeline() {
