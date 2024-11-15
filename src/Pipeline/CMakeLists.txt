@@ -68,6 +68,7 @@ llcompiler_add_library(LLCPipelines
     MLIRIndexToLLVM
     MLIRVectorToLLVM
     MLIRVectorToLLVMPass
+    MLIRMathToLLVM
 
     MLIRConvertToSPIRVPass
     MLIRSCFToSPIRV

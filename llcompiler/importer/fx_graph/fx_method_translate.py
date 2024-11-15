@@ -32,9 +32,20 @@ from ...dialect.llh import (
     ReshapeOp,
     TransposeOp,
     ExpandOp,
+    AbsOp,
 )
 from ...dialect.llh_utility import build_llh_transpose
 from xdsl.ir import SSAValue, Operation, Block
+
+
+@TORCH_METHOD_TRANSLATE("abs")
+def aten_view_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(AbsOp.build, 1, node, value_map, block)
 
 
 @TORCH_METHOD_TRANSLATE("reshape")
@@ -85,6 +96,7 @@ def torch_permute_convert(
         result_types=[result_type],
     )
 
+
 @TORCH_METHOD_TRANSLATE("view")
 def aten_view_convert(
     node: torch.fx.node.Node,
@@ -96,5 +108,5 @@ def aten_view_convert(
     input = get_arg_value(node.args[0], value_map, block)
     dims = []
     for dim in range(len(node.args[1:])):
-        dims.append(get_arg_value(node.args[1+dim], value_map, block))
+        dims.append(get_arg_value(node.args[1 + dim], value_map, block))
     return ReshapeOp(operands=[input, dims], result_types=[result_type])

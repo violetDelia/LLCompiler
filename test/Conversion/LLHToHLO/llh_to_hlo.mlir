@@ -37,6 +37,13 @@ func.func @div(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
 }
 
 // -----
+func.func @abs(%arg0: tensor<?x10x?x?xf32>) ->() attributes {entrance}{
+  // CHECK: mhlo.abs
+  %222 = "llh.abs"(%arg0) : (tensor<?x10x?x?xf32>) -> tensor<?x10x?x?xf32>
+  return 
+}
+
+// -----
 func.func @conv_nchw_fchw(%arg0: tensor<4x3x5x5xf32> , %arg1: tensor<?x3x?x?xf32>) -> (tensor<?x4x?x?xf32>) attributes {entrance} {
     // CHECK: mhlo.convolution
     // CHECK-SAME: dim_numbers = [b, f, 0, 1]x[o, i, 0, 1]->[b, f, 0, 1]

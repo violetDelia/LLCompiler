@@ -33,6 +33,7 @@ from ...dialect.llh import (
     EmptyOp,
     ConvOp,
     AddOp,
+    AbsOp,
     DivOp,
     MulOp,
     DimOp,
@@ -90,6 +91,14 @@ def builtin_truediv_convert(
 ):
     return commond_build_op(DivOp.build, 2, node, value_map, block)
 
+@TORCH_FUNCTION_TRANSLATE("abs","aten::abs")
+def aten_view_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(AbsOp.build, 1, node, value_map, block)
 
 @TORCH_FUNCTION_TRANSLATE("aten::sym_size.int")
 def aten_sym_size_int_convert(

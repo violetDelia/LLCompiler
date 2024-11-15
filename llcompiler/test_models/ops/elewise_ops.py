@@ -51,3 +51,13 @@ class Relu(nn.Module):
     def forward(self, x: torch.Tensor):
         x = self.relu(x)
         return x
+
+class Abs(nn.Module):
+    def __init__(self):
+        super().__init__()
+        
+
+    def forward(self, x: torch.Tensor):
+        x = x.abs()
+        x = torch.abs(x)
+        return x

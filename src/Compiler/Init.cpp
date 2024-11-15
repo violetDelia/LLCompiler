@@ -39,6 +39,7 @@
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
+#include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
 #include "mlir/Conversion/MemRefToLLVM/MemRefToLLVM.h"
 #include "mlir/Conversion/UBToLLVM/UBToLLVM.h"
 #include "mlir/Dialect/Arith/Transforms/BufferizableOpInterfaceImpl.h"
@@ -50,6 +51,7 @@
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/LLVMIR/Transforms/InlinerInterfaceImpl.h"
 #include "mlir/Dialect/Linalg/Transforms/BufferizableOpInterfaceImpl.h"
+#include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/Transforms/AllocationOpInterfaceImpl.h"
 #include "mlir/Dialect/SCF/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Shape/IR/Shape.h"
@@ -96,6 +98,7 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::vector::VectorDialect>();
   context.getOrLoadDialect<mlir::tensor::TensorDialect>();
   context.getOrLoadDialect<mlir::index::IndexDialect>();
+  context.getOrLoadDialect<mlir::math::MathDialect>();
 
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
 
@@ -127,6 +130,7 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::arith::registerConvertArithToLLVMInterface(registry);
   mlir::index::registerConvertIndexToLLVMInterface(registry);
   mlir::cf::registerConvertControlFlowToLLVMInterface(registry);
+  mlir::registerConvertMathToLLVMInterface(registry);
 
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
 

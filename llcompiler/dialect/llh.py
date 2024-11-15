@@ -155,11 +155,19 @@ class WeightOp(IRDLOperation):
 
 
 @irdl_op_definition
+class AbsOp(IRDLOperation):
+    name = "llh.abs"
+    input = operand_def(LLH_Computable_Type)
+    result = result_def(LLH_Computable_Type)
+
+
+@irdl_op_definition
 class AddOp(IRDLOperation):
     name = "llh.add"
     lhs = operand_def(LLH_Computable_Type)
     rhs = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
+
 
 @irdl_op_definition
 class SubOp(IRDLOperation):
@@ -167,6 +175,7 @@ class SubOp(IRDLOperation):
     lhs = operand_def(LLH_Computable_Type)
     rhs = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
+
 
 @irdl_op_definition
 class DivOp(IRDLOperation):
@@ -242,11 +251,13 @@ class ReshapeOp(IRDLOperation):
     shapes = var_operand_def(IntegerType)
     result = result_def(TensorType)
 
+
 @irdl_op_definition
 class EmptyOp(IRDLOperation):
     name = "llh.empty"
     shapes = var_operand_def(IntegerType)
     result = result_def(TensorType)
+
 
 @irdl_op_definition
 class ExpandOp(IRDLOperation):
@@ -337,7 +348,6 @@ class AdaptiveAvgPoolOp(IRDLOperation):
     input = operand_def(TensorType)
     out_size = attr_def(ArrayAttr)
     result = result_def(TensorType)
-    
 
 
 LLH = Dialect(
@@ -364,7 +374,8 @@ LLH = Dialect(
         FlattenOp,
         BatchNormOp,
         SubOp,
-        EmptyOp
+        EmptyOp,
+        AbsOp
     ],
     [],
 )

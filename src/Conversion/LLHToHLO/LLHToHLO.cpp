@@ -277,7 +277,7 @@ struct MaxPoolOpLowing : public OpConversionPattern<MaxPoolOp> {
     auto max = rewriter.create<mhlo::MaxOp>(loc, block.getArgument(0),
                                             block.getArgument(1));
     auto return_op = rewriter.create<mhlo::ReturnOp>(loc, ValueRange{max});
-    rewriter.replaceOp(op,reduce_winodw_op);
+    rewriter.replaceOp(op, reduce_winodw_op);
   }
 };
 
@@ -295,6 +295,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<DivOp, mhlo::DivOp>>(converter, context);
   patterns.add<SimplyFullLowing<MaxOp, mhlo::MaxOp>>(converter, context);
   patterns.add<SimplyFullLowing<MatMulOp, mhlo::DotOp>>(converter, context);
+  patterns.add<SimplyFullLowing<AbsOp,mhlo::AbsOp>>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<BatchNormOpLowing>(converter, context);
   patterns.add<MaxPoolOpLowing>(converter, context);
@@ -307,17 +308,10 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
 //===----------------------------------------------------------------------===//
 void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
-  target.addIllegalOp<DivOp>();
-  target.addIllegalOp<SubOp>();
-  target.addIllegalOp<AddOp>();
-  target.addIllegalOp<MulOp>();
-  target.addIllegalOp<MaxOp>();
-  target.addIllegalOp<ReluOp>();
-  target.addIllegalOp<ConvOp>();
-  target.addIllegalOp<BatchNormOp>();
-  target.addIllegalOp<BroadCastToOp>();
-  target.addIllegalOp<TransposeOp>();
-  target.addIllegalOp<MaxPoolOp>();
+  target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp>();
+  target.addIllegalOp<ReluOp, BatchNormOp,AbsOp>();
+  target.addIllegalOp<ConvOp, MaxPoolOp>();
+  target.addIllegalOp<TransposeOp,BroadCastToOp>();
   target.addLegalDialect<mhlo::MhloDialect>();
   target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

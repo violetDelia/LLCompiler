@@ -41,10 +41,11 @@ def torch_compiler_time(model, *inputs):
 
 
 module_dict = {
-    Add: [torch.randn((200, 3, 224, 256), device="cpu")],
+    # Add: [torch.randn((200, 3, 224, 256), device="cpu")],
     # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
+    Abs: [torch.randn((200*3* 224* 256), device="cpu")],
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
     # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
@@ -105,7 +106,7 @@ def run_model_dict(dict):
             torch_compiler_time(torch_compiler, *inputs)
             engine_res = llcompiler_run_time(opt_model, *inputs)
             llcompiler_run_time(opt_model, *inputs)
-            loop_llcompiler_run_time(100,opt_model, *inputs)
+            #loop_llcompiler_run_time(100,opt_model, *inputs)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")

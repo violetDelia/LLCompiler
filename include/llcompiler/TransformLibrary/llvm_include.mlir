@@ -8,6 +8,7 @@ transform.named_sequence @lowing_to_llvm(%module: !transform.any_op {transform.c
   %funcs = transform.structured.match ops{["llvm.func"]} in %lowing_func_module
     : (!transform.any_op) -> !transform.any_op
   transform.apply_conversion_patterns to %funcs {
+    transform.apply_conversion_patterns.dialect_to_llvm "math"
     transform.apply_conversion_patterns.dialect_to_llvm "memref"
     transform.apply_conversion_patterns.dialect_to_llvm "index"
     transform.apply_conversion_patterns.dialect_to_llvm "arith"

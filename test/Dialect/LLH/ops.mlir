@@ -20,3 +20,10 @@ func.func @aot(%arg0: i64, %arg1: i64, %arg2: tensor<?x?x224x224xf32>) ->(){
     return
 }
 
+// CHECK-LABEL: aot
+func.func @unary_op(%arg0: tensor<?x?x224x224xf32>) ->(){
+    // llh.abs
+    %1 = "llh.abs"(%arg0): (tensor<?x?x224x224xf32>) -> tensor<?x?x224x224xf32>
+    return
+}
+
