@@ -7,7 +7,7 @@
 "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
 // CHECK-LABEL: dim_to_const
 func.func @dim_to_const(%101: tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>) ->(i64, i64, i64, i64) attributes {entrance} {
-  // CHECK-COUNT-5: llh.constant
+  // CHECK-COUNT-3: llh.constant
   %0 = "llh.constant"() <{symbol = @c3, value = 3 : i64}> : () -> i64
   %1 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64
   %2 = "llh.constant"() <{symbol = @c0, value = 0 : i64}> : () -> i64
@@ -26,8 +26,7 @@ func.func @dim_to_const(%101: tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, 
 "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
 // CHECK-LABEL: fold_two_abs
 func.func @fold_two_abs(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) ->  tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>> attributes {entrance} {
-  // CHECK: "llh.abs"(%arg0)
-  // CHECK: "llh.abs"(%arg0)
+  // CHECK: llh.abs
   // CHECK: return
   %4 = "llh.abs"(%arg0) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
   %5 = "llh.abs"(%4) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>

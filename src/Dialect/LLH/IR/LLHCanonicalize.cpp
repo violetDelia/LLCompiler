@@ -46,12 +46,21 @@ using namespace mlir::llh;
 #include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
 constexpr inline size_t ReshapeBenefit = 100;
 constexpr inline size_t BroadcastBenefit = 99;
+
+//===----------------------------------------------------------------------===//
+// ConstantOp.
+//===----------------------------------------------------------------------===//
+void ConstantOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<EraseNoUserOp<ConstantOp>>(context);
+}
 //===----------------------------------------------------------------------===//
 // AbsOp.
 //===----------------------------------------------------------------------===//
 void AbsOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
   results.add<FoldTwoAbsOpPattern>(context);
+  results.add<EraseNoUserOp<AbsOp>>(context);
 }
 //===----------------------------------------------------------------------===//
 // MaxOp.
@@ -372,7 +381,6 @@ struct ExtractOpRefine : public LLHOpRewritePattern<ExtractOp> {
     return llvm::success();
   }
   void rewrite(ExtractOp op, LLHPatternRewriter &rewriter) const final {
-    op->dump();
     auto loc = op.getLoc();
     auto index = op.getIndex();
     auto input = op.getInput();

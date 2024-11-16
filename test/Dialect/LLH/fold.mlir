@@ -3,7 +3,7 @@
 
 // CHECK-LABEL: fold_dim
 func.func @fold_dim(%101: tensor<?x512x1x1xf32>) ->(i64, i64, i64, i64) attributes {entrance} {
-  // CHECK-COUNT-5: llh.constant
+  // CHECK-COUNT-3: llh.constant
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = 2 : i64}> : () -> i64
   %2 = "llh.constant"() <{value = 0 : i64}> : () -> i64

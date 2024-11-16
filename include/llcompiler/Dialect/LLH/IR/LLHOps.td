@@ -173,7 +173,7 @@ def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike]>{
         }]>
     ];
     let hasFolder = 1;
-    //let hasCanonicalizer = 1;
+    let hasCanonicalizer = 1;
 }
 
 def LLH_BroadCastToOp          : LLH_SymbolOp<"broadcast_to",[]>{
