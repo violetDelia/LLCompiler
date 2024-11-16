@@ -12,10 +12,32 @@ import torch.nn as nn
 import torch.nn.functional as F
 import math, copy, time
 
+
+def clones(module, N):
+    return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
+
+
+def attention(
+    query: Tensor,
+    key: Tensor,
+    value: Tensor,
+    mask: Optional[Tensor] = None,
+    dropout: float = 0.1,
+):
+    k_dim = query.size(-1)
+    scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(k_dim)
+    if mask is not None:
+        scores = scores.masked_fill(mask == 0, -1e10)
+    attention_score = F.softmax(scores, dim=-1)
+    if dropout is not None:
+        attention_score = dropout(attention_score)
+    out = torch.matmul(attention_score, value)
+    return out, attention_score  # shape: (seq_len, v_dim), (seq_len, seq_lem)
+
 class MultiHeadedAttention(nn.Module):
     def __init__(self, 
                 num_heads: int= 2,
-                d_model: int =6, 
+                d_model: int =8, 
                 dropout: float=0.1):
         super(MultiHeadedAttention, self).__init__()
         assert d_model % num_heads == 0, "d_model must be divisible by num_heads"
@@ -42,25 +64,4 @@ class MultiHeadedAttention(nn.Module):
              .view(batch_size, -1, self.num_heads * self.k_dim)
         out = self.proj_weights[-1](out)
         return out
-
-
-
-def clones(module, N):
-        return nn.ModuleList([copy.deepcopy(module) for _ in range(N)])
-    
-    
-def attention(query: Tensor, 
-              key: Tensor,
-              value: Tensor, 
-              mask: Optional[Tensor] = None, 
-              dropout: float = 0.1):
-    k_dim = query.size(-1)
-    scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(k_dim)
-    if mask is not None:
-        scores = scores.masked_fill(mask == 0, -1e10)
-    attention_score = F.softmax(scores, dim = -1)
-    if dropout is not None:
-        attention_score = dropout(attention_score) 
-    out = torch.matmul(attention_score, value)
-    return out, attention_score # shape: (seq_len, v_dim), (seq_len, seq_lem)
 

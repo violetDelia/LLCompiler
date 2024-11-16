@@ -110,3 +110,18 @@ def aten_view_convert(
     for dim in range(len(node.args[1:])):
         dims.append(get_arg_value(node.args[1 + dim], value_map, block))
     return ReshapeOp(operands=[input, dims], result_types=[result_type])
+
+@TORCH_METHOD_TRANSLATE("unsqueeze")
+def aten_view_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    raise ValueError
+    result_type = torch_fake_tensor_translate(get_result_type(node))
+    input = get_arg_value(node.args[0], value_map, block)
+    dims = []
+    for dim in range(len(node.args[1:])):
+        dims.append(get_arg_value(node.args[1 + dim], value_map, block))
+    return ReshapeOp(operands=[input, dims], result_types=[result_type])

@@ -34,7 +34,7 @@ llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
                                          LLHPatternRewriter* rewrite);
 RankedTensorType cloneTensorWithEncoding(RankedTensorType type,
                                          EncodingAttr encoding);
-size_t getConstIntegerValue(Value value);
+int64_t getConstIntegerValue(Value value);
 bool isConstIntegerValue(Value value);
 Layout getLayoutFromGloabalLayout(Layout global_layout,int64_t rank);
 Layout getWeightLayoutFromGloabalLayout(Layout global_layout,int64_t rank);

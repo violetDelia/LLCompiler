@@ -205,8 +205,28 @@ def LLH_DimOp : LLH_Op<"dim">{
         );
     let results = (outs 
         LLH_Int64);
+    let builders = [
+        OpBuilder<(ins "Value":$input, "size_t":$dim),
+        [{
+            llvm::SmallVector<mlir::Value> operands;
+            auto const_dim = $_builder.create<mlir::llh::ConstantOp>(input.getLoc(),$_builder.getI64IntegerAttr(dim));
+            operands.push_back(input);
+            operands.push_back(const_dim);
+            $_state.addOperands(operands);
+            $_state.addTypes($_builder.getI64Type());
+        }]>,
+    ];
     let hasCanonicalizer = 1;
     let hasFolder = 1;
+}
+
+def LLH_ExtractOp : LLH_SymbolOp<"extract",[]>{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        LLH_Int64:$index);
+    let results = (outs 
+        LLH_Tensor);
+    let hasCanonicalizer = 1;
 }
 
 def LLH_ReshapeOp : LLH_SymbolOp<"reshape",[]>{

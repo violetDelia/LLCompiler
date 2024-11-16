@@ -5,7 +5,7 @@ from .fx_translate import (
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
-    SPECIAL_RESULT_FAKE_INDEX_MAP
+    SPECIAL_RESULT_FAKE_INDEX_MAP,
 )
 import torch._ops as op
 import torch.fx
@@ -47,6 +47,7 @@ from ...dialect.llh import (
     MaxPoolOp,
     SubOp,
     MatmulOp,
+    ExtractOp
 )
 from ...dialect.llh_utility import build_llh_transpose, build_llh_constant
 from torch._subclasses.fake_tensor import FakeTensor
@@ -91,7 +92,8 @@ def builtin_truediv_convert(
 ):
     return commond_build_op(DivOp.build, 2, node, value_map, block)
 
-@TORCH_FUNCTION_TRANSLATE("abs","aten::abs")
+
+@TORCH_FUNCTION_TRANSLATE("abs", "aten::abs")
 def aten_view_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
@@ -99,6 +101,7 @@ def aten_view_convert(
     block: Block,
 ):
     return commond_build_op(AbsOp.build, 1, node, value_map, block)
+
 
 @TORCH_FUNCTION_TRANSLATE("aten::sym_size.int")
 def aten_sym_size_int_convert(
@@ -143,14 +146,27 @@ def builtin_getitem_convert(
             value_map[node.name] = value_map[node.args[0].name]
             return None
         else:
-            raise NotImplementedError("重构一下，添加tuple op")
+            raise NotImplementedError("重构一下,添加tuple op")
     inputs = value_map[node.args[0].name]
     if (len(inputs) == 1) and isinstance(inputs[0].type, TensorType):
-        if isinstance(node.args[1], slice):
+        out = get_result_type(node)
+        # Slice
+        if len(node.args) > 1 and isinstance(node.args[1], slice):
+            print(node)
+            print(node.args)
             raise NotImplementedError("do not support slice current")
-        dim: ConstantOp = build_llh_constant(node.args[1])
-        block.add_op(dim)
-        return DimOp(operands=[inputs[0], dim.result], result_types=[i64])
+        # Dim
+        elif isinstance(out, torch.SymInt):
+            dim: ConstantOp = build_llh_constant(node.args[1])
+            block.add_op(dim)
+            return DimOp(operands=[inputs[0], dim.result], result_types=[i64])
+        elif isinstance(out, FakeTensor):
+            index: ConstantOp = build_llh_constant(node.args[1])
+            block.add_op(index)
+            extract_op =  ExtractOp(operands=[inputs[0], index.result], result_types=[torch_fake_tensor_translate(out)])
+            return extract_op
+        else:
+            raise ValueError(node,type(out))
 
     else:
         raise NotImplementedError

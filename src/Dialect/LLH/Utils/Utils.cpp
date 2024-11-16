@@ -16,6 +16,7 @@
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 
 #include <cstddef>
+#include <cstdint>
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
@@ -82,7 +83,7 @@ bool isConstIntegerValue(Value value) {
   return false;
 }
 
-size_t getConstIntegerValue(Value value) {
+int64_t getConstIntegerValue(Value value) {
   auto type = value.getType();
   if (!llvm::isa<IntegerType>(type)) FATAL(llc::MLIR);
   auto op = value.getDefiningOp();

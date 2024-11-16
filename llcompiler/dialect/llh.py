@@ -47,6 +47,7 @@ from xdsl.irdl import (
     ParameterDef,
     ParametrizedAttribute,
     TypeVar,
+    AttrSizedOperandSegments
 )
 from xdsl.irdl.constraints import ParamAttrConstraint, AnyOf
 from typing import TypeAlias, Annotated
@@ -245,12 +246,30 @@ class DimOp(IRDLOperation):
 
 
 @irdl_op_definition
+class SliceOp(IRDLOperation):
+    name = "llh.slice"
+    input = operand_def(TensorType)
+    starts = var_operand_def(IntegerType)
+    ends = var_operand_def(IntegerType)
+    strides = var_operand_def(IntegerType)
+    result = result_def(TensorType)
+    
+    irdl_options = [AttrSizedOperandSegments(as_property=True)]
+
+@irdl_op_definition
+class ExtractOp(IRDLOperation):
+    name = "llh.extract"
+    input = operand_def(TensorType)
+    index = operand_def(IntegerType)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
 class ReshapeOp(IRDLOperation):
     name = "llh.reshape"
     input = operand_def(TensorType)
     shapes = var_operand_def(IntegerType)
     result = result_def(TensorType)
-
 
 @irdl_op_definition
 class EmptyOp(IRDLOperation):
@@ -375,7 +394,9 @@ LLH = Dialect(
         BatchNormOp,
         SubOp,
         EmptyOp,
-        AbsOp
+        AbsOp,
+        SliceOp,
+        ExtractOp
     ],
     [],
 )
