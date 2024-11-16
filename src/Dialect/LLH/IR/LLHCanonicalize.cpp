@@ -13,6 +13,7 @@
 //    limitations under the License.
 //
 
+#include <cstddef>
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
@@ -37,17 +38,26 @@
 #include "mlir/IR/TypeRange.h"
 #include "mlir/IR/Value.h"
 #include "mlir/IR/ValueRange.h"
-
+#include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
 using namespace mlir;
 using namespace mlir::llh;
 
+constexpr inline size_t ReshapeBenefit = 100;
+constexpr inline size_t BroadcastBenefit = 99;
+//===----------------------------------------------------------------------===//
+// AbsOp.
+//===----------------------------------------------------------------------===//
+void AbsOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<FoldTwoAbsOpPattern>(context);
+}
 //===----------------------------------------------------------------------===//
 // MaxOp.
 //===----------------------------------------------------------------------===//
 void MaxOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
-  results.add<SimplyBinaryOpInsertBraodcast<MaxOp>>(context);
-  results.add<SimplyBinaryOpReshape<MaxOp>>(context, 2);
+  results.add<SimplyBinaryOpInsertBraodcast<MaxOp>>(context,BroadcastBenefit);
+  results.add<SimplyBinaryOpReshape<MaxOp>>(context, ReshapeBenefit);
 }
 
 //===----------------------------------------------------------------------===//
@@ -55,40 +65,40 @@ void MaxOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
 //===----------------------------------------------------------------------===//
 void MulOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
-  results.add<SimplyBinaryOpInsertBraodcast<MulOp>>(context);
-  results.add<SimplyBinaryOpReshape<MulOp>>(context, 2);
+  results.add<SimplyBinaryOpInsertBraodcast<MulOp>>(context,BroadcastBenefit);
+  results.add<SimplyBinaryOpReshape<MulOp>>(context, ReshapeBenefit);
 }
 //===----------------------------------------------------------------------===//
 // AddOp.
 //===----------------------------------------------------------------------===//
 void AddOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
-  results.add<SimplyBinaryOpInsertBraodcast<AddOp>>(context);
-  results.add<SimplyBinaryOpReshape<AddOp>>(context, 2);
+  results.add<SimplyBinaryOpInsertBraodcast<AddOp>>(context,BroadcastBenefit);
+  results.add<SimplyBinaryOpReshape<AddOp>>(context, ReshapeBenefit);
 }
 //===----------------------------------------------------------------------===//
 // SubOp.
 //===----------------------------------------------------------------------===//
 void SubOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
-  results.add<SimplyBinaryOpInsertBraodcast<SubOp>>(context);
-  results.add<SimplyBinaryOpReshape<SubOp>>(context, 2);
+  results.add<SimplyBinaryOpInsertBraodcast<SubOp>>(context,BroadcastBenefit);
+  results.add<SimplyBinaryOpReshape<SubOp>>(context, ReshapeBenefit);
 }
 //===----------------------------------------------------------------------===//
 // MinOp.
 //===----------------------------------------------------------------------===//
 void MinOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
-  results.add<SimplyBinaryOpInsertBraodcast<MinOp>>(context);
-  results.add<SimplyBinaryOpReshape<MinOp>>(context, 2);
+  results.add<SimplyBinaryOpInsertBraodcast<MinOp>>(context,BroadcastBenefit);
+  results.add<SimplyBinaryOpReshape<MinOp>>(context, ReshapeBenefit);
 }
 //===----------------------------------------------------------------------===//
 // DivOp.
 //===----------------------------------------------------------------------===//
 void DivOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
-  results.add<SimplyBinaryOpInsertBraodcast<DivOp>>(context);
-  results.add<SimplyBinaryOpReshape<DivOp>>(context, 2);
+  results.add<SimplyBinaryOpInsertBraodcast<DivOp>>(context,BroadcastBenefit);
+  results.add<SimplyBinaryOpReshape<DivOp>>(context, ReshapeBenefit);
 }
 
 //===----------------------------------------------------------------------===//

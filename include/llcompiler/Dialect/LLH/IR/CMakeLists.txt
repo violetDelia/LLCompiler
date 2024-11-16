@@ -15,3 +15,7 @@ add_dependencies(MLIRLLHDialectIncGen MLIRSymbolShapeOpInterfacesIncGen)
 
 add_mlir_doc(LLHDialect LLHDialect LLH/ -gen-dialect-doc)
 add_mlir_doc(LLHOps LLHOps LLH/ -gen-op-doc)
+
+set(LLVM_TARGET_DEFINITIONS LLHCanonicalize.td)
+mlir_tablegen(LLHCanonicalize.inc -gen-rewriters)
+add_public_tablegen_target(LLHCanonicalizeIncGen)

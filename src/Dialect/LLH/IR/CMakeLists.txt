@@ -1,4 +1,3 @@
-
 llcompiler_add_library(MLIRLLHDialect
     SRC_FILES
     LLHTypes.cpp
@@ -16,6 +15,7 @@ llcompiler_add_library(MLIRLLHDialect
 
     DEPENDS
     MLIRLLHDialectIncGen
+    LLHCanonicalizeIncGen
 
     LINKS PUBLIC
     MLIRIR

@@ -1,5 +1,5 @@
-// RUN: llc-opt --split-input-file --infer-symbol-shape --canonicalize %s| FileCheck %s
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --canonicalize /home/lfr/LLCompiler/test/Dialect/LLH/canonicalize.mlir 
+// RUN: llc-opt --split-input-file --infer-symbol-shape --canonicalize -remove-dead-values %s| FileCheck %s
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --canonicalize -remove-dead-values /home/lfr/LLCompiler/test/Dialect/LLH/canonicalize.mlir 
 
 
 "llh.symbolic_int"() <{sym_name = "c512"}> : () -> ()
@@ -18,6 +18,20 @@ func.func @dim_to_const(%101: tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, 
   %104 = "llh.dim"(%101, %1) <{symbol = @c1}> : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
   %105 = "llh.dim"(%101, %0) <{symbol = @c1}> : (tensor<?x512x1x1xf32, #llh.encoding<shapes = @s0, @c512, @c1, @c1>>, i64) -> i64
   return %102,%103,%104,%105: i64, i64, i64, i64
+}
+
+// -----
+"llh.symbolic_int"() <{sym_name = "c512"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
+"llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+// CHECK-LABEL: fold_two_abs
+func.func @fold_two_abs(%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) ->  tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>> attributes {entrance} {
+  // CHECK: "llh.abs"(%arg0)
+  // CHECK: "llh.abs"(%arg0)
+  // CHECK: return
+  %4 = "llh.abs"(%arg0) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
+  %5 = "llh.abs"(%4) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
+  return %5 : tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
 }
 
 

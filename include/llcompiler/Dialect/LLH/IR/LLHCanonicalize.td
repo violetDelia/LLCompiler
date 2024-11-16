@@ -17,6 +17,7 @@
 #define LLH_CANONICALIZE
 
 include "llcompiler/Dialect/LLH/IR/LLHOps.td"
+include "mlir/IR/PatternBase.td"
 
 
 //===----------------------------------------------------------------------===//
@@ -88,8 +89,10 @@ class EqualString<string s> : Constraint<CPred<"$0 == \"" # s # "\"">>;
 
 
 //===----------------------------------------------------------------------===//
-// Canonicalization for AdaptiveAvgPoolOp
+// Canonicalization for AbsOp
 //===----------------------------------------------------------------------===//
-
+def FoldTwoAbsOpPattern : Pat<(LLH_AbsOp (LLH_AbsOp:$res $input)),
+                                 (LLH_AbsOp $input),
+                                 [(HasOneUse $res)]>;
 
 #endif // LLH_CANONICALIZE

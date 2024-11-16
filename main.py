@@ -29,15 +29,16 @@ def llcompiler_run_time(model, *inputs):
 def torch_run_time(model, *inputs):
     return model(*inputs)
 
+
 @run_time
-def loop_llcompiler_run_time(loop_times,model, *inputs):
+def loop_llcompiler_run_time(loop_times, model, *inputs):
     for _ in range(0, loop_times):
         model(*inputs)
+
 
 @run_time
 def torch_compiler_time(model, *inputs):
     return model(*inputs)
-
 
 
 module_dict = {
@@ -45,7 +46,13 @@ module_dict = {
     # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
-    Abs: [torch.randn((200*3* 224* 256), device="cpu")],
+    Abs: [torch.randn((200,3,224,256), device="cpu")],
+    # MultiHeadAttention: [
+    #     torch.randn((2, 20, 8), device="cpu"),
+    #     torch.randn((2, 20, 8), device="cpu"),
+    #     torch.randn((2, 20, 8), device="cpu"),
+    #     torch.tril(torch.ones((20, 20)), diagonal=0).unsqueeze(0),
+    # ]
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
     # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
@@ -64,10 +71,7 @@ module_dict = {
 
 
 def run_model_dict(dict):
-    modes = [
-        "inference",
-        "training"
-    ]
+    modes = ["inference", "training"]
     for mode in modes:
         for func, inputs in dict.items():
             print("模型: ", func.__name__, ", 模式: ", mode)
@@ -87,13 +91,13 @@ def run_model_dict(dict):
                 log_level="debug",
                 symbol_infer=True,
                 target_layout="NHWC",
-                pipeline = "transform"
+                pipeline="transform",
             )
             model = func()
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
-                dynamic=False,
+                dynamic=True,
                 fullgraph=True,
             )
             torch_compiler: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
@@ -106,7 +110,7 @@ def run_model_dict(dict):
             torch_compiler_time(torch_compiler, *inputs)
             engine_res = llcompiler_run_time(opt_model, *inputs)
             llcompiler_run_time(opt_model, *inputs)
-            #loop_llcompiler_run_time(100,opt_model, *inputs)
+            # loop_llcompiler_run_time(100,opt_model, *inputs)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")
