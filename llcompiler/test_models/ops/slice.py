@@ -8,5 +8,5 @@ class Extract(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = x[0]
-        x = x[-1]
+        x = x[-2]
         return x

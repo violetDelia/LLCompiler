@@ -64,10 +64,83 @@ void generateEntranceSymbol(ModuleOp module) {
     auto func_type = func.getFunctionType();
     auto& block = func.getFunctionBody().getBlocks().front();
     auto input_num = block.getNumArguments();
+    auto maybe_attrs = func.getArgAttrs();
+    if (maybe_attrs.has_value()) {
+      auto attrs = maybe_attrs.value().getValue();
+      CHECK(llc::MLIR_PASS,
+            attrs.size() == func.getFunctionType().getNumInputs());
+      for (int i{}; i < input_num; i++) {
+        auto arg = block.getArgument(i);
+        if (isa<RankedTensorType>(arg.getType())) {
+          auto tensor = llvm::cast<RankedTensorType>(arg.getType());
+          auto has_encode = tensor.getEncoding();
+          auto arg_attr = llvm::cast<DictionaryAttr>(attrs[i]);
+          CHECK(llc::SymbolInfer, arg_attr);
+          SmallVector<StringRef> symbols;
+          for (size_t dim{}; dim < tensor.getRank(); dim++) {
+            auto dim_symbol_attr = arg_attr.getAs<StringAttr>(
+                "func.input_symbol_" + std::to_string(dim));
+            CHECK(llc::SymbolInfer, dim_symbol_attr);
+            symbols.push_back(dim_symbol_attr.getValue());
+            symbol_analysis->getOrBuildSymbol(dim_symbol_attr.getValue());
+          }
+          symbol_analysis->addEncoding(arg, symbols);
+        }
+        new_input.push_back(arg.getType());
+      }
+    } else {
+      for (int i{}; i < input_num; i++) {
+        auto arg = block.getArgument(i);
+        auto new_arg = symbol_analysis->addEncoding(arg);
+        new_input.push_back(new_arg.getType());
+      }
+    }
+    auto& blocks = func.getFunctionBody().getBlocks();
+    for (auto& block : blocks) {
+      if (block.isEntryBlock()) {
+        auto new_func_type = FunctionType::get(
+            context, new_input, block.getTerminator()->getOperandTypes());
+        func.setType(new_func_type);
+        func->dump();
+      }
+    }
+  }
+}
+
+void removeEntranceTensorEncoding(ModuleOp module) {
+  auto funcs = module.getOps<func::FuncOp>();
+  auto context = module->getContext();
+  auto builder = IRRewriter(context);
+  llvm::SmallVector<Type> new_input;
+  for (auto func : funcs) {
+    if (!func->hasAttr(llc::EntranceAttr)) continue;
+    auto func_type = func.getFunctionType();
+    auto& block = func.getFunctionBody().getBlocks().front();
+    auto input_num = block.getNumArguments();
+    auto maybe_attrs = func.getArgAttrs();
+    if (!maybe_attrs.has_value()) return;
+    auto attrs = maybe_attrs.value().getValue();
+    CHECK(llc::MLIR_PASS,
+          attrs.size() == func.getFunctionType().getNumInputs());
     for (int i{}; i < input_num; i++) {
       auto arg = block.getArgument(i);
-      auto new_arg = symbol_analysis->addEncoding(arg);
-      new_input.push_back(new_arg.getType());
+      if (isa<RankedTensorType>(arg.getType())) {
+        auto tensor = llvm::cast<RankedTensorType>(arg.getType());
+        auto has_encode = tensor.getEncoding();
+        auto arg_attr = llvm::cast<DictionaryAttr>(attrs[i]);
+        CHECK(llc::SymbolInfer, arg_attr);
+        auto symbols_system = SymbolAnalysis::getInstance(module);
+        SmallVector<StringRef> symbols;
+        for (size_t dim{}; dim < tensor.getRank(); dim++) {
+          auto dim_symbol_attr = arg_attr.getAs<StringAttr>(
+              "func.input_symbol_" + std::to_string(dim));
+          CHECK(llc::SymbolInfer, dim_symbol_attr);
+          symbols.push_back(dim_symbol_attr.getValue());
+          symbols_system->getOrBuildSymbol(dim_symbol_attr.getValue());
+        }
+        symbols_system->addEncoding(arg, symbols);
+      }
+      new_input.push_back(arg.getType());
     }
     auto& blocks = func.getFunctionBody().getBlocks();
     for (auto& block : blocks) {
@@ -136,9 +209,7 @@ void InferSymbolShapePass::runOnOperation() {
   auto module = getOperation();
   if (UseBinding) {
     generateEntranceSymbol(module);
-  }else{
-
-
+  } else {
   }
   module.walk([](Operation* op) { checkAndInferSymbol(op); });
   RewritePatternSet patterns(context);

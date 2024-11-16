@@ -93,10 +93,7 @@ llvm::StringRef BuildBinaryOpSymbolBind(Operation* op) {
   }
   analysis->buildSymbolRelation(
       analysis->getSymbolAttr(op), analysis->getSymbolAttr(lhs),
-      analysis->getSymbolAttr(rhs), llh::SymbolRelation::Mul);
-  analysis->buildSymbolRelation(
-      analysis->getSymbolAttr(op), analysis->getSymbolAttr(rhs),
-      analysis->getSymbolAttr(lhs), llh::SymbolRelation::Mul);
+      analysis->getSymbolAttr(rhs), relation);
   return symbol;
 }
 
@@ -445,19 +442,30 @@ SymbolRelationOp SymbolAnalysis::buildSymbolRelation(
       break;
     case SymbolRelation::GE:
       Q_UNARY_INSERT(GE_table, symbol, relation);
-      Q_UNARY_INSERT(LT_table, relation, symbol);
-      break;
-    case SymbolRelation::GT:
-      Q_UNARY_INSERT(GT_table, symbol, relation);
       Q_UNARY_INSERT(LE_table, relation, symbol);
       break;
+    case SymbolRelation::GT:
+      Q_UNARY_INSERT(GT_table, symbol, relation)
+      Q_UNARY_INSERT(GE_table, symbol, relation)
+      Q_UNARY_INSERT(LT_table, relation, symbol)
+      Q_UNARY_INSERT(LE_table, relation, symbol)
+      Q_UNARY_INSERT(NOTEQ_table, relation, symbol)
+      Q_UNARY_INSERT(NOTEQ_table, symbol, relation)
+      break;
     case SymbolRelation::LE:
-      Q_UNARY_INSERT(LT_table, symbol, relation);
-      Q_UNARY_INSERT(GE_table, relation, symbol);
+      Q_UNARY_INSERT(LE_table, symbol, relation)
+      Q_UNARY_INSERT(GE_table, relation, symbol)
       break;
     case SymbolRelation::LT:
-      Q_UNARY_INSERT(LE_table, symbol, relation);
-      Q_UNARY_INSERT(GE_table, relation, symbol);
+      Q_UNARY_INSERT(LT_table, symbol, relation)
+      Q_UNARY_INSERT(LE_table, symbol, relation)
+      Q_UNARY_INSERT(GE_table, relation, symbol)
+      Q_UNARY_INSERT(GT_table, relation, symbol)
+      Q_UNARY_INSERT(NOTEQ_table, relation, symbol)
+      Q_UNARY_INSERT(NOTEQ_table, symbol, relation)
+    case SymbolRelation::NOTEQ:
+      Q_UNARY_INSERT(NOTEQ_table, relation, symbol)
+      Q_UNARY_INSERT(NOTEQ_table, symbol, relation)
       break;
   }
   return relation_op;

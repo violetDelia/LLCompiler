@@ -116,6 +116,7 @@ class SymbolAnalysis {
  private:
   // TODO:
   std::map<std::string, std::unordered_set<std::string>> EQ_table;
+  std::map<std::string, std::unordered_set<std::string>> NOTEQ_table;
   std::map<std::string, std::unordered_set<std::string>> GT_table;
   std::map<std::string, std::unordered_set<std::string>> LT_table;
   std::map<std::string, std::unordered_set<std::string>> GE_table;

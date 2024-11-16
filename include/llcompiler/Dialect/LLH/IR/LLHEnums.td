@@ -95,10 +95,10 @@ def LLH_SYMBOL_EXP_GE         : I32EnumAttrCase<"GE", 5>;
 def LLH_SYMBOL_EXP_LE         : I32EnumAttrCase<"LE", 6>;
 def LLH_SYMBOL_EXP_GT         : I32EnumAttrCase<"GT", 7>;
 def LLH_SYMBOL_EXP_LT         : I32EnumAttrCase<"LT", 8>;
-
+def LLH_SYMBOL_EXP_NOTEQ         : I32EnumAttrCase<"NOTEQ", 9>;
 def LLH_SymbolRelation : I32EnumAttr<"SymbolRelation",
     "SymbolRelation",
-    [LLH_SYMBOL_EXP_ADD , LLH_SYMBOL_EXP_SUB, LLH_SYMBOL_EXP_MUL, LLH_SYMBOL_EXP_FloorDiv, LLH_SYMBOL_EXP_EQ, LLH_SYMBOL_EXP_GE, LLH_SYMBOL_EXP_LE, LLH_SYMBOL_EXP_GT, LLH_SYMBOL_EXP_LT]> {
+    [LLH_SYMBOL_EXP_ADD , LLH_SYMBOL_EXP_SUB, LLH_SYMBOL_EXP_MUL, LLH_SYMBOL_EXP_FloorDiv, LLH_SYMBOL_EXP_EQ, LLH_SYMBOL_EXP_GE, LLH_SYMBOL_EXP_LE, LLH_SYMBOL_EXP_GT, LLH_SYMBOL_EXP_LT,LLH_SYMBOL_EXP_NOTEQ]> {
   let genSpecializedAttr = 0;
   let cppNamespace = "::mlir::llh";
 }

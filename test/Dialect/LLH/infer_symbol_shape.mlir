@@ -199,3 +199,19 @@ func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
   %11 = "llh.broadcast_to"(%6, %7, %8, %9, %10) <{cast_dims = array<i64: 0, 1, 2, 3>}> : (tensor<*xf32>, i64, i64, i64, i64) -> tensor<*xf32>
   return 
 }
+
+// -----
+func.func @main(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"}) -> tensor<?x?xf32> attributes {entrance} {
+    %0 = "llh.constant"() <{symbol = @c3, value = 3 : i64}> : () -> i64
+    %1 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64
+    %2 = "llh.constant"() <{symbol = @c1, value = 1 : i64}> : () -> i64
+    %3 = "llh.constant"() <{symbol = @c0, value = 0 : i64}> : () -> i64
+    %4 = "llh.constant"() <{symbol = @c18446744073709551615, value = -1 : i64}> : () -> i64
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<?x?x?xf32, #llh.encoding<shapes = @s1, @s2, @s2>>
+    %5 = "llh.extract"(%arg0, %3) : (tensor<?x?x?x?xf32>, i64) -> tensor<?x?x?xf32>
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<?x?xf32, #llh.encoding<shapes = @s2, @s2>>
+    %6 = "llh.extract"(%5, %4) : (tensor<?x?x?xf32>, i64) -> tensor<?x?xf32>
+    return %6 : tensor<?x?xf32>
+}

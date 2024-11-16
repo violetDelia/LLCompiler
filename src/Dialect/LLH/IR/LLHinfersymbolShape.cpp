@@ -269,6 +269,10 @@ void ConvSymbolInfer(Operation* op) {
 #define HAS_SYMBOLATTR_RETURN(op) \
   if (op->hasAttr(llc::SymbolIntAttr)) return llvm::failure();
 
+#define NO_SYMBOLATTR_RETURN(value)                        \
+  if (!value.getDefiningOp()->hasAttr(llc::SymbolIntAttr)) \
+    return llvm::failure();
+
 #define NO_ENCODING_RETURN(value) \
   if (!llc::hasEncoding(value)) return llvm::failure();
 
@@ -344,7 +348,6 @@ INFER_BINARY(SubOp)
 INFER_BINARY(MaxOp)
 INFER_BINARY(MinOp)
 
-
 INFER_CONV(ConvBiasOp)
 INFER_CONV(ConvOp)
 INFER_NO_OPERAND(WeightOp)
@@ -378,7 +381,27 @@ UNIMPLEMENTED_INFER_FUNCTION(CatOp)
 UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
 
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
-UNIMPLEMENTED_INFER_FUNCTION(ExtractOp)
+INFER_FUNCTION(ExtractOp) {
+  HAS_ENCODING_RETURN(getResult())
+  NO_ENCODING_RETURN(getInput())
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbols = llvm::SmallVector<StringRef>();
+  auto new_shapes = llvm::SmallVector<int64_t>();
+  auto input_type = llc::getRankTensorFrom(getInput());
+  auto input_symbols = llc::getEncodingFrom(input_type).getShapeSymbols();
+  auto rank = input_type.getRank();
+  for (int i = 1; i < rank; ++i) {
+    new_shapes.push_back(input_type.getShape()[i]);
+    symbols.push_back(input_symbols[i].getValue());
+  }
+  auto new_tensor =
+      RankedTensorType::get(new_shapes, input_type.getElementType());
+  getResult().setType(new_tensor);
+  auto res = getResult();
+  symbol_analsis->addEncoding(res, symbols);
+  COMMON_CHECK
+  return llvm::success();
+}
 
 INFER_FUNCTION(MatMulOp) {
   HAS_ENCODING_RETURN(getResult())
@@ -403,9 +426,6 @@ INFER_FUNCTION(MatMulOp) {
   COMMON_CHECK
   symbol_analsis->buildSymbolRelation(lhs_symbols[1].getAttr().strref(),
                                       rhs_symbols[0].getAttr().strref(),
-                                      SymbolRelation::EQ);
-  symbol_analsis->buildSymbolRelation(rhs_symbols[0].getAttr().strref(),
-                                      lhs_symbols[1].getAttr().strref(),
                                       SymbolRelation::EQ);
   return llvm::success();
 }
@@ -582,5 +602,6 @@ INFER_FUNCTION(TransposeOp) {
 #undef UNIMPLEMENTED_INFER_FUNCTION
 #undef HAS_ENCODING_RETURN
 #undef HAS_SYMBOLATTR_RETURN
+#undef NO_SYMBOLATTR_RETURN
 #undef NO_ENCODING_RETURN
 }  // namespace mlir::llh

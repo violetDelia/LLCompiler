@@ -82,7 +82,7 @@ void traverseExpressionSymbolPos(AffineBinaryOpExpr& exp,
   }
 }
 
-void removeEntranceTensorEncoding(ModuleOp module) {
+void generateEntranceTensorEncoding(ModuleOp module) {
   auto funcs = module.getOps<func::FuncOp>();
   auto context = module->getContext();
   auto builder = IRRewriter(context);
@@ -268,7 +268,7 @@ void RemoveRedundantOpsPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  removeEntranceTensorEncoding(module);
+  generateEntranceTensorEncoding(module);
   RewritePatternSet patterns(context);
   populateRemoveRedundantOpsPassPatterns(patterns);
   auto config = GreedyRewriteConfig();
