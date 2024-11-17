@@ -19,6 +19,7 @@
 #include <string>
 
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -109,7 +110,7 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
     auto elements = op.getElements();
     llvm::SmallVector<Value, 0> new_elements;
     for (auto operand : elements) {
-      if (isa<CastUOp, CastSOp,arith::IndexCastOp>(operand.getDefiningOp())) {
+      if (isa<CastUOp, CastSOp, arith::IndexCastOp>(operand.getDefiningOp())) {
         new_elements.push_back(operand.getDefiningOp()->getOperand(0));
       } else if (isa<arith::ConstantOp>(operand.getDefiningOp())) {
         auto const_op = cast<arith::ConstantOp>(operand.getDefiningOp());

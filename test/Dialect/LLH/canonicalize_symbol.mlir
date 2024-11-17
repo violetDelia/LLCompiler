@@ -29,7 +29,6 @@ module @__symbol__ {
   "llh.symbol_relation"() <{relation = @s5, relation_kind = #llh.SymbolRelation<EQ>, symbol = @s2}> : () -> ()
   "llh.symbol_relation"() <{relation = @s4, relation_kind = #llh.SymbolRelation<EQ>, symbol = @s1}> : () -> ()
   "llh.symbol_relation"() <{relation = @s3, relation_kind = #llh.SymbolRelation<EQ>, symbol = @s0}> : () -> ()
-  "llh.symbol_relation"() <{relation = @s3, relation_kind = #llh.SymbolRelation<EQ>, symbol = @s0}> : () -> ()
 }
 
 // -----
@@ -69,6 +68,18 @@ func.func @sink_symbol_bind(%arg1: tensor<?x3x?x?xf32>) ->(i64,i64){
   "llh.encoding_bind"(%arg1) <{encoding = #llh.encoding<shapes = @s0, @c3, @s2, @s2>}> : (tensor<?x3x?x?xf32>) -> ()
   return %1, %0: i64,i64 
 }
+
+
+// -----
+func.func @main(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s3"}) attributes {entrance} {
+    %idx0 = index.constant 0
+    // CHECK-NOT : arith.index_cast
+    %dim = tensor.dim {symbol = @s0} %arg0, %idx0 : tensor<?x?x?x?xf32>
+    %2 = arith.index_cast %dim : index to i64
+    "llh.symbol_bind"(%2) <{symbol = @s0}> : (i64) -> ()
+    return
+}
+
 
 
 

@@ -64,7 +64,7 @@ class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type Operand
 
 def LLH_TorchSymbolicIntOp : LLH_Op<"torch_symbolic_int",[]>{
     let description = [{
-        torch 框架的symbol信息, 已弃用
+        torch 框架从fx_graph直接获取的符号信息。
     }];
     let arguments = (ins 
        LLH_StringAttr:$sym_name);
@@ -73,7 +73,7 @@ def LLH_TorchSymbolicIntOp : LLH_Op<"torch_symbolic_int",[]>{
 
 def LLH_SymbolicBindOp: Op<LLH_Dialect,"symbolic_bind">{
     let description = [{
-        torch 框架的symbol信息, 已弃用
+        根据fake tensor 的信息,每创建一个op,就相应创建一个symbolic_bind将torch_symbolic_int与Op的结果绑定。
     }];
     let arguments = (ins 
        LLH_Symbolic_Type:$operand ,

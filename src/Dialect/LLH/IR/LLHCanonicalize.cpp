@@ -29,6 +29,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/IR/Block.h"
@@ -44,6 +45,7 @@
 using namespace mlir;
 using namespace mlir::llh;
 #include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
+constexpr inline size_t SinkOpBenfit = 101;
 constexpr inline size_t RefineOpBenefit = 101;
 constexpr inline size_t ReshapeBenefit = 100;
 constexpr inline size_t BroadcastBenefit = 99;
@@ -153,7 +155,7 @@ void AdaptiveAvgPoolOp::getCanonicalizationPatterns(
 // SymbolBindOp
 //===----------------------------------------------------------------------===//
 namespace {
-struct SinkSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
+struct MoveSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
 
   LogicalResult match(SymbolBindOp op) const final {
@@ -172,17 +174,33 @@ struct SinkSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
     rewriter.moveOpAfter(new_op, root.getDefiningOp());
   }
 };
+
+struct SinkSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(SymbolBindOp op) const final {
+    auto input = op.getOperand();
+    if (!isa<mlir::arith::IndexCastOp>(input.getDefiningOp()))
+      return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(SymbolBindOp op, LLHPatternRewriter &rewriter) const final {
+    auto operand = op.getOperand().getDefiningOp();
+    op->setOperand(0, operand->getOperand(0));
+  }
+};
 }  // namespace
 
 void SymbolBindOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                                MLIRContext *context) {
-  results.add<SinkSymbolBindOp>(context);
+  results.add<SinkSymbolBindOp>(context,SinkOpBenfit);
+  results.add<MoveSymbolBindOp>(context);
 }
 //===----------------------------------------------------------------------===//
 // EncodingBindOp
 //===----------------------------------------------------------------------===//
 namespace {
-struct SinkEncodingBindOp : public LLHOpRewritePattern<EncodingBindOp> {
+struct MoveEncodingBindOp : public LLHOpRewritePattern<EncodingBindOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
 
   LogicalResult match(EncodingBindOp op) const final { return llvm::success(); }
@@ -197,11 +215,12 @@ struct SinkEncodingBindOp : public LLHOpRewritePattern<EncodingBindOp> {
     }
   }
 };
+
 }  // namespace
 
 void EncodingBindOp::getCanonicalizationPatterns(
     mlir::RewritePatternSet &results, MLIRContext *context) {
-  results.add<SinkEncodingBindOp>(context);
+  results.add<MoveEncodingBindOp>(context);
 }
 //===----------------------------------------------------------------------===//
 // SymbolBinaryRelationOp
@@ -242,8 +261,13 @@ struct ReplaceSymbolIfEquel : public LLHOpRewritePattern<SymbolRelationOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
 
   LogicalResult match(SymbolRelationOp op) const final {
-    if (op.getRelationKind() == SymbolRelation::EQ) return llvm::success();
-    return llvm::failure();
+    if (op.getRelationKind() != SymbolRelation::EQ) return llvm::failure();
+    auto analysis = SymbolAnalysis::getInstance(op);
+    auto symbol = op.getSymbol();
+    if (analysis->isConst(symbol)) return llvm::failure();
+    auto relation = op.getRelation();
+    if (analysis->isConst(relation)) return llvm::failure();
+    return llvm::success();
   }
   void rewrite(SymbolRelationOp op, LLHPatternRewriter &rewriter) const final {
     auto symbol = op.getSymbol();
@@ -399,10 +423,7 @@ struct ExtractOpToSliceOp : public LLHOpRewritePattern<ExtractOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(ExtractOp op) const final { return llvm::success(); }
 
-  void rewrite(ExtractOp op, LLHPatternRewriter &rewriter) const final {
-    
-
-  }
+  void rewrite(ExtractOp op, LLHPatternRewriter &rewriter) const final {}
 };
 }  // namespace
 void ExtractOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
@@ -414,10 +435,7 @@ void ExtractOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
 // SliceOp
 //===----------------------------------------------------------------------===//
 void SliceOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                            MLIRContext *context) {
-}
-
-
+                                          MLIRContext *context) {}
 
 void mlir::llh::populateSymbolCanonicalizePatterns(
     RewritePatternSet &patterns) {
@@ -425,4 +443,5 @@ void mlir::llh::populateSymbolCanonicalizePatterns(
   patterns.add<ReplaceSymbolIfEquel>(context);
   patterns.add<RemoveSymbolRelationIfAllConst>(context);
   patterns.add<RemoveSymbolBinaryRelationIfAllConst>(context);
+  patterns.add<SinkSymbolBindOp>(context,SinkOpBenfit);
 };

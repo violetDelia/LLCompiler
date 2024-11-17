@@ -159,6 +159,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::createConvertLLHToArithPass());
   pm.addPass(mlir::createConvertLLHToTensorPass());
   pm.addPass(mlir::createConvertLLHToHLOPass());
+  pm.addPass(mlir::createCanonicalizerPass());
   pm.addPass(mlir::index::ex::createFoldIndexCastPass());
   //===----------------------------------------------------------------------===//
   //  opt mhlo

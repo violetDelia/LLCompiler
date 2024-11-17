@@ -53,5 +53,6 @@
 
 namespace mlir::llh {
 void populateSymbolCanonicalizePatterns(RewritePatternSet& patterns);
+void populateSinkSymbolBindPatterns(RewritePatternSet& patterns);
 }
 

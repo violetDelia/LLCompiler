@@ -24,7 +24,7 @@ class Resnet(nn.Module):
             sub.training = False
 
     def forward(self, x: torch.Tensor):
-        x = x.reshape(x.shape[0],x.shape[1],224,224)
+        #x = x.reshape(x.shape[0],x.shape[1],224,224)
         x = self.resnet.conv1(x)
         x = self.resnet.bn1(x)
         x = self.resnet.relu(x)

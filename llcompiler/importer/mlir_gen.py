@@ -118,5 +118,4 @@ class MLIR_Builder:
             op = onnx_node_translate(node, op_map, symbol_map)
             op_map[node.name] = op
             func.body.block.add_op(op)
-        printer.print(func)
         raise NotImplementedError
