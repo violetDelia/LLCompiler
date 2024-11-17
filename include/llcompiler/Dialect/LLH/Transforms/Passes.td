@@ -94,6 +94,9 @@ def OperationlegalizationPass : Pass<"operation-legalization","ModuleOp"> {
     %9 = "llh.add"(%9, %2) : (tensor<?x?x224x224xf32>, tensor<1xf32>) -> tensor<?x?x224x224xf32>
     '''
   }];
+  let dependentDialects = [ "::mlir::shape::ShapeDialect",
+                            "::mlir::math::MathDialect",
+                            "::mlir::complex::ComplexDialect"];
 }
 
 def RemoveRedundantOpsPass : Pass<"remove-redundant-ops","ModuleOp">{

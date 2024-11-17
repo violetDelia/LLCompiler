@@ -32,7 +32,8 @@ transform.named_sequence @mhlo_to_linalg(%module: !transform.any_op {transform.r
     %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
     %opt_shape_funcs = transform.apply_registered_pass "symbolic-shape-optimization" to %funcs : (!transform.any_op) -> !transform.any_op
     %to_std_funcs = transform.apply_registered_pass "mhlo-legalize-to-std" to %opt_shape_funcs : (!transform.any_op) -> !transform.any_op
-    %to_linalg_funcs = transform.apply_registered_pass "hlo-legalize-to-linalg" to %to_std_funcs : (!transform.any_op) -> !transform.any_op 
+    %to_memref_funcs = transform.structured.match ops{["func.func"]} in %to_std_funcs : (!transform.any_op) -> !transform.any_op
+    %to_linalg_funcs = transform.apply_registered_pass "hlo-legalize-to-linalg" to %to_memref_funcs : (!transform.any_op) -> !transform.any_op 
     %lowing_cf = transform.apply_registered_pass "mhlo-legalize-control-flow" to %to_linalg_funcs : (!transform.any_op) -> !transform.any_op
     transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
@@ -40,23 +41,14 @@ transform.named_sequence @mhlo_to_linalg(%module: !transform.any_op {transform.r
     transform.yield
   }
 
-transform.named_sequence @mhlo_one_shot_bufferize(%module: !transform.any_op {transform.consumed}) {
+transform.named_sequence @mhlo_one_shot_bufferize(%module: !transform.any_op {transform.readeonly}) {
     %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
     transform.bufferization.eliminate_empty_tensors %funcs : !transform.any_op
     %empty_ops = transform.structured.match ops{["tensor.empty"]} in %module : (!transform.any_op) -> !transform.op<"tensor.empty">
     transform.bufferization.empty_tensor_to_alloc_tensor %empty_ops : (!transform.op<"tensor.empty">) -> !transform.op<"bufferization.alloc_tensor">
-    %bufferized_module = transform.bufferization.one_shot_bufferize %module
-      {function_boundary_type_conversion = 1 : i32,
-      allow_return_allocs_from_loops = true,
-      allow_unknown_ops = true,
-      bufferize_function_boundaries = true,
-      dump_alias_sets = false,
-      test_analysis_only = false,
-      print_conflicts = false,
-      check_parallel_regions = true,
-      memcpy_op = "memref.copy"} : (!transform.any_op) -> !transform.any_op
-    %bufferized_funcs = transform.structured.match ops{["func.func"]} in %bufferized_module : (!transform.any_op) -> !transform.any_op
-    %finnal_funcs = transform.apply_registered_pass "finalizing-bufferize" to %bufferized_funcs  : (!transform.any_op) -> !transform.any_op
+    %bufferized_module = transform.apply_registered_pass "computeop-and-func-bufferize" to %module  : (!transform.any_op) -> !transform.any_op
+    %finnal_module = transform.apply_registered_pass "final-bufferize" to %bufferized_module {options = "alignment=128"} : (!transform.any_op) -> !transform.any_op
+    %finnal_funcs = transform.structured.match ops{["func.func"]} in %finnal_module : (!transform.any_op) -> !transform.any_op
     %promote_buffer_module = transform.apply_registered_pass "promote-buffers-to-stack" to %finnal_funcs {options = "max-alloc-size-in-bytes=128"}: (!transform.any_op) -> !transform.any_op
     transform.apply_patterns to %promote_buffer_module {
       transform.apply_patterns.canonicalization

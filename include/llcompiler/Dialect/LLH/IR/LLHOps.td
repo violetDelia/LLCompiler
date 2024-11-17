@@ -229,6 +229,15 @@ def LLH_ExtractOp : LLH_SymbolOp<"extract",[]>{
     let hasCanonicalizer = 1;
 }
 
+def LLH_SliceOp : LLH_SymbolOp<"slice",[]>{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        LLH_Int64:$index);
+    let results = (outs 
+        LLH_Tensor);
+    let hasCanonicalizer = 1;
+}
+
 def LLH_ReshapeOp : LLH_SymbolOp<"reshape",[]>{
     let arguments = (ins 
         LLH_Tensor:$input,

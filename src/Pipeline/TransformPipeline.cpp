@@ -99,6 +99,7 @@ void registerPasses() {
 
   mlir::mhlo::registerAllMhloPasses();
   mlir::hlo::registerFinalBufferizePass();
+  mlir::hlo::registerComputeOpAndFuncBufferizePass();
 
   mlir::LLVM::registerLLVMPasses();
   mlir::registerTransformsPasses();
@@ -166,14 +167,15 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing mhlo
   //===----------------------------------------------------------------------===//
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::mhlo::createSymbolicShapeOptimizationPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::mhlo::createLegalizeHloToLinalgPass());
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::mhlo::createLegalizeControlFlowPass());
+//   pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
+//   pm.addNestedPass<mlir::func::FuncOp>(
+//       mlir::mhlo::createSymbolicShapeOptimizationPass());
+//   pm.addNestedPass<mlir::func::FuncOp>(
+//       mlir::mhlo::createLegalizeHloToLinalgPass());
+//   pm.addNestedPass<mlir::func::FuncOp>(
+//       mlir::mhlo::createLegalizeControlFlowPass());
   // NOTE: unkown error (mutithreading)
+  mlir::mhlo::createLegalizeToMemrefPass();
   applyInterpreter(pm, __LLC_TRANSFORM_MLHO_TO_LINALG__);
   //===----------------------------------------------------------------------===//
   //  lowing shape

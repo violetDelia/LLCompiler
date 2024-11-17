@@ -44,6 +44,7 @@
 using namespace mlir;
 using namespace mlir::llh;
 #include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
+constexpr inline size_t RefineOpBenefit = 101;
 constexpr inline size_t ReshapeBenefit = 100;
 constexpr inline size_t BroadcastBenefit = 99;
 
@@ -51,7 +52,7 @@ constexpr inline size_t BroadcastBenefit = 99;
 // ConstantOp.
 //===----------------------------------------------------------------------===//
 void ConstantOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                        MLIRContext *context) {
+                                             MLIRContext *context) {
   results.add<EraseNoUserOp<ConstantOp>>(context);
 }
 //===----------------------------------------------------------------------===//
@@ -393,11 +394,31 @@ struct ExtractOpRefine : public LLHOpRewritePattern<ExtractOp> {
     op->setOperand(1, new_index);
   }
 };
+
+struct ExtractOpToSliceOp : public LLHOpRewritePattern<ExtractOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+  LogicalResult match(ExtractOp op) const final { return llvm::success(); }
+
+  void rewrite(ExtractOp op, LLHPatternRewriter &rewriter) const final {
+    
+
+  }
+};
 }  // namespace
 void ExtractOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                             MLIRContext *context) {
-  results.add<ExtractOpRefine>(context);
+  results.add<ExtractOpRefine>(context, RefineOpBenefit);
 }
+
+//===----------------------------------------------------------------------===//
+// SliceOp
+//===----------------------------------------------------------------------===//
+void SliceOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                            MLIRContext *context) {
+}
+
+
+
 void mlir::llh::populateSymbolCanonicalizePatterns(
     RewritePatternSet &patterns) {
   auto context = patterns.getContext();

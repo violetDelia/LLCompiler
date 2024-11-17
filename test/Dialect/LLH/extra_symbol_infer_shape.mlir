@@ -47,5 +47,3 @@ func.func @mul(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
 // CHECK-LABEL: __symbol__
 // CHECK: llh.symbol_binary_relation
 // CHECK-SAME: relation_kind = #llh.SymbolRelation<Mul>
-// CHECK: llh.symbol_binary_relation
-// CHECK-SAME: relation_kind = #llh.SymbolRelation<Mul>
