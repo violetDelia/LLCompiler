@@ -101,7 +101,6 @@ void generateEntranceSymbol(ModuleOp module) {
         auto new_func_type = FunctionType::get(
             context, new_input, block.getTerminator()->getOperandTypes());
         func.setType(new_func_type);
-        func->dump();
       }
     }
   }

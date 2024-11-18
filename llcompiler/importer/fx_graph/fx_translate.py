@@ -417,8 +417,10 @@ def torch_build_func(
                     elif isinstance(arg, list):
                         trav_args(arg)
                     elif isinstance(arg, torch.fx.node.Node):
-                        output_types.append(value_map[arg.name][0].type)
-                        return_values.append(value_map[arg.name][0])
+                        type = get_result_type(arg)
+                        if(isinstance(type, FakeTensor)):
+                            output_types.append(value_map[arg.name][0].type)
+                            return_values.append(value_map[arg.name][0])
                     elif arg is None:
                         pass
                     else:

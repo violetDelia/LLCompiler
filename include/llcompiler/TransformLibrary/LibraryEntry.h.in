@@ -8,3 +8,4 @@
 #define __LLC_TRANSFORM_TENSOR_BASIC_OPT__ "tensor_basic_opt"
 #define __LLC_TRANSFORM_LLVM_LOWING__ "lowing_to_llvm"
 #define __LLC_TRANSFORM_LLVM_BASIC_OPT__ "llvm_basic_opt"
+#define __LLC_TRANSFORM_MEMREF_BASIC_OPT__ "memref_basic_opt"

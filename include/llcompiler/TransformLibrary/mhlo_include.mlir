@@ -49,10 +49,11 @@ transform.named_sequence @mhlo_one_shot_bufferize(%module: !transform.any_op {tr
     %bufferized_module = transform.apply_registered_pass "computeop-and-func-bufferize" to %module  : (!transform.any_op) -> !transform.any_op
     %finnal_module = transform.apply_registered_pass "final-bufferize" to %bufferized_module {options = "alignment=128"} : (!transform.any_op) -> !transform.any_op
     %finnal_funcs = transform.structured.match ops{["func.func"]} in %finnal_module : (!transform.any_op) -> !transform.any_op
-    %promote_buffer_module = transform.apply_registered_pass "promote-buffers-to-stack" to %finnal_funcs {options = "max-alloc-size-in-bytes=128"}: (!transform.any_op) -> !transform.any_op
-    transform.apply_patterns to %promote_buffer_module {
+    %promote_buffer_funcs = transform.apply_registered_pass "promote-buffers-to-stack" to %finnal_funcs {options = "max-alloc-size-in-bytes=128"}: (!transform.any_op) -> !transform.any_op
+    transform.apply_patterns to %promote_buffer_funcs {
       transform.apply_patterns.canonicalization
     } : !transform.any_op
+    %res_to_rag_module = transform.apply_registered_pass "buffer-results-to-out-params" to %finnal_module {options = "hoist-static-allocs=true add-result-attr=true"}: (!transform.any_op) -> !transform.any_op
     transform.yield
   }
 

@@ -7,3 +7,5 @@
 #define __LLC_TRANSFORM_TENSOR_INCLUDE__  "@CMAKE_CURRENT_SOURCE_DIR@/tensor_include.mlir"
 
 #define __LLC_TRANSFORM_LLVM_INCLUDE__  "@CMAKE_CURRENT_SOURCE_DIR@/llvm_include.mlir"
+
+#define __LLC_TRANSFORM_MEMREF_INCLUDE__  "@CMAKE_CURRENT_SOURCE_DIR@/memref_include.mlir"

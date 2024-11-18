@@ -122,7 +122,6 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
         new_elements.push_back(new_const);
       } else if (isa<arith::ConstantOp>(operand.getDefiningOp())) {
       } else {
-        operand.dump();
         UNIMPLEMENTED(llc::MLIR_PASS)
             << operand.getDefiningOp()->getName().getStringRef().str();
       }

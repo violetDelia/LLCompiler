@@ -106,12 +106,10 @@ LogicalResult insertReshapeBeforeBinary(Operation* op,
     auto new_op = rewriter.replaceOpWithNewOp<BinaryOp>(
         op, TypeRange{res.getType()}, ValueRange{lhs, reshape},
         op->getAttrDictionary().getValue());
-    new_op.dump();
   } else {
     auto new_op = rewriter.replaceOpWithNewOp<BinaryOp>(
         op, TypeRange{res.getType()}, ValueRange{reshape, rhs},
         op->getAttrDictionary().getValue());
-    new_op.dump();
   }
   return llvm::success();
 }

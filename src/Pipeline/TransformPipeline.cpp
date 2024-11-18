@@ -43,6 +43,7 @@
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
 #include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
+#include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
 #include "mlir/Conversion/Passes.h"
 #include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
 #include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
@@ -100,6 +101,8 @@ void registerPasses() {
   mlir::mhlo::registerAllMhloPasses();
   mlir::hlo::registerFinalBufferizePass();
   mlir::hlo::registerComputeOpAndFuncBufferizePass();
+  mlir::hlo::registerAllocToArgPass();
+  mlir::hlo::registerOneShotBufferizePass();
 
   mlir::LLVM::registerLLVMPasses();
   mlir::registerTransformsPasses();
@@ -107,6 +110,9 @@ void registerPasses() {
   mlir::registerReconcileUnrealizedCasts();
   mlir::registerConvertVectorToLLVMPass();
   mlir::registerConvertFuncToLLVMPass();
+  mlir::registerFinalizeMemRefToLLVMConversionPass();
+  mlir::registerConvertMathToLLVMPass();
+  mlir::registerSCFToControlFlow();
 }
 
 void applyInterpreter(::mlir::OpPassManager &pm, const char *entry_point) {
@@ -129,6 +135,8 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
       __LLC_TRANSFORM_TENSOR_INCLUDE__);
   preload_options.transformLibraryPaths.push_back(
       __LLC_TRANSFORM_LLVM_INCLUDE__);
+  preload_options.transformLibraryPaths.push_back(
+      __LLC_TRANSFORM_MEMREF_INCLUDE__);
   pm.addPass(mlir::transform::createPreloadLibraryPass(preload_options));
   // 合法化非法的Op
   pm.addPass(mlir::llh::createOperationlegalizationPass());
@@ -168,15 +176,14 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing mhlo
   //===----------------------------------------------------------------------===//
-//   pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
-//   pm.addNestedPass<mlir::func::FuncOp>(
-//       mlir::mhlo::createSymbolicShapeOptimizationPass());
-//   pm.addNestedPass<mlir::func::FuncOp>(
-//       mlir::mhlo::createLegalizeHloToLinalgPass());
-//   pm.addNestedPass<mlir::func::FuncOp>(
-//       mlir::mhlo::createLegalizeControlFlowPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::mhlo::createSymbolicShapeOptimizationPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::mhlo::createLegalizeHloToLinalgPass());
+  //   pm.addNestedPass<mlir::func::FuncOp>(
+  //       mlir::mhlo::createLegalizeControlFlowPass());
   // NOTE: unkown error (mutithreading)
-  mlir::mhlo::createLegalizeToMemrefPass();
   applyInterpreter(pm, __LLC_TRANSFORM_MLHO_TO_LINALG__);
   //===----------------------------------------------------------------------===//
   //  lowing shape
@@ -208,25 +215,26 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // lowing linalg
   //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::createConvertLinalgToAffineLoopsPass());
+  applyInterpreter(pm, __LLC_TRANSFORM_MLHO_BUFFERIZE__);
   //===----------------------------------------------------------------------===//
   // affine opt
   //===----------------------------------------------------------------------===//
-
-  mlir::affine::AffineVectorizeOptions vectorize_options;
-  vectorize_options.vectorSizes = {128};
-  vectorize_options.vectorizeReductions = true;
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::affine::createAffineVectorize(vectorize_options));
+  pm.addPass(mlir::createConvertLinalgToAffineLoopsPass());
+  pm.addPass(mlir::memref::createNormalizeMemRefsPass());
+    mlir::affine::AffineVectorizeOptions vectorize_options;
+    vectorize_options.vectorSizes = {8};
+    vectorize_options.vectorizeReductions = true;
+    pm.addNestedPass<mlir::func::FuncOp>(
+        mlir::affine::createAffineVectorize(vectorize_options));
   //===----------------------------------------------------------------------===//
   // lowing to csf
   //===----------------------------------------------------------------------===//
   // lowing affine to scf
-  pm.addPass(mlir::createLowerAffinePass());
   mlir::VectorTransferToSCFOptions vec_scf_options;
   vec_scf_options.unroll = true;
   vec_scf_options.lowerScalable = true;
   pm.addPass(mlir::createConvertVectorToSCFPass(vec_scf_options));
+  pm.addPass(mlir::createLowerAffinePass());
   pm.addPass(mlir::createCSEPass());
 
   //===----------------------------------------------------------------------===//
@@ -238,7 +246,6 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //  scf  opt
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::createLoopInvariantCodeMotionPass());
-
   //===----------------------------------------------------------------------===//
   //  gpu
   //===----------------------------------------------------------------------===//
@@ -248,17 +255,13 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // memref opt
   //===----------------------------------------------------------------------===//
-  // 添加内存释放op
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createBufferDeallocationPass());
   // liveness
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createOptimizeAllocationLivenessPass());
   pm.addNestedPass<mlir::func::FuncOp>(mlir::hlo::createAllocToArgPass());
-  //===----------------------------------------------------------------------===//
-  // lowing scf
-  //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::createConvertSCFToCFPass());
+  //applyInterpreter(pm, __LLC_TRANSFORM_MEMREF_BASIC_OPT__);
   //===----------------------------------------------------------------------===//
   // lowing to llvm
   //===----------------------------------------------------------------------===//

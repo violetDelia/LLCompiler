@@ -141,6 +141,11 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
 
   mlir::memref::registerAllocationOpInterfaceExternalModels(registry);
 
+  mlir::tensor::registerInferTypeOpInterfaceExternalModels(registry);
+
+  mlir::scf::registerValueBoundsOpInterfaceExternalModels(registry);
+  mlir::memref::registerValueBoundsOpInterfaceExternalModels(registry);
+
   mlir::registerBuiltinDialectTranslation(registry);
   mlir::registerLLVMDialectTranslation(registry);
 

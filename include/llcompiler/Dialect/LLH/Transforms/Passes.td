@@ -96,7 +96,9 @@ def OperationlegalizationPass : Pass<"operation-legalization","ModuleOp"> {
   }];
   let dependentDialects = [ "::mlir::shape::ShapeDialect",
                             "::mlir::math::MathDialect",
-                            "::mlir::complex::ComplexDialect"];
+                            "::mlir::complex::ComplexDialect",
+                            "::mlir::bufferization::BufferizationDialect",
+                            "::mlir::cf::ControlFlowDialect"];
 }
 
 def RemoveRedundantOpsPass : Pass<"remove-redundant-ops","ModuleOp">{

@@ -8,3 +8,6 @@
 
 #define __LLC_TRANSFORM_LLVM_INCLUDE__  "/home/lfr/LLCompiler/install/include/TransformLibrary/llvm_include.mlir"
 
+#define __LLC_TRANSFORM_MEMREF_INCLUDE__  "/home/lfr/LLCompiler/install/include/TransformLibrary/memref_include.mlir"
+
+

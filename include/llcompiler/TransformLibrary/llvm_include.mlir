@@ -3,13 +3,14 @@ module @llvm_include attributes { transform.with_named_sequence } {
 
   
 transform.named_sequence @lowing_to_llvm(%module: !transform.any_op {transform.consumed}) {
-  %lowing_vector_module = transform.apply_registered_pass "convert-vector-to-llvm" to %module {options = "reassociate-fp-reductions force-32bit-vector-indices=0"}: (!transform.any_op) -> !transform.any_op 
+  %lowing_scf_module = transform.apply_registered_pass "convert-scf-to-cf" to %module: (!transform.any_op) -> !transform.any_op 
+  %lowing_vector_module = transform.apply_registered_pass "convert-vector-to-llvm" to %lowing_scf_module {options = "reassociate-fp-reductions force-32bit-vector-indices=0"}: (!transform.any_op) -> !transform.any_op 
   %lowing_func_module = transform.apply_registered_pass "convert-func-to-llvm" to %lowing_vector_module {options = "index-bitwidth=64"}: (!transform.any_op) -> !transform.any_op 
-  %funcs = transform.structured.match ops{["llvm.func"]} in %lowing_func_module
+  %lowing_math_module = transform.apply_registered_pass "convert-math-to-llvm" to %lowing_func_module: (!transform.any_op) -> !transform.any_op 
+  %lowing_memref_module = transform.apply_registered_pass "finalize-memref-to-llvm" to %lowing_math_module {options = "index-bitwidth=64"}: (!transform.any_op) -> !transform.any_op 
+  %lowing_memref_funcs = transform.structured.match ops{["llvm.func"]} in %lowing_memref_module
     : (!transform.any_op) -> !transform.any_op
-  transform.apply_conversion_patterns to %funcs {
-    transform.apply_conversion_patterns.dialect_to_llvm "math"
-    transform.apply_conversion_patterns.dialect_to_llvm "memref"
+  transform.apply_conversion_patterns to %lowing_memref_funcs {
     transform.apply_conversion_patterns.dialect_to_llvm "index"
     transform.apply_conversion_patterns.dialect_to_llvm "arith"
     transform.apply_conversion_patterns.dialect_to_llvm "cf"
@@ -23,7 +24,7 @@ transform.named_sequence @lowing_to_llvm(%module: !transform.any_op {transform.c
     legal_dialects = ["llvm"],
     partial_conversion
   } : !transform.any_op
-  %funcs_1 = transform.structured.match ops{["llvm.func"]} in %lowing_func_module
+  %funcs_1 = transform.structured.match ops{["llvm.func"]} in %lowing_memref_module
     : (!transform.any_op) -> !transform.any_op
   %final = transform.apply_registered_pass "reconcile-unrealized-casts" to %funcs_1
     : (!transform.any_op) -> !transform.any_op

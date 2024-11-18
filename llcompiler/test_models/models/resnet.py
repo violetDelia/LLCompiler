@@ -19,7 +19,7 @@ class Resnet(nn.Module):
     def __init__(self):
         super().__init__()
         self.resnet = torchvision.models.resnet18(num_classes = 10)
-        self.resnet.avgpool = nn.Sequential(nn.Flatten(1), nn.Linear(100352, 512))
+        self.resnet.avgpool = nn.Sequential(nn.Flatten(1), nn.Linear(4096, 512))
         for sub in self.modules():
             sub.training = False
 
@@ -30,7 +30,7 @@ class Resnet(nn.Module):
         x = self.resnet.relu(x)
         x = self.resnet.maxpool(x)
         x = self.resnet.layer1(x)
-        x = self.resnet.layer2(x)
+        # x = self.resnet.layer2(x)
         # x = self.resnet.layer3(x)
         # x = self.resnet.layer4(x)
         x = self.resnet.avgpool(x)
