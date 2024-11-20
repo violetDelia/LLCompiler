@@ -5,7 +5,9 @@ from .fx_translate import (
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
+    _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
+    SPECIAL_GETITEM_IS_OPERAND_MAP,
 )
 import torch._ops as op
 import torch.fx
@@ -27,6 +29,7 @@ from xdsl.dialects.builtin import (
     IntegerAttr,
     BoolAttr,
     DenseIntOrFPElementsAttr,
+    FloatAttr,
 )
 from ...dialect.llh import (
     ConvBiasOp,
@@ -34,6 +37,7 @@ from ...dialect.llh import (
     ConvOp,
     AddOp,
     AbsOp,
+    BatchNormOp,
     DivOp,
     MulOp,
     DimOp,
@@ -47,14 +51,14 @@ from ...dialect.llh import (
     MaxPoolOp,
     SubOp,
     MatmulOp,
-    ExtractOp
+    ExtractOp,
 )
 from ...dialect.llh_utility import build_llh_transpose, build_llh_constant
 from torch._subclasses.fake_tensor import FakeTensor
 
 
 @TORCH_FUNCTION_TRANSLATE("mul", "aten::mul.Tensor")
-def builtin_mul_convert(
+def mul_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -64,7 +68,7 @@ def builtin_mul_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::add.Tensor", "add", "iadd")
-def builtin_add_convert(
+def add_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -74,7 +78,7 @@ def builtin_add_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("sub", "aten::sub.Tensor")
-def builtin_add_convert(
+def sub_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -84,7 +88,7 @@ def builtin_add_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("truediv", "aten::div.Tensor", "floordiv")
-def builtin_truediv_convert(
+def div_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -94,7 +98,7 @@ def builtin_truediv_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("abs", "aten::abs")
-def aten_view_convert(
+def abs_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -114,7 +118,7 @@ def aten_sym_size_int_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::relu", F.relu)
-def aten_sym_size_int_convert(
+def relu_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -124,7 +128,7 @@ def aten_sym_size_int_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::mm")
-def aten_sym_size_int_convert(
+def matmul_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -141,12 +145,15 @@ def builtin_getitem_convert(
     block: Block,
 ):
     target_name = node.args[0].target.__str__()
+    if target_name in SPECIAL_GETITEM_IS_OPERAND_MAP and node.args[1] in SPECIAL_GETITEM_IS_OPERAND_MAP[target_name]: 
+        op_res_0:OpResult = value_map[node.args[0].name][0]
+        index = SPECIAL_GETITEM_IS_OPERAND_MAP[target_name][node.args[1]]
+        value_map[node.name] = [op_res_0.op.operands[index]]
+        return None    
     if target_name in SPECIAL_RESULT_FAKE_INDEX_MAP:
         if SPECIAL_RESULT_FAKE_INDEX_MAP[target_name] == node.args[1]:
             value_map[node.name] = value_map[node.args[0].name]
             return None
-        else:
-            raise NotImplementedError("重构一下,添加tuple op")
     inputs = value_map[node.args[0].name]
     if (len(inputs) == 1) and isinstance(inputs[0].type, TensorType):
         out = get_result_type(node)
@@ -163,10 +170,13 @@ def builtin_getitem_convert(
         elif isinstance(out, FakeTensor):
             index: ConstantOp = build_llh_constant(node.args[1])
             block.add_op(index)
-            extract_op =  ExtractOp(operands=[inputs[0], index.result], result_types=[torch_fake_tensor_translate(out)])
+            extract_op = ExtractOp(
+                operands=[inputs[0], index.result],
+                result_types=[torch_fake_tensor_translate(out)],
+            )
             return extract_op
         else:
-            raise ValueError(node,type(out))
+            raise ValueError(node, type(out))
 
     else:
         raise NotImplementedError
@@ -188,7 +198,7 @@ def aten_view_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE(F.max_pool2d, "aten::max_pool2d_with_indices")
-def aten_view_convert(
+def max_pool2d_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -219,7 +229,7 @@ def aten_view_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE(F.adaptive_avg_pool2d)
-def flatten_convert(
+def adaptive_avg_pool2d_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -239,7 +249,7 @@ def flatten_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::t")
-def aten_t_convert(
+def transpose_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -273,7 +283,7 @@ def cat_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::convolution")
-def aten_convolution_convert(
+def convolution_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -308,7 +318,7 @@ def aten_convolution_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::empty.memory_format")
-def builtin_mul_convert(
+def empty_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -322,7 +332,7 @@ def builtin_mul_convert(
 
 
 @TORCH_FUNCTION_TRANSLATE("empty")
-def builtin_mul_convert(
+def empty_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
@@ -337,15 +347,56 @@ def builtin_mul_convert(
     return op
 
 
-def torch_function_translate(
+@TORCH_FUNCTION_TRANSLATE("aten::_native_batch_norm_legit_no_training")
+def batch_norm_convert(
     node: torch.fx.node.Node,
-    value_map: dict[str, list[SSAValue]],
+    value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
-) -> Operation:
-    target: op.OpOverload = node.target
-    if type(target).__name__ == "builtin_function_or_method":
-        build_fn = TORCH_FUNCTION_TRANSLATE[target.__name__]
-    else:
-        build_fn = TORCH_FUNCTION_TRANSLATE[target.name()]
-    return build_fn(node, value_map, symbol_map, block)
+):
+    print(node.meta)
+    print(node.all_input_nodes)
+    print(get_result_type(node))
+    result_type = torch_fake_tensor_translate(get_result_type(node))
+    input = get_arg_value(node.args[0], value_map, block)
+    weight = get_arg_value(node.args[1], value_map, block)
+    bias = get_arg_value(node.args[2], value_map, block)
+    input_mean = get_arg_value(node.args[3], value_map, block)
+    input_var = get_arg_value(node.args[4], value_map, block)
+    attrs = {
+        "epsilon": FloatAttr(node.args[5], f64),
+        "momentum": FloatAttr(node.args[6], f64),
+        "feature_index": IntegerAttr(1, i64),
+    }
+    return BatchNormOp.build(
+        operands=[input, weight, bias, input_mean, input_var],
+        attributes=attrs,
+        result_types=[result_type],
+    )
+
+
+@TORCH_FUNCTION_TRANSLATE("aten::_native_batch_norm_legit_functional")
+def batch_norm_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    print(node.kwargs)
+    print(node.meta)
+    result_type = torch_fake_tensor_translate(get_result_type(node))
+    input = get_arg_value(node.args[0], value_map, block)
+    weight = get_arg_value(node.args[1], value_map, block)
+    bias = get_arg_value(node.args[2], value_map, block)
+    input_mean = get_arg_value(node.args[3], value_map, block)
+    input_var = get_arg_value(node.args[4], value_map, block)
+    attrs = {
+        "epsilon": FloatAttr(node.args[6], f64),
+        "momentum": FloatAttr(node.args[7], f64),
+        "feature_index": IntegerAttr(1, i64),
+    }
+    return BatchNormOp.build(
+        operands=[input, weight, bias, input_mean, input_var],
+        attributes=attrs,
+        result_types=[result_type],
+    )

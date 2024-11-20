@@ -42,7 +42,6 @@ class Mul(nn.Module):
         return x
 
 
-
 class Relu(nn.Module):
     def __init__(self):
         super().__init__()
@@ -52,10 +51,10 @@ class Relu(nn.Module):
         x = self.relu(x)
         return x
 
+
 class Abs(nn.Module):
     def __init__(self):
         super().__init__()
-        
 
     def forward(self, x: torch.Tensor):
         x = x.abs()

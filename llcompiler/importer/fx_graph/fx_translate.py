@@ -170,7 +170,7 @@ def torch_fake_tensor_translate(tensor: FakeTensor):
     return TensorType(element_type=ele_type, shape=shape)
 
 
-def torch_fake_tensor_encoding(tensor: FakeTensor):
+def make_input_tensor_symbol_attrs(tensor: FakeTensor):
     shape = []
     for dim in tensor.shape:
         if isinstance(dim, int):
@@ -209,8 +209,14 @@ def get_result_type_ext(node: torch.fx.node.Node, index: int):
     raise ValueError("No example_value found in node meta")
 
 
-# 一些特殊的op,val里面有多个fake tensor，保存返回的索引
-SPECIAL_RESULT_FAKE_INDEX_MAP = {"aten.max_pool2d_with_indices.default": 0}
+# 一些特殊的op,val里面有多个fake tensor，但是只需要使用1个返回值，保存返回的索引。
+SPECIAL_RESULT_FAKE_INDEX_MAP = {
+    "aten.max_pool2d_with_indices.default": 0,
+}
+
+# 一些特殊的op，实际getitem 拿到是输入
+SPECIAL_GETITEM_IS_OPERAND_MAP = {
+}
 
 
 def get_result_type(
@@ -346,14 +352,13 @@ def torch_build_func(
     output_types = []
     return_values = []
     arg_attrs = []
-    graph.print_tabular()
     for node in graph.nodes:
         if node.op == "placeholder":
             # 张量输入
             if node.type is torch.Tensor:
                 fake_tensor = node.meta["example_value"]
                 tensor_type = torch_fake_tensor_translate(fake_tensor)
-                arg_attrs.append(torch_fake_tensor_encoding(fake_tensor))
+                arg_attrs.append(make_input_tensor_symbol_attrs(fake_tensor))
                 arg_value = block.insert_arg(tensor_type, len(input_types))
                 value_map[node.name] = [arg_value]
                 input_types.append(tensor_type)
@@ -365,7 +370,7 @@ def torch_build_func(
                 if isinstance(val, FakeTensor):
                     fake_tensor = node.meta["val"]
                     tensor_type = torch_fake_tensor_translate(fake_tensor)
-                    arg_attrs.append(torch_fake_tensor_encoding(fake_tensor))
+                    arg_attrs.append(make_input_tensor_symbol_attrs(fake_tensor))
                     arg_value = block.insert_arg(tensor_type, len(input_types))
                     value_map[node.name] = [arg_value]
                     input_types.append(tensor_type)
@@ -418,9 +423,11 @@ def torch_build_func(
                         trav_args(arg)
                     elif isinstance(arg, torch.fx.node.Node):
                         type = get_result_type(arg)
-                        if(isinstance(type, FakeTensor)):
-                            output_types.append(value_map[arg.name][0].type)
-                            return_values.append(value_map[arg.name][0])
+                        if isinstance(type, FakeTensor):
+                            # None 是一些不需要多余输出的aten生成的
+                            if value_map[arg.name] != None:
+                                output_types.append(value_map[arg.name][0].type)
+                                return_values.append(value_map[arg.name][0])
                     elif arg is None:
                         pass
                     else:

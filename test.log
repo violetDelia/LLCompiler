@@ -1,0 +1,13 @@
+builtin.module attributes  {"builtin.gloabal_layout" = "NCHW"} {
+  func.func @main(%0 : tensor<3xf32> {"func.input_symbol_0" = "c3"}, %1 : tensor<3xf32> {"func.input_symbol_0" = "c3"}, %2 : tensor<3xf32> {"func.input_symbol_0" = "c3"}, %3 : tensor<3xf32> {"func.input_symbol_0" = "c3"}, %4 : tensor<i64>, %5 : tensor<?x3x?x?xf32> {"func.input_symbol_0" = "s0", "func.input_symbol_1" = "c3", "func.input_symbol_2" = "s2", "func.input_symbol_3" = "s2"}) -> (tensor<3xf32>, tensor<3xf32>, tensor<i64>, tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<?x3x?x?xf32>, tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>)  attributes {"entrance"}{
+    %6 = "llh.torch_symbolic_int"() {"sym_name" = "s0"} : () -> i64
+    %7 = "llh.torch_symbolic_int"() {"sym_name" = "s2"} : () -> i64
+    %8 = "llh.constant"() {"value" = 1 : i64} : () -> i64
+    %9 = "llh.add"(%4, %8) : (tensor<i64>, i64) -> tensor<i64>
+    %10 = "llh.batch_norm"(%5, %0, %1, %2, %3) {"epsilon" = 1.000000e-01 : f64, "momentum" = 1.000000e-05 : f64, "feature_index" = 1 : i64} : (tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<?x3x?x?xf32>
+    %11 = "llh.constant"() {"value" = 1 : i64} : () -> i64
+    %12 = "llh.add"(%9, %11) : (tensor<i64>, i64) -> tensor<i64>
+    %13 = "llh.batch_norm"(%10, %0, %1, %2, %3) {"epsilon" = 1.000000e-01 : f64, "momentum" = 1.000000e-05 : f64, "feature_index" = 1 : i64} : (tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<?x3x?x?xf32>
+    func.return %2, %3, %12, %13, %0, %5, %10, %0, %1, %0, %1, %2, %3 : tensor<3xf32>, tensor<3xf32>, tensor<i64>, tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<?x3x?x?xf32>, tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>
+  }
+}

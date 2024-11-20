@@ -7,7 +7,8 @@ from time import time
 from llcompiler.core.utility import run_time
 
 
-TORCH_DTYPE_TO_TYPE = {torch.float32: 4}
+TORCH_DTYPE_TO_TYPE = {torch.float32: 4,
+                       torch.int64: 3}
 
 
 # 负责执行c++的执行器

@@ -12,6 +12,7 @@ import onnx
 from torch._subclasses.fake_tensor import FakeTensor
 from .importer.fx_graph import get_result_type
 
+
 def empty_call(*args, **kwargs):
     return 1
 
@@ -37,7 +38,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         L3_cache_size=0,
         L2_cache_size=0,
         L1_cache_size=0,
-        target_layout = "NCHW",
+        target_layout="NCHW",
         vebose_first_ir=False,  # 输出构建的xdsl IR
         ir_tree_dir: str = "",  # mlir ir tree dir
         log_root: str = "",  # 日志保存路径
@@ -65,7 +66,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.L3_cache_size = L3_cache_size
         self.L2_cache_size = L2_cache_size
         self.L1_cache_size = L1_cache_size
-        assert target_layout in ["NCHW","NHWC"]
+        assert target_layout in ["NCHW", "NHWC"]
         self.target_layout = target_layout
         assert opt_level > 0 and opt_level <= 3
         self.opt_level = opt_level
@@ -79,7 +80,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         if self.vebose_first_ir:
             print(self._mlir_module)
         compiler_options = CompilerOptions()
-        compiler_options.pipeline =self.pipeline
+        compiler_options.pipeline = self.pipeline
         compiler_options.mode = self.mode
         compiler_options.target = self.target
         compiler_options.symbol_infer = self.symbol_infer
@@ -100,11 +101,5 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         return execut
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
-        if self.mode in ["training"]:
-            return aot_module_simplified(
-                model,
-                inputs,
-                fw_compiler=self.compiler,
-            )
-        if self.mode in ["inference"]:
-            return self.compiler(model, inputs)
+            return aot_autograd(fw_compiler=self.compiler)(model, inputs)
+        

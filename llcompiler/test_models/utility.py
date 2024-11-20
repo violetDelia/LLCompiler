@@ -28,7 +28,8 @@ def check_same(out1: torch.Tensor, out2: torch.Tensor,eps = 1e-5):
     return res
 
 
-def run_dynamic_training_compiler(model, input):
+def run_dynamic_training_compiler(model:torch.nn.Module, input):
+    model.train()
     compiler = compiler = LLC.LLCompiler(mode="training", symbol_infer=True)
     opt_model: torch._dynamo.eval_frame.Optimizedmodel = torch.compile(
         model=model,
@@ -39,7 +40,8 @@ def run_dynamic_training_compiler(model, input):
     return opt_model(input)
 
 
-def run_dynamic_inference_compiler(model, input):
+def run_dynamic_inference_compiler(model:torch.nn.Module, input):
+    model.training = False
     compiler = compiler = LLC.LLCompiler(mode="inference", symbol_infer=True)
     opt_model: torch._dynamo.eval_frame.Optimizedmodel = torch.compile(
         model=model,
@@ -51,6 +53,7 @@ def run_dynamic_inference_compiler(model, input):
 
 
 def run_training_compiler(model, input):
+    model.train(True)
     compiler = compiler = LLC.LLCompiler(mode="training", symbol_infer=True)
     opt_model: torch._dynamo.eval_frame.Optimizedmodel = torch.compile(
         model=model,
@@ -62,6 +65,7 @@ def run_training_compiler(model, input):
 
 
 def run_inference_compiler(model, input):
+    model.training = False
     compiler = compiler = LLC.LLCompiler(mode="inference", symbol_infer=True)
     opt_model: torch._dynamo.eval_frame.Optimizedmodel = torch.compile(
         model=model,

@@ -42,7 +42,7 @@ def torch_compiler_time(model, *inputs):
 
 
 module_dict = {
-    # Add: [torch.randn((200, 3, 224, 256), device="cpu")],
+    Add: [torch.randn((200, 3, 224, 256), device="cpu")],
     # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
@@ -57,9 +57,9 @@ module_dict = {
     # ]
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
-    # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
+    #Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
     # BatchNorm2D_Inference: [torch.randn(200, 3, 224, 224, device="cpu")],
-    Linear: [torch.randn((10,100000), device="cpu")],
+    # Linear: [torch.randn((10,100000), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
     # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")],
     # ElewiseFusion1: [torch.randn((200, 3, 224, 224), device="cpu")],
@@ -96,6 +96,7 @@ def run_model_dict(dict):
                 pipeline="transform",
             )
             model = func()
+            model.traning = True
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
