@@ -12,12 +12,12 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#include "llcompiler/Dialect/IRExtension/IR/Types.h"
+#include "Dialect/IRExtension/IR/Types.h"
 
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "Dialect/IRExtension/IR/Dialect.h"
 
 #define GET_TYPEDEF_CLASSES
-#include "llcompiler/Dialect/IRExtension/IR/Types.cpp.inc"
+#include "Dialect/IRExtension/IR/Types.cpp.inc"
 namespace mlir::ex {
 //===----------------------------------------------------------------------===//
 // LLHDialect initialize method.
@@ -25,7 +25,7 @@ namespace mlir::ex {
 void IRExtensionDialect::registerTypes() {
   addTypes<
 #define GET_TYPEDEF_LIST
-#include "llcompiler/Dialect/IRExtension/IR/Types.cpp.inc"
+#include "Dialect/IRExtension/IR/Types.cpp.inc"
       >();
 }
 }  // namespace mlir::ex

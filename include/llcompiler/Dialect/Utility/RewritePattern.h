@@ -16,7 +16,7 @@
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_REWRITEPATTERN_H_
 #include <utility>
 
-#include "llcompiler/Support/Logger.h"
+#include "Support/Logger.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Transforms/DialectConversion.h"
 

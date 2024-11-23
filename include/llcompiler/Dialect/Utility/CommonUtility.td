@@ -13,12 +13,11 @@
 //    limitations under the License.
 //
 
-#ifndef LLH_CANONICALIZE
-#define LLH_CANONICALIZE
+#ifndef LLH_COMMONUTILITY
+#define LLH_COMMONUTILITY
 
-include "llcompiler/Dialect/LLH/IR/LLHOps.td"
 include "mlir/IR/PatternBase.td"
-
+include "Dialect/Utility/TensorPred.td"
 
 //===----------------------------------------------------------------------===//
 // Common utility functions.
@@ -86,13 +85,4 @@ def IsStaticShapeTensor:
 def Equal: Constraint<CPred<"$0 == $1">, "are equal">;
 
 class EqualString<string s> : Constraint<CPred<"$0 == \"" # s # "\"">>;
-
-
-//===----------------------------------------------------------------------===//
-// Canonicalization for AbsOp
-//===----------------------------------------------------------------------===//
-def FoldTwoAbsOpPattern : Pat<(LLH_AbsOp (LLH_AbsOp:$res $input)),
-                                 (LLH_AbsOp $input),
-                                 [(HasOneUse $res)]>;
-
-#endif // LLH_CANONICALIZE
+#endif // LLH_COMMONUTILITY

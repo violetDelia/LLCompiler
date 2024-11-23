@@ -2,6 +2,8 @@
 #define __LLC_TRANSFORM_LINALG_GENERALIZE__ "linalg_generalize"
 #define __LLC_TRANSFORM_LINALG_SPECIALIZE__ "linalg_specialize"
 #define __LLC_TRANSFORM_LINALG_FLATTEN__ "linalg_flatten_elementwise"
+#define __LLC_TRANSFORM_LINALG_BASIC_FUSE__ "linalg_basic_fuse"
+#define __LLC_TRANSFORM_LINALG_BASIC_VECTORIZATION__ "linalg_basic_vectorization"
 #define __LLC_TRANSFORM_MLHO_BASIC_OPT__ "mhlo_basic_opt"
 #define __LLC_TRANSFORM_MLHO_TO_LINALG__ "mhlo_to_linalg"
 #define __LLC_TRANSFORM_MLHO_BUFFERIZE__ "mhlo_one_shot_bufferize"

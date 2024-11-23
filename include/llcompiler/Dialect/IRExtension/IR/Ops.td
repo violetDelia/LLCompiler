@@ -13,6 +13,6 @@
 //    limitations under the License.
 #ifndef LLC_IREX_OPS
 #define LLC_IREX_OPS
-include "llcompiler/Dialect/IRExtension/IR/Attrs.td"
+include "Dialect/IRExtension/IR/Attrs.td"
 
 #endif // LLC_IREX_OPS

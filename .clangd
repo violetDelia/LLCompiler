@@ -1,16 +1,12 @@
 CompileFlags:
   Add: [-xc++,-Wall
-  -I/home/lfr/LLCompiler/include/,
+  -I/home/lfr/LLCompiler/include/llcompiler/,
   -I/home/lfr/LLCompiler/src/,
   -I/home/lfr/LLCompiler/third_party/onnx/,
-  -I/home/lfr/LLCompiler/.setuptools-cmake-build/third_party/onnx/,
   -I/home/lfr/LLCompiler/third_party/spdlog/include/,
   -I/home/lfr/LLCompiler/third_party/pybind11/include/,
-  -I/home/lfr/LLCompiler/.setuptools-cmake-build/third_party/llvm-project/llvm/include/,
   -I/home/lfr/LLCompiler/third_party/llvm-project/llvm/include/,
-  -I/home/lfr/LLCompiler/.setuptools-cmake-build/third_party/llvm-project/llvm/tools/mlir/include/,
   -I/home/lfr/LLCompiler/third_party/llvm-project/mlir/include/,
-  -I/home/lfr/LLCompiler/.setuptools-cmake-build/include/,
   ]
 Diagnostics:
   UnusedIncludes: Strict

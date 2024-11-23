@@ -15,10 +15,10 @@
 
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMON_REWRITE_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMON_REWRITE_H_
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Utils/Utils.h"
-#include "llcompiler/Dialect/Utility/RewritePattern.h"
-#include "llcompiler/Dialect/Utility/Type.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/LLH/Utils/Utils.h"
+#include "Dialect/Utility/RewritePattern.h"
+#include "Dialect/Utility/Type.h"
 #include "mlir/IR/Operation.h"
 namespace mlir::llh {
 template <class BinaryOp>

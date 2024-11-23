@@ -5,32 +5,31 @@ llcompiler_add_library(LLCPipelines
 
     DEPENDS
     LLCConversionPassIncGen
-    MLIRLLHToTosaIncGen
 
     LINKS PUBLIC
     MLIRPass
     MLIRTransforms
 
-    MLIRLLHUtils
-    MLIRLLHTransforms
-    MLIRLLHToTosa
-    MLIRLLHToArith
-    MLIRLLHToTensor
-    MLIRLLHToHLO
-    MLIRLLHToShape
+    LLCLLHUtils
+    LLCLLHTransforms
+    LLCLLHToTosa
+    LLCCLLHToArith
+    LLCCLLHToTensor
+    LLCLLHToHLO
+    LLCLLHToShape
 
-    MLIRLLVMExtensionTransforms
-    MLIRIndexExtensionTransforms
-    MLIRTosaExTransforms
+    LLCLLVMExtensionTransforms
+    LLCIndexExtensionTransforms
+    LLCTosaExTransforms
 
-    MhloDialect
-    MhloPasses
-    AllMhloPasses
-    MLIRHLOGPUTransforms
-    MhloToMemrefConversion
-    MhloToStandard
-    MhloToLinalg
-    MhloToStablehlo
+    # MhloDialect
+    # MhloPasses
+    # AllMhloPasses
+    # MLIRHLOGPUTransforms
+    # MhloToMemrefConversion
+    # MhloToStandard
+    # MhloToLinalg
+    # MhloToStablehlo
 
     StablehloPasses
     StablehloTOSATransforms
@@ -52,8 +51,8 @@ llcompiler_add_library(LLCPipelines
 
     MLIRControlFlowToSCF
 
-    DeallocationPasses
-    MLIRBufferTransforms
+    # DeallocationPasses
+    # MLIRBufferTransforms
     MLIRBufferizationToMemRef
 
     MLIRSCFToControlFlow

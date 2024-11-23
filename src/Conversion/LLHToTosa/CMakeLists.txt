@@ -1,10 +1,9 @@
-llcompiler_add_library(MLIRLLHToTosa
+llcompiler_add_library(LLCLLHToTosa
   SRC_FILES
   LLHToTosa.cpp
 
   DEPENDS
   LLCConversionPassIncGen
-  MLIRLLHToTosaIncGen
 
   LINKS PUBLIC
   LLCMLIRUtility

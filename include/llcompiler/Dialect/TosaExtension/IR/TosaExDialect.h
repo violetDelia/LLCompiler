@@ -22,7 +22,7 @@
 #include "mlir/IR/Dialect.h"
 
 #define LLCOMPILER_MACRO_FOR_FIX_HEAD
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h.inc"
+#include "Dialect/TosaExtension/IR/TosaExDialect.h.inc"
 #undef LLCOMPILER_MACRO_FOR_FIX_HEAD
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXDIALECT_H_

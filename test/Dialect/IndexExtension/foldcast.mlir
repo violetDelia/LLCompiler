@@ -1,4 +1,4 @@
-// RUN: llc-opt --split-input-file --fold-index-cast   %s| FileCheck %s
+// RUN: llc-opt --split-input-file --fold-index-cast -allow-unregistered-dialect %s| FileCheck %s
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --fold-index-cast  /home/lfr/LLCompiler/test/Dialect/IndexExtension/foldcast.mlir
 
 func.func @cast() ->(index) attributes {entrance}{

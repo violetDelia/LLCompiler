@@ -17,5 +17,5 @@
 #define INCLUDE_LLCOMPILER_DIALECT_IREXTENSION_IR_OPS_H_
 
 #define GET_OP_CLASSES
-#include "llcompiler/Dialect/IRExtension/IR/Ops.h.inc"
+#include "Dialect/IRExtension/IR/Ops.h.inc"
 #endif  // INCLUDE_LLCOMPILER_DIALECT_IREXTENSION_IR_OPS_H_

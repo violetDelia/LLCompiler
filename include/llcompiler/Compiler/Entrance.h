@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "llcompiler/Compiler/Engine.h"
+#include "Compiler/Engine.h"
 
 namespace llc::compiler {
 

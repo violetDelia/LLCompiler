@@ -11,31 +11,26 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Compiler/Init.h"
+#include "Compiler/Init.h"
 
 #include <iostream>
 #include <string>
 
-#include "deallocation/transforms/passes.h"
-#include "llcompiler/Compiler/Entrance.h"
-#include "llcompiler/Compiler/Init.h"
-#include "llcompiler/Conversion/Passes.h"
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
-#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
-#include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Pipeline/CommonPipeline.h"
-#include "llcompiler/Pipeline/TransFromPipeline.h"
-#include "llcompiler/Support/Logger.h"
-#include "mhlo/IR/hlo_ops.h"
-#include "mhlo/IR/register.h"
-#include "mhlo/interfaces/bufferizable_op_interface_impl.h"
-#include "mhlo/transforms/passes.h"
+#include "Compiler/Entrance.h"
+#include "Compiler/Init.h"
+#include "Conversion/Passes.h"
+#include "Dialect/IRExtension/IR/Dialect.h"
+#include "Dialect/IndexExtension/Transforms/Passes.h"
+#include "Dialect/LLH/IR/LLHEnums.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/LLH/Transforms/Passes.h"
+#include "Dialect/LLVMExtension/Transforms/Passes.h"
+#include "Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "Frontend/Core/Base.h"
+#include "Pipeline/BasicPipeline.h"
+#include "Pipeline/CommonPipeline.h"
+#include "Pipeline/TransFromPipeline.h"
+#include "Support/Logger.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
@@ -83,9 +78,6 @@
 #include "stablehlo/dialect/Register.h"
 #include "stablehlo/dialect/StablehloOps.h"
 #include "stablehlo/dialect/VhloOps.h"
-#include "stablehlo_ext/transforms/passes.h"
-#include "transforms/gpu_passes.h"
-#include "transforms/passes.h"
 
 namespace llc::compiler {
 
@@ -109,7 +101,6 @@ void load_dialect(mlir::MLIRContext& context) {
 
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
 
-  context.getOrLoadDialect<mlir::mhlo::MhloDialect>();
   context.getOrLoadDialect<mlir::chlo::ChloDialect>();
   context.getOrLoadDialect<mlir::stablehlo::StablehloDialect>();
   context.getOrLoadDialect<mlir::vhlo::VhloDialect>();
@@ -130,7 +121,6 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
       registry);
   mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::vector::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::mhlo::registerBufferizableOpInterfaceExternalModels(registry);
 
   mlir::registerConvertMemRefToLLVMInterface(registry);
   mlir::registerConvertFuncToLLVMInterface(registry);

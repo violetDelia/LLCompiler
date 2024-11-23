@@ -15,7 +15,7 @@
 #define LLH_TRANSFORMLAYOUTTONHWC
 include "mlir/IR/PatternBase.td"
 include "mlir/IR/Constraints.td"
-include "llcompiler/Dialect/LLH/IR/LLHOps.td"
+include "Dialect/LLH/IR/LLHOps.td"
 
 def Gen_Transpose_Perms_NCHW_To_NHWC: NativeCodeCall<"genTransposePermsToNHWC($0,llc::LAYOUT::NCHW)">;
 

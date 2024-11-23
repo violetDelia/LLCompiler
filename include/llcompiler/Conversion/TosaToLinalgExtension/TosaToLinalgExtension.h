@@ -23,7 +23,7 @@ class Pass;
 class RewritePatternSet;
 class ConversionTarget;
 #define GEN_PASS_DECL_CONVERTTOSATOLINALGEXTENSIONPASS
-#include "llcompiler/Conversion/Passes.h.inc"
+#include "Conversion/Passes.h.inc"
 
 }  // namespace mlir
 #endif  // INCLUDE_LLCOMPILER_CONVERSION_LLHTOLINALG_LLHTOLINALG_H_

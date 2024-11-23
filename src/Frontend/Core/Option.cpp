@@ -15,8 +15,8 @@
 #include <cstdint>
 #include <string>
 
-#include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Frontend/Core/Option.h"
+#include "Frontend/Core/Base.h"
+#include "Frontend/Core/Option.h"
 #include "llvm/Support/CommandLine.h"
 
 namespace llc::option {

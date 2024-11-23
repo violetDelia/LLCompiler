@@ -18,8 +18,8 @@ llcompiler_add_executable(llc-opt
     ${dialect_libs}
     ${conversion_libs}
     ${extension_libs}
-    AllMhloPasses
-    DeallocationPasses
-    MLIRHLOGPUTransforms
-    MhloRegisterDialects
+    # AllMhloPasses
+    # DeallocationPasses
+    # MLIRHLOGPUTransforms
+    # MhloRegisterDialects
 )

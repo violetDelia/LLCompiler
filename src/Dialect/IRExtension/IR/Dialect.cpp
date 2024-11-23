@@ -13,10 +13,10 @@
 //    limitations under the License.
 //
 
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "Dialect/IRExtension/IR/Dialect.h"
 
-#include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.cpp.inc"
+#include "Dialect/IRExtension/IR/Attrs.h"
+#include "Dialect/IRExtension/IR/Dialect.cpp.inc"
 
 namespace mlir::ex {
 //===----------------------------------------------------------------------===//
@@ -25,7 +25,7 @@ namespace mlir::ex {
 void IRExtensionDialect::initialize() {
   addOperations<
 #define GET_OP_LIST
-#include "llcompiler/Dialect/IRExtension/IR/Ops.cpp.inc"
+#include "Dialect/IRExtension/IR/Ops.cpp.inc"
       >();
   registerTypes();
   registerAttributes();

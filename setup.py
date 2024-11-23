@@ -84,15 +84,6 @@ def get_ext_suffix():
 # CmakeBuild
 ################################################################################
 class CmakeBuild(setuptools.Command):
-    """Compiles everything when `python setup.py build` is run using cmake.
-
-    Custom args can be passed to cmake by specifying the `CMAKE_ARGS`
-    environment variable.
-
-    The number of CPUs used by `make` can be specified by passing `-j<ncpus>`
-    to `setup.py build`.  By default all CPUs are used.
-    """
-
     user_options: ClassVar[list] = [
         ("jobs=", "j", "Specifies the number of jobs to use with make")
     ]
@@ -146,10 +137,6 @@ class CmakeBuild(setuptools.Command):
 ################################################################################
 class BuildPy(setuptools.command.build_py.build_py):
     def run(self):
-        # if self.editable_mode:
-        #     dst_dir = TOP_DIR
-        # else:
-        #     dst_dir = self.build_lib
         return super().run()
 
 
@@ -172,9 +159,8 @@ source_files = glob.glob("{}/*.cpp".format(PYBIND_DIR), recursive=True)
 libraries = ["LLCompiler"]
 ext_modules = [
     Pybind11Extension(
-        "llcompiler_",  # depends on the structure of your package
+        "llcompiler_", 
         source_files,
-        # Example: passing in the version to the compiled code
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
         runtime_library_dirs=RUNTIME_LIBRARY_DIRS,

@@ -18,15 +18,15 @@
 
 #include <memory>
 
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.h"
+#include "Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "Dialect/TosaExtension/IR/TosaExOps.h"
 #include "mlir/Pass/Pass.h"
 
 namespace mlir::tosa_ex {
 std::unique_ptr<::mlir::Pass> createTransformLayoutToNHWCPass();
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h.inc"
+#include "Dialect/TosaExtension/Transforms/Passes.h.inc"
 }  // namespace mlir::tosa_ex
 
 #endif  //  INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_TRANSFORMS_PASSES_H_

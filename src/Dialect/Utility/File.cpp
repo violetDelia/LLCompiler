@@ -11,11 +11,11 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Dialect/Utility/File.h"
+#include "Dialect/Utility/File.h"
 
 #include <filesystem>
 
-#include "llcompiler/Support/Logger.h"
+#include "Support/Logger.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/MemoryBuffer.h"
 #include "llvm/Support/SourceMgr.h"

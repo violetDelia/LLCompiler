@@ -12,7 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Dialect/IRExtension/IR/Ops.h"
+#include "Dialect/IRExtension/IR/Ops.h"
 
 #define GET_OP_CLASSES
-#include "llcompiler/Dialect/IRExtension/IR/Ops.cpp.inc"
+#include "Dialect/IRExtension/IR/Ops.cpp.inc"

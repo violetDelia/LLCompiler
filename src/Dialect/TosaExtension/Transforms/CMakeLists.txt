@@ -1,4 +1,4 @@
-llcompiler_add_library(MLIRTosaExTransforms
+llcompiler_add_library(LLCTosaExTransforms
   SRC_FILES
   TransformLayoutToNHWC.cpp
 
@@ -11,7 +11,7 @@ llcompiler_add_library(MLIRTosaExTransforms
   MLIRPass
 )
 
-# add_mlir_library(MLIRTosaExTransforms
+# add_mlir_library(LLCTosaExTransforms
 # TransformLayoutToNHWC.cpp
 
 # ADDITIONAL_HEADER_DIRS
@@ -25,4 +25,4 @@ llcompiler_add_library(MLIRTosaExTransforms
 # MLIRTosaExDialect
 # MLIRPass
 # )
-# llcompiler_install_mlir_target(MLIRTosaExTransforms TRANSFORM)
+# llcompiler_install_mlir_target(LLCTosaExTransforms TRANSFORM)

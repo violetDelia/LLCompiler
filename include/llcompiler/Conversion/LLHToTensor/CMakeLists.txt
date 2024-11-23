@@ -1,3 +1,0 @@
-set(LLVM_TARGET_DEFINITIONS LLHToTensor.td)
-mlir_tablegen(LLHToTensor.inc -gen-rewriters)
-add_public_tablegen_target(MLIRLLHToTensorIncGen)

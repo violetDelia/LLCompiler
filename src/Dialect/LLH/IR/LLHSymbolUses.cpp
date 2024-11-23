@@ -11,9 +11,9 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/Utility/Macro.h"
-#include "llcompiler/Support/Logger.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/Utility/Macro.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/Casting.h"
@@ -27,7 +27,7 @@
 #include "mlir/IR/OpImplementation.h"
 
 namespace mlir::llh {
-
+// TODO: neef add check
 LogicalResult SymbolRelationOp::verifySymbolUses(
     SymbolTableCollection& symbolTable) {
   return llvm::success();

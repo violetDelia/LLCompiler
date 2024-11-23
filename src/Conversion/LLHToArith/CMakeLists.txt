@@ -1,4 +1,4 @@
-llcompiler_add_library(MLIRLLHToArith
+llcompiler_add_library(LLCCLLHToArith
   SRC_FILES
   LLHToArith.cpp
 

@@ -19,5 +19,5 @@
 #include "mlir/IR/Dialect.h"
 
 #define GET_TYPEDEF_CLASSES
-#include "llcompiler/Dialect/IRExtension/IR/Types.h.inc"
+#include "Dialect/IRExtension/IR/Types.h.inc"
 #endif  // INCLUDE_LLCOMPILER_DIALECT_IREXTENSION_IR_TYPES_H_

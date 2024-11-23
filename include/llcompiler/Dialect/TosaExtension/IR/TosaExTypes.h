@@ -18,14 +18,14 @@
 #include <atomic>
 #include <cstdint>
 
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExEunms.h.inc"
+#include "Dialect/TosaExtension/IR/TosaExEunms.h.inc"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/DialectImplementation.h"
 #include "mlir/IR/ExtensibleDialect.h"
 
 #define GET_ATTRDEF_CLASSES
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExAttrs.h.inc"
+#include "Dialect/TosaExtension/IR/TosaExAttrs.h.inc"
 #define GET_TYPEDEF_CLASSES
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h.inc"
+#include "Dialect/TosaExtension/IR/TosaExTypes.h.inc"
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXTYPES_H_

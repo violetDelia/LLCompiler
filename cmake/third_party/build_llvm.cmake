@@ -24,7 +24,8 @@ function(build_llvm lib_path)
         WebAssembly
         X86
         XCore)
-    set(LLVM_ENABLE_PROJECTS "mlir;clang") # bolt;clang;clang-tools-extra;compiler-rt;cross-project-tests;libc;libclc;lld;lldb;mlir;openmp;polly;pstl;flang.
+    set(LLVM_ENABLE_PROJECTS "mlir;clang") 
+    # bolt;clang;clang-tools-extra;compiler-rt;cross-project-tests;libc;libclc;lld;lldb;mlir;openmp;polly;pstl;flang.
     set(LLVM_ENABLE_RTTI ON)
     set(LLVM_ENABLE_ASSERTIONS ON)
     set(LLVM_BUILD_TOOLS ON)

@@ -12,20 +12,16 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "deallocation/transforms/passes.h"
-#include "llcompiler/Compiler/Init.h"
-#include "llcompiler/Conversion/Passes.h"
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
-#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Pipeline/CommonPipeline.h"
-#include "mhlo/IR/hlo_ops.h"
-#include "mhlo/IR/register.h"
-#include "mhlo/transforms/passes.h"
+#include "Compiler/Init.h"
+#include "Conversion/Passes.h"
+#include "Dialect/IRExtension/IR/Dialect.h"
+#include "Dialect/IndexExtension/Transforms/Passes.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/LLH/Transforms/Passes.h"
+#include "Dialect/LLVMExtension/Transforms/Passes.h"
+#include "Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "Pipeline/BasicPipeline.h"
+#include "Pipeline/CommonPipeline.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
 #include "mlir/IR/AsmState.h"
@@ -42,21 +38,13 @@
 #include "mlir/Transforms/Passes.h"
 #include "stablehlo/dialect/Register.h"
 #include "stablehlo/dialect/StablehloOps.h"
-#include "stablehlo_ext/transforms/passes.h"
-#include "transforms/gpu_passes.h"
-#include "transforms/passes.h"
-//  -pass-pipeline=
-//    "builtin.module(  inline,
-//                      convert-llh-to-tosa,
-//       )"
-//
+
 int main(int argc, char **argv) {
   mlir::DialectRegistry registry;
   registry.insert<mlir::llh::LLHDialect>();
   registry.insert<mlir::ex::IRExtensionDialect>();
   registry.insert<mlir::tosa_ex::TosaExDialect>();
   registry.insert<mlir::stablehlo::StablehloDialect>();
-  registry.insert<mlir::mhlo::MhloDialect>();
   mlir::registerAllDialects(registry);
   mlir::registerAllPasses();
   mlir::registerAllExtensions(registry);
@@ -66,12 +54,6 @@ int main(int argc, char **argv) {
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
 
-  mlir::deallocation::registerDeallocationPasses();
-  mlir::hlo::registerLMHLOTransformsPasses();
-  mlir::mhlo::registerAllMhloPasses();
-  mlir::registerLMHLOGPUTransformsPasses();
-  mlir::stablehlo_ext::registerPasses();
-  mlir::mhlo::registerAllMhloDialects(registry);
   mlir::stablehlo::registerAllDialects(registry);
   mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));

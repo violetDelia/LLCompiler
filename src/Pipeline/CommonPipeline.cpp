@@ -12,10 +12,10 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Pipeline/CommonPipeline.h"
+#include "Pipeline/CommonPipeline.h"
 
-#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
-#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
+#include "Conversion/LLHToTosa/LLHToTosa.h"
+#include "Dialect/TosaExtension/Transforms/Passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"

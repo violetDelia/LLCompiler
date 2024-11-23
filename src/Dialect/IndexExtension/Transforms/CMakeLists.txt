@@ -1,4 +1,4 @@
-llcompiler_add_library(MLIRIndexExtensionTransforms
+llcompiler_add_library(LLCIndexExtensionTransforms
   SRC_FILES
   FoldIndexCast.cpp
 

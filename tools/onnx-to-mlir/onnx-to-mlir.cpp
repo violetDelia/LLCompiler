@@ -13,11 +13,11 @@
 //    limitations under the License.
 
 
-#include "llcompiler/Compiler/Init.h"
-#include "llcompiler/Compiler/Utility.h"
-#include "llcompiler/Dialect/Utility/File.h"
-#include "llcompiler/Frontend/Core/Option.h"
-#include "llcompiler/Support/Option.h"
+#include "Compiler/Init.h"
+#include "Compiler/Utility.h"
+#include "Dialect/Utility/File.h"
+#include "Frontend/Core/Option.h"
+#include "Support/Option.h"
 #define LLCOMPILER_HAS_LOG
 // C:\LLCompiler\build\tools\onnx-to-mlir\onnx-to-mlir.exe
 // --import-type=onnx_file

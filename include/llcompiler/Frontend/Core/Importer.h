@@ -23,8 +23,8 @@
  *
  */
 
-#include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Frontend/Core/Builder.h"
+#include "Frontend/Core/Base.h"
+#include "Frontend/Core/Builder.h"
 #include "mlir/IR/BuiltinOps.h"
 
 #ifndef INCLUDE_LLCOMPILER_FRONTEND_CORE_IMPORTER_H_

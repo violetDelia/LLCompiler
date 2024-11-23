@@ -7,6 +7,9 @@ transform.named_sequence @lowing_to_llvm(%module: !transform.any_op {transform.c
   %lowing_vector_module = transform.apply_registered_pass "convert-vector-to-llvm" to %lowing_scf_module {options = "reassociate-fp-reductions force-32bit-vector-indices=0"}: (!transform.any_op) -> !transform.any_op 
   %lowing_func_module = transform.apply_registered_pass "convert-func-to-llvm" to %lowing_vector_module {options = "index-bitwidth=64"}: (!transform.any_op) -> !transform.any_op 
   %lowing_math_module = transform.apply_registered_pass "convert-math-to-llvm" to %lowing_func_module: (!transform.any_op) -> !transform.any_op 
+  %lowing_math_funcs = transform.structured.match ops{["func.func"]} in %lowing_math_module
+    : (!transform.any_op) -> !transform.any_op
+  %lowing_buffer_funcs = transform.apply_registered_pass "finalizing-bufferize" to %lowing_math_funcs:(!transform.any_op) -> !transform.any_op 
   %lowing_memref_module = transform.apply_registered_pass "finalize-memref-to-llvm" to %lowing_math_module {options = "index-bitwidth=64"}: (!transform.any_op) -> !transform.any_op 
   %lowing_memref_funcs = transform.structured.match ops{["llvm.func"]} in %lowing_memref_module
     : (!transform.any_op) -> !transform.any_op

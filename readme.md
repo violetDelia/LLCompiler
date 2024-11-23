@@ -20,10 +20,10 @@ ninja check-llc-python
   * conv 的动态代码生成
   * pool 动态代码生成
   * 支持动态的linaga 融合
+* 用stablehlo，mhlo问题太多了。
 * op完善
 
-  * 训练的bn
-* affine -> vector -> x86/riscv
+  * bn 重写
 * 添加AOT算子
 
   * 重写编译逻辑

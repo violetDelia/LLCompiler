@@ -27,9 +27,9 @@
 #include <map>
 #include <string>
 
-#include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Frontend/Core/Importer.h"
-#include "llcompiler/Frontend/Core/Macro.h"
+#include "Frontend/Core/Base.h"
+#include "Frontend/Core/Importer.h"
+#include "Frontend/Core/Macro.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/Attributes.h"

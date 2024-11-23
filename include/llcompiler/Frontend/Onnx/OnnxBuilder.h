@@ -13,7 +13,7 @@
 //    limitations under the License.
 #ifndef INCLUDE_LLCOMPILER_FRONTEND_ONNX_ONNXBUILDER_H_
 #define INCLUDE_LLCOMPILER_FRONTEND_ONNX_ONNXBUILDER_H_
-#include "llcompiler/Frontend/Core/Builder.h"
+#include "Frontend/Core/Builder.h"
 #include "mlir/IR/MLIRContext.h"
 
 namespace llc::front {

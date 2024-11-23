@@ -11,16 +11,16 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
+#include "Conversion/LLHToArith/LLHToArith.h"
 
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/Utility/Builder.h"
-#include "llcompiler/Dialect/Utility/RewritePattern.h"
-#include "llcompiler/Support/Logger.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/Utility/Builder.h"
+#include "Dialect/Utility/RewritePattern.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -43,7 +43,7 @@
 
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTLLHTOARITHPASS
-#include "llcompiler/Conversion/Passes.h.inc"
+#include "Conversion/Passes.h.inc"
 
 }  // namespace mlir
 

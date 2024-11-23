@@ -13,13 +13,13 @@
 //    limitations under the License.
 //
 
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "Dialect/LLH/IR/LLHAttrs.h"
 
 #include <cstddef>
 
-#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Support/Logger.h"
+#include "Dialect/LLH/IR/LLHEnums.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
@@ -28,7 +28,7 @@
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/Support/LLVM.h"
 #define GET_ATTRDEF_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.cpp.inc"
+#include "Dialect/LLH/IR/LLHAttrs.cpp.inc"
 namespace mlir::llh {
 
 //===----------------------------------------------------------------------===//
@@ -37,7 +37,7 @@ namespace mlir::llh {
 void LLHDialect::registerAttributes() {
   addAttributes<
 #define GET_ATTRDEF_LIST
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.cpp.inc"
+#include "Dialect/LLH/IR/LLHAttrs.cpp.inc"
       >();
 }
 

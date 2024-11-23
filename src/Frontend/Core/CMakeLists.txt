@@ -12,5 +12,5 @@ llcompiler_add_library(LLCFrontendCore
     MLIRTosaDialect
     MLIRLLHDialect
     MLIRFuncDialect
-    MLIRIRExtension
+    LLCIRExtension
 )

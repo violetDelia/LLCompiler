@@ -23,7 +23,7 @@ class Pass;
 class RewritePatternSet;
 class ConversionTarget;
 #define GEN_PASS_DECL_CONVERTLLHTOARITHPASS
-#include "llcompiler/Conversion/Passes.h.inc"
+#include "Conversion/Passes.h.inc"
 
 }  // namespace mlir
 #endif  // INCLUDE_LLCOMPILER_CONVERSION_LLHTOARITH_LLHTOARITH_H_

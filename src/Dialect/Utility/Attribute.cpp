@@ -13,11 +13,11 @@
 //    limitations under the License.
 //**
 
-#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "Dialect/Utility/Attribute.h"
 
 #include <cstdint>
 
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "Dialect/LLH/IR/LLHAttrs.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "mlir/IR/BuiltinAttributes.h"

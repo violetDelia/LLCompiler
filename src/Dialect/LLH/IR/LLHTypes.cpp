@@ -13,9 +13,9 @@
 //    limitations under the License.
 #include <utility>
 
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Support/Core.h"
-#include "llcompiler/Support/Logger.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Support/Core.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "llvm/Support/LogicalResult.h"
@@ -92,7 +92,7 @@ struct TensorTypeStorage : public ::mlir::TypeStorage {
 void LLHDialect::registerTypes() {
   addTypes<
 #define GET_TYPEDEF_LIST
-#include "llcompiler/Dialect/LLH/IR/LLHTypes.cpp.inc"
+#include "Dialect/LLH/IR/LLHTypes.cpp.inc"
       >();
 }
 
@@ -142,4 +142,4 @@ llvm::ParseResult parseDynamicDim(
 }  // namespace mlir::llh
 
 #define GET_TYPEDEF_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHTypes.cpp.inc"
+#include "Dialect/LLH/IR/LLHTypes.cpp.inc"

@@ -1,4 +1,4 @@
-llcompiler_add_library(MLIRLLVMExtensionTransforms
+llcompiler_add_library(LLCLLVMExtensionTransforms
   SRC_FILES
   AdaptEntryParmsForEngine.cpp
 

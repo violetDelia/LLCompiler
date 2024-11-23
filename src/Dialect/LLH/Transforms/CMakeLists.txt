@@ -1,5 +1,5 @@
 
-llcompiler_add_library(MLIRLLHTransforms
+llcompiler_add_library(LLCLLHTransforms
   SRC_FILES
   TransformLayout.cpp
   LoadWeight.cpp
@@ -22,8 +22,8 @@ llcompiler_add_library(MLIRLLHTransforms
   LINKS PUBLIC
   MLIRLLHDialect
   MLIRPass
-  MLIRIRExtension
+  LLCIRExtension
   LLCMLIRUtility
-  MLIRLLHUtils
+  LLCLLHUtils
   LLCPatternRewriter
 )

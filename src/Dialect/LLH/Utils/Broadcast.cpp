@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Utils/Braocast.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/LLH/Utils/Braocast.h"
 namespace mlir::llh {
 
 void checkBroadcast(Operation* op) {

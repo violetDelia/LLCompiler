@@ -13,15 +13,15 @@
 //    limitations under the License.
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_
-include "llcompiler/Dialect/LLH/IR/LLHAttrs.td"
-include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
+include "Dialect/LLH/IR/LLHAttrs.td"
+include "Dialect/LLH/IR/LLHConstraints.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
-include "llcompiler/Interfaces/BraodcastableOpInterfaces.td"
+include "Interfaces/BraodcastableOpInterfaces.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 include "mlir/Interfaces/CastInterfaces.td"
 include "mlir/IR/SymbolInterfaces.td"
-include "llcompiler/Interfaces/SymbolShapeOpInterfaces.td"
+include "Interfaces/SymbolShapeOpInterfaces.td"
 
 
 class LLH_Op<string mnemonic, list<Trait> traits = [Pure]> :

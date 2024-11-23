@@ -25,7 +25,7 @@
 #include "mlir/Support/LLVM.h"
 
 #define LLCOMPILER_MACRO_FOR_FIX_HEAD
-#include "llcompiler/Dialect/LLH/IR/LLHEunms.h.inc"
+#include "Dialect/LLH/IR/LLHEunms.h.inc"
 #undef LLCOMPILER_MACRO_FOR_FIX_HEAD
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHENUMS_H_
 

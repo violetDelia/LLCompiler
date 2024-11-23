@@ -11,7 +11,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Compiler/Entrance.h"
+#include "Compiler/Entrance.h"
 
 #include <pybind11/buffer_info.h>
 #include <pybind11/pytypes.h>
@@ -20,9 +20,9 @@
 #include <iostream>
 #include <vector>
 
-#include "llcompiler/Compiler/Tensor.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Support/Logger.h"
+#include "Compiler/Tensor.h"
+#include "Pipeline/BasicPipeline.h"
+#include "Support/Logger.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "mlir-c/ExecutionEngine.h"
 #include "pybind11/cast.h"

@@ -13,7 +13,7 @@
 //    limitations under the License.
 #include <cstdint>
 
-#include "llcompiler/Frontend/Core/Base.h"
+#include "Frontend/Core/Base.h"
 
 namespace llc::front {
 const int64_t ONNX_ADAPTED_VERSION = 22;

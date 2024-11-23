@@ -26,7 +26,7 @@ namespace mlir::index::ex {
 
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h.inc"
+#include "Dialect/IndexExtension/Transforms/Passes.h.inc"
 
 }  // namespace mlir::index_ex
 

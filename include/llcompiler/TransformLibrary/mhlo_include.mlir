@@ -33,7 +33,7 @@ transform.named_sequence @mhlo_to_linalg(%module: !transform.any_op {transform.r
     %opt_shape_funcs = transform.apply_registered_pass "symbolic-shape-optimization" to %funcs : (!transform.any_op) -> !transform.any_op
     %to_std_funcs = transform.apply_registered_pass "mhlo-legalize-to-std" to %opt_shape_funcs : (!transform.any_op) -> !transform.any_op
     %to_memref_funcs = transform.structured.match ops{["func.func"]} in %to_std_funcs : (!transform.any_op) -> !transform.any_op
-    %to_linalg_funcs = transform.apply_registered_pass "hlo-legalize-to-linalg" to %to_memref_funcs : (!transform.any_op) -> !transform.any_op 
+    %to_linalg_funcs = transform.apply_registered_pass "hlo-legalize-to-linalg" to %to_memref_funcs {options = "enable-primitive-ops=true"}: (!transform.any_op) -> !transform.any_op
     %lowing_cf = transform.apply_registered_pass "mhlo-legalize-control-flow" to %to_linalg_funcs : (!transform.any_op) -> !transform.any_op
     transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
@@ -44,6 +44,9 @@ transform.named_sequence @mhlo_to_linalg(%module: !transform.any_op {transform.r
 transform.named_sequence @mhlo_one_shot_bufferize(%module: !transform.any_op {transform.readeonly}) {
     %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
     transform.bufferization.eliminate_empty_tensors %funcs : !transform.any_op
+    transform.apply_patterns to %funcs {
+      transform.apply_patterns.linalg.erase_unnecessary_inputs
+    } : !transform.any_op
     %empty_ops = transform.structured.match ops{["tensor.empty"]} in %module : (!transform.any_op) -> !transform.op<"tensor.empty">
     transform.bufferization.empty_tensor_to_alloc_tensor %empty_ops : (!transform.op<"tensor.empty">) -> !transform.op<"bufferization.alloc_tensor">
     %bufferized_module = transform.apply_registered_pass "computeop-and-func-bufferize" to %module  : (!transform.any_op) -> !transform.any_op

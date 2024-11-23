@@ -1,4 +1,4 @@
-llcompiler_add_library(MLIRLLHUtils
+llcompiler_add_library(LLCLLHUtils
   SRC_FILES
   Utils.cpp
   SymbolAnalysis.cpp

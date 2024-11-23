@@ -13,6 +13,6 @@
 //    limitations under the License.
 //
 
-#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
+#include "Dialect/IRExtension/IR/Enums.h"
 
-#include "llcompiler/Dialect/IRExtension/IR/Eunms.cpp.inc"
+#include "Dialect/IRExtension/IR/Eunms.cpp.inc"

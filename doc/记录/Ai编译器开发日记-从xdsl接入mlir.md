@@ -16,7 +16,7 @@ ExecuteEngine * (const str * xdsl_module, CompilerOptions * option,...);
 打包的名称为llcompiler_;
 
 ```C++
-#include "llcompiler/Compiler/Entrance.h"
+#include "Compiler/Entrance.h"
 
 #include <iostream>
 

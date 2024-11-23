@@ -18,18 +18,18 @@
 #include <regex>
 #include <string>
 
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
-#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/Braocast.h"
-#include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
-#include "llcompiler/Dialect/LLH/Utils/Utils.h"
-#include "llcompiler/Dialect/Utility/Attribute.h"
-#include "llcompiler/Dialect/Utility/RewritePattern.h"
-#include "llcompiler/Dialect/Utility/Type.h"
-#include "llcompiler/Interfaces/BraodcastableOpInterfaces.h"
-#include "llcompiler/Support/Logger.h"
+#include "Dialect/LLH/IR/LLHAttrs.h"
+#include "Dialect/LLH/IR/LLHEnums.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/LLH/Transforms/Passes.h"
+#include "Dialect/LLH/Utils/Braocast.h"
+#include "Dialect/LLH/Utils/CommonRewrite.h"
+#include "Dialect/LLH/Utils/Utils.h"
+#include "Dialect/Utility/Attribute.h"
+#include "Dialect/Utility/RewritePattern.h"
+#include "Dialect/Utility/Type.h"
+#include "Interfaces/BraodcastableOpInterfaces.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Hashing.h"
@@ -58,7 +58,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::llh {
 #define GEN_PASS_DEF_RESHAPEBEFOREBRAODCASTPASS
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
+#include "Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;

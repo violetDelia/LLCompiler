@@ -18,7 +18,6 @@
 
 #include <memory>
 
-#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Pass/Pass.h"
 
@@ -26,7 +25,7 @@ namespace mlir::LLVM::ex {
 
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h.inc"
+#include "Dialect/LLVMExtension/Transforms/Passes.h.inc"
 
 }  // namespace mlir::LLVM::ex
 

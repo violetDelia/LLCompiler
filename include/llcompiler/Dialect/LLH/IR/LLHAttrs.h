@@ -15,11 +15,11 @@
 
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_
-#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "Dialect/LLH/IR/LLHEnums.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #define GET_ATTRDEF_CLASSES
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h.inc"
+#include "Dialect/LLH/IR/LLHAttrs.h.inc"
 namespace mlir::llh {}
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHATTRS_H_

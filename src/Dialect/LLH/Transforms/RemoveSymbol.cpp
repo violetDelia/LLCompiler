@@ -15,14 +15,14 @@
 
 #include <cstdint>
 
-#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
-#include "llcompiler/Dialect/Utility/Attribute.h"
-#include "llcompiler/Dialect/Utility/RewritePattern.h"
-#include "llcompiler/Dialect/Utility/Type.h"
-#include "llcompiler/Support/Logger.h"
+#include "Dialect/LLH/IR/LLHAttrs.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/LLH/Transforms/Passes.h"
+#include "Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "Dialect/Utility/Attribute.h"
+#include "Dialect/Utility/RewritePattern.h"
+#include "Dialect/Utility/Type.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -40,7 +40,7 @@
 
 namespace mlir::llh {
 #define GEN_PASS_DEF_REMOVESYMBOLPASS
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
+#include "Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;

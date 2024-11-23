@@ -1,4 +1,4 @@
-llcompiler_add_library(MLIRIRExtension
+llcompiler_add_library(LLCIRExtension
     SRC_FILES
     Types.cpp
     Dialect.cpp
@@ -7,7 +7,7 @@ llcompiler_add_library(MLIRIRExtension
     Attrs.cpp
 
     DEPENDS
-    MLIRIRExtensionIncGen
+    LLCIRExtensionIncGen
 
     LINKS PUBLIC
     MLIRSupport

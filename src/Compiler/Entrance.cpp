@@ -11,7 +11,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Compiler/Entrance.h"
+#include "Compiler/Entrance.h"
 
 #include <stdio.h>
 #include <unistd.h>
@@ -27,12 +27,12 @@
 #include <system_error>
 #include <utility>
 
-#include "llcompiler/Compiler/Engine.h"
-#include "llcompiler/Compiler/Init.h"
-#include "llcompiler/Dialect/Utility/File.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Pipeline/TransFromPipeline.h"
-#include "llcompiler/Support/Logger.h"
+#include "Compiler/Engine.h"
+#include "Compiler/Init.h"
+#include "Dialect/Utility/File.h"
+#include "Pipeline/BasicPipeline.h"
+#include "Pipeline/TransFromPipeline.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
@@ -51,7 +51,6 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Target/LLVMIR/Export.h"
-#include "mhlo/transforms/passes.h"
 namespace llc::compiler {
 
 CompilerOptions::CompilerOptions() {}

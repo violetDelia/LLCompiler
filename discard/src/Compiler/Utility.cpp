@@ -14,11 +14,11 @@
 
 #include <filesystem>
 
-#include "llcompiler/Compiler/Utility.h"
-#include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Frontend/Onnx/OnnxBuilder.h"
-#include "llcompiler/Frontend/Onnx/OnnxImporter.h"
-#include "llcompiler/Support/Logger.h"
+#include "Compiler/Utility.h"
+#include "Frontend/Core/Base.h"
+#include "Frontend/Onnx/OnnxBuilder.h"
+#include "Frontend/Onnx/OnnxImporter.h"
+#include "Support/Logger.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/OwningOpRef.h"

@@ -1,4 +1,4 @@
-llcompiler_add_library(MLIRLLHToShape
+llcompiler_add_library(LLCLLHToShape
   SRC_FILES
   LLHToShape.cpp
 

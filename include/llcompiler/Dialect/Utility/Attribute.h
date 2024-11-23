@@ -18,9 +18,9 @@
 #include <initializer_list>
 #include <utility>
 
-#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
-#include "llcompiler/Support/Core.h"
-#include "llcompiler/Support/Logger.h"
+#include "Dialect/LLH/IR/LLHEnums.h"
+#include "Support/Core.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"

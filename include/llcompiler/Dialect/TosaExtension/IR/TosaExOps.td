@@ -13,10 +13,10 @@
 //    limitations under the License.
 #ifndef LLH_TOSAEX_OPS
 #define LLH_TOSAEX_OPS
-include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.td"
-include "llcompiler/Dialect/TosaExtension/IR/TosaExConstraints.td"
-include "llcompiler/Dialect/TosaExtension/IR/TosaExEnums.td"
-include "llcompiler/Dialect/TosaExtension/IR/TosaExInterfaces.td"
+include "Dialect/TosaExtension/IR/TosaExTypes.td"
+include "Dialect/TosaExtension/IR/TosaExConstraints.td"
+include "Dialect/TosaExtension/IR/TosaExEnums.td"
+include "Dialect/TosaExtension/IR/TosaExInterfaces.td"
 include "mlir/Interfaces/InferTypeOpInterface.td"
 include "mlir/Interfaces/SideEffectInterfaces.td"
 

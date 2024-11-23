@@ -11,7 +11,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "llcompiler/Frontend/Onnx/OnnxBuilder.h"
+#include "Frontend/Onnx/OnnxBuilder.h"
 #include "mlir/IR/MLIRContext.h"
 
 

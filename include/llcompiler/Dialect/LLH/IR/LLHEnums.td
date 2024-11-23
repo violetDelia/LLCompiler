@@ -15,7 +15,7 @@
 #define LLH_EUNMS
 
 include "mlir/IR/EnumAttr.td"
-include "llcompiler/Dialect/LLH/IR/LLHDialect.td"
+include "Dialect/LLH/IR/LLHDialect.td"
 
 
 def LLH_AUTO_PAD_NOTSET         : I32EnumAttrCase<"DEFAULT", 0>;

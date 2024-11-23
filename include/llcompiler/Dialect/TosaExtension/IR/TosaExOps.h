@@ -16,7 +16,7 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXOPS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXOPS_H_
 
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.h"
+#include "Dialect/TosaExtension/IR/TosaExTypes.h"
 #include "mlir/Bytecode/BytecodeOpInterface.h"
 #include "mlir/IR/Dialect.h"
 #include "mlir/IR/OpDefinition.h"
@@ -25,5 +25,5 @@
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 
 #define GET_OP_CLASSES
-#include "llcompiler/Dialect/TosaExtension/IR/TosaExOps.h.inc"
+#include "Dialect/TosaExtension/IR/TosaExOps.h.inc"
 #endif  // INCLUDE_LLCOMPILER_DIALECT_TOSAEXTENSION_IR_TOSAEXOPS_H_

@@ -1,3 +1,7 @@
+set(LLVM_TARGET_DEFINITIONS LLHCanonicalize.td)
+mlir_tablegen(LLHCanonicalize.inc -gen-rewriters)
+add_public_tablegen_target(LLHCanonicalizeIncGen)
+
 llcompiler_add_library(MLIRLLHDialect
     SRC_FILES
     LLHTypes.cpp

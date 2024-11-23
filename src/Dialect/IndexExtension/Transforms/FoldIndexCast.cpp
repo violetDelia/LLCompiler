@@ -18,16 +18,15 @@
 #include <regex>
 #include <string>
 
-#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Support/Logger.h"
+#include "Dialect/IndexExtension/Transforms/Passes.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
-#include "mhlo/IR/hlo_ops.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
@@ -46,7 +45,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::index::ex {
 #define GEN_PASS_DEF_FOLDINDEXCASTPASS
-#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h.inc"
+#include "Dialect/IndexExtension/Transforms/Passes.h.inc"
 }  // namespace mlir::index::ex
 using namespace ::mlir;
 using namespace ::mlir::index;

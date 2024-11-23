@@ -11,28 +11,24 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "deallocation/transforms/passes.h"
-#include "llcompiler/Compiler/Init.h"
-#include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
-#include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
-#include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
-#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
-#include "llcompiler/Conversion/Passes.h"
-#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
-#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
-#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Pipeline/TransFromPipeline.h"
-#include "llcompiler/Support/Enums.h"
-#include "llcompiler/Support/Logger.h"
-#include "llcompiler/TransformLibrary/LibraryEntry.h"
-#include "llcompiler/TransformLibrary/LibraryPath.h"
-#include "mhlo/IR/register.h"
-#include "mhlo/interfaces/bufferizable_op_interface_impl.h"
-#include "mhlo/transforms/passes.h"
+#include "Compiler/Init.h"
+#include "Conversion/LLHToArith/LLHToArith.h"
+#include "Conversion/LLHToHLO/LLHToHLO.h"
+#include "Conversion/LLHToTensor/LLHToTensor.h"
+#include "Conversion/LLHToTosa/LLHToTosa.h"
+#include "Conversion/Passes.h"
+#include "Dialect/IndexExtension/Transforms/Passes.h"
+#include "Dialect/LLH/IR/LLHOps.h"
+#include "Dialect/LLH/Transforms/Passes.h"
+#include "Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "Dialect/LLVMExtension/Transforms/Passes.h"
+#include "Dialect/TosaExtension/Transforms/Passes.h"
+#include "Pipeline/BasicPipeline.h"
+#include "Pipeline/TransFromPipeline.h"
+#include "Support/Enums.h"
+#include "Support/Logger.h"
+#include "TransformLibrary/LibraryEntry.h"
+#include "TransformLibrary/LibraryPath.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
 #include "mlir/Conversion/BufferizationToMemRef/BufferizationToMemRef.h"
@@ -88,7 +84,6 @@
 #include "stablehlo/conversions/linalg/transforms/Passes.h"
 #include "stablehlo/conversions/tosa/transforms/Passes.h"
 #include "stablehlo/transforms/Passes.h"
-#include "transforms/passes.h"
 namespace llc::pipeline {
 
 namespace {
@@ -98,13 +93,8 @@ void registerPasses() {
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
 
-  mlir::mhlo::registerAllMhloPasses();
-  mlir::hlo::registerFinalBufferizePass();
-  mlir::hlo::registerComputeOpAndFuncBufferizePass();
-  mlir::hlo::registerAllocToArgPass();
-  mlir::hlo::registerOneShotBufferizePass();
-
   mlir::LLVM::registerLLVMPasses();
+  mlir::registerLinalgPasses();
   mlir::registerTransformsPasses();
   mlir::bufferization::registerBufferizationPasses();
   mlir::registerReconcileUnrealizedCasts();
@@ -198,15 +188,8 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  linalg opt
   //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::createConvertElementwiseToLinalgPass());
-  // applyInterpreter(pm, __LLC_TRANSFORM_LINALG_SPECIALIZE__);
-  applyInterpreter(pm, __LLC_TRANSFORM_LINALG_GENERALIZE__);
-  // applyInterpreter(pm, __LLC_TRANSFORM_LINALG_FLATTEN__);
-  pm.addPass(mlir::createLinalgInlineScalarOperandsPass());
-  pm.addPass(mlir::createLinalgFoldUnitExtentDimsPass());
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::createLinalgDetensorizePass());
-  pm.addPass(mlir::createLinalgElementwiseOpFusionPass());
-  pm.addPass(mlir::createCanonicalizerPass());
+  applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_FUSE__);
+  applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_VECTORIZATION__);
   //===----------------------------------------------------------------------===//
   // bufferization
   //===----------------------------------------------------------------------===//
@@ -215,17 +198,16 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // lowing linalg
   //===----------------------------------------------------------------------===//
-  applyInterpreter(pm, __LLC_TRANSFORM_MLHO_BUFFERIZE__);
+  pm.addPass(mlir::createConvertLinalgToAffineLoopsPass());
   //===----------------------------------------------------------------------===//
   // affine opt
   //===----------------------------------------------------------------------===//
-  pm.addPass(mlir::createConvertLinalgToAffineLoopsPass());
-  pm.addPass(mlir::memref::createNormalizeMemRefsPass());
-    mlir::affine::AffineVectorizeOptions vectorize_options;
-    vectorize_options.vectorSizes = {8};
-    vectorize_options.vectorizeReductions = true;
-    pm.addNestedPass<mlir::func::FuncOp>(
-        mlir::affine::createAffineVectorize(vectorize_options));
+  //   pm.addPass(mlir::memref::createNormalizeMemRefsPass());
+  //     mlir::affine::AffineVectorizeOptions vectorize_options;
+  //     vectorize_options.vectorSizes = {8};
+  //     vectorize_options.vectorizeReductions = true;
+  //     pm.addNestedPass<mlir::func::FuncOp>(
+  //         mlir::affine::createAffineVectorize(vectorize_options));
   //===----------------------------------------------------------------------===//
   // lowing to csf
   //===----------------------------------------------------------------------===//
@@ -260,10 +242,9 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   // liveness
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createOptimizeAllocationLivenessPass());
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::hlo::createAllocToArgPass());
-  //applyInterpreter(pm, __LLC_TRANSFORM_MEMREF_BASIC_OPT__);
+  // applyInterpreter(pm, __LLC_TRANSFORM_MEMREF_BASIC_OPT__);
   //===----------------------------------------------------------------------===//
-  // lowing to llvm
+  //  lowing to llvm
   //===----------------------------------------------------------------------===//
   applyInterpreter(pm, __LLC_TRANSFORM_LLVM_LOWING__);
   //===----------------------------------------------------------------------===//
