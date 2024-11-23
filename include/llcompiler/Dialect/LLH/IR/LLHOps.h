@@ -16,11 +16,11 @@
 #ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
-#include "Dialect/LLH/IR/LLHAttrs.h"
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/LLH/IR/LLHTypesImpl.h"
-#include "Interfaces/BraodcastableOpInterfaces.h"
-#include "Interfaces/SymbolShapeOpInterfaces.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
+#include "llcompiler/Interfaces/BraodcastableOpInterfaces.h"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
@@ -43,11 +43,11 @@
 #include "mlir/Interfaces/LoopLikeInterface.h"
 #include "mlir/Interfaces/SideEffectInterfaces.h"
 #define PLACEHOLD_FOR_FIX_HEADER
-#include "Dialect/LLH/IR/LLHDialect.h.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.h.inc"
 #define GET_TYPEDEF_CLASSES
-#include "Dialect/LLH/IR/LLHTypes.h.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHTypes.h.inc"
 #define GET_OP_CLASSES
-#include "Dialect/LLH/IR/LLHOps.h.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"
 #undef PLACEHOLD_FOR_FIX_HEADER
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 

@@ -11,26 +11,26 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "Compiler/Init.h"
+#include "llcompiler/Compiler/Init.h"
 
 #include <iostream>
 #include <string>
 
-#include "Compiler/Entrance.h"
-#include "Compiler/Init.h"
-#include "Conversion/Passes.h"
-#include "Dialect/IRExtension/IR/Dialect.h"
-#include "Dialect/IndexExtension/Transforms/Passes.h"
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Transforms/Passes.h"
-#include "Dialect/LLVMExtension/Transforms/Passes.h"
-#include "Dialect/TosaExtension/IR/TosaExDialect.h"
-#include "Frontend/Core/Base.h"
-#include "Pipeline/BasicPipeline.h"
-#include "Pipeline/CommonPipeline.h"
-#include "Pipeline/TransFromPipeline.h"
-#include "Support/Logger.h"
+#include "llcompiler/Compiler/Entrance.h"
+#include "llcompiler/Compiler/Init.h"
+#include "llcompiler/Conversion/Passes.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Pipeline/BasicPipeline.h"
+#include "llcompiler/Pipeline/CommonPipeline.h"
+#include "llcompiler/Pipeline/TransFromPipeline.h"
+#include "llcompiler/Support/Logger.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
 #include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"

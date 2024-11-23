@@ -12,13 +12,13 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
 
 #include <cstdint>
 
-#include "Dialect/IRExtension/IR/Attrs.h"
-#include "Dialect/IRExtension/IR/Enums.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"

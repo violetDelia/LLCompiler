@@ -13,19 +13,19 @@
 //    limitations under the License.
 //
 
-#include "Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
 
 #include <cstddef>
 #include <cstdint>
 
-#include "Dialect/LLH/IR/LLHAttrs.h"
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Utils/SymbolAnalysis.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Dialect/Utility/Type.h"
-#include "Interfaces/SymbolShapeOpInterfaces.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/BuiltinTypes.h"

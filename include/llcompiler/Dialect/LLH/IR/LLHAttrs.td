@@ -14,8 +14,8 @@
 #ifndef LLH_ATTRIBUTES
 #define LLH_ATTRIBUTES
 
-include "Dialect/LLH/IR/LLHEnums.td"
-include "Dialect/LLH/IR/LLHConstraints.td"
+include "llcompiler/Dialect/LLH/IR/LLHEnums.td"
+include "llcompiler/Dialect/LLH/IR/LLHConstraints.td"
 
 class LLH_Attr<string name, string attrMnemonic, list<Trait> traits = [],
                    string baseCppClass = "::mlir::Attribute">

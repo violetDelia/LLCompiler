@@ -15,8 +15,8 @@
 
 #include <cstdint>
 
-#include "Dialect/LLH/Transforms/Passes.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Support/Logger.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/PatternMatch.h"
@@ -24,7 +24,7 @@
 
 namespace mlir::llh {
 #define GEN_PASS_DEF_MARKAOTPASS
-#include "Dialect/LLH/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;

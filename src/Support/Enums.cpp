@@ -11,13 +11,13 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "Support/Enums.h"
+#include "llcompiler/Support/Enums.h"
 
 #include <cstring>
 #include <exception>
 
-#include "Support/Logger.h"
-#include "Support/Core.h"
+#include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Core.h"
 namespace llc {
 
 

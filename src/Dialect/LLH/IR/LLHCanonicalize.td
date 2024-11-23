@@ -16,8 +16,8 @@
 #ifndef LLH_CANONICALIZE
 #define LLH_CANONICALIZE
 
-include "Dialect/LLH/IR/LLHOps.td"
-include "Dialect/Utility/TensorPred.td"
+include "llcompiler/Dialect/LLH/IR/LLHOps.td"
+include "llcompiler/Dialect/Utility/TensorPred.td"
 include "mlir/IR/PatternBase.td"
 
 

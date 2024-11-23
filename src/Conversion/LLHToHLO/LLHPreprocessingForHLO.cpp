@@ -16,11 +16,11 @@
 #include <cstdio>
 #include <iostream>
 
-#include "Conversion/LLHToHLO/LLHToHLO.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Dialect/Utility/Type.h"
-#include "Support/Logger.h"
+#include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -47,7 +47,7 @@
 #include "stablehlo/dialect/StablehloOps.h"
 namespace mlir {
 #define GEN_PASS_DEF_LLHPREPROCESSINGFORHLOPASS
-#include "Conversion/Passes.h.inc"
+#include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
 

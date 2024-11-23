@@ -18,9 +18,9 @@
 
 #include <memory>
 
-#include "Dialect/IRExtension/IR/Dialect.h"
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Complex/IR/Complex.h"
 #include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
@@ -34,7 +34,7 @@ std::unique_ptr<::mlir::Pass> createTransformLayoutPass();
 std::unique_ptr<::mlir::Pass> createTransformLayoutPass(llh::Layout target_layout);
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
-#include "Dialect/LLH/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 
 }  // namespace mlir::llh
 

@@ -18,8 +18,8 @@
 #include <regex>
 #include <string>
 
-#include "Dialect/LLVMExtension/Transforms/Passes.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -35,7 +35,7 @@
 #include "mlir/Support/LLVM.h"
 namespace mlir::LLVM::ex {
 #define GEN_PASS_DEF_ADAPTENTRYPARMSFORENGINEPASS
-#include "Dialect/LLVMExtension/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h.inc"
 }  // namespace mlir::LLVM::ex
 using namespace ::mlir;
 using namespace ::mlir::LLVM;

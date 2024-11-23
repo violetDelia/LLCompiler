@@ -18,9 +18,9 @@
 #include <cstdint>
 #include <string>
 
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/Utility/Attribute.h"
-#include "Support/Enums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Support/Enums.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassOptions.h"

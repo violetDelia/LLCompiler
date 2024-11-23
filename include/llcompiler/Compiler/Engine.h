@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "Compiler/Tensor.h"
+#include "llcompiler/Compiler/Tensor.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 namespace llc::compiler {
 

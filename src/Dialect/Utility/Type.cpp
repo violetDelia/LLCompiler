@@ -12,16 +12,16 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#include "Dialect/Utility/Type.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
-#include "Dialect/IRExtension/IR/Attrs.h"
-#include "Dialect/IRExtension/IR/Enums.h"
-#include "Dialect/LLH/IR/LLHAttrs.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"

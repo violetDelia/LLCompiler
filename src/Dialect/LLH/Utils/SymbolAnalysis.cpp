@@ -13,21 +13,21 @@
 //    limitations under the License.
 //
 
-#include "Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <string>
 #include <utility>
 
-#include "Dialect/LLH/IR/LLHAttrs.h"
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Utils/Utils.h"
-#include "Dialect/Utility/Attribute.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Dialect/Utility/Type.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"

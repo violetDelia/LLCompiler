@@ -22,10 +22,10 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
-#include "Compiler/Entrance.h"
-#include "Frontend/Core/Base.h"
-#include "Pipeline/BasicPipeline.h"
-#include "Support/Logger.h"
+#include "llcompiler/Compiler/Entrance.h"
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Pipeline/BasicPipeline.h"
+#include "llcompiler/Support/Logger.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/IR/MLIRContext.h"
 

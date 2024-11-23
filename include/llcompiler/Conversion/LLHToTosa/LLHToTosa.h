@@ -22,7 +22,7 @@ class Pass;
 class RewritePatternSet;
 class ConversionTarget;
 #define GEN_PASS_DECL_CONVERTLLHTOTOSAPASS
-#include "Conversion/Passes.h.inc"
+#include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
 #endif  // INCLUDE_LLCOMPILER_CONVERSION_LLHTOTOSA_LLHTOTOSA_H_

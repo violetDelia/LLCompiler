@@ -25,11 +25,11 @@
 #include <utility>
 #include <vector>
 
-#include "Dialect/IRExtension/IR/Dialect.h"
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"

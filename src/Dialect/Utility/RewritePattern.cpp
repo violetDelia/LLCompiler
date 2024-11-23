@@ -12,11 +12,11 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 //
-#include "Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
 
-#include "Dialect/LLH/Utils/Braocast.h"
-#include "Dialect/LLH/Utils/InferSymbol.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/Utils/Braocast.h"
+#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
+#include "llcompiler/Support/Logger.h"
 namespace mlir {
 //不要再这个方法里面创建非symbolOp
 void LLHPatternRewriter::processWileBuildOperation(Operation *op) {

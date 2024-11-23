@@ -25,7 +25,7 @@ namespace mlir::LLVM::ex {
 
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
-#include "Dialect/LLVMExtension/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h.inc"
 
 }  // namespace mlir::LLVM::ex
 

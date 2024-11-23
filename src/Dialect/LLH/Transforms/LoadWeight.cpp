@@ -18,11 +18,11 @@
 #include <regex>
 #include <string>
 
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Transforms/Passes.h"
-#include "Dialect/Utility/Attribute.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -42,7 +42,7 @@
 
 namespace mlir::llh {
 #define GEN_PASS_DEF_LOADWEIGHTPASS
-#include "Dialect/LLH/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;

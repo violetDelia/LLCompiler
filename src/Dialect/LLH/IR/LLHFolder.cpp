@@ -14,9 +14,9 @@
 #include <functional>
 #include <iostream>
 
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Utils/Utils.h"
-#include "Dialect/Utility/Type.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/SmallVector.h"

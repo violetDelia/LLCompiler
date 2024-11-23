@@ -13,6 +13,6 @@
 //    limitations under the License.
 #ifndef LLC_IREX_CONSTRAINTS
 #define LLC_IREX_CONSTRAINTS
-include "Dialect/IRExtension/IR/Types.td"
+include "llcompiler/Dialect/IRExtension/IR/Types.td"
 
 #endif // LLC_IREX_CONSTRAINTS

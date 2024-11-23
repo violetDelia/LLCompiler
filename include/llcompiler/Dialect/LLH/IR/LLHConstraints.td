@@ -13,7 +13,7 @@
 //    limitations under the License.
 #ifndef LLH_CONSTRAINTS
 #define LLH_CONSTRAINTS
-include "Dialect/LLH/IR/LLHTypes.td"
+include "llcompiler/Dialect/LLH/IR/LLHTypes.td"
 include "mlir/IR/CommonTypeConstraints.td"
 include "mlir/IR/CommonAttrConstraints.td"
 

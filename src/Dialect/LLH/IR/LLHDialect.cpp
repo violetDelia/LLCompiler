@@ -11,13 +11,13 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "Dialect/IRExtension/IR/Dialect.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 
 // using namespace ::mlir;
 
-#include "Dialect/LLH/IR/LLHDialect.cpp.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHDialect.cpp.inc"
 #include "mlir/Target/LLVMIR/LLVMTranslationInterface.h"
 #include "mlir/Transforms/InliningUtils.h"
 
@@ -48,7 +48,7 @@ struct LLHInlinerInterface : public DialectInlinerInterface {
 void LLHDialect::initialize() {
   addOperations<
 #define GET_OP_LIST
-#include "Dialect/LLH/IR/LLHOps.cpp.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.cpp.inc"
       >();
   registerTypes();
   registerAttributes();

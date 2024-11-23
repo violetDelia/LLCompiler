@@ -14,9 +14,9 @@
 
 #ifndef INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_
 #define INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/Utility/Attribute.h"
-#include "Support/Enums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Support/Enums.h"
 #include "llvm/Support/CommandLine.h"
 #include "mlir/Pass/PassManager.h"
 #include "mlir/Pass/PassOptions.h"

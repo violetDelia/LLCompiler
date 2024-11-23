@@ -13,6 +13,6 @@
 //    limitations under the License.
 //
 
-#include "Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 
-#include "Dialect/LLH/IR/LLHEunms.cpp.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHEunms.cpp.inc"

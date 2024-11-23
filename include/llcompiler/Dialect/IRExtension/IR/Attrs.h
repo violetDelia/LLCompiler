@@ -17,9 +17,9 @@
 #define INCLUDE_LLCOMPILER_DIALECT_IREXTENSION_IR_ATTRS_H_
 
 #include "mlir/IR/Attributes.h"
-#include "Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #define GET_ATTRDEF_CLASSES
-#include "Dialect/IRExtension/IR/Attrs.h.inc"
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.h.inc"
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_IREXTENSION_IR_ATTRS_H_
 

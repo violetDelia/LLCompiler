@@ -13,8 +13,8 @@
 //    limitations under the License.
 #include <utility>
 
-#include "Frontend/Core/Base.h"
-#include "Frontend/Core/Importer.h"
+#include "llcompiler/Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Core/Importer.h"
 #include "mlir/IR/MLIRContext.h"
 
 namespace llc::front {

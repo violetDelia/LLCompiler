@@ -12,7 +12,7 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "Support/Logger.h"
+#include "llcompiler/Support/Logger.h"
 
 #include <chrono>
 #include <cstddef>
@@ -25,7 +25,7 @@
 #include <sstream>
 #include <string>
 
-#include "Support/Core.h"
+#include "llcompiler/Support/Core.h"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"

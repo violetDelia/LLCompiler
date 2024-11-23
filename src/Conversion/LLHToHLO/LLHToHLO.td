@@ -16,8 +16,8 @@
 #ifndef LLH_LLH_TO_HLO
 #define LLH_LLH_TO_HLO
 
-include "Dialect/LLH/IR/LLHOps.td"
-include "Dialect/Utility/CommonUtility.td"
+include "llcompiler/Dialect/LLH/IR/LLHOps.td"
+include "llcompiler/Dialect/Utility/CommonUtility.td"
 include "mlir/IR/PatternBase.td"
 include "stablehlo/dialect/StablehloOps.td"
 

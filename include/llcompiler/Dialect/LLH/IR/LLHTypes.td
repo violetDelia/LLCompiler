@@ -16,7 +16,7 @@
 #define LLH_TYPES
 
 include "mlir/IR/DialectBase.td"
-include "Dialect/LLH/IR/LLHDialect.td"
+include "llcompiler/Dialect/LLH/IR/LLHDialect.td"
 
 
 //===----------------------------------------------------------------------===//

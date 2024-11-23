@@ -17,7 +17,7 @@
 #define LLH_COMMONUTILITY
 
 include "mlir/IR/PatternBase.td"
-include "Dialect/Utility/TensorPred.td"
+include "llcompiler/Dialect/Utility/TensorPred.td"
 
 //===----------------------------------------------------------------------===//
 // Common utility functions.

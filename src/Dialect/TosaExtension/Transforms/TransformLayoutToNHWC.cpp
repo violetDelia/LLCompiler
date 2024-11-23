@@ -15,10 +15,10 @@
 
 #include <cstdint>
 
-#include "Dialect/TosaExtension/Transforms/Passes.h"
-#include "Dialect/Utility/Attribute.h"
-#include "Dialect/Utility/Builder.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
@@ -36,7 +36,7 @@
 
 namespace mlir::tosa_ex {
 #define GEN_PASS_DEF_TRANSFORMLAYOUTTONHWC
-#include "Dialect/TosaExtension/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h.inc"
 }  // namespace mlir::tosa_ex
 using namespace ::mlir;
 using namespace mlir::tosa;

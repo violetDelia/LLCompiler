@@ -17,8 +17,8 @@
 #include <cstdint>
 #include <vector>
 
-#include "Dialect/IRExtension/IR/Enums.h"
-#include "Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"

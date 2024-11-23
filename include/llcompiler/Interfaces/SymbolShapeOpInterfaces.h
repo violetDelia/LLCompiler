@@ -20,6 +20,6 @@
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/OpDefinition.h"
 #define FIX_HEADER
-#include "Interfaces/SymbolShapeOpInterfaces.h.inc"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h.inc"
 #undef FIX_HEADER
 #endif  // INCLUDE_LLCOMPILER_INTERFACES_SYMBOLSHAPEOPINTERFACES_H_

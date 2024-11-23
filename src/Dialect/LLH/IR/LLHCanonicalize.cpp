@@ -17,15 +17,15 @@
 #include <cstdint>
 #include <cstdio>
 
-#include "Dialect/LLH/IR/LLHAttrs.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Utils/CommonRewrite.h"
-#include "Dialect/LLH/Utils/SymbolAnalysis.h"
-#include "Dialect/LLH/Utils/Utils.h"
-#include "Dialect/Utility/Attribute.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Dialect/Utility/Type.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
@@ -44,7 +44,7 @@
 #include "mlir/IR/ValueRange.h"
 using namespace mlir;
 using namespace mlir::llh;
-#include "Dialect/LLH/IR/LLHCanonicalize.inc"
+#include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
 constexpr inline size_t SinkOpBenfit = 101;
 constexpr inline size_t RefineOpBenefit = 101;
 constexpr inline size_t ReshapeBenefit = 100;

@@ -21,12 +21,12 @@
 #include <utility>
 #include <vector>
 
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Transforms/Passes.h"
-#include "Dialect/LLH/Utils/InferSymbol.h"
-#include "Dialect/LLH/Utils/SymbolAnalysis.h"
-#include "Dialect/Utility/Attribute.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -45,7 +45,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::llh {
 #define GEN_PASS_DEF_INFERSYMBOLSHAPEPASS
-#include "Dialect/LLH/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;

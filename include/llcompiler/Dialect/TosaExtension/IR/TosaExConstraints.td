@@ -13,6 +13,6 @@
 //    limitations under the License.
 #ifndef LLH_TOSAEX_CONSTRAINTS
 #define LLH_TOSAEX_CONSTRAINTS
-include "Dialect/TosaExtension/IR/TosaExTypes.td"
+include "llcompiler/Dialect/TosaExtension/IR/TosaExTypes.td"
 
 #endif // LLH_TOSAEX_CONSTRAINTS

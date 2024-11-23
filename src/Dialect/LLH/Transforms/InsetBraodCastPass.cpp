@@ -18,11 +18,11 @@
 #include <regex>
 #include <string>
 
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Transforms/Passes.h"
-#include "Dialect/LLH/Utils/CommonRewrite.h"
-#include "Dialect/LLH/Utils/Utils.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -38,7 +38,7 @@
 
 namespace mlir::llh {
 #define GEN_PASS_DEF_INSERTBROADCASTPASS
-#include "Dialect/LLH/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;

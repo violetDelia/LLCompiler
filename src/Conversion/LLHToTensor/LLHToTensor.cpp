@@ -11,17 +11,17 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "Conversion/LLHToTensor/LLHToTensor.h"
+#include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/IR/LLHTypesImpl.h"
-#include "Dialect/LLH/Utils/Utils.h"
-#include "Dialect/Utility/Builder.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -45,7 +45,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTLLHTOTENSORPASS
-#include "Conversion/Passes.h.inc"
+#include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
 

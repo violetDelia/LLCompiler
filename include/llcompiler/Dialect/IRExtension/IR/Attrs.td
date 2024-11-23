@@ -14,8 +14,8 @@
 #ifndef LLC_IREX_ATTRIBUTES
 #define LLC_IREX_ATTRIBUTES
 
-include "Dialect/IRExtension/IR/Enums.td"
-include "Dialect/IRExtension/IR/Constraints.td"
+include "llcompiler/Dialect/IRExtension/IR/Enums.td"
+include "llcompiler/Dialect/IRExtension/IR/Constraints.td"
 
 
 class IRExtension_Attr<string name, string attrMnemonic, list<Trait> traits = [],

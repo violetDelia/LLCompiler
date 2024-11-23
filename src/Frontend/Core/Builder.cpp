@@ -12,11 +12,11 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "Frontend/Core/Builder.h"
+#include "llcompiler/Frontend/Core/Builder.h"
 
-#include "Dialect/IRExtension/IR/Dialect.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Support/Logger.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/Builders.h"

@@ -19,6 +19,6 @@
 #include "mlir/IR/Dialect.h"
 
 #define LLCOMPILER_MACRO_FOR_FIX_HEAD
-#include "Dialect/IRExtension/IR/Dialect.h.inc"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h.inc"
 #undef LLCOMPILER_MACRO_FOR_FIX_HEAD
 #endif  // INCLUDE_LLCOMPILER_DIALECT_IREXTENSION_IR_DIALECT_H_

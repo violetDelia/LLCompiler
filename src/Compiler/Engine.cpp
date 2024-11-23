@@ -11,14 +11,14 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "Compiler/Engine.h"
+#include "llcompiler/Compiler/Engine.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <vector>
 
-#include "Compiler/Tensor.h"
-#include "Support/Logger.h"
+#include "llcompiler/Compiler/Tensor.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "mlir/ExecutionEngine/RunnerUtils.h"
 namespace llc::compiler {

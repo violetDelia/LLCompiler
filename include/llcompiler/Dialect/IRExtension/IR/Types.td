@@ -16,7 +16,7 @@
 #define LLC_IREX_TYPES
 
 include "mlir/IR/DialectBase.td"
-include "Dialect/IRExtension/IR/Dialect.td"
+include "llcompiler/Dialect/IRExtension/IR/Dialect.td"
 
 
 #endif // LLC_IREX_TYPES

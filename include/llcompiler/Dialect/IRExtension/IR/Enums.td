@@ -14,7 +14,7 @@
 #ifndef LLC_IREX_EUNMS
 #define LLC_IREX_EUNMS
 include "mlir/IR/EnumAttr.td"
-include "Dialect/IRExtension/IR/Dialect.td"
+include "llcompiler/Dialect/IRExtension/IR/Dialect.td"
 
 def IRExtension_LAYOUT_NCHW         : I32EnumAttrCase<"NCHW", 0>;
 def IRExtension_LAYOUT_NHWC        : I32EnumAttrCase<"NHWC", 1>;

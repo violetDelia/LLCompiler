@@ -11,19 +11,19 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "Conversion/LLHToTosa/LLHToTosa.h"
+#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/Utility/Builder.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Dialect/Utility/Tool.h"
-#include "Dialect/Utility/Type.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/Tool.h"
+#include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -47,7 +47,7 @@
 
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTLLHTOTOSAPASS
-#include "Conversion/Passes.h.inc"
+#include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
 
@@ -131,7 +131,7 @@ bool check_conv_illegal(Operation* op) {
 // operation lowing
 //===----------------------------------------------------------------------===//
 
-#include "Conversion/LLHToTosa/LLHToTosa.inc"
+#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.inc"
 
 struct ReluOpLowering : public OpConversionPattern<ReluOp> {
   using OpConversionPattern<ReluOp>::OpConversionPattern;

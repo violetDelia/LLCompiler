@@ -24,7 +24,7 @@
  *
  */
 
-#include "Frontend/Core/Base.h"
+#include "llcompiler/Frontend/Core/Base.h"
 
 namespace llc::front {}  // namespace llc::front
 

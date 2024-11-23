@@ -11,7 +11,7 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "Conversion/LLHToHLO/LLHToHLO.h"
+#include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
 
 #include <algorithm>
 #include <cstddef>
@@ -19,13 +19,13 @@
 #include <cstdio>
 #include <iostream>
 
-#include "Dialect/LLH/IR/LLHEnums.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Utils/Utils.h"
-#include "Dialect/Utility/Builder.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Dialect/Utility/Type.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -55,7 +55,7 @@
 #include "stablehlo/dialect/StablehloOps.h"
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTLLHTOHLOPASS
-#include "Conversion/Passes.h.inc"
+#include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
 

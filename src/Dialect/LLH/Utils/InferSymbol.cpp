@@ -13,9 +13,9 @@
 //    limitations under the License.
 //
 
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/LLH/Utils/SymbolAnalysis.h"
-#include "Dialect/LLH/Utils/InferSymbol.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
 namespace mlir::llh {
 
 void checkAndInferSymbol(Operation* op) {

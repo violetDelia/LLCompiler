@@ -12,11 +12,11 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "Support/Option.h"
+#include "llcompiler/Support/Option.h"
 
 #include <string>
 
-#include "Support/Logger.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/ManagedStatic.h"
 namespace llc::option {

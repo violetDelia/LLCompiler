@@ -18,9 +18,9 @@
 #include <regex>
 #include <string>
 
-#include "Dialect/IndexExtension/Transforms/Passes.h"
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -45,7 +45,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::index::ex {
 #define GEN_PASS_DEF_FOLDINDEXCASTPASS
-#include "Dialect/IndexExtension/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h.inc"
 }  // namespace mlir::index::ex
 using namespace ::mlir;
 using namespace ::mlir::index;

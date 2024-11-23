@@ -11,6 +11,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#include "Interfaces/SymbolShapeOpInterfaces.h"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 
-#include "Interfaces/SymbolShapeOpInterfaces.cpp.inc"
+#include "llcompiler/Interfaces/SymbolShapeOpInterfaces.cpp.inc"

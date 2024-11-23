@@ -11,15 +11,15 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "Conversion/TosaToLinalgExtension/TosaToLinalgExtension.h"
+#include "llcompiler/Conversion/TosaToLinalgExtension/TosaToLinalgExtension.h"
 
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
-#include "Dialect/LLH/IR/LLHOps.h"
-#include "Dialect/Utility/RewritePattern.h"
-#include "Support/Logger.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/RewritePattern.h"
+#include "llcompiler/Support/Logger.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -39,7 +39,7 @@
 
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTTOSATOLINALGEXTENSIONPASS
-#include "Conversion/Passes.h.inc"
+#include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
 

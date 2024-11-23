@@ -13,10 +13,10 @@
 //    limitations under the License.
 //
 
-#include "Dialect/IRExtension/IR/Attrs.h"
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.h"
 
-#include "Dialect/IRExtension/IR/Dialect.h"
-#include "Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "llvm/ADT/TypeSwitch.h"
 #include "mlir/IR/Attributes.h"
 #include "mlir/IR/Builders.h"
@@ -24,10 +24,10 @@
 #include "mlir/IR/OpDefinition.h"
 #include "mlir/IR/OpImplementation.h"
 #include "mlir/IR/Attributes.h"
-#include "Dialect/IRExtension/IR/Enums.h"
+#include "llcompiler/Dialect/IRExtension/IR/Enums.h"
 #include "mlir/Support/LLVM.h"
 #define GET_ATTRDEF_CLASSES
-#include "Dialect/IRExtension/IR/Attrs.cpp.inc"
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.cpp.inc"
 
 namespace mlir::ex {
 //===----------------------------------------------------------------------===//
@@ -36,7 +36,7 @@ namespace mlir::ex {
 void IRExtensionDialect::registerAttributes() {
   addAttributes<
 #define GET_ATTRDEF_LIST
-#include "Dialect/IRExtension/IR/Attrs.cpp.inc"
+#include "llcompiler/Dialect/IRExtension/IR/Attrs.cpp.inc"
       >();
 }
 }  // namespace mlir::ex
