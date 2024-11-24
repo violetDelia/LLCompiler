@@ -3,7 +3,7 @@ llcompiler_add_library(LLCLLVMExtensionTransforms
   AdaptEntryParmsForEngine.cpp
 
   DEPENDS
-  MLIRLLVMExtensionPassIncGen
+  LLCLLVMExtensionPassIncGen
   
 
   LINKS PUBLIC

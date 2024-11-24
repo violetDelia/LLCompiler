@@ -21,10 +21,8 @@
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
-#include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/ADT/Twine.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
@@ -32,15 +30,12 @@
 #include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/AffineExpr.h"
-#include "mlir/IR/Attributes.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
-#include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
-#include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::index::ex {
@@ -134,7 +129,7 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateFoldIndexCastPassPassPatterns(RewritePatternSet& patterns) {
+void populateFoldIndexCastPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<FoldCastOp<CastSOp>>(context, 2);
   patterns.add<FoldCastOp<CastUOp>>(context, 2);
@@ -160,7 +155,7 @@ void FoldIndexCastPass::runOnOperation() {
   auto* context = &getContext();
   auto module = getOperation();
   RewritePatternSet patterns(context);
-  populateFoldIndexCastPassPassPatterns(patterns);
+  populateFoldIndexCastPassPatterns(patterns);
   auto op = getOperation();
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
     signalPassFailure();

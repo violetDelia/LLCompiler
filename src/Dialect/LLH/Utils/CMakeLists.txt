@@ -6,7 +6,7 @@ llcompiler_add_library(LLCLLHUtils
   Broadcast.cpp
 
   DEPENDS
-  MLIRLLHDialectIncGen
+  LLCLLHDialectIncGen
   
 
   LINKS PUBLIC

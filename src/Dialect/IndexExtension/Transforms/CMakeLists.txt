@@ -3,7 +3,7 @@ llcompiler_add_library(LLCIndexExtensionTransforms
   FoldIndexCast.cpp
 
   DEPENDS
-  MLIRIndexExtensionPassIncGen
+  LLCIndexExtensionPassIncGen
   
 
   LINKS PUBLIC

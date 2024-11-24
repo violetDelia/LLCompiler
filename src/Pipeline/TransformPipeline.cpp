@@ -17,6 +17,7 @@
 #include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Conversion/Passes.h"
+#include "llcompiler/Dialect/BufferizationExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
@@ -92,6 +93,7 @@ void registerPasses() {
   mlir::registerLLCConversionPasses();
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
+  mlir::bufferization::ex::registerBufferizationExtensionPasses();
 
   mlir::stablehlo::registerPasses();
   mlir::stablehlo::registerStablehloLegalizeToLinalgPass();
@@ -241,12 +243,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // memref opt
   //===----------------------------------------------------------------------===//
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::bufferization::createBufferDeallocationPass());
-  // liveness
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::bufferization::createOptimizeAllocationLivenessPass());
-  // applyInterpreter(pm, __LLC_TRANSFORM_MEMREF_BASIC_OPT__);
+  applyInterpreter(pm, __LLC_TRANSFORM_MEMREF_BASIC_OPT__);
   //===----------------------------------------------------------------------===//
   //  lowing to llvm
   //===----------------------------------------------------------------------===//

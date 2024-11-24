@@ -16,6 +16,7 @@
 #include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/BufferizationExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
@@ -53,6 +54,7 @@ int main(int argc, char **argv) {
   mlir::registerLLCConversionPasses();
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
+  mlir::bufferization::ex::registerBufferizationExtensionPasses();
 
   mlir::stablehlo::registerAllDialects(registry);
   mlir::asMainReturnCode(

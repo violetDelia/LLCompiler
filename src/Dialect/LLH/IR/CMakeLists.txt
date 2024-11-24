@@ -18,7 +18,7 @@ llcompiler_add_library(MLIRLLHDialect
     LLHSymbolUses
 
     DEPENDS
-    MLIRLLHDialectIncGen
+    LLCLLHDialectIncGen
     LLHCanonicalizeIncGen
 
     LINKS PUBLIC

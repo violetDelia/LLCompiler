@@ -5,7 +5,7 @@ llcompiler_add_library(MLIRTosaExDialect
     TosaExOps.cpp
 
     DEPENDS
-    MLIRTosaExDialectIncGen
+    LLCTosaExDialectIncGen
 
     LINKS PUBLIC
     MLIRIR
@@ -22,7 +22,7 @@ llcompiler_add_library(MLIRTosaExDialect
 #     ${PROJECT_SOURCE_DIR}/include/llcompiler/Dialect/TosaEx
 
 #     DEPENDS
-#     MLIRTosaExDialectIncGen
+#     LLCTosaExDialectIncGen
 
 #     LINK_LIBS PUBLIC
 #     MLIRIR

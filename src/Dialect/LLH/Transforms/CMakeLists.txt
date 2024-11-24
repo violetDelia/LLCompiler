@@ -14,8 +14,8 @@ llcompiler_add_library(LLCLLHTransforms
   MarkAot.cpp
 
   DEPENDS
-  MLIRLLHDialectIncGen
-  MLIRLLHPassIncGen
+  LLCLLHDialectIncGen
+  LLCLLHPassIncGen
   LLHTransformLayoutToNHWCIncGen
   
 

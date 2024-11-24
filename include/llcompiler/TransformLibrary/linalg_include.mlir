@@ -81,18 +81,6 @@ transform.named_sequence @flatten_elementwise(%module: !transform.any_op {transf
     transform.yield
   }
 
-transform.named_sequence @basic_elementwise_fuse(%module: !transform.any_op {transform.readonly}) {
-    %linalg_ops = transform.structured.match interface{LinalgOp} in %module: (!transform.any_op) -> !transform.any_op
-    %flattened = transform.structured.flatten_elementwise %linalg_ops
-      : (!transform.any_op) -> !transform.any_op
-    %func_ops = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.op<"func.func">
-    transform.apply_patterns to %func_ops {
-      transform.apply_patterns.tensor.fold_tensor_empty
-    } : !transform.op<"func.func">
-    transform.yield
-  }
-
-
 transform.named_sequence @linalg_basic_fuse(%module: !transform.any_op {transform.consumed}) {
   transform.apply_patterns to %module {
       transform.apply_patterns.linalg.erase_unnecessary_inputs
@@ -120,7 +108,8 @@ transform.named_sequence @linalg_bufferization(%module: !transform.any_op {trans
           test_analysis_only= false,
           memcpy_op = "memref.copy" }
         : (!transform.any_op) -> !transform.any_op
-    %res_to_rag_module = transform.apply_registered_pass "buffer-results-to-out-params" to %bufferized_module {options = "hoist-static-allocs=true add-result-attr=true"}: (!transform.any_op) -> !transform.any_op
+    %res_to_para_module = transform.apply_registered_pass "buffer-results-to-out-params" to %bufferized_module {options = "hoist-static-allocs=true add-result-attr=true"}: (!transform.any_op) -> !transform.any_op
+    %alloc_to_arg_module = transform.apply_registered_pass "alloc-to-arg" to %res_to_para_module : (!transform.any_op) -> !transform.any_op
     transform.yield
   }
 } // transform module
