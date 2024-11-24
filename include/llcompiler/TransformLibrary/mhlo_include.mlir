@@ -60,4 +60,35 @@ transform.named_sequence @mhlo_one_shot_bufferize(%module: !transform.any_op {tr
     transform.yield
   }
 
+transform.named_sequence @stablehlo_basic_opt(%module: !transform.any_op {transform.consumed}) {
+    transform.apply_patterns to %module {
+      transform.apply_patterns.canonicalization
+    } : !transform.any_op
+    %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op 
+    %conveted_to_signless_module = transform.apply_registered_pass "stablehlo-convert-to-signless" to %module : (!transform.any_op) -> !transform.any_op
+    %conveted_to_signless_funcs = transform.structured.match ops{["func.func"]} in %conveted_to_signless_module : (!transform.any_op) -> !transform.any_op
+    %expands_funcs = transform.apply_registered_pass "stablehlo-compatibility-expander" to %conveted_to_signless_funcs : (!transform.any_op) -> !transform.any_op
+    // %dynamic_canonicalized_funcs = transform.apply_registered_pass "stablehlo-canonicalize-dynamism" to %expands_funcs : (!transform.any_op) -> !transform.any_op
+    // %folded_funcs = transform.apply_registered_pass "stablehlo-aggressive-folder" to %dynamic_canonicalized_funcs : (!transform.any_op) -> !transform.any_op
+    // %canonicalized_funcs = transform.apply_registered_pass "stablehlo-aggressive-simplification" to %folded_funcs : (!transform.any_op) -> !transform.any_op
+    // transform.apply_patterns to %conveted_to_signless_module {
+    //   transform.apply_patterns.canonicalization
+    // } : !transform.any_op
+    transform.yield
+  }
+
+transform.named_sequence @stablehlo_to_linalg(%module: !transform.any_op {transform.readeonly}) {
+    %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
+    %opt_shape_funcs = transform.apply_registered_pass "stablehlo-legalize-to-linalg" to %funcs {options = "enablePrimitiveOps=true"}: (!transform.any_op) -> !transform.any_op
+    %to_std_funcs = transform.apply_registered_pass "mhlo-legalize-to-std" to %opt_shape_funcs : (!transform.any_op) -> !transform.any_op
+    %to_memref_funcs = transform.structured.match ops{["func.func"]} in %to_std_funcs : (!transform.any_op) -> !transform.any_op
+    %to_linalg_funcs = transform.apply_registered_pass "hlo-legalize-to-linalg" to %to_memref_funcs {options = "enable-primitive-ops=true"}: (!transform.any_op) -> !transform.any_op
+    %lowing_cf = transform.apply_registered_pass "mhlo-legalize-control-flow" to %to_linalg_funcs : (!transform.any_op) -> !transform.any_op
+    transform.apply_patterns to %module {
+      transform.apply_patterns.canonicalization
+    } : !transform.any_op
+    transform.yield
+  }
+
+
 }

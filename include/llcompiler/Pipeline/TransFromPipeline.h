@@ -12,8 +12,8 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-#ifndef INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_
-#define INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_
+#ifndef INCLUDE_LLCOMPILER_PIPELINE_TRANSFROMPIPELINE_H_
+#define INCLUDE_LLCOMPILER_PIPELINE_TRANSFROMPIPELINE_H_
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Enums.h"
@@ -59,4 +59,4 @@ void registerTransformPipeline();
 
 }  // namespace llc::pipeline
 
-#endif  // INCLUDE_LLCOMPILER_PIPELINE_COMMONPIPELINE_H_
+#endif  //  INCLUDE_LLCOMPILER_PIPELINE_TRANSFROMPIPELINE_H_

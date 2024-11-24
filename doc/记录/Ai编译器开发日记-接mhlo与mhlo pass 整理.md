@@ -1,5 +1,4 @@
-# mlho
-
+# MHLO
 为了复用mhlo的一些功能，将原来从stablehlo -> tosa 的路线 迁移到了 mhlo ->stablehlo -> tosa ， 本来想直接从mhlo-> linalg的，但是发现tosa上的优化还是有点用的。
 
 整理了一下mhlo主线上的Pass。

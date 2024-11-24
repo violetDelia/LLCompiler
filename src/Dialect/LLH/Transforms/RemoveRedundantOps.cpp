@@ -208,10 +208,10 @@ struct replaceTorchSymbolicIntOp
         if (isa<EncodingAttr>(has_encode)) {
           auto encoding = cast<EncodingAttr>(has_encode);
           auto symbols = encoding.getShapeSymbols();
-          for( size_t i{}; i < symbols.size(); i++){
+          for (size_t i{}; i < symbols.size(); i++) {
             auto name = symbols[i].getValue();
             if (name != symbol) continue;
-            auto dim_op = llh::buildTensorDim(arg, &rewriter,i);
+            auto dim_op = llh::buildTensorDim(arg, &rewriter, i);
             rewriter.replaceOp(op, dim_op);
             return;
           }

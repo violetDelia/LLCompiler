@@ -149,7 +149,7 @@ OpFoldResult AddOp::fold(FoldAdaptor adaptor) {
         [](const APFloat &a, const APFloat &b) { return a + b; });
   }
   return {};
-};
+}
 
 // sub(b,sub(a,b)) = b-(b-a) = b-b+a = a
 OpFoldResult SubOp::fold(FoldAdaptor adaptor) {
@@ -209,7 +209,7 @@ OpFoldResult SubOp::fold(FoldAdaptor adaptor) {
         [](const APFloat &a, const APFloat &b) { return a - b; });
   }
   return {};
-};
+}
 
 OpFoldResult DivOp::fold(FoldAdaptor adaptor) {
   auto res_type = getType();
@@ -258,7 +258,7 @@ OpFoldResult DivOp::fold(FoldAdaptor adaptor) {
         [](const APFloat &a, const APFloat &b) { return a / b; });
   }
   return {};
-};
+}
 
 OpFoldResult MulOp::fold(FoldAdaptor adaptor) {
   auto res_type = getType();
@@ -307,6 +307,6 @@ OpFoldResult MulOp::fold(FoldAdaptor adaptor) {
         [](const APFloat &a, const APFloat &b) { return a / b; });
   }
   return {};
-};
+}
 
 }  // namespace mlir::llh

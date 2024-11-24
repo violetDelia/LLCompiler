@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMON_REWRITE_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMON_REWRITE_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMONREWRITE_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMONREWRITE_H_
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
@@ -148,4 +148,4 @@ struct SimplyBinaryOpReshape : public LLHOpRewritePattern<BinaryOp> {
 };
 
 }  // namespace mlir::llh
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMON_REWRITE_H_
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMONREWRITE_H_

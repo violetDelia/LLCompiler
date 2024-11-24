@@ -109,7 +109,7 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
       for (auto dim : cast_dims) {
         if (dim == i) {
           is_expand = true;
-        };
+        }
       }
       if (!is_expand) {
         unexpand_dims.push_back(i);

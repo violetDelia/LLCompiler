@@ -11,12 +11,11 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
-
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
+#include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
@@ -71,25 +70,22 @@ struct DimOpLowing : public OpConversionPattern<DimOp> {
     auto dim = op.getDim();
     auto attrs = op->getAttrs();
     auto res = op->getResult(0);
-    auto index_dim =
-        rewriter.create<mlir::arith::IndexCastOp>(loc, rewriter.getIndexType(), dim);
+    auto index_dim = rewriter.create<mlir::arith::IndexCastOp>(
+        loc, rewriter.getIndexType(), dim);
     auto new_dim = rewriter.create<shape::DimOp>(
         loc, rewriter.getIndexType(), ::mlir::ValueRange{input, index_dim},
         attrs);
-    auto index_out =
-        rewriter.create<mlir::arith::IndexCastOp>(loc, op->getResultTypes(), new_dim);
+    auto index_out = rewriter.create<mlir::arith::IndexCastOp>(
+        loc, op->getResultTypes(), new_dim);
     rewriter.replaceOp(op, index_out);
   }
 };
-
-
-
 
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateConvertLLHToShapePassPatterns(TypeConverter& converter,
-                                            RewritePatternSet& patterns) {
+                                           RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<DimOpLowing>(converter, context);
 }

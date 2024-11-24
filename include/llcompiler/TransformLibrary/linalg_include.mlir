@@ -65,4 +65,22 @@ transform.named_sequence @linalg_basic_fuse(%module: !transform.any_op {transfor
 transform.named_sequence @linalg_basic_vectorization(%module: !transform.any_op {transform.readonly}) {
     transform.yield
   }
+
+transform.named_sequence @linalg_bufferization(%module: !transform.any_op {transform.readonly}) {
+    %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
+    transform.bufferization.buffer_loop_hoisting %funcs : !transform.any_op
+    transform.bufferization.eliminate_empty_tensors %funcs : !transform.any_op
+    transform.apply_patterns to %funcs {
+      transform.apply_patterns.linalg.erase_unnecessary_inputs
+    } : !transform.any_op
+    %empty_ops = transform.structured.match ops{["tensor.empty"]} in %module : (!transform.any_op) -> !transform.op<"tensor.empty">
+    transform.bufferization.empty_tensor_to_alloc_tensor %empty_ops : (!transform.op<"tensor.empty">) -> !transform.op<"bufferization.alloc_tensor">
+    %bufferized_funcs = transform.bufferization.one_shot_bufferize
+        layout{IdentityLayoutMap} %funcs {
+          bufferize_function_boundaries=true,
+          test_analysis_only= true,
+          memcpy_op = "linalg.copy" }
+        : (!transform.any_op) -> !transform.any_op
+    transform.yield
+  }
 } // transform module

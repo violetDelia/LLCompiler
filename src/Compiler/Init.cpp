@@ -97,7 +97,6 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::complex::ComplexDialect>();
   context.getOrLoadDialect<mlir::arith::ArithDialect>();
   context.getOrLoadDialect<mlir::scf::SCFDialect>();
-  
 
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
 

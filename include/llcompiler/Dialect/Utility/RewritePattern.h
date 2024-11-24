@@ -147,13 +147,12 @@ struct SimplyFullLowing : public OpConversionPattern<SourceOp> {
   }
 };
 
-
 template <class Op>
 struct EraseNoUserOp : public LLHOpRewritePattern<Op> {
   using LLHOpRewritePattern<Op>::LLHOpRewritePattern;
 
   LogicalResult match(Op op) const final {
-    if(op->getUsers().empty()) return llvm::success();
+    if (op->getUsers().empty()) return llvm::success();
     return llvm::failure();
   }
   void rewrite(Op op, LLHPatternRewriter &rewriter) const final {

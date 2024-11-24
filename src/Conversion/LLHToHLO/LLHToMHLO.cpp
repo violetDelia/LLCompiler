@@ -11,14 +11,13 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
-
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
+#include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
@@ -110,7 +109,7 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
       for (auto dim : cast_dims) {
         if (dim == i) {
           is_expand = true;
-        };
+        }
       }
       if (!is_expand) {
         unexpand_dims.push_back(i);

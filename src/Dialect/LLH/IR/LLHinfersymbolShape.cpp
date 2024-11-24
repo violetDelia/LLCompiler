@@ -68,7 +68,7 @@ void checkIsReturnOperand(Value& value) {
     }
   }
 }
-//遍历shapes ()
+// 遍历shapes ()
 bool encodingWithDims(mlir::Operation* op, OperandRange dims,
                       ShapedType input_type) {
   auto symbol_analsis = SymbolAnalysis::getInstance(op);
@@ -548,7 +548,7 @@ INFER_FUNCTION(ReshapeOp) {
   if (!encodingWithDims(getOperation(), dims, input_type)) {
     WARN_UNIMPLEMENTED(llc::SymbolInfer);
     return llvm::failure();
-  };
+  }
   COMMON_CHECK
   INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
   return llvm::success();

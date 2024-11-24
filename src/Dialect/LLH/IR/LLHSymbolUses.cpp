@@ -27,7 +27,7 @@
 #include "mlir/IR/OpImplementation.h"
 
 namespace mlir::llh {
-// TODO: neef add check
+// TODO(lfr): need add check
 LogicalResult SymbolRelationOp::verifySymbolUses(
     SymbolTableCollection& symbolTable) {
   return llvm::success();

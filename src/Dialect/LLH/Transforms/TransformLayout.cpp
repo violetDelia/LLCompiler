@@ -164,7 +164,8 @@ struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
     auto new_conv = rewriter.create<ConvOp>(
         loc, new_res_type, new_input->getResult(0), new_weights->getResult(0),
         op.getDilation(), op.getKernelShape(), op.getPad(), op.getStride(),
-        op.getGroup(), LayoutAttr::get(context, Layout::NHWC),LayoutAttr::get(context, Layout::NHWC));
+        op.getGroup(), LayoutAttr::get(context, Layout::NHWC),
+        LayoutAttr::get(context, Layout::NHWC));
     auto res_transpose =
         buildTrnasposeOpFromLayoutTo(rewriter, new_conv, target, layout);
     rewriter.replaceOp(op, res_transpose);
@@ -177,9 +178,10 @@ struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateTransformLayoutPassPatterns(RewritePatternSet& patterns,Layout target_layout) {
+void populateTransformLayoutPassPatterns(RewritePatternSet& patterns,
+                                         Layout target_layout) {
   auto context = patterns.getContext();
-  patterns.add<ConvOpConvertLayout>(context,target_layout);
+  patterns.add<ConvOpConvertLayout>(context, target_layout);
 }
 }  // namespace
 //===----------------------------------------------------------------------===//
@@ -201,7 +203,7 @@ void TransformLayoutPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   RewritePatternSet patterns(context);
-  populateTransformLayoutPassPatterns(patterns,TargetLayout);
+  populateTransformLayoutPassPatterns(patterns, TargetLayout);
   populateSymbolCanonicalizePatterns(patterns);
   auto op = getOperation();
   if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
@@ -213,10 +215,10 @@ void TransformLayoutPass::runOnOperation() {
 //===----------------------------------------------------------------------===//
 std::unique_ptr<::mlir::Pass> mlir::llh::createTransformLayoutPass() {
   return std::make_unique<TransformLayoutPass>();
-};
+}
 std::unique_ptr<::mlir::Pass> mlir::llh::createTransformLayoutPass(
     llh::Layout target_layout) {
   ::mlir::llh::TransformLayoutPassOptions options;
   options.TargetLayout = target_layout;
   return std::make_unique<TransformLayoutPass>(options);
-};
+}

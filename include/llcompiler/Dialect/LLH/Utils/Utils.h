@@ -36,8 +36,8 @@ RankedTensorType cloneTensorWithEncoding(RankedTensorType type,
                                          EncodingAttr encoding);
 int64_t getConstIntegerValue(Value value);
 bool isConstIntegerValue(Value value);
-Layout getLayoutFromGloabalLayout(Layout global_layout,int64_t rank);
-Layout getWeightLayoutFromGloabalLayout(Layout global_layout,int64_t rank);
+Layout getLayoutFromGloabalLayout(Layout global_layout, int64_t rank);
+Layout getWeightLayoutFromGloabalLayout(Layout global_layout, int64_t rank);
 }  // namespace mlir::llh
 
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_UTILS_H_

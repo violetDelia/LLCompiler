@@ -15,13 +15,16 @@
 #ifndef INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
 #define INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
 #include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
-#include "llcompiler/Conversion/TosaToLinalgExtension/TosaToLinalgExtension.h"
-#include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
-#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
+#include "llcompiler/Conversion/LLHToHLO/LLHPreprocessingForHLO.h"
 #include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
 #include "llcompiler/Conversion/LLHToShape/LLHToShape.h"
-#include "llcompiler/Conversion/LLHToHLO/LLHPreprocessingForHLO.h"
+#include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
+#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
+#include "llcompiler/Conversion/TosaToLinalgExtension/TosaToLinalgExtension.h"
+#include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Pass/PassRegistry.h"
+#include "stablehlo/dialect/ChloOps.h"
+
 namespace mlir {
 
 #define GEN_PASS_REGISTRATION

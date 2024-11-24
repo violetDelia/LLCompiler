@@ -140,6 +140,6 @@ Layout getWeightLayoutFromGloabalLayout(Layout global_layout, int64_t rank) {
   } else {
     UNIMPLEMENTED(llc::UTILITY);
   }
-};
+}
 
 }  // namespace mlir::llh

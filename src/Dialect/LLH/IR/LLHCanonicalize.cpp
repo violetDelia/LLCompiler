@@ -193,7 +193,7 @@ struct SinkSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
 
 void SymbolBindOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                                MLIRContext *context) {
-  results.add<SinkSymbolBindOp>(context,SinkOpBenfit);
+  results.add<SinkSymbolBindOp>(context, SinkOpBenfit);
   results.add<MoveSymbolBindOp>(context);
 }
 //===----------------------------------------------------------------------===//
@@ -226,7 +226,7 @@ void EncodingBindOp::getCanonicalizationPatterns(
 // SymbolBinaryRelationOp
 //===----------------------------------------------------------------------===//
 namespace {
-//如果symbol表示常量就去除
+// 如果symbol表示常量就去除
 struct RemoveSymbolBinaryRelationIfAllConst
     : public LLHOpRewritePattern<SymbolBinaryRelationOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
@@ -443,5 +443,5 @@ void mlir::llh::populateSymbolCanonicalizePatterns(
   patterns.add<ReplaceSymbolIfEquel>(context);
   patterns.add<RemoveSymbolRelationIfAllConst>(context);
   patterns.add<RemoveSymbolBinaryRelationIfAllConst>(context);
-  patterns.add<SinkSymbolBindOp>(context,SinkOpBenfit);
-};
+  patterns.add<SinkSymbolBindOp>(context, SinkOpBenfit);
+}

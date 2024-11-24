@@ -37,7 +37,7 @@ struct MemerefDiscript {
 };
 
 int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
-  auto maybe_func = engine->lookup("main");  //查找入口函数
+  auto maybe_func = engine->lookup("main");  // 查找入口函数
   CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
   auto& func = maybe_func.get();
   auto in = inputs[0];

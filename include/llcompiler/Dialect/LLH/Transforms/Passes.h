@@ -31,7 +31,8 @@
 namespace mlir::llh {
 
 std::unique_ptr<::mlir::Pass> createTransformLayoutPass();
-std::unique_ptr<::mlir::Pass> createTransformLayoutPass(llh::Layout target_layout);
+std::unique_ptr<::mlir::Pass> createTransformLayoutPass(
+    llh::Layout target_layout);
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"

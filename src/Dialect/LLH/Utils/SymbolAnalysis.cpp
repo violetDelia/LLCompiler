@@ -91,9 +91,9 @@ llvm::StringRef BuildBinaryOpSymbolBind(Operation* op) {
   } else {
     UNIMPLEMENTED(llc::SymbolInfer);
   }
-  analysis->buildSymbolRelation(
-      analysis->getSymbolAttr(op), analysis->getSymbolAttr(lhs),
-      analysis->getSymbolAttr(rhs), relation);
+  analysis->buildSymbolRelation(analysis->getSymbolAttr(op),
+                                analysis->getSymbolAttr(lhs),
+                                analysis->getSymbolAttr(rhs), relation);
   return symbol;
 }
 
@@ -212,7 +212,7 @@ bool SymbolAnalysis::cleanCache() {
   auto& manager = SymbolAnalysisManager::getInstance();
   manager.analysis_map_[module] = nullptr;
   return true;
-};
+}
 
 bool SymbolAnalysis ::isExtraSymbolicInferOp(Operation* op) {
   return isa<DimOp>(op);
@@ -270,7 +270,7 @@ SymbolicIntOp SymbolAnalysis::getOrBuildSymbol(const llvm::StringRef symbol) {
   _insertInModule(&builder, symbol_op);
   symbols_table_[symbol_op.getSymName().str()] = symbol_op;
   return symbol_op;
-};
+}
 
 SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(size_t val) {
   std::string symbol = "c" + std::to_string(val);
@@ -471,7 +471,7 @@ SymbolRelationOp SymbolAnalysis::buildSymbolRelation(
   return relation_op;
 }
 
-// TODO: 并查集重写
+// TODO(lfr): 并查集重写
 SymbolBinaryRelationOp SymbolAnalysis::buildSymbolRelation(
     const llvm::StringRef symbol, const llvm::StringRef relation_lhs,
     const llvm::StringRef relation_rhs, SymbolRelation relation_kind) {
@@ -548,7 +548,7 @@ ModuleOp SymbolAnalysis::getRootModule() const {
 
 bool SymbolAnalysis::hasSymbol(const llvm::StringRef symbol) const {
   return symbols_table_.count(symbol.str());
-};
+}
 
 #define PRINT_TABLE(table, relation)                              \
   for (auto& pair : table) {                                      \
@@ -596,9 +596,9 @@ bool SymbolAnalysis::_isConst(Operation* op) {
 }
 bool SymbolAnalysis::_isConst(Value value) {
   return isConst(getSymbolAttr(value));
-};
+}
 bool SymbolAnalysis::isConst(const llvm::StringRef name) {
   return name.starts_with("c");
-};
+}
 #undef PRINT_TABLE
 }  // namespace mlir::llh

@@ -36,9 +36,9 @@ namespace llc::compiler {
 extern "C" struct CompilerOptions {
   CompilerOptions();
 
-  std::string pipeline;  //采用的pipeline
-  std::string mode;      //模型运行模式
-  std::string target;    //后端
+  std::string pipeline;  // 采用的pipeline
+  std::string mode;      // 模型运行模式
+  std::string target;    // 后端
   bool symbol_infer;
   unsigned opt_level;
   uint64_t L3_cache_size;
@@ -46,10 +46,10 @@ extern "C" struct CompilerOptions {
   uint64_t L1_cache_size;
   unsigned index_bit_width;
   std::string ir_tree_dir;    // dump 路径
-  std::string target_layout;  //数据布局
-  std::string log_root;       //日志路径
-  std::string log_level;      //日志等级
-  bool log_llvm;              //输出bitcode
+  std::string target_layout;  // 数据布局
+  std::string log_root;       // 日志路径
+  std::string log_level;      // 日志等级
+  bool log_llvm;              // 输出bitcode
 };
 
 extern "C" Engine do_compile(const char* xdsl_module,

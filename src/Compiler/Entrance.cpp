@@ -156,8 +156,6 @@ void runTransformPipeline(CompilerOptions& options,
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
 }
 
-
-
 Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* init logger *********//
   logger::LoggerOption logger_option;
@@ -168,7 +166,7 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* init mlir context *********//
   mlir::DialectRegistry registry;
   add_extension_and_interface(registry);
-  mlir::MLIRContext context(registry,mlir::MLIRContext::Threading::DISABLED);
+  mlir::MLIRContext context(registry, mlir::MLIRContext::Threading::DISABLED);
   load_dialect(context);
   // ********* load to mlir *********//
   mlir::OwningOpRef<mlir::ModuleOp> module;
@@ -211,7 +209,7 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   }
 
   // ********* link *********//
-  // TODO: refine
+  // TODO(lfr): refine
   llvm::SmallVector<llvm::SmallString<256>, 4> sharedLibPaths;
   sharedLibPaths.push_back(llvm::StringRef(
       "/home/lfr/LLCompiler/build/third_party/llvm-project/llvm/lib/"
@@ -273,7 +271,7 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
     return objectLayer;
   };
   // ********* engine *********//
-  // TODO: AOT and preload
+  // TODO(lfr): AOT and preload
   auto maybe_jit = llvm::orc::LLJITBuilder()
                        .setObjectLinkingLayerCreator(objectLinkingLayerCreator)
                        .setNumCompileThreads(8)

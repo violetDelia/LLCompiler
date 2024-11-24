@@ -72,7 +72,7 @@ llvm::SmallVector<size_t> analysisOriginalMemrefRank(
       if (pass_by_memref) {
         end = i;
         continue;
-      };
+      }
       pass_by_memref = true;
       if (!(begin == end && begin == 0)) {
         original_memref_rank.push_back((end - begin - 2) / 2);
@@ -120,7 +120,7 @@ void transformMemrefPtrs(size_t index, IRRewriter* rewriter, Block& block) {
           cast<LLVM::LLVMPointerType>(base_prt.getType()).getAddressSpace()),
       loc);
   rewriter->replaceAllUsesWith(data_ptr, new_data_prt);
-};
+}
 
 void transformMemrefOffset(size_t index, IRRewriter* rewriter, Block& block) {
   auto context = rewriter->getContext();
@@ -136,13 +136,13 @@ void transformMemrefOffset(size_t index, IRRewriter* rewriter, Block& block) {
           context, cast<LLVM::LLVMPointerType>(new_offset_ptr.getType())
                        .getAddressSpace()),
       rewriter->getI64Type(), new_offset_ptr, ArrayRef<Value>{const_op}, true);
-  auto new_offset = rewriter->create<LLVM::LoadOp>(loc, offset.getType(),
-                                                   get_element_ptr);
+  auto new_offset =
+      rewriter->create<LLVM::LoadOp>(loc, offset.getType(), get_element_ptr);
   block.push_front(new_offset);
   block.push_front(get_element_ptr);
   block.push_front(const_op);
   rewriter->replaceAllUsesWith(offset, new_offset);
-};
+}
 
 void transformMemrefSizesOrStrides(size_t index, size_t rank,
                                    IRRewriter* rewriter, Block& block) {

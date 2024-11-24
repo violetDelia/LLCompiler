@@ -14,11 +14,12 @@
 //
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Utils/Braocast.h"
+#include "llcompiler/Dialect/LLH/Utils/Broadcast.h"
 namespace mlir::llh {
 
 void checkBroadcast(Operation* op) {
-  auto broadcast_op = llvm::dyn_cast_or_null<mlir::BraodcastableOpInterface>(op);
+  auto broadcast_op =
+      llvm::dyn_cast_or_null<mlir::BraodcastableOpInterface>(op);
   if (broadcast_op) {
     broadcast_op.reshapeAndBrodcast();
     return;

@@ -97,7 +97,7 @@ bool equalShape(mlir::ShapedType lhs, mlir::ShapedType rhs) {
     if (lhs.getDimSize(i) != rhs.getDimSize(i)) return false;
   }
   return true;
-};
+}
 // one dim shape
 mlir::DenseIntElementsAttr ArrayAttrToIntElementsAttr(
     mlir::DenseI64ArrayAttr array_attr) {
@@ -115,7 +115,7 @@ mlir::DenseIntElementsAttr GenWindowIntElementsAttr(
   auto new_data = layout.addBatchAndFeature(data);
   auto shape = llvm::SmallVector<int64_t>();
   auto ele_type = array_attr.getElementType();
-  shape.push_back(data.size()+2);
+  shape.push_back(data.size() + 2);
   auto tensor = mlir::RankedTensorType::get(shape, ele_type);
   return mlir::DenseIntElementsAttr::get(tensor, new_data);
 }
@@ -126,7 +126,7 @@ mlir::DenseIntElementsAttr GenWindowPadIntElementsAttr(
   int64_t rank = data.size();
   llvm::SmallVector<int64_t> new_data(rank, 0);
   new_data.append(data.begin(), data.end());
-  llvm::SmallVector<int64_t> shape = { rank,2};
+  llvm::SmallVector<int64_t> shape = {rank, 2};
   auto ele_type = pad_attr.getElementType();
   auto tensor = mlir::RankedTensorType::get(shape, ele_type);
   return mlir::DenseIntElementsAttr::get(tensor, new_data);
@@ -155,7 +155,7 @@ mlir::DenseElementsAttr genSplatElementAttr(llvm::ArrayRef<int64_t> shape,
   BUILD_ATTR(element_type.isF32(), float, tensor, value)
   BUILD_ATTR(element_type.isF64(), double, tensor, value)
   UNIMPLEMENTED(llc::MLIR);
-};
+}
 #undef BUILD_ATTR
 // mlir::ex::Layout getLayoutFrom(mlir::RankedTensorType tensor) {
 //   auto encode =

@@ -36,7 +36,6 @@
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
 
-
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTTOSATOLINALGEXTENSIONPASS
 #include "llcompiler/Conversion/Passes.h.inc"
@@ -57,15 +56,12 @@ namespace {
 // operation lowing
 //===----------------------------------------------------------------------===//
 
-
-
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateConvertTosaToLinalgExtensionPassPatterns(
     TypeConverter& converter, RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  
 }
 
 //===----------------------------------------------------------------------===//

@@ -93,6 +93,9 @@ void registerPasses() {
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
 
+  mlir::stablehlo::registerPasses();
+  mlir::stablehlo::registerStablehloLegalizeToLinalgPass();
+
   mlir::LLVM::registerLLVMPasses();
   mlir::registerLinalgPasses();
   mlir::registerTransformsPasses();
@@ -162,7 +165,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  opt mhlo
   //===----------------------------------------------------------------------===//
-  applyInterpreter(pm, __LLC_TRANSFORM_MLHO_BASIC_OPT__);
+  applyInterpreter(pm, __LLC_TRANSFORM_HLO_BASIC_OPT__);
   //===----------------------------------------------------------------------===//
   //  lowing mhlo
   //===----------------------------------------------------------------------===//
@@ -174,7 +177,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //   pm.addNestedPass<mlir::func::FuncOp>(
   //       mlir::mhlo::createLegalizeControlFlowPass());
   // NOTE: unkown error (mutithreading)
-  applyInterpreter(pm, __LLC_TRANSFORM_MLHO_TO_LINALG__);
+  applyInterpreter(pm, __LLC_TRANSFORM_HLO_TO_LINALG__);
   //===----------------------------------------------------------------------===//
   //  lowing shape
   //===----------------------------------------------------------------------===//
@@ -193,7 +196,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   // bufferization
   //===----------------------------------------------------------------------===//
-  applyInterpreter(pm, __LLC_TRANSFORM_MLHO_BUFFERIZE__);
+  applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_BUFFERIZATION__);
 
   //===----------------------------------------------------------------------===//
   // lowing linalg

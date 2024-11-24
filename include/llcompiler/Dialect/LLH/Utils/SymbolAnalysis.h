@@ -98,9 +98,9 @@ class SymbolAnalysis {
   bool _remove(llvm::StringRef symbol);
 
  public:
-  //未知symbol的标记
+  // 未知symbol的标记
   static llvm::StringRef UNKOW_SYMBOL;
-  //弃用
+  // 弃用
   static bool symbol_enable;
   // symbol module 的名字
   static mlir::StringRef symbol_module_name;
@@ -114,7 +114,7 @@ class SymbolAnalysis {
   std::atomic<int> next_module_id_ = 0;
 
  private:
-  // TODO:
+  // TODO(lfr): 并查集重写
   std::map<std::string, std::unordered_set<std::string>> EQ_table;
   std::map<std::string, std::unordered_set<std::string>> NOTEQ_table;
   std::map<std::string, std::unordered_set<std::string>> GT_table;
@@ -127,7 +127,7 @@ class SymbolAnalysis {
   std::map<std::string, std::unordered_set<std::string>> Mul_table;
 };
 
-//防止多个Module同时infersymbol
+// 防止多个Module同时infersymbol
 class SymbolAnalysisManager {
   friend SymbolAnalysis;
   static SymbolAnalysisManager &getInstance();

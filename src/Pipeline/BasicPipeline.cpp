@@ -181,7 +181,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloAggressiveSimplificationPass());
   pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::stablehlo::createStablehloCompatibilityExpanderPass());  //分解
+      mlir::stablehlo::createStablehloCompatibilityExpanderPass());  // 分解
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::stablehlo::createStablehloLegalizeDeprecatedOpsPass());
   pm.addPass(mlir::stablehlo::createStablehloConvertToSignlessPass());
@@ -286,7 +286,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
       mlir::bufferization::createBufferHoistingPass());
   pm.addNestedPass<mlir::func::FuncOp>(
       mlir::bufferization::createBufferLoopHoistingPass());
-  //内存复用
+  // 内存复用
   // 化简memref.dim
   pm.addPass(mlir::memref::createResolveShapedTypeResultDimsPass());
   // 化简memref.dim
@@ -305,7 +305,7 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
   // affine opt
   //===----------------------------------------------------------------------===//
 
-  //去除affine.delinearize_index
+  // 去除affine.delinearize_index
   pm.addPass(mlir::affine::createAffineExpandIndexOpsPass());
 
   //   // affine 并行化
