@@ -191,6 +191,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  linalg opt
   //===----------------------------------------------------------------------===//
+  applyInterpreter(pm,__LLC_TRANSFORM_LINALG_BASIC_ANALYSIS__);
   applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_FUSE__);
   applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_VECTORIZATION__);
   //===----------------------------------------------------------------------===//

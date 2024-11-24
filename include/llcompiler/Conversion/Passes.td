@@ -82,7 +82,8 @@ def LLHPreprocessingForHLOPass : Pass<"preprocessing-llh-to-hlo"> {
                             "::mlir::index::IndexDialect",
                             "::mlir::stablehlo::StablehloDialect",
                             "::mlir::chlo::ChloDialect",
-                            "::mlir::LLVM::LLVMDialect"
+                            "::mlir::LLVM::LLVMDialect",
+                            "::mlir::sparse_tensor::SparseTensorDialect"
                             ];
 }
 

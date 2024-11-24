@@ -8,6 +8,8 @@ transform.named_sequence @tensor_basic_opt(%module: !transform.any_op {transform
       transform.apply_patterns.tensor.fold_tensor_subset_ops
       transform.apply_patterns.tensor.rewrite_as_constant aggressive
     } : !transform.any_op
+    transform.bufferization.buffer_loop_hoisting %funcs : !transform.any_op
+    transform.bufferization.eliminate_empty_tensors %funcs : !transform.any_op
     transform.yield
   }
 

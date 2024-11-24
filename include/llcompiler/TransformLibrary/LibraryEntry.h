@@ -23,6 +23,7 @@
 #define __LLC_TRANSFORM_LINALG_BASIC_VECTORIZATION__ \
   "linalg_basic_vectorization"
 #define __LLC_TRANSFORM_LINALG_BASIC_BUFFERIZATION__ "linalg_bufferization"
+#define __LLC_TRANSFORM_LINALG_BASIC_ANALYSIS__ "linalg_analysis"
 #define __LLC_TRANSFORM_MHLO_BASIC_OPT__ "mhlo_basic_opt"
 #define __LLC_TRANSFORM_MHLO_TO_LINALG__ "mhlo_to_linalg"
 #define __LLC_TRANSFORM_MHLO_BUFFERIZE__ "mhlo_one_shot_bufferize"
