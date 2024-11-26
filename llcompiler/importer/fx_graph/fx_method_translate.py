@@ -96,7 +96,6 @@ def torch_permute_convert(
         result_types=[result_type],
     )
 
-
 @TORCH_METHOD_TRANSLATE("view")
 def aten_view_convert(
     node: torch.fx.node.Node,
@@ -110,6 +109,7 @@ def aten_view_convert(
     for dim in range(len(node.args[1:])):
         dims.append(get_arg_value(node.args[1 + dim], value_map, block))
     return ReshapeOp(operands=[input, dims], result_types=[result_type])
+
 
 @TORCH_METHOD_TRANSLATE("unsqueeze")
 def aten_view_convert(

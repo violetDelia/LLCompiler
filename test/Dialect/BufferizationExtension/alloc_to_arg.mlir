@@ -15,3 +15,5 @@ func.func @main(%arg0: memref<?x?x?x?xf32> {bufferization.access = "read", func.
     memref.copy %alloc, %arg1 : memref<?x?x?x?xf32> to memref<?x?x?x?xf32>
     return
   }
+
+

@@ -8,6 +8,8 @@ class BatchNorm2D_Inference(nn.Module):
         self.batch = nn.BatchNorm2d(3)
     def forward(self, x: torch.Tensor):
         x = self.batch(x)
+        
+        
         x = self.batch(x)
         x = self.batch(x)
         x = self.batch(x)
