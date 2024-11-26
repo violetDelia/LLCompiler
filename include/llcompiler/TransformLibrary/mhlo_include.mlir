@@ -1,5 +1,15 @@
 module @mhlo_inlcude attributes { transform.with_named_sequence } {
 
+transform.named_sequence @mhlo_analysis(%module: !transform.any_op {transform.consumed}) ->(!transform.any_op){
+    %analysied_module = transform.bufferization.one_shot_bufferize
+        layout{IdentityLayoutMap} %module {
+          bufferize_function_boundaries=true,
+          test_analysis_only= true,
+          memcpy_op = "linalg.copy" }
+        : (!transform.any_op) -> !transform.any_op
+    transform.yield %analysied_module: !transform.any_op 
+  }
+
 transform.named_sequence @mhlo_basic_opt(%module: !transform.any_op {transform.consumed}) {
     transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
