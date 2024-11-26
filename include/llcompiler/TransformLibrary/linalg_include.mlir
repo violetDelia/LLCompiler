@@ -92,6 +92,9 @@ transform.named_sequence @linalg_basic_fuse(%module: !transform.any_op {transfor
   // transform.include @flatten_elementwise failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
   transform.include @linalg_generalize failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
   %elementwise_fused_module = transform.include @elementwise_fuse failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> (!transform.any_op)
+  transform.apply_patterns to %elementwise_fused_module {
+      transform.apply_patterns.canonicalization
+    } : !transform.any_op
     transform.yield
   }
 

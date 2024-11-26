@@ -133,28 +133,20 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   preload_options.transformLibraryPaths.push_back(
       __LLC_TRANSFORM_MEMREF_INCLUDE__);
   pm.addPass(mlir::transform::createPreloadLibraryPass(preload_options));
-  // 合法化非法的Op
   pm.addPass(mlir::llh::createOperationlegalizationPass());
-  // 标记Aot算子
   pm.addPass(mlir::llh::createMarkAotPass());
-  // 去除冗余Op
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());
-  // 内联
   pm.addPass(::mlir::createInlinerPass());
-  // 符号推导和shapeinfer
   pm.addPass(mlir::llh::createInferSymbolShapePass(
       {.CleanSymbolCache = false, .UseBinding = true}));
-  // 将WeightOp转换为constant
-  pm.addPass(mlir::llh::createLoadWeightPass());
-  // 布局转换
-  pm.addPass(mlir::llh::createTransformLayoutPass(options.targetLayout));
-  // 预处理，这样lowing会方方便一点
-  pm.addPass(mlir::createLLHPreprocessingForHLOPass());
-  // 规范化
+  pm.addPass(mlir::llh::createDecomposeOpsPass());
+  pm.addPass(mlir::createCSEPass());
   pm.addPass(mlir::createCanonicalizerPass());
-  // 卸载encodingAttr并绑定到encodingbind Op 上
+  pm.addPass(mlir::llh::createLoadWeightPass());
+  pm.addPass(mlir::llh::createTransformLayoutPass(options.targetLayout));
+  pm.addPass(mlir::createLLHPreprocessingForHLOPass());
+  pm.addPass(mlir::createCanonicalizerPass());
   pm.addPass(mlir::llh::createUnloadAndBindEncoding());
-  // 去除符号，因为hlo的规范化不识别
   pm.addPass(mlir::llh::createRemoveSymbolPass());
   //===----------------------------------------------------------------------===//
   //  lowing llh
@@ -193,7 +185,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  linalg opt
   //===----------------------------------------------------------------------===//
-  applyInterpreter(pm,__LLC_TRANSFORM_LINALG_BASIC_ANALYSIS__);
+  applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_ANALYSIS__);
   applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_FUSE__);
   applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_VECTORIZATION__);
   //===----------------------------------------------------------------------===//

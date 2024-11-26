@@ -41,7 +41,7 @@ def run_dynamic_training_compiler(model:torch.nn.Module, input):
 
 
 def run_dynamic_inference_compiler(model:torch.nn.Module, input):
-    model.training = False
+    model.train(False)
     compiler = compiler = LLC.LLCompiler(mode="inference", symbol_infer=True)
     opt_model: torch._dynamo.eval_frame.Optimizedmodel = torch.compile(
         model=model,
@@ -65,7 +65,7 @@ def run_training_compiler(model, input):
 
 
 def run_inference_compiler(model, input):
-    model.training = False
+    model.train(False)
     compiler = compiler = LLC.LLCompiler(mode="inference", symbol_infer=True)
     opt_model: torch._dynamo.eval_frame.Optimizedmodel = torch.compile(
         model=model,
@@ -77,6 +77,7 @@ def run_inference_compiler(model, input):
 
 
 def check_static_model_inference(model, input,eps = 1e-5):
+    model.train(False)
     torch_out = model(input)
     compiler_out = run_inference_compiler(model, input)
     is_correct = check_same(torch_out, compiler_out,eps)

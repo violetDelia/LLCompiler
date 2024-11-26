@@ -12,6 +12,7 @@ llcompiler_add_library(LLCLLHTransforms
   RemoveSymbol.cpp
   InsetBraodCastPass.cpp
   MarkAot.cpp
+  DecomposeOps.cpp
 
   DEPENDS
   LLCLLHDialectIncGen

@@ -9,12 +9,9 @@ from xdsl.printer import Printer
 from llcompiler_.entrance import do_compile, CompilerOptions
 import os
 import onnx
+from torch._decomp import get_decompositions
 from torch._subclasses.fake_tensor import FakeTensor
 from .importer.fx_graph import get_result_type
-
-
-def empty_call(*args, **kwargs):
-    return 1
 
 
 class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
@@ -74,6 +71,11 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             os.makedirs(ir_tree_dir, exist_ok=True)
         self.ir_tree_dir = ir_tree_dir
         self.log_llvm = log_llvm
+        aten = torch.ops.aten
+        self.decompositions = {
+            aten._native_batch_norm_legit_no_training.default,
+            
+        }
 
     def compiler(self, model: Any, inputs: List[torch.Tensor]):
         self._mlir_module = self.importer(model)
@@ -101,5 +103,10 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         return execut
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
-            return aot_autograd(fw_compiler=self.compiler)(model, inputs)
-        
+        if self.mode == "training":
+            return aot_autograd(
+                fw_compiler=self.compiler,
+                decompositions=get_decompositions(self.decompositions),
+            )(model, inputs)
+        if self.mode == "inference":
+            return self.compiler(model, inputs)

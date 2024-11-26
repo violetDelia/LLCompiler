@@ -79,6 +79,7 @@ struct AllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
   };
 
   Operation* getRootAllocOp(Value source) const {
+    if (isa<BlockArgument>(source)) return nullptr;
     if (dyn_cast<memref::AllocOp>(source.getDefiningOp()))
       return source.getDefiningOp();
     return nullptr;

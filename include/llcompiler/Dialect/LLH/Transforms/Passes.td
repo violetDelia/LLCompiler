@@ -152,4 +152,11 @@ def MarkAotPass : Pass<"mark-aot","ModuleOp">{
   }];
 }
 
+def DecomposeOpsPass : Pass<"decompose-ops","ModuleOp">{
+  let summary = "分解算子";
+  let description = [{
+    
+  }];
+  let dependentDialects = [ "::mlir::llh::LLHDialect"];
+}
 #endif // LLH_PASS

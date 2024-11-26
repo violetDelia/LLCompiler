@@ -17,18 +17,17 @@ ninja check-llc-python
 
 * 动态性支持
 
-  * conv 的动态代码生成
-  * pool 动态代码生成
-  * 支持动态的linaga 融合
-* 用stablehlo，mhlo问题太多了。
+  * window stride类代码生成
 * op完善
 
-  * bn 重写
+  * slice
 * 添加AOT算子
 
   * 重写编译逻辑
+* pass 开发
+
+  * decompose
 * 支持GPU后端
-* transform 自定义Pipeline
-* 华为的自动融合策略实现
+* reduce fusion
 * 量化指令调研和实现   L3 i4 --> L1/L2 f16
-* flashattension + kv chach
+* kv chach 有必要在编译器写吗？

@@ -57,8 +57,8 @@ module_dict = {
     # ]
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
-    Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
-    # BatchNorm2D_Inference: [torch.randn(200, 3, 224, 224, device="cpu")],
+    # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
+    BatchNorm2D_Inference: [torch.randn(50, 3, 224, 224, device="cpu")],
     # Linear: [torch.randn((10,100000), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
     # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")],
@@ -73,7 +73,10 @@ module_dict = {
 
 
 def run_model_dict(dict):
-    modes = ["inference", "training"]
+    modes = [
+        "inference",
+        # "training"
+    ]
     for mode in modes:
         for func, inputs in dict.items():
             print("模型: ", func.__name__, ", 模式: ", mode)
@@ -92,11 +95,12 @@ def run_model_dict(dict):
                 ),
                 log_level="debug",
                 symbol_infer=True,
-                target_layout="NHWC",
+                target_layout="NCHW",
                 pipeline="transform",
             )
-            model = func()
-            model.traning = True
+            model: nn.Module = func()
+            if mode  == "inference":
+                model.train(False)
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
@@ -117,7 +121,7 @@ def run_model_dict(dict):
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")
-                print((engine_res - torch_res))
+                print((engine_res - torch_res).max())
 
 
 if __name__ == "__main__":

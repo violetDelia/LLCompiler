@@ -284,6 +284,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<MatMulOp, stablehlo::DotOp>>(converter,
                                                              context);
   patterns.add<SimplyFullLowing<AbsOp, stablehlo::AbsOp>>(converter, context);
+  patterns.add<SimplyFullLowing<SqrtOp, stablehlo::SqrtOp>>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(context);
   patterns.add<BatchNormOpLowing>(converter, context);
@@ -297,7 +298,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
 void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
   target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp>();
-  target.addIllegalOp<ReluOp, BatchNormOp, AbsOp>();
+  target.addIllegalOp<ReluOp, BatchNormOp, AbsOp, SqrtOp>();
   target.addIllegalOp<ConvOp, MaxPoolOp>();
   target.addIllegalOp<TransposeOp, BroadCastToOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();

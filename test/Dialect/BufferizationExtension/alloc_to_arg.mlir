@@ -11,7 +11,7 @@ func.func @main(%arg0: memref<?x?x?x?xf32> {bufferization.access = "read", func.
     %dim_3 = memref.dim %arg0, %c2 : memref<?x?x?x?xf32>
     %dim_4 = memref.dim %arg0, %c3 : memref<?x?x?x?xf32>
     %alloc = memref.alloc(%dim, %dim_2, %dim_3, %dim_4) {alignment = 64 : i64} : memref<?x?x?x?xf32>
-    // CHECK-NOT : memref.copy
+    // CHECK-NOT: memref.copy
     memref.copy %alloc, %arg1 : memref<?x?x?x?xf32> to memref<?x?x?x?xf32>
     return
   }

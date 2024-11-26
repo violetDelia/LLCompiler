@@ -176,6 +176,14 @@ def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike]>{
     let hasCanonicalizer = 1;
 }
 
+def LLH_ConvertToOp : LLH_SymbolOp<"convert_to", []>{
+    let arguments = (ins 
+        LLH_Tensor:$input
+        );
+    let results = (outs 
+        LLH_Tensor);
+}
+
 def LLH_BroadCastToOp          : LLH_SymbolOp<"broadcast_to",[]>{
     let arguments = (ins 
         LLH_Tensor:$input,
@@ -299,6 +307,8 @@ def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 def LLH_AbsOp          : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>{
     let hasCanonicalizer = 1;
 }
+
+def LLH_SqrtOp         : LLH_UnaryElementwiseOp<"sqrt", [], LLH_Tensor>;
 
 def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape, DeclareOpInterfaceMethods<SymbolUserOpInterface>], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
