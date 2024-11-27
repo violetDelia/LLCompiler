@@ -18,6 +18,7 @@
 
 #include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
@@ -93,12 +94,39 @@ struct ReluOpSwitch : public LLHOpRewritePattern<ReluOp> {
                                        op->getAttrDictionary().getValue());
   }
 };
+
+struct ExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
+  using LLHOpRewritePattern<ExtractOp>::LLHOpRewritePattern;
+  LogicalResult match(ExtractOp op) const final { return llvm::success(); }
+  void rewrite(ExtractOp op, LLHPatternRewriter& rewriter) const final {
+    auto loc = op->getLoc();
+    auto one = rewriter.create<ConstantOp>(loc, rewriter.getI64IntegerAttr(1));
+    auto zore = rewriter.create<ConstantOp>(loc, rewriter.getI64IntegerAttr(0));
+    auto input = op.getInput();
+    auto input_type = llc::getRankTensorFrom(input);
+    auto slice_out_shape = llc::getShapeFrom(input_type);
+    auto dims = llh::buildTensorDims(input, &rewriter);
+    auto index = op.getIndex();
+    dims[0] = one;
+    
+    llvm::SmallVector<Value> start({index, zore, zore});
+    llvm::SmallVector<Value> stride({one, one, one});
+    slice_out_shape[0] = 1;
+    auto slice_out_type = input_type.clone(slice_out_shape);
+    auto slice =
+        rewriter.create<SliceOp>(loc, slice_out_type,input,start, dims, stride);
+    dims.erase(dims.begin());
+    auto reshape = rewriter.create<ReshapeOp>(loc, op.getType(), slice, dims);
+    rewriter.replaceOp(op, reshape);
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
 void populateLLHPreprocessingForHLOPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<ReluOpSwitch>(context);
+  patterns.add<ExtractOpSwitch>(context);
 }
 
 //===----------------------------------------------------------------------===//

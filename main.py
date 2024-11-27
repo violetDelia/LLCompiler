@@ -47,7 +47,7 @@ module_dict = {
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Abs: [torch.randn((200,3,224,256), device="cpu")],
-    # Extract: [torch.randn((200,3,224,256), device="cpu")],
+    Extract: [torch.randn((200,3,224,256), device="cpu")],
     # Unsqueeze: [torch.randn((200,3,224,256), device="cpu")],
     # MultiHeadedAttention: [
     #     torch.randn((2, 24, 8), device="cpu"),
@@ -59,7 +59,7 @@ module_dict = {
     # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
     # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
     # BatchNorm2D_Inference: [torch.randn(50, 3, 224, 224, device="cpu")],
-    Decompose_BatchNorm: [torch.randn(1000, 224, device="cpu")],
+    # Decompose_BatchNorm: [torch.randn(1000, 224, device="cpu")],
     # Linear: [torch.randn((10,100000), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
     # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")],

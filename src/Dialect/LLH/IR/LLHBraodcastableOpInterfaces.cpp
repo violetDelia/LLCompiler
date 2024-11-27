@@ -147,7 +147,6 @@ LogicalResult insertBroadcastBeforeBinary(Operation* op,
     will_be_broadcast = lhs;
     target_operand = rhs;
   } else {
-    op->dump();
     FATAL(llc::MLIR_PASS) << "Unexpected result";
     return llvm::failure();
   }

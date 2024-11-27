@@ -237,10 +237,12 @@ def LLH_ExtractOp : LLH_SymbolOp<"extract",[]>{
     let hasCanonicalizer = 1;
 }
 
-def LLH_SliceOp : LLH_SymbolOp<"slice",[]>{
+def LLH_SliceOp : LLH_SymbolOp<"slice",[AttrSizedOperandSegments]>{
     let arguments = (ins 
         LLH_Tensor:$input,
-        LLH_Int64:$index);
+        Variadic<LLH_Int64>:$start_index,
+        Variadic<LLH_Int64>:$length,
+        Variadic<LLH_Int64>:$strides);
     let results = (outs 
         LLH_Tensor);
     let hasCanonicalizer = 1;

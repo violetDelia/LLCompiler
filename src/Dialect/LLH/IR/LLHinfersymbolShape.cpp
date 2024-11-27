@@ -59,15 +59,12 @@ int getChannelOutIndex(Layout layout, int rank) {
 
 void checkIsReturnOperand(Value& value) { 
   for (auto user : value.getUsers()) {
-    user->dump();
     if (llvm::isa<mlir::func::ReturnOp>(user)) {
-      user->dump();
       auto func = user->getParentOfType<func::FuncOp>();
       auto func_type = func.getFunctionType();
       auto new_func_type = FunctionType::get(
           value.getContext(), func_type.getInputs(), user->getOperandTypes());
       func.setFunctionType(new_func_type);
-      func->dump();
     }
   }
 }
@@ -546,6 +543,7 @@ INFER_FUNCTION(BroadCastToOp) {
 }
 
 INFER_FUNCTION(ReshapeOp) {
+  NO_ENCODING_RETURN(getInput())
   HAS_ENCODING_RETURN(getResult())
   auto dims = getShapes();
   auto input_type = llc::getRankTensorFrom(getInput());
