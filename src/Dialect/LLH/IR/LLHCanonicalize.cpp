@@ -28,13 +28,16 @@
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/IR/Block.h"
+#include "mlir/IR/BuiltinAttributeInterfaces.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/IR/PatternMatch.h"
@@ -42,6 +45,7 @@
 #include "mlir/IR/TypeRange.h"
 #include "mlir/IR/Value.h"
 #include "mlir/IR/ValueRange.h"
+#include "mlir/Support/LLVM.h"
 using namespace mlir;
 using namespace mlir::llh;
 #include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
@@ -436,6 +440,38 @@ void ExtractOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
 //===----------------------------------------------------------------------===//
 void SliceOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                           MLIRContext *context) {}
+
+//===----------------------------------------------------------------------===//
+// ReShapeOp.
+//===----------------------------------------------------------------------===//
+namespace {
+struct FoldReshapeOp : public LLHOpRewritePattern<ReshapeOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+  LogicalResult match(ReshapeOp op) const final {
+    auto res = op.getResult();
+    auto tensor = llc::getRankTensorFrom(res);
+    if (!tensor.hasStaticShape()) return llvm::failure();
+    auto input = op.getInput();
+    if (isa<BlockArgument>(input)) return llvm::failure();
+    if (!isa<ConstantOp>(input.getDefiningOp())) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(ReshapeOp op, LLHPatternRewriter &rewriter) const final {
+    auto res = op.getResult();
+    auto tensor_type = llc::getRankTensorFrom(res);
+    auto const_op = llvm::dyn_cast<ConstantOp>(op.getInput().getDefiningOp());
+    auto value = llvm::dyn_cast_or_null<DenseElementsAttr>(const_op.getValue());
+    CHECK(llc::MLIR, value);
+    auto new_value =
+        DenseElementsAttr::getFromRawBuffer(tensor_type, value.getRawData());
+    auto new_const = rewriter.replaceOpWithNewOp<ConstantOp>(op, new_value);
+  }
+};
+}  // namespace
+void ReshapeOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                            MLIRContext *context) {
+  results.add<FoldReshapeOp>(context);
+}
 
 void mlir::llh::populateSymbolCanonicalizePatterns(
     RewritePatternSet &patterns) {

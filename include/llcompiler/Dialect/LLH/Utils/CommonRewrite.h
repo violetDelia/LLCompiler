@@ -122,7 +122,6 @@ struct SimplyBinaryOpReshape : public LLHOpRewritePattern<BinaryOp> {
          i >= 0 && j >= 0; i--, j--) {
       auto higher_dim = higher_shapes[i];
       auto lower_dim = lower_shapes[j];
-      INFO(llc::DEBUG)<< higher_dim<<" "<<lower_dim;
       if (lower_dim == 1 && (higher_dim > 1 || higher_dim < 0)) {
       } else if (((lower_dim > 1 || lower_dim < 0) && higher_dim == 1) ||
                  (lower_dim == higher_dim)) {

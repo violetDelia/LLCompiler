@@ -252,6 +252,7 @@ def LLH_ReshapeOp : LLH_SymbolOp<"reshape",[]>{
         Variadic<LLH_Int64>:$shapes);
     let results = (outs 
         LLH_Tensor);
+    let hasCanonicalizer = 1;
 }
 
 def LLH_EmptyOp : LLH_SymbolOp<"empty",[NoMemoryEffect]>{

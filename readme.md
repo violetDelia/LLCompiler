@@ -16,7 +16,6 @@ ninja check-llc-python
 # Todo
 
 * 动态性支持
-
   * window stride类代码生成
 * op完善
 
@@ -24,10 +23,11 @@ ninja check-llc-python
 * 添加AOT算子
 
   * 重写编译逻辑
-* pass 开发
-
-  * decompose
 * 支持GPU后端
 * reduce fusion
 * 量化指令调研和实现   L3 i4 --> L1/L2 f16
 * kv chach 有必要在编译器写吗？
+
+## log
+
+2024.11.27:   代数化简: reshape(const) --> const

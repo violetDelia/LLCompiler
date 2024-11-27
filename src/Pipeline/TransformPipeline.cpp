@@ -141,8 +141,8 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
       {.CleanSymbolCache = false, .UseBinding = true}));
   pm.addPass(mlir::llh::createDecomposeOpsPass());
   pm.addPass(mlir::createCSEPass());
-  pm.addPass(mlir::createCanonicalizerPass());
   pm.addPass(mlir::llh::createLoadWeightPass());
+  pm.addPass(mlir::createCanonicalizerPass());
   pm.addPass(mlir::llh::createTransformLayoutPass(options.targetLayout));
   pm.addPass(mlir::createLLHPreprocessingForHLOPass());
   pm.addPass(mlir::createCanonicalizerPass());
