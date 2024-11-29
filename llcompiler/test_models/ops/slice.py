@@ -7,6 +7,8 @@ class Extract(nn.Module):
         super().__init__()
 
     def forward(self, x: torch.Tensor):
-        x = x[0]
+        x = x[1]
+        x_ = x[-1]
+        x = x*x_
         x = x[-2]
         return x

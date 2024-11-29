@@ -18,6 +18,7 @@ transform.named_sequence @memref_basic_opt(%module: !transform.any_op {transform
           : (!transform.op<"memref.alloca">)
             -> (!transform.any_op, !transform.any_op)
     transform.memref.erase_dead_alloc_and_stores %liveness_opted_funcs : (!transform.any_op) -> ()
+    %lowing_affine_funcs = transform.apply_registered_pass "lower-affine" to %liveness_opted_funcs : (!transform.any_op) -> !transform.any_op
     transform.yield
   }
 } // transform module

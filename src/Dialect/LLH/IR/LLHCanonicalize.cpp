@@ -413,12 +413,12 @@ struct ExtractOpRefine : public LLHOpRewritePattern<ExtractOp> {
     auto loc = op.getLoc();
     auto index = op.getIndex();
     auto input = op.getInput();
-    auto dim = rewriter.create<DimOp>(loc, input, 0);
+    auto dim = rewriter.create<DimOp>(loc, input, 0);3,-1;
     auto index_value = llh::getConstIntegerValue(index);
     auto offset = rewriter.create<ConstantOp>(
-        loc, rewriter.getI64IntegerAttr(-index_value - 1));
-    auto new_index = rewriter.create<SubOp>(loc, rewriter.getI64Type(),
-                                            ValueRange{dim, offset});
+        loc, rewriter.getI64IntegerAttr(index_value));
+    auto new_index = rewriter.create<AddOp>(loc, rewriter.getI64Type(),
+                                            ValueRange{dim, index});
     op->setOperand(1, new_index);
   }
 };

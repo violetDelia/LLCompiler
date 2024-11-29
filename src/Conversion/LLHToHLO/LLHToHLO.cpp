@@ -64,6 +64,16 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+llvm::SmallVector<Value> castToIndex(ConversionPatternRewriter* rewriter,
+                                     llvm::SmallVector<Value> values,
+                                     Location loc) {
+  llvm::SmallVector<Value> new_values;
+  for (auto value : values) {
+    new_values.push_back(rewriter->create<mlir::arith::IndexCastOp>(
+        loc, rewriter->getIndexType(), value));
+  }
+  return new_values;
+}
 //===----------------------------------------------------------------------===//
 // legal func
 //===----------------------------------------------------------------------===//
@@ -95,14 +105,8 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
     auto out_shapes = op.getOutShapes();
     auto cast_dims = op.getCastDims();
     auto operand = op.getInput();
-    llvm::SmallVector<Value> out_dims;
     llvm::SmallVector<int64_t> unexpand_dims;
     llvm::SmallVector<int64_t> broadcast_dimensions;
-    for (auto shape : out_shapes) {
-      auto dim_val = rewriter.create<mlir::arith::IndexCastOp>(
-          loc, rewriter.getIndexType(), shape);
-      out_dims.push_back(dim_val);
-    }
     auto rank = res_type.getRank();
     for (int64_t i{}; i < rank; i++) {
       bool is_expand = false;
@@ -116,8 +120,8 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
       }
       broadcast_dimensions.push_back(i);
     }
-    auto output_dimensions =
-        rewriter.create<tensor::FromElementsOp>(loc, out_shapes);
+    auto output_dimensions = rewriter.create<tensor::FromElementsOp>(
+        loc, castToIndex(&rewriter, out_shapes, loc));
     auto i64_type = rewriter.getI64Type();
     auto broadcast_dimensions_shape = RankedTensorType::get(
         {static_cast<int64_t>(broadcast_dimensions.size())}, i64_type);
@@ -267,6 +271,28 @@ struct MaxPoolOpLowing : public OpConversionPattern<MaxPoolOp> {
   }
 };
 
+struct SliceOpLowing : public OpConversionPattern<SliceOp> {
+  using OpConversionPattern<SliceOp>::OpConversionPattern;
+
+  LogicalResult match(SliceOp op) const { return llvm::success(); }
+
+  void rewrite(SliceOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const {
+    auto loc = op->getLoc();
+    auto start_index = op.getStartIndex();
+    auto end_index = op.getEndIndex();
+    auto strides = op.getStrides();
+    auto new_satrt_index = rewriter.create<tensor::FromElementsOp>(
+        loc, castToIndex(&rewriter, start_index, loc));
+    auto new_limits_index = rewriter.create<tensor::FromElementsOp>(
+        loc, castToIndex(&rewriter, end_index, loc));
+    auto new_strides = rewriter.create<tensor::FromElementsOp>(
+        loc, castToIndex(&rewriter, strides, loc));
+    rewriter.replaceOpWithNewOp<stablehlo::RealDynamicSliceOp>(
+        op, op.getType(), op.getInput(), new_satrt_index, new_limits_index,
+        new_strides);
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -290,6 +316,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<BatchNormOpLowing>(converter, context);
   patterns.add<MaxPoolOpLowing>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
+  patterns.add<SliceOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//

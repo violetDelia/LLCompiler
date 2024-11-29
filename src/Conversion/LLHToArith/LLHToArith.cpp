@@ -88,14 +88,14 @@ struct SimplyBinaryOpLowing : public OpConversionPattern<FromOp> {
     auto lhs = op->getOperand(0);
     auto rhs = op->getOperand(1);
     auto index_lhs =
-        rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), lhs);
+        rewriter.create<arith::IndexCastOp>(loc, rewriter.getIndexType(), lhs);
     auto index_rhs =
-        rewriter.create<index::CastUOp>(loc, rewriter.getIndexType(), rhs);
+        rewriter.create<arith::IndexCastOp>(loc, rewriter.getIndexType(), rhs);
     auto new_add = rewriter.create<ToOp>(
         loc, TypeRange{rewriter.getIndexType()},
         ValueRange{index_lhs, index_rhs}, op->getAttrDictionary().getValue());
     auto index_res =
-        rewriter.create<index::CastUOp>(loc, res.getType(), new_add);
+        rewriter.create<arith::IndexCastOp>(loc, res.getType(), new_add);
     rewriter.replaceOp(op, index_res);
   }
 };

@@ -38,10 +38,11 @@ func.func @main(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.inp
   %0 = "llh.constant"() <{value = -1 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = -5 : i64}> : () -> i64
   // CHECK: llh.dim
+  // CHECK: llh.add
   // CHECK: llh.extract
   %6 = "llh.extract"(%arg0, %0) : (tensor<?x?x?x?xf32>, i64) -> tensor<?x?x?xf32>
   // CHECK: llh.dim
-  // CHECK: llh.sub
+  // CHECK: llh.add
   // CHECK: llh.extract
   %7 = "llh.extract"(%arg0, %1) : (tensor<?x?x?x?xf32>, i64) -> tensor<?x?x?xf32>
   return 

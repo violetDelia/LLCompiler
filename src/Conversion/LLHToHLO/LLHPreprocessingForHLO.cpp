@@ -25,6 +25,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
@@ -36,6 +37,7 @@
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Location.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
@@ -61,6 +63,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+
 //===----------------------------------------------------------------------===//
 // legal func
 //===----------------------------------------------------------------------===//
@@ -97,27 +100,41 @@ struct ReluOpSwitch : public LLHOpRewritePattern<ReluOp> {
 
 struct ExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
   using LLHOpRewritePattern<ExtractOp>::LLHOpRewritePattern;
-  LogicalResult match(ExtractOp op) const final { return llvm::success(); }
+  LogicalResult match(ExtractOp op) const final {
+    auto input = op.getInput();
+    auto input_type = llc::getRankTensorFrom(input);
+    auto rank = input_type.getRank();
+    // if (rank == 1) return llvm::failure();
+    return llvm::success();
+  }
+
   void rewrite(ExtractOp op, LLHPatternRewriter& rewriter) const final {
     auto loc = op->getLoc();
     auto one = rewriter.create<ConstantOp>(loc, rewriter.getI64IntegerAttr(1));
     auto zore = rewriter.create<ConstantOp>(loc, rewriter.getI64IntegerAttr(0));
     auto input = op.getInput();
     auto input_type = llc::getRankTensorFrom(input);
+    auto rank = input_type.getRank();
     auto slice_out_shape = llc::getShapeFrom(input_type);
     auto dims = llh::buildTensorDims(input, &rewriter);
     auto index = op.getIndex();
-    dims[0] = one;
-    
-    llvm::SmallVector<Value> start({index, zore, zore});
-    llvm::SmallVector<Value> stride({one, one, one});
+    llvm::SmallVector<Value> start(rank, zore);
+    start[0] = index;
+    auto end_index = rewriter.create<AddOp>(loc, TypeRange{index.getType()},
+                                            ValueRange{index, one});
+    dims[0] = end_index;
+    llvm::SmallVector<Value> stride(rank, one);
     slice_out_shape[0] = 1;
     auto slice_out_type = input_type.clone(slice_out_shape);
-    auto slice =
-        rewriter.create<SliceOp>(loc, slice_out_type,input,start, dims, stride);
-    dims.erase(dims.begin());
-    auto reshape = rewriter.create<ReshapeOp>(loc, op.getType(), slice, dims);
-    rewriter.replaceOp(op, reshape);
+    auto slice = rewriter.create<SliceOp>(loc, slice_out_type, input, start,
+                                          dims, stride);
+    if (rank != 1) {
+      dims.erase(dims.begin());
+      auto reshape = rewriter.create<ReshapeOp>(loc, op.getType(), slice, dims);
+      rewriter.replaceOp(op, reshape);
+    } else {
+      rewriter.replaceOp(op, slice);
+    }
   }
 };
 //===----------------------------------------------------------------------===//

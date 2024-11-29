@@ -10,14 +10,13 @@ transform.named_sequence @mhlo_analysis(%module: !transform.any_op {transform.co
     transform.yield %analysied_module: !transform.any_op 
   }
 
-transform.named_sequence @mhlo_basic_opt(%module: !transform.any_op {transform.consumed}) {
+transform.named_sequence @mhlo_basic_opt(%module: !transform.any_op {transform.readeonly}) {
     transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
     } : !transform.any_op
     %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
     %remove_tuple_funcs = transform.apply_registered_pass "mhlo-flatten-tuple" to %funcs : (!transform.any_op) -> !transform.any_op 
-    %conveted_to_signless_module = transform.apply_registered_pass "convert-to-signless" to %module : (!transform.any_op) -> !transform.any_op
-    %conveted_to_signless_funcs = transform.structured.match ops{["func.func"]} in %conveted_to_signless_module : (!transform.any_op) -> !transform.any_op
+    %conveted_to_signless_funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
     %simplfy_reduce_funcs = transform.apply_registered_pass "group-reduction-dimensions" to %conveted_to_signless_funcs : (!transform.any_op) -> !transform.any_op
     %simplfy_broadcast_funcs = transform.apply_registered_pass "mhlo-legalize-broadcast-to-broadcast-in-dim" to %simplfy_reduce_funcs : (!transform.any_op) -> !transform.any_op
     %canonicalize_dot_funcs = transform.apply_registered_pass "hlo-canonicalize-dot" to %simplfy_broadcast_funcs : (!transform.any_op) -> !transform.any_op
@@ -25,14 +24,14 @@ transform.named_sequence @mhlo_basic_opt(%module: !transform.any_op {transform.c
     %canonicalize_gather_funcs = transform.apply_registered_pass "hlo-canonicalize-gather" to %canonicalize_reduce_funcs : (!transform.any_op) -> !transform.any_op
     %canonicalize_scatter_funcs = transform.apply_registered_pass "hlo-canonicalize-scatter" to %canonicalize_gather_funcs : (!transform.any_op) -> !transform.any_op
     %cf_sinked_funcs = transform.apply_registered_pass "mhlo-sink-constants-to-control-flow" to %canonicalize_scatter_funcs : (!transform.any_op) -> !transform.any_op
-    transform.apply_patterns to %conveted_to_signless_module {
+    transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
     } : !transform.any_op
     %ops_expanded_funcs = transform.apply_registered_pass "mhlo-expand-ops-simplifier" to %cf_sinked_funcs : (!transform.any_op) -> !transform.any_op
     // NOTE: unkown assert error -> appending to the MLIRContext dialect registry while in a multi-threaded execution context" while register mhlo-test-unfuse-batch-norm
     %batch_norm_decomposed_funcs = transform.apply_registered_pass "mhlo-test-unfuse-batch-norm" to %ops_expanded_funcs : (!transform.any_op) -> !transform.any_op
     %broadcast_sinked_funcs = transform.apply_registered_pass "mhlo-broadcast-propagation" to %batch_norm_decomposed_funcs : (!transform.any_op) -> !transform.any_op
-    transform.apply_patterns to %conveted_to_signless_module {
+    transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
     } : !transform.any_op
     transform.yield
@@ -75,13 +74,12 @@ transform.named_sequence @stablehlo_basic_opt(%module: !transform.any_op {transf
       transform.apply_patterns.canonicalization
     } : !transform.any_op
     %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op 
-    %conveted_to_signless_module = transform.apply_registered_pass "stablehlo-convert-to-signless" to %module : (!transform.any_op) -> !transform.any_op
-    %conveted_to_signless_funcs = transform.structured.match ops{["func.func"]} in %conveted_to_signless_module : (!transform.any_op) -> !transform.any_op
+    %conveted_to_signless_funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
     %expands_funcs = transform.apply_registered_pass "stablehlo-compatibility-expander" to %conveted_to_signless_funcs : (!transform.any_op) -> !transform.any_op
     %dynamic_canonicalized_funcs = transform.apply_registered_pass "stablehlo-canonicalize-dynamism" to %expands_funcs : (!transform.any_op) -> !transform.any_op
     %folded_funcs = transform.apply_registered_pass "stablehlo-aggressive-folder" to %dynamic_canonicalized_funcs : (!transform.any_op) -> !transform.any_op
     %canonicalized_funcs = transform.apply_registered_pass "stablehlo-aggressive-simplification" to %folded_funcs : (!transform.any_op) -> !transform.any_op
-    transform.apply_patterns to %conveted_to_signless_module {
+    transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
     } : !transform.any_op
     transform.yield

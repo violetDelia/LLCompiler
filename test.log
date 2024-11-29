@@ -1,13 +1,133 @@
-builtin.module attributes  {"builtin.gloabal_layout" = "NCHW"} {
-  func.func @main(%0 : tensor<3xf32> {"func.input_symbol_0" = "c3"}, %1 : tensor<3xf32> {"func.input_symbol_0" = "c3"}, %2 : tensor<3xf32> {"func.input_symbol_0" = "c3"}, %3 : tensor<3xf32> {"func.input_symbol_0" = "c3"}, %4 : tensor<i64>, %5 : tensor<?x3x?x?xf32> {"func.input_symbol_0" = "s0", "func.input_symbol_1" = "c3", "func.input_symbol_2" = "s2", "func.input_symbol_3" = "s2"}) -> (tensor<3xf32>, tensor<3xf32>, tensor<i64>, tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<?x3x?x?xf32>, tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>)  attributes {"entrance"}{
-    %6 = "llh.torch_symbolic_int"() {"sym_name" = "s0"} : () -> i64
-    %7 = "llh.torch_symbolic_int"() {"sym_name" = "s2"} : () -> i64
-    %8 = "llh.constant"() {"value" = 1 : i64} : () -> i64
-    %9 = "llh.add"(%4, %8) : (tensor<i64>, i64) -> tensor<i64>
-    %10 = "llh.batch_norm"(%5, %0, %1, %2, %3) {"epsilon" = 1.000000e-01 : f64, "momentum" = 1.000000e-05 : f64, "feature_index" = 1 : i64} : (tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<?x3x?x?xf32>
-    %11 = "llh.constant"() {"value" = 1 : i64} : () -> i64
-    %12 = "llh.add"(%9, %11) : (tensor<i64>, i64) -> tensor<i64>
-    %13 = "llh.batch_norm"(%10, %0, %1, %2, %3) {"epsilon" = 1.000000e-01 : f64, "momentum" = 1.000000e-05 : f64, "feature_index" = 1 : i64} : (tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<?x3x?x?xf32>
-    func.return %2, %3, %12, %13, %0, %5, %10, %0, %1, %0, %1, %2, %3 : tensor<3xf32>, tensor<3xf32>, tensor<i64>, tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<?x3x?x?xf32>, tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>
-  }
-}
+Args: build/bin/llc-opt /home/lfr/LLCompiler/ir_tree/inference/fx/Extract/builtin_module_no-symbol-name/20_fold-index-cast.mlir -fold-index-cast --debug 
+Load new dialect in Context builtin
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ShapedType)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::MemRefLayoutAttrInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::TypedAttr)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ElementsAttr)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::DistinctAttr)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::BytecodeOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::SymbolOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpAsmOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::RegionKindInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ConditionallySpeculatable)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::MemoryEffectOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ResourceBlobManagerDialectInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpAsmDialectInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::BytecodeDialectInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::detail::AffineBinaryOpExprStorage)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::detail::AffineConstantExprStorage)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::detail::AffineDimExprStorage)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::detail::AffineMapStorage)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::detail::IntegerSetStorage)
+Load new dialect in Context builtin
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::CastOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::DestructurableTypeInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::ZeroOperands<mlir::TypeID::get() [with Trait = mlir::OpTrait::ZeroOperands]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::OneRegion<mlir::TypeID::get() [with Trait = mlir::OpTrait::OneRegion]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::ZeroResults<mlir::TypeID::get() [with Trait = mlir::OpTrait::ZeroResults]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::ZeroSuccessors<mlir::TypeID::get() [with Trait = mlir::OpTrait::ZeroSuccessors]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::NoRegionArguments<mlir::TypeID::get() [with Trait = mlir::OpTrait::NoRegionArguments]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::NoTerminator<mlir::TypeID::get() [with Trait = mlir::OpTrait::NoTerminator]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::SingleBlock<mlir::TypeID::get() [with Trait = mlir::OpTrait::SingleBlock]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::OpInvariants<mlir::TypeID::get() [with Trait = mlir::OpTrait::OpInvariants]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::BytecodeOpInterface::Trait<mlir::TypeID::get() [with Trait = mlir::BytecodeOpInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::AffineScope<mlir::TypeID::get() [with Trait = mlir::OpTrait::AffineScope]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::IsIsolatedFromAbove<mlir::TypeID::get() [with Trait = mlir::OpTrait::IsIsolatedFromAbove]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::SymbolTable<mlir::TypeID::get() [with Trait = mlir::OpTrait::SymbolTable]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::SymbolOpInterface::Trait<mlir::TypeID::get() [with Trait = mlir::SymbolOpInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpAsmOpInterface::Trait<mlir::TypeID::get() [with Trait = mlir::OpAsmOpInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::RegionKindInterface::Trait<mlir::TypeID::get() [with Trait = mlir::RegionKindInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::HasOnlyGraphRegion<mlir::TypeID::get() [with Trait = mlir::OpTrait::HasOnlyGraphRegion]::Empty>)
+Load new dialect in Context func
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::CallOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::SymbolUserOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::CallableOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::FunctionOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::RegionBranchTerminatorOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::DialectInlinerInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ConvertToLLVMPatternInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::bufferization::BufferizableOpInterface)
+Load new dialect in Context cf
+Load new dialect in Context arith
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::arith::ArithFastMathInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::VectorUnrollOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::InferTypeOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::InferIntRangeInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::arith::ArithIntegerOverflowFlagsInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::arith::ArithRoundingModeInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::SelectLikeOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::bufferization::BufferDeallocationOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ValueBoundsOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::bufferization::BufferViewFlowOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::BranchOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::mesh::ShardingInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::ZeroRegions<mlir::TypeID::get() [with Trait = mlir::OpTrait::ZeroRegions]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::OneResult<mlir::TypeID::get() [with Trait = mlir::OpTrait::OneResult]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::OneTypedResult<mlir::Type>::Impl<mlir::TypeID::get() [with Trait = mlir::OpTrait::OneTypedResult<mlir::Type>::Impl]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::ConstantLike<mlir::TypeID::get() [with Trait = mlir::OpTrait::ConstantLike]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ConditionallySpeculatable::Trait<mlir::TypeID::get() [with Trait = mlir::ConditionallySpeculatable::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::AlwaysSpeculatableImplTrait<mlir::TypeID::get() [with Trait = mlir::OpTrait::AlwaysSpeculatableImplTrait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::MemoryEffectOpInterface::Trait<mlir::TypeID::get() [with Trait = mlir::MemoryEffectOpInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::InferIntRangeInterface::Trait<mlir::TypeID::get() [with Trait = mlir::InferIntRangeInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::InferTypeOpInterface::Trait<mlir::TypeID::get() [with Trait = mlir::InferTypeOpInterface::Trait]::Empty>)
+Load new dialect in Context tensor
+Load new dialect in Context affine
+Load new dialect in Context ub
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ub::PoisonAttrInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::affine::AffineMapAccessInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::affine::AffineDmaStartOp)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::affine::AffineDmaWaitOp)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::LoopLikeOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::RegionBranchOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::affine::AffineReadOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::affine::AffineWriteOpInterface)
+Load new dialect in Context complex
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ReifyRankedShapedTypeOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ShapedDimOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OffsetSizeAndStrideOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::DestinationStyleOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::transform::FindPayloadReplacementOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::SubsetOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::SubsetInsertionOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::SubsetExtractionOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::TilingInterface)
+Load new dialect in Context linalg
+Load new dialect in Context math
+Load new dialect in Context memref
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::CopyOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::PromotableMemOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::DestructurableAccessorOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::PromotableAllocationOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::DestructurableAllocationOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ViewLikeOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::bufferization::AllocationOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::RuntimeVerifiableOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::linalg::AggregatedOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::linalg::LinalgOp)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::linalg::ContractionOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::linalg::ConvolutionOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::linalg::FillOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::PartialReductionOpInterface)
+Load new dialect in Context scf
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::ParallelCombiningOpInterface)
+Ignoring repeated interface registration
+Ignoring repeated interface registration
+Ignoring repeated interface registration
+Load new dialect in Context index
+Load new dialect in Context stablehlo
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::InferShapedTypeOpInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::hlo::HloDialectInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::VerifiableTensorEncoding)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::hlo::BoundedAttrInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::AutomaticAllocationScope<mlir::TypeID::get() [with Trait = mlir::OpTrait::AutomaticAllocationScope]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::CallableOpInterface::Trait<mlir::TypeID::get() [with Trait = mlir::CallableOpInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::FunctionOpInterface::Trait<mlir::TypeID::get() [with Trait = mlir::FunctionOpInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::DataLayoutSpecInterface)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::OneTypedResult<mlir::RankedTensorType>::Impl<mlir::TypeID::get() [with Trait = mlir::OpTrait::OneTypedResult<mlir::RankedTensorType>::Impl]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::OpTrait::NOperands<4>::Impl<mlir::TypeID::get() [with Trait = mlir::OpTrait::NOperands<4>::Impl]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::InferShapedTypeOpInterface::Trait<mlir::TypeID::get() [with Trait = mlir::InferShapedTypeOpInterface::Trait]::Empty>)
+ImplicitTypeIDRegistry::lookupOrInsert(mlir::AttributeTrait::IsLocation<mlir::TypeID::get() [with Trait = mlir::AttributeTrait::IsLocation]::Empty>)
+/home/lfr/LLCompiler/ir_tree/inference/fx/Extract/builtin_module_no-symbol-name/20_fold-index-cast.mlir:15:11: error: 'stablehlo.real_dynamic_slice' op failed to verify that all of {start_indices, limit_indices, strides} have same type
+    %11 = "stablehlo.real_dynamic_slice"(%arg0, %4, %10, %3) : (tensor<?x?x?x?xf32>, tensor<4xi64>, tensor<4xindex>, tensor<4xi64>) -> tensor<1x?x?x?xf32>
+          ^
+/home/lfr/LLCompiler/ir_tree/inference/fx/Extract/builtin_module_no-symbol-name/20_fold-index-cast.mlir:15:11: note: see current operation: %11 = "stablehlo.real_dynamic_slice"(%arg0, %4, %10, %3) : (tensor<?x?x?x?xf32>, tensor<4xi64>, tensor<4xindex>, tensor<4xi64>) -> tensor<1x?x?x?xf32>

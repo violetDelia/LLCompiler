@@ -46,3 +46,10 @@ func.func @empty(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance}{
     %15 = "llh.empty"(%6) : (i64) -> tensor<?xf32>
   return 
 }
+
+// CHECK-LABEL: extract
+func.func @extract(%arg0: tensor<?xf32>) -> tensor<f32> attributes {entrance} {
+    %0 = "llh.constant"() <{value = 0 : i64}> : () -> i64
+    %7 = "llh.extract"(%arg0, %0) : (tensor<?xf32>, i64) -> tensor<f32>
+    return %7 : tensor<f32>
+}

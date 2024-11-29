@@ -5,7 +5,6 @@
 //    You may obtain a copy of the License at
 
 //        http://www.apache.org/licenses/LICENSE-2.0
-
 //    Unless required by applicable law or agreed to in writing, software
 //    distributed under the License is distributed on an "AS IS" BASIS,
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -233,7 +232,7 @@ def LLH_ExtractOp : LLH_SymbolOp<"extract",[]>{
         LLH_Tensor:$input,
         LLH_Int64:$index);
     let results = (outs 
-        LLH_Tensor);
+        LLH_Computable_Type);
     let hasCanonicalizer = 1;
 }
 
@@ -241,7 +240,7 @@ def LLH_SliceOp : LLH_SymbolOp<"slice",[AttrSizedOperandSegments]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         Variadic<LLH_Int64>:$start_index,
-        Variadic<LLH_Int64>:$length,
+        Variadic<LLH_Int64>:$end_index,
         Variadic<LLH_Int64>:$strides);
     let results = (outs 
         LLH_Tensor);

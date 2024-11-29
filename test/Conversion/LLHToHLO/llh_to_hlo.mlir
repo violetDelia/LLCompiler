@@ -1,6 +1,6 @@
 // RUN: llc-opt --split-input-file --convert-llh-to-hlo %s| FileCheck %s
 
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --convert-llh-to-hlo /home/lfr/LLCompiler/test/Conversion/LLHToHLO/llh_to_hlo.mlir
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --convert-llh-to-tensor --convert-llh-to-hlo --fold-index-cast --canonicalize /home/lfr/LLCompiler/test/Conversion/LLHToHLO/llh_to_hlo.mlir
 
 func.func @constant() ->() attributes {entrance}{
   // CHECK: stablehlo.constant
@@ -115,5 +115,20 @@ func.func @max_pool(%arg0: tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32> attribute
     %0 = "llh.max_pool"(%arg0) <{ceil_mode = false, dilation = array<i64: 2, 1>, kernel_shape = array<i64: 5, 5>, layout = #llh.Layout<NCHW>, pad = array<i64: 1, 2, 1, 2>, stride = array<i64: 1, 2>}> : (tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32>
     return %0 : tensor<1x?x?x?xf32>
 }
+
+// -----
+func.func @slice(%arg0: tensor<?x?x?x?xf32> ) -> tensor<1x?x?x?xf32> attributes {entrance} {
+    %c0_i64 = arith.constant {symbol = @c0} 0 : i64
+    %c1_i64 = arith.constant {symbol = @c1} 1 : i64
+    %c2_i64 = arith.constant {symbol = @c2} 2 : i64
+    %c3_i64 = arith.constant {symbol = @c3} 3 : i64
+    %0 = "llh.dim"(%arg0, %c1_i64) <{symbol = @s1}> : (tensor<?x?x?x?xf32>, i64) -> i64
+    %1 = "llh.dim"(%arg0, %c2_i64) <{symbol = @s2}> : (tensor<?x?x?x?xf32>, i64) -> i64
+    %2 = "llh.dim"(%arg0, %c3_i64) <{symbol = @s3}> : (tensor<?x?x?x?xf32>, i64) -> i64
+    // CHECK: stablehlo.real_dynamic_slice
+    // CHECK-NOT: llh.slice
+    %3 = "llh.slice"(%arg0, %c0_i64, %c0_i64, %c0_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
+    return %3 : tensor<1x?x?x?xf32>
+  }
 
 

@@ -41,13 +41,21 @@ def torch_compiler_time(model, *inputs):
     return model(*inputs)
 
 
+a = torch.randn((3, 3), device="cpu")
+i, j = a.shape
+count = 0
+for i_ in range(i):
+    for j_ in range(j):
+        a[i_, j_] = count
+        count += 1
+print(a)
 module_dict = {
     # Add: [torch.randn((200, 3, 224, 256), device="cpu")],
     # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Abs: [torch.randn((200,3,224,256), device="cpu")],
-    Extract: [torch.randn((200,3,224,256), device="cpu")],
+    Extract: [a],
     # Unsqueeze: [torch.randn((200,3,224,256), device="cpu")],
     # MultiHeadedAttention: [
     #     torch.randn((2, 24, 8), device="cpu"),
@@ -100,12 +108,12 @@ def run_model_dict(dict):
                 pipeline="transform",
             )
             model: nn.Module = func()
-            if mode  == "inference":
+            if mode == "inference":
                 model.train(False)
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
-                dynamic=True,
+                dynamic=False,
                 fullgraph=True,
             )
             torch_compiler: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
@@ -119,6 +127,8 @@ def run_model_dict(dict):
             engine_res = llcompiler_run_time(opt_model, *inputs)
             llcompiler_run_time(opt_model, *inputs)
             # loop_llcompiler_run_time(100,opt_model, *inputs)
+            print(engine_res)
+            print(torch_res)
             is_same = check_same(engine_res, torch_res)
             if not is_same:
                 print(func.__name__, " in ", mode, " is incorrect!")

@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHTypesImpl.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -54,6 +55,9 @@ using namespace ::mlir::llh;
 namespace {
 //===----------------------------------------------------------------------===//
 // common func
+//===----------------------------------------------------------------------===//
+//===----------------------------------------------------------------------===//
+// legal func
 //===----------------------------------------------------------------------===//
 
 //===----------------------------------------------------------------------===//

@@ -32,6 +32,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Traits.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -130,17 +131,48 @@ struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
   }
 };
 
-struct WeightOpRefine : public LLHOpRewritePattern<WeightOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-  LogicalResult match(WeightOp op) const final {
-    auto res = llvm::cast<RankedTensorType>(op->getResult(0).getType());
-    if (res.getRank() == 0) return llvm::success();
+template <class Op>
+struct ResultScaleRefine : public LLHOpRewritePattern<Op> {
+  using LLHOpRewritePattern<Op>::LLHOpRewritePattern;
+  LogicalResult match(Op op) const final {
+    auto res = op->getResults();
+    for (auto res : op->getResults()) {
+      auto tensor = llc::getRankTensorFrom(res);
+      if (tensor.getRank() == 0) return llvm::success();
+    }
     return llvm::failure();
   }
-  void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {
-    auto res = op->getResult(0);
-    auto shape_type = llvm::cast<ShapedType>(res.getType());
-    res.setType(RankedTensorType::get({1}, shape_type.getElementType()));
+  void rewrite(Op op, LLHPatternRewriter& rewriter) const final {
+    auto res = op->getResults();
+    for (auto res : op->getResults()) {
+      auto tensor = llc::getRankTensorFrom(res);
+      auto new_tensor = RankedTensorType::get({1}, tensor.getElementType());
+      res.setType(new_tensor);
+      for (auto user : res.getUsers()) {
+        if (isa<func::ReturnOp>(user)) {
+          auto return_op = cast<func::ReturnOp>(user);
+          auto operands = return_op->getOperands();
+          auto index = 0;
+          for (auto operand : operands) {
+            if (operand.getDefiningOp() == op.getOperation()) {
+              break;
+            }
+            index++;
+          }
+          auto func = return_op->template getParentOfType<func::FuncOp>();
+          auto func_type = func.getFunctionType();
+          auto input = func_type.getInputs();
+          auto output = func_type.getResults();
+          llvm::SmallVector<Type> new_output;
+          for (auto output_type : output) {
+            new_output.push_back(output_type);
+          }
+          new_output[index] = new_tensor;
+          auto new_func_type = rewriter.getFunctionType(input, new_output);
+          func.setFunctionType(new_func_type);
+        }
+      }
+    }
   }
 };
 
@@ -150,7 +182,8 @@ struct WeightOpRefine : public LLHOpRewritePattern<WeightOp> {
 void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<BraodcastableScalarToTensor>(context);
-  patterns.add<WeightOpRefine>(context);
+  patterns.add<ResultScaleRefine<WeightOp>>(context);
+  patterns.add<ResultScaleRefine<ExtractOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//
