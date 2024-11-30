@@ -16,3 +16,4 @@ build_pybind11("${CMAKE_CURRENT_SOURCE_DIR}/pybind11")
 #unkown error in ../mlir-hlo/stablehlo
 build_stablehlo("${CMAKE_CURRENT_SOURCE_DIR}/stablehlo" "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
 # build_hlo("${CMAKE_CURRENT_SOURCE_DIR}/mlir-hlo" "${CMAKE_CURRENT_SOURCE_DIR}/llvm-project/llvm")
+build_symengine("${CMAKE_CURRENT_SOURCE_DIR}/symengine_loc")

@@ -218,7 +218,23 @@ func.func @extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.
 
 // -----
 func.func @matmul(%arg0: tensor<?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1"}) -> tensor<*xf32> attributes {entrance} {
+    // CHECK: llh.matmul
+    // CHECK-SAME: tensor<?x10xf32, #llh.encoding<shapes = @s0, @c10>>
     %const = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<512x10xf32>
     %matmul = "llh.matmul"(%arg0, %const) : (tensor<?x?xf32>, tensor<512x10xf32>) -> tensor<*xf32>
+    // llh.symbol_relation
     return %matmul : tensor<*xf32>
 }
+
+// -----
+func.func @slice(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"} ) -> tensor<1x?x?x?xf32> attributes {entrance} {
+    %c0_i64 = arith.constant {symbol = @c0} 0 : i64
+    %c1_i64 = arith.constant {symbol = @c1} 1 : i64
+    %c2_i64 = arith.constant {symbol = @c2} 2 : i64
+    %c3_i64 = arith.constant {symbol = @c3} 3 : i64
+    %0 = "llh.dim"(%arg0, %c1_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
+    %1 = "llh.dim"(%arg0, %c2_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
+    %2 = "llh.dim"(%arg0, %c3_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
+    %3 = "llh.slice"(%arg0, %c0_i64, %c0_i64, %c0_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
+    return %3 : tensor<1x?x?x?xf32>
+  }

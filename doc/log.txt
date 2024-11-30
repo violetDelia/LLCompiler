@@ -1,1 +1,22 @@
-2024.11.27 : reshape 代数化简
+2024.11.27 :    reshape 代数化简
+2024.11.30 :    extract --> slice
+                slice --> hlo.slice
+                extract 规范化
+                ResultScaleRefine for -operation-legalization
+                
+TODO:
+    slice symbol infer
+    slice test
+    extract test
+
+备忘：
+    哪些指令不能并行？
+    动态conv 代码生成。
+    batch norm traing op 
+    添加GPU后端。
+    int8量化。
+    int4 量化指令调研。
+    
+    
+    
+

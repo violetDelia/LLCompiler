@@ -27,14 +27,10 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/SCF/IR/SCF.h"
-#include "mlir/Dialect/Utils/StaticValueUtils.h"
 #include "mlir/IR/BuiltinAttributes.h"
-#include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
-#include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/Value.h"
 #include "mlir/IR/ValueRange.h"
 #include "mlir/Support/LLVM.h"
@@ -57,7 +53,7 @@ int getChannelOutIndex(Layout layout, int rank) {
   return -1;
 }
 
-void checkIsReturnOperand(Value& value) { 
+void checkIsReturnOperand(Value& value) {
   for (auto user : value.getUsers()) {
     if (llvm::isa<mlir::func::ReturnOp>(user)) {
       auto func = user->getParentOfType<func::FuncOp>();
@@ -228,8 +224,8 @@ void ConvSymbolInfer(Operation* op) {
   auto batch_symbol = batch_symbol_attr.getAttr().str();
   new_shape_symbol.insert(new_shape_symbol.begin(), batch_symbol);
   // channel_shape
-  size_t channel_out_index;
-  size_t weight_index;
+  size_t channel_out_index{};
+  size_t weight_index{};
   if (layout == Layout::NCHW) {
     weight_index = 0;
     channel_out_index = 1;
@@ -318,7 +314,6 @@ void ConvSymbolInfer(Operation* op) {
     NO_ENCODING_RETURN(getOperation()->getOperand(0)) \
     NO_ENCODING_RETURN(getOperation()->getOperand(1)) \
     HAS_ENCODING_RETURN(getOperation()->getResult(0)) \
-    auto res = getResult();                           \
     ConvSymbolInfer(getOperation());                  \
     COMMON_CHECK                                      \
     return llvm::success();                           \
@@ -371,8 +366,7 @@ INFER_FUNCTION(ConstantOp) {
     auto new_res_type =
         RankedTensorType::get(shape.getShape(), shape.getElementType());
     res.setType(new_res_type);
-    auto res = getResult();
-    symbol_analysis->addEncoding(res);
+    symbol_analysis->addEncoding(getResult());
     COMMON_CHECK return llvm::success();
   }
   return llvm::failure();
@@ -381,9 +375,19 @@ INFER_FUNCTION(ConstantOp) {
 UNIMPLEMENTED_INFER_FUNCTION(LayerNormOp)
 UNIMPLEMENTED_INFER_FUNCTION(CatOp)
 UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
-UNIMPLEMENTED_INFER_FUNCTION(SliceOp)
-
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
+
+INFER_FUNCTION(SliceOp) {
+  HAS_ENCODING_RETURN(getResult())
+  NO_ENCODING_RETURN(getInput())
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbols = llvm::SmallVector<StringRef>();
+  auto new_shapes = llvm::SmallVector<int64_t>();
+  auto input_type = llc::getRankTensorFrom(getInput());
+  auto start = getStartIndex();
+  auto end = getEndIndex();
+}
+
 INFER_FUNCTION(ExtractOp) {
   HAS_ENCODING_RETURN(getResult())
   NO_ENCODING_RETURN(getInput())
@@ -510,7 +514,6 @@ INFER_FUNCTION(MaxPoolOp) {
   new_shape_symbol.insert(new_shape_symbol.begin(), batch_symbol);
   // channel_shape
   size_t channel_index = getChannelOutIndex(layout, rank);
-  size_t weight_index = 0;
   new_shape.insert(new_shape.begin() + channel_index,
                    input_shape[channel_index]);
   auto channel_out_symbol_attr = input_symbols[channel_index];
@@ -571,7 +574,6 @@ INFER_FUNCTION(EmptyOp) {
 INFER_FUNCTION(TransposeOp) {
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
   HAS_ENCODING_RETURN(getOperation()->getResult(0))
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto prem = getPerms();
   auto input_type = getInput().getType();
   CHECK(llc::SymbolInfer, llvm::isa<RankedTensorType>(input_type));
