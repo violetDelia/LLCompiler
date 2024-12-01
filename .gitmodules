@@ -12,9 +12,9 @@
 [submodule "third_party/stablehlo"]
 	path = third_party/stablehlo
 	url = https://github.com/openxla/stablehlo.git
-[submodule "third_party/symengine"]
-	path = third_party/symengine
-	url = https://github.com/symengine/symengine.git
+[submodule "third_party/ginac"]
+	path = third_party/ginac
+	url = git://www.ginac.de/ginac.git
 ### not used ###
 [submodule "third_party/mlir-hlo"]
     path = third_party/mlir-hlo
@@ -28,6 +28,9 @@
 [submodule "third_party/googletest"]
 	path = third_party/googletest
 	url = https://github.com/google/googletest.git
+[submodule "third_party/symengine"]
+	path = third_party/symengine
+	url = https://github.com/symengine/symengine.git
 # [submodule "third_party/protobuf"]
 # 	path = third_party/protobuf
 # 	url = https://github.com/protocolbuffers/protobuf.git

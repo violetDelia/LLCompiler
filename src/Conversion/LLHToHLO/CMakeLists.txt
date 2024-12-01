@@ -1,5 +1,5 @@
 set(LLVM_TARGET_DEFINITIONS LLHToHLO.td)
-mlir_tablegen(LLHToHLO.inc -gen-rewriters)
+mlir_tablegen(LLHToHLO.inc -gen-rewriters EXTRA_INCLUDES ${STABLEHLO_INCLUDE_DIRS})
 add_public_tablegen_target(LLCLLHToHLOIncGen)
 
 llcompiler_add_library(LLCLLHToHLO
