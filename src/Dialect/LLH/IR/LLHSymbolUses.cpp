@@ -38,7 +38,8 @@ LogicalResult SymbolBinaryRelationOp::verifySymbolUses(
   return llvm::success();
 }
 
-LogicalResult AddOp::verifySymbolUses(SymbolTableCollection& symbolTable) {
+LogicalResult SymbolRelationMapOp::verifySymbolUses(
+    SymbolTableCollection& symbolTable) {
   return llvm::success();
 }
 

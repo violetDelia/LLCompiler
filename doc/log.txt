@@ -1,10 +1,12 @@
-2024.11.27 :    reshape 代数化简
-2024.11.30 :    extract --> slice
+2024.11.27  :   reshape 代数化简
+2024.11.30  :   extract --> slice
                 slice --> hlo.slice
                 extract 规范化
                 ResultScaleRefine for -operation-legalization
+2024.11.21  :   add SymbolRelationMapOp op
                 
 TODO:
+    refactor symbol syste use symengine
     slice symbol infer
     slice test
     extract test

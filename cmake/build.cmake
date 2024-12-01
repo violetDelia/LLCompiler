@@ -106,34 +106,3 @@ function(llcompiler_install_target name)
         PUBLIC_HEADER DESTINATION ${LLCOMPILER_INSTALL_DIR}/include)
     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_INSTALLED_TARGETS ${name})
 endfunction()
-
-# function(llcompiler_install_mlir_target name)
-#     cmake_parse_arguments(ARG
-#         "DIALECT, TRANSFORM, CONVERSION,PIPELINE"
-#         ""
-#         ""
-#         ${ARGN}
-#     )
-#     set_target_properties(${name} PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-#     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_ALL_TARGETS ${name})
-#     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TARGETS ${name})
-
-#     if(ARG_DIALECT)
-#         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_DIALECT ${name})
-#     endif()
-
-#     if(ARG_TRANSFORM)
-#         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_TRANSFORM ${name})
-#     endif()
-
-#     if(ARG_CONVERSION)
-#         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_CONVERSION ${name})
-#     endif()
-
-#     if(ARG_PIPELINE)
-#         set_property(GLOBAL APPEND PROPERTY LLCOMPILER_MLIR_PIPELINE ${name})
-#     endif()
-
-#     message("add MLIR lib: ${name}.")
-#     llcompiler_install_target(${name})
-# endfunction()

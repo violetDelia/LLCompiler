@@ -117,6 +117,17 @@ def LLH_SymbolicCastOp: Op<LLH_Dialect,"symbolic_cast",[DeclareOpInterfaceMethod
         LLH_Tensor);
 }
 
+def LLH_SymbolRelationMapOp : LLH_Op<"symbol_relation_map",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
+    let description = [{
+        描述符号关系的op
+    }];
+    let arguments = (ins 
+       FlatSymbolRefAttr:$symbol,
+       SymbolRefArrayAttr:$relations,
+       AffineMapAttr:$relation
+       );
+}
+
 def LLH_SymbolBinaryRelationOp : LLH_Op<"symbol_binary_relation",[DeclareOpInterfaceMethods<SymbolUserOpInterface>]>{
     let description = [{
         描述符号关系的op
@@ -312,7 +323,7 @@ def LLH_AbsOp          : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>{
 
 def LLH_SqrtOp         : LLH_UnaryElementwiseOp<"sqrt", [], LLH_Tensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape, DeclareOpInterfaceMethods<SymbolUserOpInterface>], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
     let hasCanonicalizer = 1;
