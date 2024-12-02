@@ -15,8 +15,10 @@
 
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 
+#include <charconv>
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
 #include <string>
 #include <utility>
 
@@ -31,6 +33,7 @@
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
@@ -47,6 +50,12 @@
 #include "mlir/IR/Value.h"
 #include "mlir/Pass/AnalysisManager.h"
 #include "mlir/Support/LLVM.h"
+#include "symengine/basic.h"
+#include "symengine/dict.h"
+#include "symengine/integer.h"
+#include "symengine/logic.h"
+#include "symengine/printers.h"
+#include "symengine/symbol.h"
 
 namespace mlir::llh {
 namespace {
@@ -156,7 +165,7 @@ SymbolAnalysis::SymbolAnalysis(Operation* op) {
   auto symbol_ints = module.getOps<SymbolicIntOp>();
   for (auto symbol_int : symbol_ints) {
     auto symbol = symbol_int.getSymName();
-    symbols_table_[symbol.str()] = symbol_int;
+    symbol_op_table_[symbol.str()] = symbol_int;
   }
   auto symbol_module = SymbolTable::lookupNearestSymbolFrom(
       module.getOperation(),
@@ -247,33 +256,27 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbol() {
   CHECK(llc::MLIR, llvm::isa<ModuleOp>(module));
   std::string symbol = "s" + std::to_string(next_symbol_id_);
   next_symbol_id_++;
-  while (symbols_table_.count(symbol)) {
+  while (symbol_op_table_.count(symbol)) {
     symbol = "s" + std::to_string(next_symbol_id_);
     next_symbol_id_++;
   }
   LLHPatternRewriter builder(symbol_module_->getContext());
-  auto symbol_op =
-      builder.create<SymbolicIntOp>(builder.getUnknownLoc(), symbol);
-  _insertInModule(&builder, symbol_op);
-  symbols_table_[symbol_op.getSymName().str()] = symbol_op;
+  auto symbol_op = _insertNewSymbol(symbol, &builder);
   return symbol_op;
 }
 
 SymbolicIntOp SymbolAnalysis::getOrBuildSymbol(const llvm::StringRef symbol) {
   LLHPatternRewriter builder(symbol_module_->getContext());
   auto symbol_str = symbol.str();
-  if (symbols_table_.count(symbol_str)) {
-    return llvm::cast<SymbolicIntOp>(symbols_table_.at(symbol_str));
+  if (symbol_op_table_.count(symbol_str)) {
+    return llvm::cast<SymbolicIntOp>(symbol_op_table_.at(symbol_str));
   }
-  auto symbol_op =
-      builder.create<SymbolicIntOp>(builder.getUnknownLoc(), symbol);
-  _insertInModule(&builder, symbol_op);
-  symbols_table_[symbol_op.getSymName().str()] = symbol_op;
+  auto symbol_op = _insertNewSymbol(symbol, &builder);
   return symbol_op;
 }
 
 SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(size_t val) {
-  std::string symbol = "c" + std::to_string(val);
+  llvm::SmallString<1> symbol("c" + std::to_string(val));
   return getOrBuildSymbol(symbol);
 }
 
@@ -419,6 +422,8 @@ llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Value value) {
 #define Q_BINARY_INSERT(table, symbol, lhs, rhs) \
   QIUCK_INSERT(table, symbol.str(), lhs.str() + "|" + rhs.str())
 
+#define Q_INSERT_EQ(table, symbol, relation) \
+  QIUCK_INSERT(table, symbol.str(), relation.str())
 SymbolRelationOp SymbolAnalysis::buildSymbolRelation(
     const llvm::StringRef symbol, const llvm::StringRef relation,
     SymbolRelation relation_kind) {
@@ -547,29 +552,15 @@ ModuleOp SymbolAnalysis::getRootModule() const {
 }
 
 bool SymbolAnalysis::hasSymbol(const llvm::StringRef symbol) const {
-  return symbols_table_.count(symbol.str());
+  return symbol_op_table_.count(symbol.str());
 }
 
-#define PRINT_TABLE(table, relation)                              \
-  for (auto& pair : table) {                                      \
-    for (auto& relations : pair.second) {                         \
-      INFO(llc::SymbolInfer)                                      \
-          << pair.first << " [" << relation << "] " << relations; \
-    }                                                             \
-  }
 void SymbolAnalysis::debugPrintSymbols() {
-  for (auto symbols : symbols_table_) {
-    INFO(llc::SymbolInfer) << "has symbol: " << symbols.first;
+  for (auto& map : this->symbol_table_) {
+    auto name = map.first;
+    auto symbol = map.second;
+    std::cout << name << ": " << SymEngine::ccode(*symbol.get()) << std::endl;
   }
-  PRINT_TABLE(Add_table, "+")
-  PRINT_TABLE(Sub_table, "-")
-  PRINT_TABLE(Mul_table, "*")
-  PRINT_TABLE(FloorDiv_table, "//")
-  PRINT_TABLE(EQ_table, "==")
-  PRINT_TABLE(GE_table, ">=")
-  PRINT_TABLE(GT_table, ">")
-  PRINT_TABLE(LE_table, "<=")
-  PRINT_TABLE(LT_table, "<")
 }
 
 void SymbolAnalysis::_insertInModule(LLHPatternRewriter* builder,
@@ -600,5 +591,33 @@ bool SymbolAnalysis::_isConst(Value value) {
 bool SymbolAnalysis::isConst(const llvm::StringRef name) {
   return name.starts_with("c");
 }
-#undef PRINT_TABLE
+int64_t SymbolAnalysis::_getConst(const llvm::StringRef name) {
+  CHECK(llc::SymbolInfer, isConst(name));
+  std::string value = name.str();
+  int64_t res;
+  llvm::to_integer(name.substr(1), res);
+  return res;
+}
+
+SymbolicIntOp SymbolAnalysis::_insertNewSymbol(
+    const llvm::StringRef symbol_name, LLHPatternRewriter* builder) {
+  auto symbol_str = symbol_name.str();
+  auto symbol_op =
+      builder->create<SymbolicIntOp>(builder->getUnknownLoc(), symbol_name);
+  _insertInModule(builder, symbol_op);
+  symbol_op_table_[symbol_str] = symbol_op;
+  if (!isConst(symbol_name)) {
+    auto symbol = SymEngine::symbol(symbol_str);
+    symbol_table_[symbol_str] = symbol->rcp_from_this();
+  } else {
+    auto value = _getConst(symbol_name);
+    auto symbol = SymEngine::integer(value);
+    symbol_table_[symbol_str] = symbol->rcp_from_this();
+  }
+  if (!isConst(symbol_name)) {
+    auto one = getOrBuildConstSymbol(1);
+    buildSymbolRelation(symbol_name, one.getSymName(), SymbolRelation::GE);
+  }
+  return symbol_op;
+};
 }  // namespace mlir::llh

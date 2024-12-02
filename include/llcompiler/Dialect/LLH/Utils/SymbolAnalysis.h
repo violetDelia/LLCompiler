@@ -17,6 +17,7 @@
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_SYMBOLANALYSIS_H_
 
 #include <cstddef>
+#include <cstdint>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -43,7 +44,9 @@
 #include "mlir/IR/Value.h"
 #include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
-
+#include "symengine/basic.h"
+#include "symengine/dict.h"
+#include "symengine/symbol.h"
 namespace mlir::llh {
 
 class SymbolAnalysis {
@@ -95,12 +98,14 @@ class SymbolAnalysis {
   void _insertToSymbolModule(LLHPatternRewriter *builder, Operation *op) const;
   bool _isConst(Operation *op);
   bool _isConst(Value value);
+  int64_t _getConst(const llvm::StringRef name);
   bool _remove(llvm::StringRef symbol);
+  SymbolicIntOp _insertNewSymbol(const llvm::StringRef symbol_name,
+                                 LLHPatternRewriter *builder);
 
  public:
   // 未知symbol的标记
   static llvm::StringRef UNKOW_SYMBOL;
-  // 弃用
   static bool symbol_enable;
   // symbol module 的名字
   static mlir::StringRef symbol_module_name;
@@ -108,7 +113,7 @@ class SymbolAnalysis {
  private:
   static std::mutex mutex_;
   std::map<Operation *, size_t> module_map_;
-  std::map<std::string, Operation *> symbols_table_;
+  std::map<std::string, Operation *> symbol_op_table_;
   Operation *symbol_module_;
   std::atomic<int> next_symbol_id_ = 0;
   std::atomic<int> next_module_id_ = 0;
@@ -125,6 +130,10 @@ class SymbolAnalysis {
   std::map<std::string, std::unordered_set<std::string>> Sub_table;
   std::map<std::string, std::unordered_set<std::string>> FloorDiv_table;
   std::map<std::string, std::unordered_set<std::string>> Mul_table;
+
+  std::map<std::string, SymEngine::RCP<const SymEngine::Basic>> symbol_table_;
+  std::map<std::string, SymEngine::set_basic> relations_tables_;
+  std::map<std::string, std::vector<std::string>> symbol_subs_tabel_;
 };
 
 // 防止多个Module同时infersymbol

@@ -1,17 +1,6 @@
 // RUN: llc-opt --split-input-file --infer-symbol-shape %s| FileCheck %s
 //  /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape /home/lfr/LLCompiler/test/Dialect/LLH/infer_symbol_shape.mlir
 
-// CHECK: "llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
-// CHECK: "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
-// CHECK: "llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
-// CHECK: "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
-// CHECK-LABEL: block
-// CHECK-SAME: (%arg0: tensor<?x3x?x?xbf16, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, %arg1: bf16) -> tensor<?x3x?x?xbf16, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>
-func.func @block(%arg2: tensor<?x3x?x?xbf16>,%arg3: bf16) ->(tensor<?x3x?x?xbf16>) attributes {entrance}{
-  return %arg2 : tensor<?x3x?x?xbf16>
-}
-
-// -----
 // CHECK: "llh.symbolic_int"() <{sym_name = "c384"}> : () -> ()
 // CHECK-LABEL: constant
 func.func @constant() ->() attributes {entrance}{
@@ -238,3 +227,15 @@ func.func @slice(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.in
     %3 = "llh.slice"(%arg0, %c0_i64, %c0_i64, %c0_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
     return %3 : tensor<1x?x?x?xf32>
   }
+
+// -----
+// CHECK: "llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
+// CHECK: "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
+// CHECK: "llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
+// CHECK: "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
+// CHECK-LABEL: block
+// CHECK-SAME: (%arg0: tensor<?x3x?x?xbf16, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, %arg1: bf16) -> tensor<?x3x?x?xbf16, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>
+func.func @block(%arg2: tensor<?x3x?x?xbf16>,%arg3: bf16) ->(tensor<?x3x?x?xbf16>) attributes {entrance}{
+  return %arg2 : tensor<?x3x?x?xbf16>
+}
+

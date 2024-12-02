@@ -17,6 +17,9 @@ llcompiler_add_library(MLIRLLHDialect
     LLHCanonicalize.cpp
     LLHSymbolUses.cpp
 
+    ADDITIONAL_INCLUDE_DIRS
+    ${SYMENGINE_INCLUDE_DIRS}
+
     DEPENDS
     LLCLLHDialectIncGen
     LLHCanonicalizeIncGen
@@ -26,5 +29,5 @@ llcompiler_add_library(MLIRLLHDialect
     LLCSupport
     MLIRSymbolShapeOpInterfaces
     MLIRBraodcastableOpInterfaces
+    symengine
 )
-

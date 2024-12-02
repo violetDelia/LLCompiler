@@ -14,11 +14,13 @@ llcompiler_add_library(LLCLLHTransforms
   MarkAot.cpp
   DecomposeOps.cpp
 
+  ADDITIONAL_INCLUDE_DIRS
+  ${SYMENGINE_INCLUDE_DIRS}
+
   DEPENDS
   LLCLLHDialectIncGen
   LLCLLHPassIncGen
   LLHTransformLayoutToNHWCIncGen
-  
 
   LINKS PUBLIC
   MLIRLLHDialect

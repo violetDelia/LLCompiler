@@ -66,7 +66,8 @@ def LLH_TorchSymbolicIntOp : LLH_Op<"torch_symbolic_int",[]>{
         torch 框架从fx_graph直接获取的符号信息。
     }];
     let arguments = (ins 
-       LLH_StringAttr:$sym_name);
+       LLH_StringAttr:$sym_name
+       );
     let results = (outs LLH_Int64);
 }
 
@@ -107,7 +108,9 @@ def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
         symbol 信息
     }];
     let arguments = (ins 
-       SymbolNameAttr:$sym_name);
+       SymbolNameAttr:$sym_name,
+       DefaultValuedAttr<I64Attr, "1">:$min,
+       DefaultValuedAttr<I64Attr, "INT64_MAX">:$max);
 }
 
 def LLH_SymbolicCastOp: Op<LLH_Dialect,"symbolic_cast",[DeclareOpInterfaceMethods<CastOpInterface>]>{

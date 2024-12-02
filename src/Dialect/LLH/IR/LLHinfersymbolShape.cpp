@@ -386,6 +386,8 @@ INFER_FUNCTION(SliceOp) {
   auto input_type = llc::getRankTensorFrom(getInput());
   auto start = getStartIndex();
   auto end = getEndIndex();
+  COMMON_CHECK
+  return llvm::success();
 }
 
 INFER_FUNCTION(ExtractOp) {

@@ -3,6 +3,9 @@ llcompiler_add_library(LLCPipelines
     BasicPipeline.cpp
     TransformPipeline.cpp
 
+    ADDITIONAL_INCLUDE_DIRS
+    ${SYMENGINE_INCLUDE_DIRS}
+    
     DEPENDS
     LLCConversionPassIncGen
 
