@@ -127,7 +127,8 @@ def LLH_SymbolRelationMapOp : LLH_Op<"symbol_relation_map",[DeclareOpInterfaceMe
     let arguments = (ins 
        FlatSymbolRefAttr:$symbol,
        SymbolRefArrayAttr:$relations,
-       AffineMapAttr:$relation
+       AffineMapAttr:$relation,
+       LLH_StringAttr:$express
        );
 }
 

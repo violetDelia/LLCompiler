@@ -222,6 +222,5 @@ void InferSymbolShapePass::runOnOperation() {
     INFO(llc::SymbolInfer) << "CleanSymbolCache";
     analysis->cleanCache();
   }
-  analysis->debugPrintSymbols();
   LLC_RUN_OUT_PASS
 }

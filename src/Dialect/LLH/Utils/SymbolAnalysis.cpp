@@ -469,8 +469,9 @@ SymbolRelationMapOp SymbolAnalysis::buildSymbolRelation(
         FlatSymbolRefAttr::get(getOrBuildSymbol(relation))));
   }
   auto relation_attr = ArrayAttr::get(builder.getContext(), attrs);
+  auto expression = SymEngine::ccode(*getBasicSymbol(symbol));
   auto relation_op = builder.create<SymbolRelationMapOp>(
-      builder.getUnknownLoc(), symbol, relation_attr, affine_map);
+      builder.getUnknownLoc(), symbol, relation_attr, affine_map, expression);
   _insertToSymbolModule(&builder, relation_op);
   return relation_op;
 }

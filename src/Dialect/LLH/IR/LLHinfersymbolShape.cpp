@@ -576,9 +576,6 @@ INFER_FUNCTION(MaxPoolOp) {
       RankedTensorType::get(new_shape, input_type.getElementType());
   getResult().setType(new_tensor);
   auto res = getResult();
-  for (auto str : new_shape_symbol) {
-    std::cout << str.str() << std::endl;
-  }
   symbol_analsis->addEncoding(res, new_shape_symbol);
   COMMON_CHECK
   return llvm::success();
