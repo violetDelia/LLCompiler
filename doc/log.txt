@@ -3,13 +3,17 @@
                 slice --> hlo.slice
                 extract 规范化
                 ResultScaleRefine for -operation-legalization
-2024.11.21  :   add SymbolRelationMapOp op
+2024.12.1  :    add SymbolRelationMapOp op
+2024.12.3  :    refactor conv shape infer
+                refactor max pool shape infer
                 
 TODO:
+    refactor LLH_SymbolRelationMapOp --> stringattr
     refactor symbol syste use symengine
     slice symbol infer
     slice test
     extract test
+    symbol_relation check and add eq
 
 备忘：
     哪些指令不能并行？

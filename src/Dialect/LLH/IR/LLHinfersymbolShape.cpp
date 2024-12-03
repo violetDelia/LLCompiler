@@ -288,7 +288,6 @@ void ConvSymbolInfer(Operation* op) {
   op->getResult(0).setType(new_tensor);
   auto res = op->getResult(0);
   symbol_analsis->addEncoding(res, new_shape_symbol);
-  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
 }
 }  // namespace
 
@@ -503,6 +502,8 @@ INFER_FUNCTION(AdaptiveAvgPoolOp) {
 INFER_FUNCTION(MaxPoolOp) {
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
   HAS_ENCODING_RETURN(getOperation()->getResult(0))
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto context = getContext();
   auto layout_attr =
       llvm::cast_or_null<LayoutAttr>(getOperation()->getAttr(llc::LayoutAttr));
   CHECK(llc::SymbolInfer, layout_attr);
@@ -518,14 +519,19 @@ INFER_FUNCTION(MaxPoolOp) {
   auto new_shape_symbol = llvm::SmallVector<StringRef>();
   auto space_rank = kernel_shape.size();
   auto input_shape = input_type.getShape();
+  auto has_encoding = input_type.getEncoding();
+  CHECK(llc::SymbolInfer, has_encoding);
+  auto encoding = cast_or_null<EncodingAttr>(has_encoding);
+  CHECK(llc::SymbolInfer, encoding);
+  auto input_symbols = encoding.getShapeSymbols();
   for (int i = 0; i < space_rank; ++i) {
+    auto in = input_shape[i + space_rank];
+    auto pad_h = pad[i];
+    auto pad_l = pad[i + space_rank];
+    auto dilation = dilations[i];
+    auto stride = strides[i];
+    auto kernel_size = kernel_shape[i];
     if (!input_type.isDynamicDim(i + space_index)) {
-      auto in = input_shape[i + space_rank];
-      auto pad_h = pad[i];
-      auto pad_l = pad[i + space_rank];
-      auto dilation = dilations[i];
-      auto stride = strides[i];
-      auto kernel_size = kernel_shape[i];
       auto out =
           (in + pad_h + pad_l - dilation * (kernel_size - 1) - 1) / stride + 1;
       new_shape.push_back(out);
@@ -533,15 +539,26 @@ INFER_FUNCTION(MaxPoolOp) {
     } else {
       auto out = ShapedType::kDynamic;
       new_shape.push_back(out);
-      new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+      auto in_basic_symbol = symbol_analsis->getBasicSymbol(
+          input_symbols[i + space_rank].getValue());
+      auto new_symbol = div(
+          sub(add(add(in_basic_symbol, integer(pad_h)), integer(pad_l)),
+              sub(mul(integer(dilation), sub(integer(kernel_size), one)), one)),
+          integer(stride));
+      auto exp =
+          getAffineBinaryOpExpr(AffineExprKind::CeilDiv,
+                                (getAffineSymbolExpr(0, context) + pad_h +
+                                 pad_l - dilation * (kernel_size - 1) - 1),
+                                getAffineConstantExpr(stride, context)) +
+          1;
+      auto affine_map = AffineMap::get(1, 1, exp);
+      auto symbol_op = symbol_analsis->buildNewSymbol(
+          new_symbol, affine_map, {input_symbols[i + space_rank].getValue()},
+          true);
+      new_shape_symbol.push_back(symbol_op.getSymName());
     }
   }
   // batch shape
-  auto has_encoding = input_type.getEncoding();
-  CHECK(llc::SymbolInfer, has_encoding);
-  auto encoding = cast_or_null<EncodingAttr>(has_encoding);
-  CHECK(llc::SymbolInfer, encoding);
-  auto input_symbols = encoding.getShapeSymbols();
   auto batch_index = 0;
   new_shape.insert(new_shape.begin(), input_shape[batch_index]);
   auto batch_symbol_attr = input_symbols[batch_index];
@@ -555,13 +572,14 @@ INFER_FUNCTION(MaxPoolOp) {
   auto channel_out_symbol = channel_out_symbol_attr.getAttr().str();
   new_shape_symbol.insert(new_shape_symbol.begin() + channel_index,
                           channel_out_symbol);
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto new_tensor =
       RankedTensorType::get(new_shape, input_type.getElementType());
   getResult().setType(new_tensor);
   auto res = getResult();
+  for (auto str : new_shape_symbol) {
+    std::cout << str.str() << std::endl;
+  }
   symbol_analsis->addEncoding(res, new_shape_symbol);
-  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
   COMMON_CHECK
   return llvm::success();
 }
