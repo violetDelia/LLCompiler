@@ -82,7 +82,7 @@ void generateEntranceSymbol(ModuleOp module) {
                 "func.input_symbol_" + std::to_string(dim));
             CHECK(llc::SymbolInfer, dim_symbol_attr);
             symbols.push_back(dim_symbol_attr.getValue());
-            symbol_analysis->getOrBuildSymbol(dim_symbol_attr.getValue());
+            symbol_analysis->getOrBuildSymbol(dim_symbol_attr.getValue(), true);
           }
           symbol_analysis->addEncoding(arg, symbols);
         }
@@ -96,10 +96,10 @@ void generateEntranceSymbol(ModuleOp module) {
       }
     }
     auto& blocks = func.getFunctionBody().getBlocks();
-    for (auto& block : blocks) {
-      if (block.isEntryBlock()) {
+    for (auto& sub_block : blocks) {
+      if (sub_block.isEntryBlock()) {
         auto new_func_type = FunctionType::get(
-            context, new_input, block.getTerminator()->getOperandTypes());
+            context, new_input, sub_block.getTerminator()->getOperandTypes());
         func.setType(new_func_type);
       }
     }

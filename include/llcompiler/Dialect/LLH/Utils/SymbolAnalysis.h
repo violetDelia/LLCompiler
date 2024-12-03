@@ -26,28 +26,28 @@
 #include <utility>
 #include <vector>
 
-#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
-#include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
-#include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
-#include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Operation.h"
 #include "mlir/IR/Value.h"
-#include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
+#include "symengine/add.h"
 #include "symengine/basic.h"
+#include "symengine/cwrapper.h"
 #include "symengine/dict.h"
+#include "symengine/integer.h"
 #include "symengine/symbol.h"
+#include "symengine/symengine_rcp.h"
 namespace mlir::llh {
+using Symbol = SymEngine::RCP<const SymEngine::Basic>;
 
 class SymbolAnalysis {
  public:
@@ -63,17 +63,20 @@ class SymbolAnalysis {
 
  public:
   bool cleanCache();
-  SymbolicIntOp buildNewSymbol();
-  SymbolicIntOp getOrBuildSymbol(const llvm::StringRef val);
+  SymbolicIntOp buildNewSymbol(bool greater_zore = false);
+  SymbolicIntOp buildNewSymbol(const Symbol symbol, AffineMap affine_map,
+                               llvm::ArrayRef<llvm::StringRef> relations,
+                               bool greater_zore = false);
+  SymbolicIntOp getOrBuildSymbol(const llvm::StringRef val,
+                                 bool greater_zore = false);
   SymbolicIntOp getOrBuildConstSymbol(size_t val);
   SymbolBindOp buildSymbolBindFromAttr(Value value, OpBuilder *builder);
   EncodingBindOp buildEncodingBindFrom(Value value, OpBuilder *builder);
   void buildEncodingBindFrom(Operation *op, OpBuilder *builder);
   void unloadEncoding(Value value);
   void unloadEncoding(Operation *op);
-  Value addEncoding(Value value, size_t result_pos = 0);
-  Value addEncoding(Value value, llvm::ArrayRef<llvm::StringRef> symbols,
-                    size_t result_pos = 0);
+  Value addEncoding(Value value);
+  Value addEncoding(Value value, llvm::ArrayRef<llvm::StringRef> symbols);
   llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
   llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
   SymbolRelationOp buildSymbolRelation(const llvm::StringRef symbol,
@@ -83,12 +86,16 @@ class SymbolAnalysis {
                                              const llvm::StringRef relation_lhs,
                                              const llvm::StringRef relation_rhs,
                                              SymbolRelation relation_kind);
+  SymbolRelationMapOp buildSymbolRelation(
+      const llvm::StringRef symbol, AffineMap affine_map,
+      llvm::ArrayRef<llvm::StringRef> relations);
   bool replaceSymbol(const llvm::StringRef old_symbol,
                      const llvm::StringRef new_symbol);
   ModuleOp getSymbolModule() const;
   ModuleOp getRootModule() const;
   bool hasSymbol(const llvm::StringRef symbol) const;
   void debugPrintSymbols();
+  Symbol getBasicSymbol(const llvm::StringRef symbol);
 
  private:
   explicit SymbolAnalysis(Operation *op);
@@ -101,7 +108,11 @@ class SymbolAnalysis {
   int64_t _getConst(const llvm::StringRef name);
   bool _remove(llvm::StringRef symbol);
   SymbolicIntOp _insertNewSymbol(const llvm::StringRef symbol_name,
-                                 LLHPatternRewriter *builder);
+                                 LLHPatternRewriter *builder,
+                                 bool greater_zore);
+  SymbolicIntOp _insertNewSymbol(const llvm::StringRef symbol_name,
+                                 LLHPatternRewriter *builder, bool greater_zore,
+                                 const Symbol symbol);
 
  public:
   // 未知symbol的标记
@@ -131,7 +142,7 @@ class SymbolAnalysis {
   std::map<std::string, std::unordered_set<std::string>> FloorDiv_table;
   std::map<std::string, std::unordered_set<std::string>> Mul_table;
 
-  std::map<std::string, SymEngine::RCP<const SymEngine::Basic>> symbol_table_;
+  std::map<std::string, Symbol> symbol_table_;
   std::map<std::string, SymEngine::set_basic> relations_tables_;
   std::map<std::string, std::vector<std::string>> symbol_subs_tabel_;
 };

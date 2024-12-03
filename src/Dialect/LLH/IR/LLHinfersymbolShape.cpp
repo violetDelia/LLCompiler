@@ -27,6 +27,9 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/IR/AffineExpr.h"
+#include "mlir/IR/AffineExprVisitor.h"
+#include "mlir/IR/AffineMap.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -34,8 +37,21 @@
 #include "mlir/IR/Value.h"
 #include "mlir/IR/ValueRange.h"
 #include "mlir/Support/LLVM.h"
+#include "symengine/add.h"
+#include "symengine/constants.h"
+#include "symengine/integer.h"
+#include "symengine/mul.h"
+#include "symengine/printers.h"
 
 namespace mlir::llh {
+using SymEngine::add;
+using SymEngine::div;
+using SymEngine::integer;
+using SymEngine::mul;
+using SymEngine::one;
+using SymEngine::sub;
+using SymEngine::zero;
+
 #define COMMON_CHECK                              \
   for (auto res : getOperation()->getResults()) { \
     checkIsReturnOperand(res);                    \
@@ -160,6 +176,8 @@ void simplyBinarySymbolInfer(Value& value) {
 
 void ConvSymbolInfer(Operation* op) {
   // first compute the space shape
+  auto symbol_analsis = SymbolAnalysis::getInstance(op);
+  auto context = op->getContext();
   size_t space_index = 0;
   auto layout_attr =
       llvm::cast_or_null<LayoutAttr>(op->getAttr(llc::LayoutAttr));
@@ -194,14 +212,19 @@ void ConvSymbolInfer(Operation* op) {
   auto new_shape_symbol = llvm::SmallVector<StringRef>();
   auto space_rank = kernel_shape.size();
   auto input_shape = input_type.getShape();
+  auto has_encoding = input_type.getEncoding();
+  CHECK(llc::SymbolInfer, has_encoding);
+  auto encoding = cast_or_null<EncodingAttr>(has_encoding);
+  CHECK(llc::SymbolInfer, encoding);
+  auto input_symbols = encoding.getShapeSymbols();
   for (int i = 0; i < space_rank; ++i) {
+    auto in = input_shape[i + space_rank];
+    auto pad_h = pad[i];
+    auto pad_l = pad[i + space_rank];
+    auto dilation = dilations[i];
+    auto stride = strides[i];
+    auto kernel_size = kernel_shape[i];
     if (!input_type.isDynamicDim(i + space_index)) {
-      auto in = input_shape[i + space_rank];
-      auto pad_h = pad[i];
-      auto pad_l = pad[i + space_rank];
-      auto dilation = dilations[i];
-      auto stride = strides[i];
-      auto kernel_size = kernel_shape[i];
       auto out =
           (in + pad_h + pad_l - dilation * (kernel_size - 1) - 1) / stride + 1;
       new_shape.push_back(out);
@@ -209,15 +232,26 @@ void ConvSymbolInfer(Operation* op) {
     } else {
       auto out = ShapedType::kDynamic;
       new_shape.push_back(out);
-      new_shape_symbol.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+      auto in_basic_symbol = symbol_analsis->getBasicSymbol(
+          input_symbols[i + space_rank].getValue());
+      auto new_symbol = div(
+          sub(add(add(in_basic_symbol, integer(pad_h)), integer(pad_l)),
+              sub(mul(integer(dilation), sub(integer(kernel_size), one)), one)),
+          integer(stride));
+      auto exp =
+          getAffineBinaryOpExpr(AffineExprKind::CeilDiv,
+                                (getAffineSymbolExpr(0, context) + pad_h +
+                                 pad_l - dilation * (kernel_size - 1) - 1),
+                                getAffineConstantExpr(stride, context)) +
+          1;
+      auto affine_map = AffineMap::get(1, 1, exp);
+      auto symbol_op = symbol_analsis->buildNewSymbol(
+          new_symbol, affine_map, {input_symbols[i + space_rank].getValue()},
+          true);
+      new_shape_symbol.push_back(symbol_op.getSymName());
     }
   }
   // batch shape
-  auto has_encoding = input_type.getEncoding();
-  CHECK(llc::SymbolInfer, has_encoding);
-  auto encoding = cast_or_null<EncodingAttr>(has_encoding);
-  CHECK(llc::SymbolInfer, encoding);
-  auto input_symbols = encoding.getShapeSymbols();
   auto batch_index = 0;
   new_shape.insert(new_shape.begin(), input_shape[batch_index]);
   auto batch_symbol_attr = input_symbols[batch_index];
@@ -249,7 +283,6 @@ void ConvSymbolInfer(Operation* op) {
   auto channel_out_symbol = channel_out_symbol_attr.getAttr().str();
   new_shape_symbol.insert(new_shape_symbol.begin() + channel_out_index,
                           channel_out_symbol);
-  auto symbol_analsis = SymbolAnalysis::getInstance(op);
   auto new_tensor =
       RankedTensorType::get(new_shape, input_type.getElementType());
   op->getResult(0).setType(new_tensor);
