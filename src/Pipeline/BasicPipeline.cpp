@@ -75,6 +75,7 @@
 #include "stablehlo/conversions/linalg/transforms/Passes.h"
 #include "stablehlo/conversions/tosa/transforms/Passes.h"
 #include "stablehlo/transforms/Passes.h"
+
 namespace llc::pipeline {
 void buildBasicPipeline(::mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options) {
@@ -263,17 +264,10 @@ void buildBasicPipeline(::mlir::OpPassManager &pm,
       mlir::arith::ArithDialect, mlir::scf::SCFDialect,
       mlir::linalg::LinalgDialect>();
   // func Bufferize  for remove the memref.copy before one-shot,
-  pm.addPass(mlir::func::createFuncBufferizePass());
   // Bufferize
   pm.addPass(
       mlir::bufferization::createOneShotBufferizePass(bufferization_opts));
   pm.addPass(mlir::bufferization::createDropEquivalentBufferResultsPass());
-  // 跑整图会出bug
-  pm.addNestedPass<mlir::func::FuncOp>(
-      mlir::bufferization::createFinalizingBufferizePass());
-
-  // Bufferize规范化
-
   // 规范化
   pm.addPass(mlir::createCanonicalizerPass());
   // 内存inpalce

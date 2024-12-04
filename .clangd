@@ -7,8 +7,8 @@ CompileFlags:
   -I/home/lfr/LLCompiler/third_party/pybind11/include/,
   -I/home/lfr/LLCompiler/third_party/llvm-project/llvm/include/,
   -I/home/lfr/LLCompiler/third_party/llvm-project/mlir/include/,
-  -I/home/lfr/LLCompiler/third_party/symengine_loc/,
-  -I/home/lfr/LLCompiler/build/third_party/symengine_loc/,
+  -I/home/lfr/LLCompiler/third_party/symengine/,
+  -I/home/lfr/LLCompiler/build/third_party/symengine/,
   ]
 Diagnostics:
   UnusedIncludes: Strict

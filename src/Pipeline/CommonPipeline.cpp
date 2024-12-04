@@ -175,8 +175,6 @@ void buildCommonPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::bufferization::createBufferResultsToOutParamsPass(
       buffer_result_opts));                     // 内存inpalce
   pm.addPass(mlir::createCanonicalizerPass());  // 规范化
-  pm.addPass(
-      mlir::bufferization::createFinalizingBufferizePass());  // Bufferize规范化
 
   //===----------------------------------------------------------------------===//
   // lowing linalg to affine

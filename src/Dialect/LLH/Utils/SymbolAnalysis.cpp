@@ -52,10 +52,12 @@
 #include "mlir/IR/Value.h"
 #include "mlir/Pass/AnalysisManager.h"
 #include "mlir/Support/LLVM.h"
+#include "symengine/add.h"
 #include "symengine/basic.h"
 #include "symengine/dict.h"
 #include "symengine/integer.h"
 #include "symengine/logic.h"
+#include "symengine/mul.h"
 #include "symengine/printers.h"
 #include "symengine/symbol.h"
 
@@ -69,27 +71,6 @@ llvm::StringRef BuildBinaryOpSymbolBind(Operation* op) {
   auto rhs = op->getOperand(1);
   if (!SymbolAnalysis::hasSymbolAttr(rhs)) return SymbolAnalysis::UNKOW_SYMBOL;
   llvm::SmallString<4> symbol;
-  if (isConstIntegerValue(lhs) && isConstIntegerValue(rhs)) {
-    size_t val = -1;
-    if (isa<MulOp>(op)) {
-      val = getConstIntegerValue(lhs) * getConstIntegerValue(rhs);
-    } else if (isa<AddOp>(op)) {
-      val = getConstIntegerValue(lhs) + getConstIntegerValue(rhs);
-    } else if (isa<SubOp>(op)) {
-      val = getConstIntegerValue(lhs) - getConstIntegerValue(rhs);
-    } else if (isa<DivOp>(op)) {
-      val = getConstIntegerValue(lhs) / getConstIntegerValue(rhs);
-    } else {
-      UNIMPLEMENTED(llc::SymbolInfer);
-    }
-    auto maybe_new_symbol = analysis->getOrBuildConstSymbol(val);
-    llc::add_symbol_attr(op, maybe_new_symbol.getSymName());
-    symbol = maybe_new_symbol.getSymName();
-  } else {
-    auto new_symbol = analysis->buildNewSymbol();
-    llc::add_symbol_attr(op, new_symbol.getSymName());
-    symbol = new_symbol.getSymName();
-  }
   llh::SymbolRelation relation;
   if (isa<MulOp>(op)) {
     relation = SymbolRelation::Mul;
@@ -102,10 +83,11 @@ llvm::StringRef BuildBinaryOpSymbolBind(Operation* op) {
   } else {
     UNIMPLEMENTED(llc::SymbolInfer);
   }
-  analysis->buildSymbolRelation(analysis->getSymbolAttr(op),
-                                analysis->getSymbolAttr(lhs),
-                                analysis->getSymbolAttr(rhs), relation);
-  return symbol;
+  auto new_symbol = analysis->buildNewSymbolWithRelation(
+      SymbolAnalysis::getSymbolAttr(lhs), SymbolAnalysis::getSymbolAttr(rhs),
+      relation);
+  llc::add_symbol_attr(op, new_symbol.getSymName());
+  return new_symbol.getSymName();
 }
 
 llvm::StringRef BuildShapedWithConstSymbolBind(Operation* op, Value shape_value,
@@ -252,13 +234,12 @@ llvm::StringRef SymbolAnalysis::getSymbolAttr(Value value) {
   auto op = value.getDefiningOp();
   return getSymbolAttr(op);
 }
-SymEngine::RCP<const SymEngine::Basic> SymbolAnalysis::getBasicSymbol(
-    const llvm::StringRef symbol) {
+Symbol SymbolAnalysis::getBasicSymbol(const llvm::StringRef symbol) {
   CHECK(llc::SymbolInfer, symbol_table_.contains(symbol.str()));
   return symbol_table_[symbol.str()];
 }
 SymbolicIntOp SymbolAnalysis::buildNewSymbol(
-    const SymEngine::RCP<const SymEngine::Basic> symbol, AffineMap affine_map,
+    const Symbol symbol, AffineMap affine_map,
     llvm::ArrayRef<llvm::StringRef> relations, bool greater_zore) {
   auto module = symbol_module_->getParentRegion()->getParentOfType<ModuleOp>();
   CHECK(llc::MLIR, llvm::isa<ModuleOp>(module));
@@ -444,18 +425,55 @@ SymbolRelationOp SymbolAnalysis::buildSymbolRelation(
   return relation_op;
 }
 
-SymbolBinaryRelationOp SymbolAnalysis::buildSymbolRelation(
-    const llvm::StringRef symbol, const llvm::StringRef relation_lhs,
-    const llvm::StringRef relation_rhs, SymbolRelation relation_kind) {
-  CHECK(llc::SymbolInfer, hasSymbol(symbol));
+SymbolicIntOp SymbolAnalysis::buildNewSymbolWithRelation(
+    const llvm::StringRef relation_lhs, const llvm::StringRef relation_rhs,
+    SymbolRelation relation_kind) {
   CHECK(llc::SymbolInfer, hasSymbol(relation_lhs));
   CHECK(llc::SymbolInfer, hasSymbol(relation_rhs));
-  LLHPatternRewriter builder(symbol_module_->getContext());
-  auto relation_op = builder.create<SymbolBinaryRelationOp>(
-      builder.getUnknownLoc(), symbol, relation_lhs, relation_rhs,
-      relation_kind);
-  _insertToSymbolModule(&builder, relation_op);
-  return relation_op;
+  if (isConst(relation_lhs) && isConst(relation_rhs)) {
+    auto lhs_val = _getConst(relation_lhs);
+    auto rhs_val = _getConst(relation_rhs);
+    if (SymbolRelation::Add == relation_kind) {
+      return getOrBuildConstSymbol(lhs_val + rhs_val);
+    } else if (SymbolRelation::Mul == relation_kind) {
+      return getOrBuildConstSymbol(lhs_val * rhs_val);
+    } else if (SymbolRelation::Sub == relation_kind) {
+      return getOrBuildConstSymbol(lhs_val - rhs_val);
+    } else if (SymbolRelation::FloorDiv == relation_kind) {
+      return getOrBuildConstSymbol(lhs_val / rhs_val);
+    } else {
+      UNIMPLEMENTED(llc::SymbolInfer);
+    }
+  } else {
+    auto lhs = getBasicSymbol(relation_lhs);
+    auto rhs = getBasicSymbol(relation_rhs);
+    auto context = getRootModule()->getContext();
+    Symbol new_symbol;
+    AffineMap affine_map;
+    auto lhs_affine_exp = getAffineSymbolExpr(0, context);
+    auto rhs_affine_exp = getAffineSymbolExpr(1, context);
+    if (SymbolRelation::Add == relation_kind) {
+      new_symbol = SymEngine::add(lhs, rhs);
+      auto exp = lhs_affine_exp + rhs_affine_exp;
+      affine_map = AffineMap::get(1, 2, exp);
+    } else if (SymbolRelation::Mul == relation_kind) {
+      new_symbol = SymEngine::mul(lhs, rhs);
+      auto exp = lhs_affine_exp * rhs_affine_exp;
+      affine_map = AffineMap::get(1, 2, exp);
+    } else if (SymbolRelation::Sub == relation_kind) {
+      new_symbol = SymEngine::sub(lhs, rhs);
+      auto exp = lhs_affine_exp - rhs_affine_exp;
+      affine_map = AffineMap::get(1, 2, exp);
+    } else if (SymbolRelation::FloorDiv == relation_kind) {
+      new_symbol = SymEngine::div(lhs, rhs);
+      auto exp = getAffineBinaryOpExpr(AffineExprKind::FloorDiv, lhs_affine_exp,
+                                       rhs_affine_exp);
+      affine_map = AffineMap::get(1, 2, exp);
+    } else {
+      UNIMPLEMENTED(llc::SymbolInfer);
+    }
+    return buildNewSymbol(new_symbol, affine_map, {relation_lhs, relation_rhs});
+  }
 }
 SymbolRelationMapOp SymbolAnalysis::buildSymbolRelation(
     const llvm::StringRef symbol, AffineMap affine_map,

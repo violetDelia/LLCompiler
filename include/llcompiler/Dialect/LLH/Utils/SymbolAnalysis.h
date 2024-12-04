@@ -70,6 +70,15 @@ class SymbolAnalysis {
   SymbolicIntOp getOrBuildSymbol(const llvm::StringRef val,
                                  bool greater_zore = false);
   SymbolicIntOp getOrBuildConstSymbol(size_t val);
+  SymbolicIntOp buildNewSymbolWithRelation(const llvm::StringRef relation_lhs,
+                                           const llvm::StringRef relation_rhs,
+                                           SymbolRelation relation_kind);
+  SymbolRelationOp buildSymbolRelation(const llvm::StringRef symbol,
+                                       const llvm::StringRef relation,
+                                       SymbolRelation relation_kind);
+  SymbolRelationMapOp buildSymbolRelation(
+      const llvm::StringRef symbol, AffineMap affine_map,
+      llvm::ArrayRef<llvm::StringRef> relations);
   SymbolBindOp buildSymbolBindFromAttr(Value value, OpBuilder *builder);
   EncodingBindOp buildEncodingBindFrom(Value value, OpBuilder *builder);
   void buildEncodingBindFrom(Operation *op, OpBuilder *builder);
@@ -79,16 +88,7 @@ class SymbolAnalysis {
   Value addEncoding(Value value, llvm::ArrayRef<llvm::StringRef> symbols);
   llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
   llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
-  SymbolRelationOp buildSymbolRelation(const llvm::StringRef symbol,
-                                       const llvm::StringRef relation,
-                                       SymbolRelation relation_kind);
-  SymbolBinaryRelationOp buildSymbolRelation(const llvm::StringRef symbol,
-                                             const llvm::StringRef relation_lhs,
-                                             const llvm::StringRef relation_rhs,
-                                             SymbolRelation relation_kind);
-  SymbolRelationMapOp buildSymbolRelation(
-      const llvm::StringRef symbol, AffineMap affine_map,
-      llvm::ArrayRef<llvm::StringRef> relations);
+
   bool replaceSymbol(const llvm::StringRef old_symbol,
                      const llvm::StringRef new_symbol);
   ModuleOp getSymbolModule() const;
@@ -130,18 +130,6 @@ class SymbolAnalysis {
   std::atomic<int> next_module_id_ = 0;
 
  private:
-  // TODO(lfr): 并查集重写
-  std::map<std::string, std::unordered_set<std::string>> EQ_table;
-  std::map<std::string, std::unordered_set<std::string>> NOTEQ_table;
-  std::map<std::string, std::unordered_set<std::string>> GT_table;
-  std::map<std::string, std::unordered_set<std::string>> LT_table;
-  std::map<std::string, std::unordered_set<std::string>> GE_table;
-  std::map<std::string, std::unordered_set<std::string>> LE_table;
-  std::map<std::string, std::unordered_set<std::string>> Add_table;
-  std::map<std::string, std::unordered_set<std::string>> Sub_table;
-  std::map<std::string, std::unordered_set<std::string>> FloorDiv_table;
-  std::map<std::string, std::unordered_set<std::string>> Mul_table;
-
   std::map<std::string, Symbol> symbol_table_;
   std::map<std::string, SymEngine::set_basic> relations_tables_;
   std::map<std::string, std::vector<std::string>> symbol_subs_tabel_;

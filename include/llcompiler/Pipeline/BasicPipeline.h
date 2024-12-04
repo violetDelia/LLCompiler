@@ -59,6 +59,7 @@ struct BasicPipelineOptions
                                   llvm::cl::desc("layout"),
                                   llvm::cl::init(mlir::llh::Layout::NHWC)};
 };
+// Because LLVM update cannot be used
 void buildBasicPipeline(mlir::OpPassManager &pm,
                         const BasicPipelineOptions &options);
 void registerBasicPipeline();

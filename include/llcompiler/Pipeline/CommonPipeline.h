@@ -72,6 +72,7 @@ struct CommonPipelineOptions
   Option<unsigned> indexBitWidth{
       *this, "index-width", llvm::cl::desc("index-width"), llvm::cl::init(32)};
 };
+// Because LLVM update cannot be used
 void buildCommonPipeline(::mlir::OpPassManager &pm,
                          const CommonPipelineOptions &options);
 void registerCommonPipeline();

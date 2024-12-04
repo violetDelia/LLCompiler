@@ -6,9 +6,10 @@
 2024.12.1  :    add SymbolRelationMapOp op
 2024.12.3  :    refactor conv shape infer
                 refactor max pool shape infer
+2024.12.3  :    refactor add/sub/... shape infer
+                remove symengine loc and add to submodule
                 
 TODO:
-    refactor LLH_SymbolRelationMapOp --> stringattr
     refactor symbol syste use symengine
     slice symbol infer
     slice test
