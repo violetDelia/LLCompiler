@@ -36,29 +36,6 @@ func.func @constant() ->() attributes {entrance}{
 }
 
 // -----
-// CHECK: #map = affine_map<(d0)[s0] -> ((s0 - 1) ceildiv 2 + 1)>
-// CHECK-LABEL: conv
-func.func @conv(%arg0: tensor<?x3x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "c3", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"} ) ->() attributes {entrance}{
-  %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:46.139597+08:00/L__self___conv1.weight.npy"}> : () -> tensor<64x3x7x7xf32>
-  // CHECK: llh.conv
-  // CHECK-SAME: tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s1, @s3>>
-  %126 = "llh.conv"(%arg0, %4) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 7, 7>, layout = #llh.Layout<NCHW>, pad = array<i64: 3, 3, 3, 3>, stride = array<i64: 2, 2>}> : (tensor<?x3x?x?xf32>, tensor<64x3x7x7xf32>) -> tensor<*xf32>
-  return 
-  // CHECK: llh.symbol_relation_map
-  // CHECK: llh.symbol_relation_map
-}
-
-// -----
-// CHECK-LABEL: conv_static
-func.func @conv_static(%arg0: tensor<2x3x224x224xf32>) ->() attributes {entrance}{
-  %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:46.139597+08:00/L__self___conv1.weight.npy"}> : () -> tensor<64x3x7x7xf32>
-  // CHECK: llh.conv
-  // CHECK-SAME:-> tensor<2x64x109x210xf32, #llh.encoding<shapes = @c2, @c64, @c109, @c210>>
-  %126 = "llh.conv"(%arg0, %4) <{dilation = array<i64: 2, 3>, group = 1 : i64, kernel_shape = array<i64: 7, 7>, layout = #llh.Layout<NCHW>, pad = array<i64: 3, 2, 3, 2>, stride = array<i64: 2, 1>}> : (tensor<2x3x224x224xf32>, tensor<64x3x7x7xf32>) -> tensor<*xf32>
-  return 
-}
-
-// -----
 // CHECK-LABEL: transpose
 func.func @transpose(%arg0: tensor<?x3x?x?xf32>) -> () attributes {entrance} {
   // CHECK: llh.transpose
@@ -205,6 +182,7 @@ func.func @matmul(%arg0: tensor<?x512xf32>) -> tensor<*xf32> attributes {entranc
 }
 
 // -----
+// CHECK: #map = affine_map<(d0)[s0, s1] -> (s0 - s1)>
 func.func @stride_slice(%arg0: tensor<?x?x?x?xf32>) -> () attributes {entrance} {
     %c0_i64 = arith.constant 0 : i64
     %c1_i64 = arith.constant 1 : i64
@@ -213,6 +191,35 @@ func.func @stride_slice(%arg0: tensor<?x?x?x?xf32>) -> () attributes {entrance} 
     %0 = "llh.dim"(%arg0, %c1_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
     %1 = "llh.dim"(%arg0, %c2_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
     %2 = "llh.dim"(%arg0, %c3_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
+    // CHECK: llh.stride_slice
+    // CHECK-SAME: tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s4, @s5, @s3>>
     %3 = "llh.stride_slice"(%arg0, %c0_i64, %c2_i64, %c3_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
     return 
-  }
+
+  // CHECK: llh.symbol_relation_map
+  // CHECK-SMAE: express = "-3 + s2"
+  // CHECK: llh.symbol_relation_map
+  // CHECK-SMAE: express = "-2 + s1"
+}
+
+// -----
+// CHECK: #map = affine_map<(d0)[s0] -> ((s0 - 1) ceildiv 2 + 1)>
+// CHECK-LABEL: conv
+func.func @conv(%arg0: tensor<?x3x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "c3", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"} ) ->() attributes {entrance}{
+  %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:46.139597+08:00/L__self___conv1.weight.npy"}> : () -> tensor<64x3x7x7xf32>
+  // CHECK: llh.conv
+  // CHECK-SAME: tensor<?x64x?x?xf32, #llh.encoding<shapes = @s0, @c64, @s1, @s1>>
+  %126 = "llh.conv"(%arg0, %4) <{dilation = array<i64: 1, 1>, group = 1 : i64, kernel_shape = array<i64: 7, 7>, layout = #llh.Layout<NCHW>, pad = array<i64: 3, 3, 3, 3>, stride = array<i64: 2, 2>}> : (tensor<?x3x?x?xf32>, tensor<64x3x7x7xf32>) -> tensor<*xf32>
+  return 
+  // CHECK: llh.symbol_relation_map
+}
+
+// -----
+// CHECK-LABEL: conv_static
+func.func @conv_static(%arg0: tensor<2x3x224x224xf32>) ->() attributes {entrance}{
+  %4 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-29T23:48:46.139597+08:00/L__self___conv1.weight.npy"}> : () -> tensor<64x3x7x7xf32>
+  // CHECK: llh.conv
+  // CHECK-SAME:-> tensor<2x64x109x210xf32, #llh.encoding<shapes = @c2, @c64, @c109, @c210>>
+  %126 = "llh.conv"(%arg0, %4) <{dilation = array<i64: 2, 3>, group = 1 : i64, kernel_shape = array<i64: 7, 7>, layout = #llh.Layout<NCHW>, pad = array<i64: 3, 2, 3, 2>, stride = array<i64: 2, 1>}> : (tensor<2x3x224x224xf32>, tensor<64x3x7x7xf32>) -> tensor<*xf32>
+  return 
+}

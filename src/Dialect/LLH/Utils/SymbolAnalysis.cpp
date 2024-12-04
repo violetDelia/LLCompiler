@@ -258,6 +258,9 @@ Symbol SymbolAnalysis::getBasicSymbol(const llvm::StringRef symbol) {
 SymbolicIntOp SymbolAnalysis::buildNewSymbol(
     const Symbol symbol, AffineMap affine_map,
     llvm::ArrayRef<llvm::StringRef> relations, bool greater_zore) {
+  auto express = SymEngine::ccode(*symbol);
+  if (expressions_map_.contains(express))
+    return symbol_op_table_[expressions_map_[express]];
   auto module = symbol_module_->getParentRegion()->getParentOfType<ModuleOp>();
   CHECK(llc::MLIR, llvm::isa<ModuleOp>(module));
   std::string symbol_name = "s" + std::to_string(next_symbol_id_);
@@ -269,7 +272,7 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbol(
   LLHPatternRewriter builder(symbol_module_->getContext());
   auto symbol_op =
       _insertNewSymbol(symbol_name, &builder, greater_zore, symbol);
-  buildSymbolRelation(symbol_name, affine_map, relations);
+  _buildSymbolRelation(symbol_name, affine_map, relations);
   return symbol_op;
 }
 
@@ -492,7 +495,7 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbolWithRelation(
     return buildNewSymbol(new_symbol, affine_map, {relation_lhs, relation_rhs});
   }
 }
-SymbolRelationMapOp SymbolAnalysis::buildSymbolRelation(
+SymbolRelationMapOp SymbolAnalysis::_buildSymbolRelation(
     const llvm::StringRef symbol, AffineMap affine_map,
     llvm::ArrayRef<llvm::StringRef> relations) {
   CHECK(llc::SymbolInfer, hasSymbol(symbol));
@@ -550,8 +553,8 @@ void SymbolAnalysis::debugPrintSymbols() {
   }
 }
 
-void SymbolAnalysis::_insertInModule(LLHPatternRewriter* builder,
-                                     Operation* op) const {
+void SymbolAnalysis::_insertSymbolicIntOp(LLHPatternRewriter* builder,
+                                          Operation* op) const {
   ModuleOp module = getRootModule();
   CHECK(llc::SymbolInfer, module);
   auto& block = module->getRegion(0).getBlocks().front();
@@ -592,15 +595,17 @@ SymbolicIntOp SymbolAnalysis::_insertNewSymbol(
   auto symbol_str = symbol_name.str();
   auto symbol_op =
       builder->create<SymbolicIntOp>(builder->getUnknownLoc(), symbol_name);
-  _insertInModule(builder, symbol_op);
+  _insertSymbolicIntOp(builder, symbol_op);
   symbol_op_table_[symbol_str] = symbol_op;
   if (!isConst(symbol_name)) {
     auto symbol = SymEngine::symbol(symbol_str);
     symbol_table_[symbol_str] = symbol->rcp_from_this();
+    expressions_map_[SymEngine::ccode(*symbol)] = symbol_str;
   } else {
     auto value = getIntValue(symbol_name);
     auto symbol = SymEngine::integer(value);
     symbol_table_[symbol_str] = symbol->rcp_from_this();
+    expressions_map_[SymEngine::ccode(*symbol)] = symbol_str;
   }
   if (!isConst(symbol_name) && greater_zore) {
     auto one = getOrBuildConstSymbol(1);
@@ -615,9 +620,11 @@ SymbolicIntOp SymbolAnalysis::_insertNewSymbol(
   auto symbol_str = symbol_name.str();
   auto symbol_op =
       builder->create<SymbolicIntOp>(builder->getUnknownLoc(), symbol_name);
-  _insertInModule(builder, symbol_op);
+  _insertSymbolicIntOp(builder, symbol_op);
   symbol_op_table_[symbol_str] = symbol_op;
   symbol_table_[symbol_str] = symbol->rcp_from_this();
+  auto express = SymEngine::ccode(*symbol);
+  expressions_map_[express] = symbol_str;
   if (!isConst(symbol_name) && greater_zore) {
     auto one = getOrBuildConstSymbol(1);
     buildSymbolRelation(symbol_name, one.getSymName(), SymbolRelation::GE);

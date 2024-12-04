@@ -9,8 +9,10 @@
 2024.12.3  :    refactor add/sub/... shape infer
                 remove symengine loc and add to submodule
                 add StrideSliceOp
+                add StrideSliceOp shape infer
                 
 TODO:
+    add expression set while build new symbol
     refactor symbol syste use symengine
     slice symbol infer
     slice test
