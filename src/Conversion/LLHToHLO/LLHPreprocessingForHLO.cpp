@@ -126,8 +126,8 @@ struct ExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
     llvm::SmallVector<Value> stride(rank, one);
     slice_out_shape[0] = 1;
     auto slice_out_type = input_type.clone(slice_out_shape);
-    auto slice = rewriter.create<SliceOp>(loc, slice_out_type, input, start,
-                                          dims, stride);
+    auto slice = rewriter.create<StrideSliceOp>(loc, slice_out_type, input,
+                                                start, dims, stride);
     if (rank != 1) {
       dims.erase(dims.begin());
       auto reshape = rewriter.create<ReshapeOp>(loc, op.getType(), slice, dims);

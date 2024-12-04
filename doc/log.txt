@@ -8,6 +8,7 @@
                 refactor max pool shape infer
 2024.12.3  :    refactor add/sub/... shape infer
                 remove symengine loc and add to submodule
+                add StrideSliceOp
                 
 TODO:
     refactor symbol syste use symengine

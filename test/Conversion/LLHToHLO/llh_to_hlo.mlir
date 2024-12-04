@@ -126,8 +126,8 @@ func.func @slice(%arg0: tensor<?x?x?x?xf32> ) -> tensor<1x?x?x?xf32> attributes 
     %1 = "llh.dim"(%arg0, %c2_i64) <{symbol = @s2}> : (tensor<?x?x?x?xf32>, i64) -> i64
     %2 = "llh.dim"(%arg0, %c3_i64) <{symbol = @s3}> : (tensor<?x?x?x?xf32>, i64) -> i64
     // CHECK: stablehlo.real_dynamic_slice
-    // CHECK-NOT: llh.slice
-    %3 = "llh.slice"(%arg0, %c0_i64, %c0_i64, %c0_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
+    // CHECK-NOT: llh.stride_slice
+    %3 = "llh.stride_slice"(%arg0, %c0_i64, %c0_i64, %c0_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
     return %3 : tensor<1x?x?x?xf32>
   }
 

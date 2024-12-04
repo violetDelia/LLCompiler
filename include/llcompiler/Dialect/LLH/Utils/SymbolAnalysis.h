@@ -57,9 +57,8 @@ class SymbolAnalysis {
   static bool isSymbolicInferOp(Operation *op);
   static bool hasSymbolAttr(Operation *op);
   static bool hasSymbolAttr(Value value);
-  static llvm::StringRef getSymbolAttr(Operation *op);
-  static llvm::StringRef getSymbolAttr(Value value);
   static bool isConst(const llvm::StringRef name);
+  static int64_t getIntValue(const llvm::StringRef name);
 
  public:
   bool cleanCache();
@@ -79,6 +78,8 @@ class SymbolAnalysis {
   SymbolRelationMapOp buildSymbolRelation(
       const llvm::StringRef symbol, AffineMap affine_map,
       llvm::ArrayRef<llvm::StringRef> relations);
+  llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
+  llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
   SymbolBindOp buildSymbolBindFromAttr(Value value, OpBuilder *builder);
   EncodingBindOp buildEncodingBindFrom(Value value, OpBuilder *builder);
   void buildEncodingBindFrom(Operation *op, OpBuilder *builder);
@@ -86,8 +87,6 @@ class SymbolAnalysis {
   void unloadEncoding(Operation *op);
   Value addEncoding(Value value);
   Value addEncoding(Value value, llvm::ArrayRef<llvm::StringRef> symbols);
-  llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
-  llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
 
   bool replaceSymbol(const llvm::StringRef old_symbol,
                      const llvm::StringRef new_symbol);
@@ -105,8 +104,9 @@ class SymbolAnalysis {
   void _insertToSymbolModule(LLHPatternRewriter *builder, Operation *op) const;
   bool _isConst(Operation *op);
   bool _isConst(Value value);
-  int64_t _getConst(const llvm::StringRef name);
   bool _remove(llvm::StringRef symbol);
+  llvm::StringRef _getSymbolAttr(Operation *op);
+  llvm::StringRef _getSymbolAttr(Value value);
   SymbolicIntOp _insertNewSymbol(const llvm::StringRef symbol_name,
                                  LLHPatternRewriter *builder,
                                  bool greater_zore);

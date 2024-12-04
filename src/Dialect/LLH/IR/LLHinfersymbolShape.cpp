@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstddef>
 #include <cstdint>
+#include <iterator>
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
@@ -22,6 +23,7 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
@@ -408,16 +410,35 @@ UNIMPLEMENTED_INFER_FUNCTION(LayerNormOp)
 UNIMPLEMENTED_INFER_FUNCTION(CatOp)
 UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
 UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
-
-INFER_FUNCTION(SliceOp) {
+UNIMPLEMENTED_INFER_FUNCTION(SliceOp)
+INFER_FUNCTION(StrideSliceOp) {
   HAS_ENCODING_RETURN(getResult())
   NO_ENCODING_RETURN(getInput())
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
   auto input_type = llc::getRankTensorFrom(getInput());
-  auto start = getStartIndex();
-  auto end = getEndIndex();
+  auto input_symbols = llc::getEncodingFrom(input_type).getShapeSymbols();
+  auto start_indexs = getStartIndex();
+  auto end_indexs = getEndIndex();
+  auto strides = getStrides();
+  for (auto [input_symbol, start, end, stride] :
+       llvm::zip(input_symbols, start_indexs, end_indexs, strides)) {
+    auto start_symbol = symbol_analsis->getOrBuildSymbolAttrFrom(start);
+    auto end_symbol = symbol_analsis->getOrBuildSymbolAttrFrom(end);
+    auto stride_symbol = symbol_analsis->getOrBuildSymbolAttrFrom(stride);
+    auto tem_symbol = symbol_analsis->buildNewSymbolWithRelation(
+        end_symbol, start_symbol, SymbolRelation::Sub);
+    auto res_symbol = symbol_analsis->buildNewSymbolWithRelation(
+        tem_symbol.getSymName(), stride_symbol, SymbolRelation::FloorDiv);
+    new_shapes.push_back(symbol_analsis->getIntValue(res_symbol.getSymName()));
+    symbols.push_back(res_symbol.getSymName());
+  }
+  auto new_tensor =
+      RankedTensorType::get(new_shapes, input_type.getElementType());
+  getResult().setType(new_tensor);
+  auto res = getResult();
+  symbol_analsis->addEncoding(res, symbols);
   COMMON_CHECK
   return llvm::success();
 }

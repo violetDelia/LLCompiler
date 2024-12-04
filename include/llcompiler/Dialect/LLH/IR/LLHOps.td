@@ -251,12 +251,21 @@ def LLH_ExtractOp : LLH_SymbolOp<"extract",[]>{
     let hasCanonicalizer = 1;
 }
 
-def LLH_SliceOp : LLH_SymbolOp<"slice",[AttrSizedOperandSegments]>{
+def LLH_StrideSliceOp : LLH_SymbolOp<"stride_slice",[AttrSizedOperandSegments]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         Variadic<LLH_Int64>:$start_index,
         Variadic<LLH_Int64>:$end_index,
         Variadic<LLH_Int64>:$strides);
+    let results = (outs 
+        LLH_Tensor);
+}
+
+def LLH_SliceOp : LLH_SymbolOp<"slice",[AttrSizedOperandSegments]>{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        Variadic<LLH_Int64>:$start_index,
+        Variadic<LLH_Int64>:$end_index);
     let results = (outs 
         LLH_Tensor);
     let hasCanonicalizer = 1;
@@ -545,177 +554,4 @@ def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{
 // }
 
 
-//Concat
-//ConcatFromSequence
-//ConstantOfShape
-//Conv
-//ConvInteger
-//ConvTranspose
-//Cos
-//Cosh
-//CumSum
-//DFT
-//DeformConv
-//DepthToSpace
-//DequantizeLinear
-//Det
-//Div
-//Dropout
-//DynamicQuantizeLinear
-//Einsum
-//Elu
-//Equal
-//Erf
-//Exp
-//Expand
-//EyeLike
-//Flatten
-//Floor
-//GRU
-//Gather
-//GatherElements
-//GatherND
-//Gelu
-//Gemm
-//GlobalAveragePool
-//GlobalLpPool
-//GlobalMaxPool
-//Greater
-//GreaterOrEqual
-//GridSample
-//GroupNormalization
-//HammingWindow
-//HannWindow
-//HardSigmoid
-//HardSwish
-//Hardmax
-//Identity
-//If
-//ImageDecoder
-//InstanceNormalization
-//IsInf
-//IsNaN
-//LRN
-//LSTM
-//LayerNormalization
-//LeakyRelu
-//Less
-//LessOrEqual
-//Log
-//LogSoftmax
-//Loop
-//LpNormalization
-//LpPool
-//MatMul
-//MatMulInteger
-// /Max
-//MaxPool
-//MaxRoiPool
-//MaxUnpool
-//Mean
-//MeanVarianceNormalization
-//MelWeightMatrix
-//Min
-//Mish
-//Mod
-//Mul
-//Multinomial
-//Neg
-//NegativeLogLikelihoodLoss
-//NonMaxSuppression
-//NonZero
-//Not
-//OneHot
-//Optional
-//OptionalGetElement
-//OptionalHasElement
-//Or
-//PRelu
-//Pad
-//Pow
-//QLinearConv
-//QLinearMatMul
-//QuantizeLinear
-//RNN
-//RandomNormal
-//RandomNormalLike
-//RandomUniform
-//RandomUniformLike
-//Range
-//Reciprocal
-//ReduceL1
-//ReduceL2
-//ReduceLogSum
-//ReduceLogSumExp
-//ReduceMax
-//ReduceMean
-//ReduceMin
-//ReduceProd
-//ReduceSum
-//ReduceSumSquare
-//RegexFullMatch
-//Relu
-//Reshape
-//Resize
-//ReverseSequence
-//RoiAlign
-//Round
-//STFT
-//Scan
-//Scatter
-//ScatterElements
-//ScatterND
-//Selu
-//SequenceAt
-//SequenceConstruct
-//SequenceEmpty
-//SequenceErase
-//SequenceInsert
-//SequenceLength
-//SequenceMap
-//Shape
-//Shrink
-//Sigmoid
-//Sign
-//Sin
-//Sinh
-//Size
-//Slice
-//Softmax
-//SoftmaxCrossEntropyLoss
-//Softplus
-//Softsign
-//SpaceToDepth
-//Split
-//SplitToSequence
-//Sqrt
-//Squeeze
-//StringConcat
-//StringNormalizer
-//StringSplit
-//Sub
-//Sum
-//Tan
-//Tanh
-//TfIdfVectorizer
-//ThresholdedRelu
-//Tile
-//TopK
-//Transpose
-//Trilu
-//Unique
-//Unsqueeze
-//Upsample
-//Where
-//Xor
-
-
-
-
-
-//BernoulliOp
-//BlackmanWindow
-//CenterCropPad
-//Col2Im
-//AffineGrid
 #endif // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_

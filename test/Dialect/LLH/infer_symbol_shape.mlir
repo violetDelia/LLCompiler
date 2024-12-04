@@ -205,7 +205,7 @@ func.func @matmul(%arg0: tensor<?x512xf32>) -> tensor<*xf32> attributes {entranc
 }
 
 // -----
-func.func @slice(%arg0: tensor<?x?x?x?xf32>) -> tensor<1x?x?x?xf32> attributes {entrance} {
+func.func @stride_slice(%arg0: tensor<?x?x?x?xf32>) -> () attributes {entrance} {
     %c0_i64 = arith.constant 0 : i64
     %c1_i64 = arith.constant 1 : i64
     %c2_i64 = arith.constant 2 : i64
@@ -213,6 +213,6 @@ func.func @slice(%arg0: tensor<?x?x?x?xf32>) -> tensor<1x?x?x?xf32> attributes {
     %0 = "llh.dim"(%arg0, %c1_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
     %1 = "llh.dim"(%arg0, %c2_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
     %2 = "llh.dim"(%arg0, %c3_i64) : (tensor<?x?x?x?xf32>, i64) -> i64
-    %3 = "llh.slice"(%arg0, %c0_i64, %c0_i64, %c0_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
-    return %3 : tensor<1x?x?x?xf32>
+    %3 = "llh.stride_slice"(%arg0, %c0_i64, %c2_i64, %c3_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
+    return 
   }

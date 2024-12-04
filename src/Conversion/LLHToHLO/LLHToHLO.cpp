@@ -271,12 +271,12 @@ struct MaxPoolOpLowing : public OpConversionPattern<MaxPoolOp> {
   }
 };
 
-struct SliceOpLowing : public OpConversionPattern<SliceOp> {
-  using OpConversionPattern<SliceOp>::OpConversionPattern;
+struct SliceOpLowing : public OpConversionPattern<StrideSliceOp> {
+  using OpConversionPattern<StrideSliceOp>::OpConversionPattern;
 
-  LogicalResult match(SliceOp op) const { return llvm::success(); }
+  LogicalResult match(StrideSliceOp op) const { return llvm::success(); }
 
-  void rewrite(SliceOp op, OpAdaptor adaptor,
+  void rewrite(StrideSliceOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const {
     auto loc = op->getLoc();
     auto start_index = op.getStartIndex();
