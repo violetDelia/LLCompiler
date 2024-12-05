@@ -137,10 +137,9 @@ struct DimOpToConst : public LLHOpRewritePattern<DimOp> {
     return llvm::success();
   }
   void rewrite(DimOp op, LLHPatternRewriter &rewriter) const final {
-    auto loc = op->getLoc();
     auto value = llh::getConstIntegerValue(op);
-    auto new_op = rewriter.replaceOpWithNewOp<ConstantOp>(
-        op, rewriter.getI64IntegerAttr(value));
+    rewriter.replaceOpWithNewOp<ConstantOp>(op,
+                                            rewriter.getI64IntegerAttr(value));
   }
 };
 }  // namespace
@@ -170,7 +169,6 @@ struct MoveSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
     return llvm::failure();
   }
   void rewrite(SymbolBindOp op, LLHPatternRewriter &rewriter) const final {
-    auto loc = op->getLoc();
     auto befor_cast = op.getOperand();
     auto root = befor_cast.getDefiningOp()->getOperand(0);
     auto new_op = rewriter.replaceOpWithNewOp<SymbolBindOp>(
@@ -328,7 +326,6 @@ struct AddConvLayoutAttr : public LLHOpRewritePattern<OP> {
   }
 
   void rewrite(OP op, LLHPatternRewriter &rewriter) const final {
-    auto context = op->getContext();
     auto module = op->template getParentOfType<ModuleOp>();
     auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
     CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
@@ -358,7 +355,6 @@ struct AddLayoutAttr : public LLHOpRewritePattern<OP> {
   }
 
   void rewrite(OP op, LLHPatternRewriter &rewriter) const final {
-    auto context = op->getContext();
     auto module = op->template getParentOfType<ModuleOp>();
     auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
     CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
@@ -413,10 +409,7 @@ struct ExtractOpRefine : public LLHOpRewritePattern<ExtractOp> {
     auto loc = op.getLoc();
     auto index = op.getIndex();
     auto input = op.getInput();
-    auto dim = rewriter.create<DimOp>(loc, input, 0);3,-1;
-    auto index_value = llh::getConstIntegerValue(index);
-    auto offset = rewriter.create<ConstantOp>(
-        loc, rewriter.getI64IntegerAttr(index_value));
+    auto dim = rewriter.create<DimOp>(loc, input, 0);
     auto new_index = rewriter.create<AddOp>(loc, rewriter.getI64Type(),
                                             ValueRange{dim, index});
     op->setOperand(1, new_index);
@@ -458,13 +451,15 @@ struct FoldReshapeOp : public LLHOpRewritePattern<ReshapeOp> {
   }
   void rewrite(ReshapeOp op, LLHPatternRewriter &rewriter) const final {
     auto res = op.getResult();
-    auto tensor_type = llc::getRankTensorFrom(res);
+    auto type = llc::getRankTensorFrom(res);
     auto const_op = llvm::dyn_cast<ConstantOp>(op.getInput().getDefiningOp());
     auto value = llvm::dyn_cast_or_null<DenseElementsAttr>(const_op.getValue());
     CHECK(llc::MLIR, value);
+    auto new_type =
+        RankedTensorType::get(type.getShape(), type.getElementType());
     auto new_value =
-        DenseElementsAttr::getFromRawBuffer(tensor_type, value.getRawData());
-    auto new_const = rewriter.replaceOpWithNewOp<ConstantOp>(op, new_value);
+        DenseElementsAttr::getFromRawBuffer(new_type, value.getRawData());
+    rewriter.replaceOpWithNewOp<ConstantOp>(op, new_value);
   }
 };
 }  // namespace

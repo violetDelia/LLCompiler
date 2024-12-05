@@ -351,7 +351,6 @@ def torch_build_func(
     output_types = []
     return_values = []
     arg_attrs = []
-    graph.print_tabular()
     for node in graph.nodes:
         if node.op == "placeholder":
             # 张量输入
