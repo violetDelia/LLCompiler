@@ -156,22 +156,6 @@ func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
 }
 
 // -----
-func.func @extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"}) -> tensor<?x?xf32> attributes {entrance} {
-    %0 = "llh.constant"() <{symbol = @c3, value = 3 : i64}> : () -> i64
-    %1 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64
-    %2 = "llh.constant"() <{symbol = @c1, value = 1 : i64}> : () -> i64
-    %3 = "llh.constant"() <{symbol = @c0, value = 0 : i64}> : () -> i64
-    %4 = "llh.constant"() <{symbol = @c18446744073709551615, value = -1 : i64}> : () -> i64
-    // CHECK: llh.extract
-    // CHECK-SAME:-> tensor<?x?x?xf32, #llh.encoding<shapes = @s1, @s2, @s2>>
-    %5 = "llh.extract"(%arg0, %3) : (tensor<?x?x?x?xf32>, i64) -> tensor<?x?x?xf32>
-    // CHECK: llh.extract
-    // CHECK-SAME:-> tensor<?x?xf32, #llh.encoding<shapes = @s2, @s2>>
-    %6 = "llh.extract"(%5, %4) : (tensor<?x?x?xf32>, i64) -> tensor<?x?xf32>
-    return %6 : tensor<?x?xf32>
-}
-
-// -----
 func.func @matmul(%arg0: tensor<?x512xf32>) -> tensor<*xf32> attributes {entrance} {
     // CHECK: llh.matmul
     // CHECK-SAME: tensor<?x10xf32, #llh.encoding<shapes = @s0, @c10>>
@@ -223,4 +207,26 @@ func.func @conv_static(%arg0: tensor<2x3x224x224xf32>) ->() attributes {entrance
   // CHECK-SAME:-> tensor<2x64x109x210xf32, #llh.encoding<shapes = @c2, @c64, @c109, @c210>>
   %126 = "llh.conv"(%arg0, %4) <{dilation = array<i64: 2, 3>, group = 1 : i64, kernel_shape = array<i64: 7, 7>, layout = #llh.Layout<NCHW>, pad = array<i64: 3, 2, 3, 2>, stride = array<i64: 2, 1>}> : (tensor<2x3x224x224xf32>, tensor<64x3x7x7xf32>) -> tensor<*xf32>
   return 
+}
+
+// -----
+func.func @extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"}) -> tensor<*xf32> attributes {entrance} {
+    %0 = "llh.constant"() <{symbol = @c3, value = 3 : i64}> : () -> i64
+    %1 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64
+    %2 = "llh.constant"() <{symbol = @c1, value = 1 : i64}> : () -> i64
+    %3 = "llh.constant"() <{symbol = @c0, value = 0 : i64}> : () -> i64
+    %4 = "llh.constant"() <{symbol = @c18446744073709551615, value = -1 : i64}> : () -> i64
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<?x?x?xf32, #llh.encoding<shapes = @s1, @s2, @s2>>
+    %5 = "llh.extract"(%arg0, %3) : (tensor<?x?x?x?xf32>, i64) -> tensor<*xf32>
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<?x?xf32, #llh.encoding<shapes = @s2, @s2>>
+    %6 = "llh.extract"(%5, %4) : (tensor<*xf32>, i64) -> tensor<*xf32>
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<?xf32, #llh.encoding<shapes = @s2>>
+    %7 = "llh.extract"(%6, %3) : (tensor<*xf32>, i64) -> tensor<*xf32>
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<1xf32, #llh.encoding<shapes = @c1>>
+    %8 = "llh.extract"(%7, %3) : (tensor<*xf32>, i64) -> tensor<*xf32>
+    return %8 : tensor<*xf32>
 }

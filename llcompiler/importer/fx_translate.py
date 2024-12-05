@@ -41,17 +41,17 @@ from xdsl.dialects.builtin import (
     ArrayAttr,
 )
 from xdsl.ir.affine.affine_map import AffineMap
-from ...dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
-from ...core.utility import Dict_Registry
+from ..dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
+from ..core.utility import Dict_Registry
 from datetime import datetime
 import torch.nn
 from torch._subclasses.fake_tensor import FakeTensor
-from ...core.utility import run_time
+from ..core.utility import run_time
 import os
 import numpy as np
 import torch.fx
 from torch.fx.experimental.sym_node import SymNode
-from ...dialect.llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp
+from ..dialect.llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp
 from xdsl.dialects.func import Return, FuncOp
 import sympy
 
@@ -215,8 +215,7 @@ SPECIAL_RESULT_FAKE_INDEX_MAP = {
 }
 
 # 一些特殊的op，实际getitem 拿到是输入
-SPECIAL_GETITEM_IS_OPERAND_MAP = {
-}
+SPECIAL_GETITEM_IS_OPERAND_MAP = {}
 
 
 def get_result_type(

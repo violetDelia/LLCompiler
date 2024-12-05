@@ -1,4 +1,3 @@
-
 import torch.fx
 from xdsl.context import MLContext
 from xdsl.dialects.func import Func, FuncOp, Return
@@ -7,7 +6,7 @@ from xdsl.ir import SSAValue, BlockArgument, Region, Block
 import torch.utils._pytree as pytree
 from xdsl.printer import Printer
 from ..dialect.llh import ConvBiasOp, LLH, WeightOp
-from .onnx.onnx_translate import (
+from .onnx_translate import (
     onnx_weight_translate,
     onnx_value_translate,
     onnx_node_translate,
@@ -37,7 +36,7 @@ from ..dialect.llh import TorchSymbolicIntOp
 import tempfile
 import numpy as np
 import os
-from .fx_graph import (
+from .fx_translate import (
     torch_symbol_translate,
     torch_fake_tensor_translate,
     torch_module_translate,

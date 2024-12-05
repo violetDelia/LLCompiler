@@ -452,9 +452,14 @@ INFER_FUNCTION(ExtractOp) {
   auto input_type = llc::getRankTensorFrom(getInput());
   auto input_symbols = llc::getEncodingFrom(input_type).getShapeSymbols();
   auto rank = input_type.getRank();
-  for (int i = 1; i < rank; ++i) {
-    new_shapes.push_back(input_type.getShape()[i]);
-    symbols.push_back(input_symbols[i].getValue());
+  if (rank == 1) {
+    new_shapes.push_back(1);
+    symbols.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+  } else {
+    for (int i = 1; i < rank; ++i) {
+      new_shapes.push_back(input_type.getShape()[i]);
+      symbols.push_back(input_symbols[i].getValue());
+    }
   }
   auto new_tensor =
       RankedTensorType::get(new_shapes, input_type.getElementType());

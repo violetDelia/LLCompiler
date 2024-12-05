@@ -5,7 +5,7 @@ import sys
 import os
 import onnx
 from torch._subclasses.fake_tensor import FakeTensor
-from ..importer.fx_graph import get_result_type
+from ..importer.fx_translate import get_result_type
 import sympy.core.core
 import sympy.core.facts
 import sympy.core.mul

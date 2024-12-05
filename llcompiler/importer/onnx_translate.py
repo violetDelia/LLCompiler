@@ -1,8 +1,8 @@
-from ...dialect.llh import *
+from ..dialect.llh import *
 from datetime import datetime
 import torch.nn
 from torch._subclasses.fake_tensor import FakeTensor
-from ...core.utility import run_time
+from ..core.utility import run_time
 import os
 import numpy as np
 import torch.fx
@@ -56,7 +56,8 @@ def onnx_weight_translate(weight: onnx.onnx_ml_pb2.TensorProto):
     weight_file = os.path.join(
         os.path.dirname(__file__),
         "LLcompiler_weight_temp",
-        datetime.now().astimezone().isoformat(),weight.name
+        datetime.now().astimezone().isoformat(),
+        weight.name,
     )
     os.makedirs(os.path.dirname(weight_file), exist_ok=True)
     onnx._save_bytes(weight.raw_data, weight_file)

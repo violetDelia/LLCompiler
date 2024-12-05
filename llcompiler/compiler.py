@@ -11,7 +11,6 @@ import os
 import onnx
 from torch._decomp import get_decompositions
 from torch._subclasses.fake_tensor import FakeTensor
-from .importer.fx_graph import get_result_type
 
 
 class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
@@ -74,6 +73,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         aten = torch.ops.aten
         self.decompositions = {
             aten._native_batch_norm_legit_no_training.default,
+            aten.select.int
             
         }
 
