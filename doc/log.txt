@@ -10,14 +10,13 @@
                 remove symengine loc and add to submodule
                 add StrideSliceOp
                 add StrideSliceOp shape infer
+                add expression set and check while build new symbol
                 
 TODO:
-    add expression set while build new symbol
-    refactor symbol syste use symengine
-    slice symbol infer
-    slice test
-    extract test
-    symbol_relation check and add eq
+    extract
+    slice 
+    
+    torch frezen
 
 备忘：
     哪些指令不能并行？

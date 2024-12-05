@@ -22,6 +22,7 @@
 #include "symengine/rational.h"
 #include "symengine/refine.h"
 #include "symengine/sets.h"
+#include <immintrin.h>
 #include "symengine/test_visitors.h"
 using namespace std;
 using namespace SymEngine;

@@ -26,4 +26,4 @@ def TransposeOpLowing : Pat<(LLH_TransposeOp:$res $input, $perms),
                             []>;
 
 
-#endif // LLH_CANONICALIZE
+#endif // LLH_LLH_TO_HLO

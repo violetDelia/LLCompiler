@@ -98,22 +98,20 @@ class SymbolAnalysis {
   explicit SymbolAnalysis(Operation *op);
   virtual ~SymbolAnalysis();
   Operation *_getMainFunc(Operation *op);
-  // 将symbolint插入module中
-  void _insertSymbolicIntOp(LLHPatternRewriter *builder, Operation *op) const;
-  void _insertToSymbolModule(LLHPatternRewriter *builder, Operation *op) const;
+
   bool _isConst(Operation *op);
   bool _isConst(Value value);
   bool _remove(llvm::StringRef symbol);
   llvm::StringRef _getSymbolAttr(Operation *op);
   llvm::StringRef _getSymbolAttr(Value value);
-  // 将新符号插入module中
   SymbolicIntOp _insertNewSymbol(const llvm::StringRef symbol_name,
                                  LLHPatternRewriter *builder,
                                  bool greater_zore);
-  // 将新符号插入module中
   SymbolicIntOp _insertNewSymbol(const llvm::StringRef symbol_name,
                                  LLHPatternRewriter *builder, bool greater_zore,
                                  const Symbol symbol);
+  void _insertSymbolicIntOp(LLHPatternRewriter *builder, Operation *op) const;
+  void _insertToSymbolModule(LLHPatternRewriter *builder, Operation *op) const;
   SymbolRelationMapOp _buildSymbolRelation(
       const llvm::StringRef symbol, AffineMap affine_map,
       llvm::ArrayRef<llvm::StringRef> relations);

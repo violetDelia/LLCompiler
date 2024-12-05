@@ -1,24 +1,16 @@
 build
 .vscode
-test/models
-other_party
 log
-torch_mlir
 install
-__pycache__
 .cache
 .clangd
-python_env
 LLcompiler_weight_temp
-.setuptools-cmake-build
 dist
 llcompiler.egg-info
 builtin_module_no-symbol-name
 ir_tree
-out.mlir
-doc/开发日记
-build
 xxx
-tem.mlir
 llcompiler_.cpython-310-x86_64-linux-gnu.so
+__pycache__
+log.log
 

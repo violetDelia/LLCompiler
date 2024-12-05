@@ -131,8 +131,6 @@ bool check_conv_illegal(Operation* op) {
 // operation lowing
 //===----------------------------------------------------------------------===//
 
-#include "llcompiler/Conversion/LLHToTosa/LLHToTosa.inc"
-
 struct ReluOpLowering : public OpConversionPattern<ReluOp> {
   using OpConversionPattern<ReluOp>::OpConversionPattern;
   LogicalResult match(ReluOp op) const final { return success(); }
@@ -233,7 +231,7 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
                                                   bias, pad, stride, dilation);
     }
     if (res_type.getRank() == 5) {
-       rewriter.replaceOpWithNewOp<tosa::Conv3DOp>(op, res_type, input, weight,
+      rewriter.replaceOpWithNewOp<tosa::Conv3DOp>(op, res_type, input, weight,
                                                   bias, pad, stride, dilation);
     }
     LLC_RUN_OUT_PATTERN

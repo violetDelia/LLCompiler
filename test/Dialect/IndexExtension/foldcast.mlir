@@ -29,7 +29,6 @@ func.func @fold_tensor_dim(%arg0: tensor<?x?x?x?xf32>) ->(i64) attributes {entra
 }
 
 // -----
-
 func.func @fold_from_elements(%arg0: tensor<?x?x?x?xf32>) ->(tensor<?x?x?x?xf32>) attributes {entrance}{
     %c3 = arith.constant 3 : i64
     %c2 = arith.constant 2 : index
