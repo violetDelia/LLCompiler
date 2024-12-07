@@ -44,3 +44,12 @@ func.func @mul(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
 // CHECK-LABEL: __symbol__
 // CHECK: llh.symbol_relation_map
 // CHECK-SAME: express = "512*s0", relation = #map, relations = [@s0, @c512], symbol = @s1
+
+// -----
+// CHECK-LABEL: arith_const
+func.func @arith_const() -> (index) attributes {entrance} {
+  // CHECK: arith.constant
+  // CHECK-SAME: symbol = @c1
+  %c1 = arith.constant 1 : index
+  return %c1: index
+}

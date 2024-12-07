@@ -26,6 +26,7 @@
 #include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
 #include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -53,7 +54,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-void generateEntranceSymbol(ModuleOp module) {
+void generateEntranceSymbol(ModuleOp module, bool use_binding = false) {
   auto funcs = module.getOps<func::FuncOp>();
   auto context = module->getContext();
   auto builder = IRRewriter(context);
@@ -84,15 +85,32 @@ void generateEntranceSymbol(ModuleOp module) {
             symbols.push_back(dim_symbol_attr.getValue());
             symbol_analysis->getOrBuildSymbol(dim_symbol_attr.getValue(), true);
           }
-          symbol_analysis->addEncoding(arg, symbols);
+          if (use_binding) {
+            symbol_analysis->buildEncodingBindFrom(arg, symbols);
+          } else {
+            symbol_analysis->addEncoding(arg, symbols);
+          }
         }
         new_input.push_back(arg.getType());
       }
     } else {
       for (int i{}; i < input_num; i++) {
         auto arg = block.getArgument(i);
-        auto new_arg = symbol_analysis->addEncoding(arg);
-        new_input.push_back(new_arg.getType());
+        if (!use_binding) {
+          auto new_arg = symbol_analysis->addEncoding(arg);
+          new_input.push_back(new_arg.getType());
+        } else {
+          if (isa<RankedTensorType>(arg.getType())) {
+            auto tensor = llc::getRankTensorFrom(arg);
+            llvm::SmallVector<StringRef> symbols;
+            for (auto dim : tensor.getShape()) {
+              auto new_symbol = symbol_analysis->buildNewSymbol(true);
+              symbols.push_back(new_symbol.getSymName());
+            }
+            symbol_analysis->buildEncodingBindFrom(arg, symbols);
+          }
+          new_input.push_back(arg.getType());
+        }
       }
     }
     auto& blocks = func.getFunctionBody().getBlocks();
@@ -106,78 +124,6 @@ void generateEntranceSymbol(ModuleOp module) {
   }
 }
 
-void removeEntranceTensorEncoding(ModuleOp module) {
-  auto funcs = module.getOps<func::FuncOp>();
-  auto context = module->getContext();
-  auto builder = IRRewriter(context);
-  llvm::SmallVector<Type> new_input;
-  for (auto func : funcs) {
-    if (!func->hasAttr(llc::EntranceAttr)) continue;
-    auto func_type = func.getFunctionType();
-    auto& block = func.getFunctionBody().getBlocks().front();
-    auto input_num = block.getNumArguments();
-    auto maybe_attrs = func.getArgAttrs();
-    if (!maybe_attrs.has_value()) return;
-    auto attrs = maybe_attrs.value().getValue();
-    CHECK(llc::MLIR_PASS,
-          attrs.size() == func.getFunctionType().getNumInputs());
-    for (int i{}; i < input_num; i++) {
-      auto arg = block.getArgument(i);
-      if (isa<RankedTensorType>(arg.getType())) {
-        auto tensor = llvm::cast<RankedTensorType>(arg.getType());
-        auto has_encode = tensor.getEncoding();
-        auto arg_attr = llvm::cast<DictionaryAttr>(attrs[i]);
-        CHECK(llc::SymbolInfer, arg_attr);
-        auto symbols_system = SymbolAnalysis::getInstance(module);
-        SmallVector<StringRef> symbols;
-        for (size_t dim{}; dim < tensor.getRank(); dim++) {
-          auto dim_symbol_attr = arg_attr.getAs<StringAttr>(
-              "func.input_symbol_" + std::to_string(dim));
-          CHECK(llc::SymbolInfer, dim_symbol_attr);
-          symbols.push_back(dim_symbol_attr.getValue());
-          symbols_system->getOrBuildSymbol(dim_symbol_attr.getValue());
-        }
-        symbols_system->addEncoding(arg, symbols);
-      }
-      new_input.push_back(arg.getType());
-    }
-    auto& blocks = func.getFunctionBody().getBlocks();
-    for (auto& block : blocks) {
-      if (block.isEntryBlock()) {
-        auto new_func_type = FunctionType::get(
-            context, new_input, block.getTerminator()->getOperandTypes());
-        func.setType(new_func_type);
-      }
-    }
-  }
-}
-
-void generateEntranceBinding(ModuleOp module) {
-  auto funcs = module.getOps<func::FuncOp>();
-  auto context = module->getContext();
-  auto builder = IRRewriter(context);
-  llvm::SmallVector<Type> new_input;
-  auto symbol_analysis = SymbolAnalysis::getInstance(module);
-  for (auto func : funcs) {
-    if (!func->hasAttr(llc::EntranceAttr)) continue;
-    auto func_type = func.getFunctionType();
-    auto& block = func.getFunctionBody().getBlocks().front();
-    auto input_num = block.getNumArguments();
-    for (int i{}; i < input_num; i++) {
-      auto arg = block.getArgument(i);
-      auto new_arg = symbol_analysis->addEncoding(arg);
-      new_input.push_back(new_arg.getType());
-    }
-    auto& blocks = func.getFunctionBody().getBlocks();
-    for (auto& block : blocks) {
-      if (block.isEntryBlock()) {
-        auto new_func_type = FunctionType::get(
-            context, new_input, block.getTerminator()->getOperandTypes());
-        func.setType(new_func_type);
-      }
-    }
-  }
-}
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
@@ -206,9 +152,10 @@ void InferSymbolShapePass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  if (UseBinding) {
+  if (UseEncoding) {
     generateEntranceSymbol(module);
   } else {
+    generateEntranceSymbol(module, true);
   }
   module.walk([](Operation* op) { checkAndInferSymbol(op); });
   RewritePatternSet patterns(context);

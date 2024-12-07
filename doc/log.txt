@@ -11,11 +11,12 @@
                 add StrideSliceOp
                 add StrideSliceOp shape infer
                 add expression set and check while build new symbol
+2024.12.5  :    refactor fx_op_translate 
+                add extract test
+                fix build error
                 
 TODO:
-    extract
-    slice 
-    
+    slice     
     torch frezen
 
 备忘：

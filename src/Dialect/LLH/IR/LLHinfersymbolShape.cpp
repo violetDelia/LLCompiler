@@ -44,6 +44,7 @@
 #include "symengine/integer.h"
 #include "symengine/mul.h"
 #include "symengine/printers.h"
+#include "symengine/simplify.h"
 
 namespace mlir::llh {
 using SymEngine::add;
@@ -236,10 +237,13 @@ void ConvSymbolInfer(Operation* op) {
       new_shape.push_back(out);
       auto in_basic_symbol = symbol_analsis->getBasicSymbol(
           input_symbols[i + space_rank].getValue());
-      auto new_symbol = div(
-          sub(add(add(in_basic_symbol, integer(pad_h)), integer(pad_l)),
-              sub(mul(integer(dilation), sub(integer(kernel_size), one)), one)),
-          integer(stride));
+      (in + pad_h + pad_l - dilation * (kernel_size - 1) - 1) / stride + 1;
+
+      auto new_symbol = add(
+          div(add(in_basic_symbol,
+                  integer(pad_h + pad_l - dilation * (kernel_size - 1) - 1)),
+              integer(stride)),
+          one);
       auto exp =
           getAffineBinaryOpExpr(AffineExprKind::CeilDiv,
                                 (getAffineSymbolExpr(0, context) + pad_h +

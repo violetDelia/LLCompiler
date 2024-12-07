@@ -78,9 +78,10 @@ class SymbolAnalysis {
 
   llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
   llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
-  SymbolBindOp buildSymbolBindFromAttr(Value value, OpBuilder *builder);
-  EncodingBindOp buildEncodingBindFrom(Value value, OpBuilder *builder);
-  void buildEncodingBindFrom(Operation *op, OpBuilder *builder);
+  SymbolBindOp buildSymbolBindFromAttr(Value value);
+  EncodingBindOp buildEncodingBindFrom(Value value);
+  EncodingBindOp buildEncodingBindFrom(Value value,llvm::ArrayRef<llvm::StringRef> symbols);
+  void buildEncodingBindFrom(Operation *op);
   void unloadEncoding(Value value);
   void unloadEncoding(Operation *op);
   Value addEncoding(Value value);

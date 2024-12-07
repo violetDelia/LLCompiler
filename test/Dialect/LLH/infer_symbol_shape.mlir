@@ -1,9 +1,11 @@
 // RUN: llc-opt --split-input-file --infer-symbol-shape %s| FileCheck %s
+// RUN: llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " %s | FileCheck %s --check-prefix=CHECK-ENCODING
 //  /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape /home/lfr/LLCompiler/test/Dialect/LLH/infer_symbol_shape.mlir
-
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " /home/lfr/LLCompiler/test/Dialect/LLH/infer_symbol_shape.mlir
 
 // CHECK-LABEL: block
 // CHECK-SAME: (%arg0: tensor<?x3x?x?xbf16, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, %arg1: bf16) -> tensor<?x3x?x?xbf16, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>
+// CHECK-ENCODING: llh.encoding_bind
 func.func @block(%arg2: tensor<?x3x?x?xbf16>,%arg3: bf16) ->(tensor<?x3x?x?xbf16>) attributes {entrance}{
   return %arg2 : tensor<?x3x?x?xbf16>
 }
@@ -17,6 +19,7 @@ func.func @block(%arg2: tensor<?x3x?x?xbf16>,%arg3: bf16) ->(tensor<?x3x?x?xbf16
 // -----
 // CHECK: func.func
 // CHECK-SAME: -> (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64) 
+// CHECK-ENCODING: llh.encoding_bind
 func.func @checkIsReturnOperand(%arg0: tensor<?x?x?x?xf32>, %arg1: i64) -> (tensor<*xf32> , i64) attributes {entrance} {
   %0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<*xf32>
   // CHECK: return
@@ -25,6 +28,7 @@ func.func @checkIsReturnOperand(%arg0: tensor<?x?x?x?xf32>, %arg1: i64) -> (tens
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK: llh.symbolic_int
 // CHECK-SAME: sym_name = "c384"
 // CHECK-LABEL: constant
@@ -36,6 +40,7 @@ func.func @constant() ->() attributes {entrance}{
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK-LABEL: transpose
 func.func @transpose(%arg0: tensor<?x3x?x?xf32>) -> () attributes {entrance} {
   // CHECK: llh.transpose
@@ -45,6 +50,7 @@ func.func @transpose(%arg0: tensor<?x3x?x?xf32>) -> () attributes {entrance} {
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK-LABEL: empty
 func.func @empty(%arg0: tensor<?x?x?x?xf32>) -> (tensor<?x?xf32>) attributes {entrance} {
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
@@ -62,6 +68,7 @@ func.func @empty(%arg0: tensor<?x?x?x?xf32>) -> (tensor<?x?xf32>) attributes {en
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK: #map = affine_map<(d0)[s0] -> ((s0 - 1) ceildiv 2 + 1)>
 // CHECK-LABEL: max_pool
 func.func @max_pool(%arg0: tensor<?x64x?x?xf32>) -> () attributes {entrance} {
@@ -74,6 +81,7 @@ func.func @max_pool(%arg0: tensor<?x64x?x?xf32>) -> () attributes {entrance} {
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK-LABEL: max_pool_static
 func.func @max_pool_static(%arg0: tensor<2x64x9x17xf32>) -> () attributes {entrance} {
  // CHECK: llh.max_pool
@@ -83,6 +91,7 @@ func.func @max_pool_static(%arg0: tensor<2x64x9x17xf32>) -> () attributes {entra
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 func.func @reshape(%arg0: tensor<?x?x224x226xf32>) ->() attributes {entrance}{
   %7 = "llh.constant"() <{value = 2 : i64}> : () -> i64
   %3 = "llh.constant"() <{value = 6 : i64}> : () -> i64
@@ -97,6 +106,7 @@ func.func @reshape(%arg0: tensor<?x?x224x226xf32>) ->() attributes {entrance}{
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 func.func @reshape(%arg0: tensor<?x?x224x226xf32>) ->() attributes {entrance}{
   %7 = "llh.constant"() <{value = 2 : i64}> : () -> i64
   %3 = "llh.constant"() <{value = 6 : i64}> : () -> i64
@@ -111,6 +121,7 @@ func.func @reshape(%arg0: tensor<?x?x224x226xf32>) ->() attributes {entrance}{
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK-LABEL: adaptive_average_pool
 func.func @adaptive_average_pool(%arg0: tensor<2x64x9x17xf32>) -> () attributes {entrance} {
  // CHECK: llh.adaptive_average_pool
@@ -120,6 +131,7 @@ func.func @adaptive_average_pool(%arg0: tensor<2x64x9x17xf32>) -> () attributes 
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK-LABEL: binary
 func.func @binary(%arg0: tensor<?x3x?x?xf32>, %arg2: tensor<1x1x?x?xf32>) ->() attributes {entrance}{
   %4 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<1xf32>
@@ -137,6 +149,7 @@ func.func @binary(%arg0: tensor<?x3x?x?xf32>, %arg2: tensor<1x1x?x?xf32>) ->() a
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = 1 : i64}> : () -> i64
@@ -156,6 +169,7 @@ func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 func.func @matmul(%arg0: tensor<?x512xf32>) -> tensor<*xf32> attributes {entrance} {
     // CHECK: llh.matmul
     // CHECK-SAME: tensor<?x10xf32, #llh.encoding<shapes = @s0, @c10>>
@@ -166,6 +180,7 @@ func.func @matmul(%arg0: tensor<?x512xf32>) -> tensor<*xf32> attributes {entranc
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK: #map = affine_map<(d0)[s0, s1] -> (s0 - s1)>
 func.func @stride_slice(%arg0: tensor<?x?x?x?xf32>) -> () attributes {entrance} {
     %c0_i64 = arith.constant 0 : i64
@@ -187,6 +202,7 @@ func.func @stride_slice(%arg0: tensor<?x?x?x?xf32>) -> () attributes {entrance} 
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK: #map = affine_map<(d0)[s0] -> ((s0 - 1) ceildiv 2 + 1)>
 // CHECK-LABEL: conv
 func.func @conv(%arg0: tensor<?x3x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "c3", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"} ) ->() attributes {entrance}{
@@ -200,6 +216,7 @@ func.func @conv(%arg0: tensor<?x3x?x?xf32> {func.input_symbol_0 = "s0", func.inp
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 // CHECK-LABEL: conv_static
 func.func @conv_static(%arg0: tensor<2x3x224x224xf32>) ->() attributes {entrance}{
   %4 = "llh.weight"() <{weight_file = "npy"}> : () -> tensor<64x3x7x7xf32>
@@ -210,6 +227,7 @@ func.func @conv_static(%arg0: tensor<2x3x224x224xf32>) ->() attributes {entrance
 }
 
 // -----
+// CHECK-ENCODING: llh.encoding_bind
 func.func @extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"}) -> tensor<*xf32> attributes {entrance} {
     %0 = "llh.constant"() <{symbol = @c3, value = 3 : i64}> : () -> i64
     %1 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64

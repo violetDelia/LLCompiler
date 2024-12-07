@@ -138,7 +138,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());
   pm.addPass(::mlir::createInlinerPass());
   pm.addPass(mlir::llh::createInferSymbolShapePass(
-      {.CleanSymbolCache = false, .UseBinding = true}));
+      {.CleanSymbolCache = false, .UseEncoding = true}));
   pm.addPass(mlir::llh::createDecomposeOpsPass());
   pm.addPass(mlir::createCSEPass());
   pm.addPass(mlir::llh::createLoadWeightPass());
@@ -163,14 +163,6 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing mhlo
   //===----------------------------------------------------------------------===//
-  //   pm.addNestedPass<mlir::func::FuncOp>(mlir::mhlo::createLegalizeToStdPass());
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::mhlo::createSymbolicShapeOptimizationPass());
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::mhlo::createLegalizeHloToLinalgPass());
-  //   pm.addNestedPass<mlir::func::FuncOp>(
-  //       mlir::mhlo::createLegalizeControlFlowPass());
-  // NOTE: unkown error (mutithreading)
   applyInterpreter(pm, __LLC_TRANSFORM_HLO_TO_LINALG__);
   //===----------------------------------------------------------------------===//
   //  lowing shape
@@ -182,6 +174,9 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   applyInterpreter(pm, __LLC_TRANSFORM_TENSOR_BASIC_OPT__);
   pm.addPass(mlir::createConvertTensorToLinalgPass());
+  pm.addPass(mlir::llh::createInferSymbolShapePass(
+      {.CleanSymbolCache = false, .UseEncoding = false}));
+  pm.addPass(mlir::llh::createRemoveSymbolPass());
   //===----------------------------------------------------------------------===//
   //  linalg opt
   //===----------------------------------------------------------------------===//

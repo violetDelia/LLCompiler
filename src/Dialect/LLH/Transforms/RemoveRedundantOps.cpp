@@ -111,17 +111,17 @@ void generateEntranceTensorEncoding(ModuleOp module) {
               "func.input_symbol_" + std::to_string(dim));
           CHECK(llc::SymbolInfer, dim_symbol_attr);
           symbols.push_back(dim_symbol_attr.getValue());
-          symbols_system->getOrBuildSymbol(dim_symbol_attr.getValue());
+          symbols_system->getOrBuildSymbol(dim_symbol_attr.getValue(), true);
         }
         symbols_system->addEncoding(arg, symbols);
       }
       new_input.push_back(arg.getType());
     }
     auto& blocks = func.getFunctionBody().getBlocks();
-    for (auto& block : blocks) {
-      if (block.isEntryBlock()) {
+    for (auto& sub_block : blocks) {
+      if (sub_block.isEntryBlock()) {
         auto new_func_type = FunctionType::get(
-            context, new_input, block.getTerminator()->getOperandTypes());
+            context, new_input, sub_block.getTerminator()->getOperandTypes());
         func.setType(new_func_type);
       }
     }
@@ -137,7 +137,6 @@ struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
     auto loc = op->getLoc();
     auto operand = op->getOperand(0);
     auto result_type = op->getResult(0).getType();
-    auto operand_type = operand.getType();
     auto dim_value = op.getDim();
     auto const_dim =
         llvm::dyn_cast_or_null<llh::ConstantOp>(dim_value.getDefiningOp());
@@ -149,13 +148,11 @@ struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
     auto reshape_operands = llvm::SmallVector<Value>();
     size_t index = 0;
     for (; index < dim; ++index) {
-      auto dim = dims[index];
-      reshape_operands.push_back(dim);
+      auto input_dim = dims[index];
+      reshape_operands.push_back(input_dim);
     }
     if (index < dims.size()) {
       Value rear_dim_sum = dims[index];
-      size_t rear_shape = 1;
-      bool is_dynamic = false;
       index++;
       while (index < dims.size()) {
         rear_dim_sum = rewriter.create<MulOp>(
@@ -171,7 +168,7 @@ struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
 };
 
 std::pair<std::vector<std::string>, mlir::AffineExpr*> generateBindShapeMapKey(
-    AffineBinaryOpExpr& exp, SmallVector<size_t>& symbol_pos,
+     AffineBinaryOpExpr& exp, const SmallVector<size_t>& symbol_pos,
     SymbolicBindOp& op) {
   std::vector<std::string> symbols;
   auto bind_symbols = op.getBindSymbols();

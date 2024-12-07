@@ -73,7 +73,6 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         aten = torch.ops.aten
         self.decompositions = {
             aten._native_batch_norm_legit_no_training.default,
-            aten.select.int
             
         }
 

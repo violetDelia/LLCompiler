@@ -42,12 +42,12 @@ def torch_compiler_time(model, *inputs):
 
 
 module_dict = {
-    Add: [torch.randn((200, 3, 224, 256), device="cpu")],
+    # Add: [torch.randn((200, 3, 224, 256), device="cpu")],
     # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Abs: [torch.randn((200,3,224,256), device="cpu")],
-    Extract: [torch.randn((200, 3, 224, 256), device="cpu")],
+    Extract: [torch.randn((200, 200, 224, 224), device="cpu")],
     # Unsqueeze: [torch.randn((200,3,224,256), device="cpu")],
     # MultiHeadedAttention: [
     #     torch.randn((2, 24, 8), device="cpu"),
@@ -62,7 +62,7 @@ module_dict = {
     # Decompose_BatchNorm: [torch.randn(1000, 224, device="cpu")],
     # Linear: [torch.randn((10,100000), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
-    # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")],
+   # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")],
     # ElewiseFusion1: [torch.randn((200, 3, 224, 224), device="cpu")],
     # torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
     # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
@@ -114,6 +114,7 @@ def run_model_dict(dict):
                 fullgraph=True,
             )
             torch_res = torch_run_time(model, *inputs)
+            torch_run_time(model, *inputs)
             torch_compiler_time(torch_compiler, *inputs)
             torch_compiler_time(torch_compiler, *inputs)
             engine_res = llcompiler_run_time(opt_model, *inputs)

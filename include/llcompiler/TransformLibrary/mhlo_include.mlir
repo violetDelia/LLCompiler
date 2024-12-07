@@ -69,7 +69,7 @@ transform.named_sequence @mhlo_one_shot_bufferize(%module: !transform.any_op {tr
     transform.yield
   }
 
-transform.named_sequence @stablehlo_basic_opt(%module: !transform.any_op {transform.consumed}) {
+transform.named_sequence @stablehlo_basic_opt(%module: !transform.any_op {transform.readeonly}) {
     transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
     } : !transform.any_op

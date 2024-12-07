@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
+#include "llcompiler/Pipeline/TransFromPipeline.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/Dialect/Transform/Transforms/Passes.h"
 #include "mlir/IR/AsmState.h"
@@ -57,6 +58,8 @@ int main(int argc, char **argv) {
   mlir::bufferization::ex::registerBufferizationExtensionPasses();
 
   mlir::stablehlo::registerAllDialects(registry);
+
+  llc::pipeline::registerTransformPipeline();
   mlir::asMainReturnCode(
       mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
   return 0;

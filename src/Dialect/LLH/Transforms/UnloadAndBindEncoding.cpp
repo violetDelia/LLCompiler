@@ -133,13 +133,13 @@ void UnloadAndBindEncodingPass::runOnOperation() {
   auto unloda_and_bind_encoding = [&analysis, &builder](Operation *op) {
     if (isa<func::FuncOp>(op)) return;
     if (op->getNumResults() == 0) return;
-    analysis->buildEncodingBindFrom(op, &builder);
+    analysis->buildEncodingBindFrom(op);
     analysis->unloadEncoding(op);
   };
   auto unloda_and_bind_symbol = [&analysis, &builder](Operation *op) {
     if (isa<func::FuncOp>(op)) return;
     if (op->getNumResults() != 1) return;
-    analysis->buildSymbolBindFromAttr(op->getResult(0), &builder);
+    analysis->buildSymbolBindFromAttr(op->getResult(0));
   };
   module->walk(unloda_and_bind_func_attr);
   module->walk(unloda_and_bind_encoding);

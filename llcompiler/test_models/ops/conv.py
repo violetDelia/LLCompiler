@@ -18,7 +18,7 @@ class Conv2D_NCHW_FCHW(nn.Module):
         )
 
     def forward(self, x: torch.Tensor):
-        x = x.reshape(x.shape[0],x.shape[1],224,224)
+        #x = x.reshape(x.shape[0],x.shape[1],224,224)
         x = self.conv(x)
         x = self.conv(x)
         return x

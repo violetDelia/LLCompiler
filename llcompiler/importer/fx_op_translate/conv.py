@@ -80,6 +80,7 @@ def torch_conv_convert(
     module: torch.nn.modules.conv._ConvNd,
     block: Block,
 ):
+    print(get_result_type(node))
     result_type = torch_fake_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     weight = value_map[node.target + ".weight"][0]

@@ -60,6 +60,7 @@
 #include "symengine/mul.h"
 #include "symengine/printers.h"
 #include "symengine/sets.h"
+#include "symengine/simplify.h"
 #include "symengine/symbol.h"
 
 namespace mlir::llh {
@@ -107,7 +108,7 @@ llvm::StringRef BuildConstSymbolBind(Operation* op) {
     return SymbolAnalysis::UNKOW_SYMBOL;
   size_t val;
   if (isa<ConstantOp, arith::ConstantOp>(op)) {
-    if (isa<IntegerType>(op->getResult(0).getType())) {
+    if (isa<IntegerType,IndexType>(op->getResult(0).getType())) {
       val = llvm::cast<IntegerAttr>(op->getAttr("value")).getInt();
     } else {
       UNIMPLEMENTED(llc::SymbolInfer);
@@ -225,7 +226,7 @@ bool SymbolAnalysis::cleanCache() {
 }
 
 bool SymbolAnalysis ::isExtraSymbolicInferOp(Operation* op) {
-  return isa<DimOp>(op);
+  return isa<DimOp,arith::ConstantOp>(op);
 }
 
 bool SymbolAnalysis ::isSymbolicInferOp(Operation* op) {
@@ -258,7 +259,8 @@ Symbol SymbolAnalysis::getBasicSymbol(const llvm::StringRef symbol) {
 SymbolicIntOp SymbolAnalysis::buildNewSymbol(
     const Symbol symbol, AffineMap affine_map,
     llvm::ArrayRef<llvm::StringRef> relations, bool greater_zore) {
-  auto express = SymEngine::ccode(*symbol);
+  auto refined_symbol = SymEngine::simplify(symbol);
+  auto express = SymEngine::ccode(*refined_symbol);
   if (expressions_map_.contains(express))
     return symbol_op_table_[expressions_map_[express]];
   auto module = symbol_module_->getParentRegion()->getParentOfType<ModuleOp>();
@@ -271,7 +273,7 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbol(
   }
   LLHPatternRewriter builder(symbol_module_->getContext());
   auto symbol_op =
-      _insertNewSymbol(symbol_name, &builder, greater_zore, symbol);
+      _insertNewSymbol(symbol_name, &builder, greater_zore, refined_symbol);
   _buildSymbolRelation(symbol_name, affine_map, relations);
   return symbol_op;
 }
@@ -306,28 +308,38 @@ SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(size_t val) {
   return getOrBuildSymbol(symbol);
 }
 
-SymbolBindOp SymbolAnalysis::buildSymbolBindFromAttr(Value value,
-                                                     OpBuilder* builder) {
+SymbolBindOp SymbolAnalysis::buildSymbolBindFromAttr(Value value) {
   if (!hasSymbolAttr(value)) return nullptr;
-  builder->setInsertionPointAfterValue(value);
-  return builder->create<SymbolBindOp>(value.getLoc(), value,
-                                       getOrBuildSymbolAttrFrom(value));
+  auto builder = LLHPatternRewriter(value.getContext());
+  builder.setInsertionPointAfterValue(value);
+  return builder.create<SymbolBindOp>(value.getLoc(), value,
+                                      getOrBuildSymbolAttrFrom(value));
 }
 
-EncodingBindOp SymbolAnalysis::buildEncodingBindFrom(Value value,
-                                                     OpBuilder* builder) {
+EncodingBindOp SymbolAnalysis::buildEncodingBindFrom(Value value) {
+  auto builder = LLHPatternRewriter(value.getContext());
   if (!llc::hasEncoding(value)) return nullptr;
-  // builder->setInsertionPointAfterValue(value);
   auto encoding = llc::getEncodingFrom(value);
-  auto encoding_bind = builder->create<EncodingBindOp>(
+  builder.setInsertionPointAfterValue(value);
+  auto encoding_bind = builder.create<EncodingBindOp>(
       value.getLoc(), ::mlir::TypeRange{}, value, encoding);
-  encoding_bind->moveAfter(value.getDefiningOp());
   return encoding_bind;
 }
 
-void SymbolAnalysis::buildEncodingBindFrom(Operation* op, OpBuilder* builder) {
+EncodingBindOp SymbolAnalysis::buildEncodingBindFrom(
+    Value value, llvm::ArrayRef<llvm::StringRef> symbols) {
+  auto builder = LLHPatternRewriter(value.getContext());
+  if (llc::hasEncoding(value)) unloadEncoding(value);
+  auto encoding = EncodingAttr::get(value.getContext(), symbols);
+  builder.setInsertionPointAfterValue(value);
+  auto encoding_bind = builder.create<EncodingBindOp>(
+      value.getLoc(), ::mlir::TypeRange{}, value, encoding);
+  return encoding_bind;
+}
+
+void SymbolAnalysis::buildEncodingBindFrom(Operation* op) {
   for (auto res : op->getResults()) {
-    buildEncodingBindFrom(res, builder);
+    buildEncodingBindFrom(res);
   }
 }
 

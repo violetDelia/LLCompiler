@@ -66,10 +66,9 @@ struct RemoveOp : public LLHOpRewritePattern<Op> {
 void populateRemoveSymbolPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   patterns.add<RemoveOp<SymbolicIntOp>>(context);
-  patterns.add<RemoveOp<SymbolRelationOp>>(context);
-  patterns.add<RemoveOp<SymbolBinaryRelationOp>>(context);
   patterns.add<RemoveOp<SymbolicCastOp>>(context);
   patterns.add<RemoveOp<SymbolBindOp>>(context);
+  //patterns.add<RemoveOp<SymbolRelationMapOp>>(context);
   patterns.add<RemoveOp<EncodingBindOp>>(context);
 }
 }  // namespace
@@ -92,7 +91,7 @@ void RemoveSymbolPass::runOnOperation() {
   populateRemoveSymbolPassPatterns(patterns);
   if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
     signalPassFailure();
-  auto analysis = SymbolAnalysis::getInstance(module);
-  analysis->cleanCache();
+  // auto analysis = SymbolAnalysis::getInstance(module);
+  //  analysis->cleanCache();
   LLC_RUN_OUT_PASS
 }
