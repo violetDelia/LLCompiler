@@ -1,5 +1,7 @@
 // RUN: llc-opt --split-input-file --infer-symbol-shape %s| FileCheck %s
+// RUN: llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " %s | FileCheck %s --check-prefix=CHECK-ENCODING
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape /home/lfr/LLCompiler/test/Dialect/LLH/extra_symbol_infer_shape.mlir
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " /home/lfr/LLCompiler/test/Dialect/LLH/extra_symbol_infer_shape.mlir
 
 // CHECK-LABEL: const
 func.func @const(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
@@ -46,10 +48,22 @@ func.func @mul(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
 // CHECK-SAME: express = "512*s0", relation = #map, relations = [@s0, @c512], symbol = @s1
 
 // -----
-// CHECK-LABEL: arith_const
+// CHECK-ENCODING-LABEL: arith_const
 func.func @arith_const() -> (index) attributes {entrance} {
-  // CHECK: arith.constant
-  // CHECK-SAME: symbol = @c1
+  // CHECK-ENCODING: arith.constant
+  // CHECK-ENCODING: symbol = @c1
   %c1 = arith.constant 1 : index
   return %c1: index
+}
+
+// -----
+// CHECK-ENCODING-LABEL: tensor_dim
+func.func @tensor_dim(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s0", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> (index) attributes {entrance} {
+  // CHECK-ENCODING: encoding_bind
+  // CHECK-ENCODING-SAME: shapes = @s0, @s0, @s1, @s1
+  %c2 = arith.constant 2 : index
+  // CHECK-ENCODING: tensor.dim
+  // CHECK-ENCODING-SAME: symbol = @s1
+  %dim_0 = tensor.dim %arg0, %c2 : tensor<?x?x?x?xf32>
+  return %dim_0: index
 }

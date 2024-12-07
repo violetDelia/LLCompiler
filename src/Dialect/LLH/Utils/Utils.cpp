@@ -85,7 +85,7 @@ bool isConstIntegerValue(Value value) {
 
 int64_t getConstIntegerValue(Value value) {
   auto type = value.getType();
-  if (!llvm::isa<IntegerType>(type)) FATAL(llc::MLIR);
+  if (!llvm::isa<IntegerType,IndexType>(type)) FATAL(llc::MLIR);
   auto op = value.getDefiningOp();
   if (llvm::isa<DimOp>(op)) {
     auto dim_op = cast<DimOp>(op);

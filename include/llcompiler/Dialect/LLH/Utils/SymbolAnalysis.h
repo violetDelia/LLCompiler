@@ -26,11 +26,13 @@
 #include <utility>
 #include <vector>
 
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallString.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/IR/Builders.h"
@@ -59,6 +61,9 @@ class SymbolAnalysis {
   static bool hasSymbolAttr(Value value);
   static bool isConst(const llvm::StringRef name);
   static int64_t getIntValue(const llvm::StringRef name);
+  static bool hasEncodingOrBind(Value value);
+  static llvm::SmallVector<llvm::StringRef> getEncodingShapes(Value value);
+  static  Operation *getEncodingBindOp(Value value);
 
  public:
   bool cleanCache();
@@ -80,7 +85,8 @@ class SymbolAnalysis {
   llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
   SymbolBindOp buildSymbolBindFromAttr(Value value);
   EncodingBindOp buildEncodingBindFrom(Value value);
-  EncodingBindOp buildEncodingBindFrom(Value value,llvm::ArrayRef<llvm::StringRef> symbols);
+  EncodingBindOp buildEncodingBindFrom(Value value,
+                                       llvm::ArrayRef<llvm::StringRef> symbols);
   void buildEncodingBindFrom(Operation *op);
   void unloadEncoding(Value value);
   void unloadEncoding(Operation *op);

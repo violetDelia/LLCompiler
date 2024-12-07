@@ -104,8 +104,13 @@ void generateEntranceSymbol(ModuleOp module, bool use_binding = false) {
             auto tensor = llc::getRankTensorFrom(arg);
             llvm::SmallVector<StringRef> symbols;
             for (auto dim : tensor.getShape()) {
-              auto new_symbol = symbol_analysis->buildNewSymbol(true);
-              symbols.push_back(new_symbol.getSymName());
+              if (dim == ShapedType::kDynamic) {
+                auto new_symbol = symbol_analysis->buildNewSymbol(true);
+                symbols.push_back(new_symbol.getSymName());
+              } else {
+                auto new_symbol = symbol_analysis->getOrBuildConstSymbol(dim);
+                symbols.push_back(new_symbol.getSymName());
+              }
             }
             symbol_analysis->buildEncodingBindFrom(arg, symbols);
           }

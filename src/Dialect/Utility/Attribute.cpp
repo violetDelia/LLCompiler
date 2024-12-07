@@ -27,7 +27,8 @@ namespace llc {
 #define ADD_ATTR_FUNC(name, input_type, attr_type)                       \
   void add_##name##_attr(mlir::Operation* op, llvm::StringRef attr_name, \
                          input_type value) {                             \
-    op->setAttr(attr_name, attr_type::get(op->getContext(), value));     \
+    auto attr = attr_type::get(op->getContext(), value);                 \
+    op->setAttr(attr_name, attr);                                        \
   }
 
 ADD_ATTR_FUNC(array_i64, llvm::SmallVector<int64_t>, mlir::DenseI64ArrayAttr)
@@ -57,12 +58,11 @@ void add_unit_attr(mlir::Operation* op, llvm::StringRef attr_name) {
 #define ADD_SYMBOL_ATTR(name, Key)                                     \
   DEF_ATTR(name, Key)                                                  \
   void add_##name##_attr(mlir::Operation* op, llvm::StringRef value) { \
-    add_flat_symbol_attr(op, Key, value);                                   \
+    add_flat_symbol_attr(op, Key, value);                              \
   }                                                                    \
   void add_##name##_attr(mlir::Operation* op, const char* value) {     \
-    add_flat_symbol_attr(op, Key, value);                                   \
+    add_flat_symbol_attr(op, Key, value);                              \
   }
-
 
 #define ADD_DENSE_I64_ATTR(name, Key)                                          \
   DEF_ATTR(name, Key)                                                          \
@@ -79,8 +79,6 @@ void add_unit_attr(mlir::Operation* op, llvm::StringRef attr_name) {
   void add_##name##_attr(mlir::Operation* op, ::mlir::llh::Layout value) {   \
     op->setAttr(Key, ::mlir::llh::LayoutAttr::get(op->getContext(), value)); \
   }
-
-
 
 const char* GloabalLayoutAttr = "builtin.gloabal_layout";
 ADD_LAYOUT_ATTR(layout, LayoutAttr)
