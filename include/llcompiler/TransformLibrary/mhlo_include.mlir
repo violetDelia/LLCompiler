@@ -87,7 +87,8 @@ transform.named_sequence @stablehlo_basic_opt(%module: !transform.any_op {transf
 
 transform.named_sequence @stablehlo_to_linalg(%module: !transform.any_op {transform.readeonly}) {
     %funcs = transform.structured.match ops{["func.func"]} in %module : (!transform.any_op) -> !transform.any_op
-    %opt_shape_funcs = transform.apply_registered_pass "stablehlo-legalize-to-linalg" to %funcs {options = "enable-primitive-ops=false"}: (!transform.any_op) -> !transform.any_op
+    %lowing_extension_funs = transform.apply_registered_pass "convert-stablehlo-to-linalg-extension" to %funcs : (!transform.any_op) -> !transform.any_op
+    %lowing_finnal = transform.apply_registered_pass "stablehlo-legalize-to-linalg" to %lowing_extension_funs {options = "enable-primitive-ops=false"}: (!transform.any_op) -> !transform.any_op
     transform.apply_patterns to %module {
       transform.apply_patterns.canonicalization
     } : !transform.any_op

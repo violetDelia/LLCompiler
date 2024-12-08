@@ -21,6 +21,7 @@ llcompiler_add_library(LLCPipelines
     LLCCLLHToTensor
     LLCLLHToHLO
     LLCLLHToShape
+    LLCStablehlotoLinalgExtension
 
     LLCLLVMExtensionTransforms
     LLCIndexExtensionTransforms

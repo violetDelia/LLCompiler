@@ -47,6 +47,7 @@
 #include "mlir/Dialect/Func/TransformOps/FuncTransformOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/LLVMIR/Transforms/InlinerInterfaceImpl.h"
+#include "mlir/Dialect/Linalg/IR/Linalg.h"
 #include "mlir/Dialect/Linalg/Transforms/BufferizableOpInterfaceImpl.h"
 #include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/MemRef/Transforms/AllocationOpInterfaceImpl.h"
@@ -90,6 +91,7 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::transform::TransformDialect>();
   context.getOrLoadDialect<mlir::bufferization::BufferizationDialect>();
   context.getOrLoadDialect<mlir::shape::ShapeDialect>();
+  context.getOrLoadDialect<mlir::linalg::LinalgDialect>();
   context.getOrLoadDialect<mlir::vector::VectorDialect>();
   context.getOrLoadDialect<mlir::tensor::TensorDialect>();
   context.getOrLoadDialect<mlir::index::IndexDialect>();

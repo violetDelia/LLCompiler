@@ -114,5 +114,20 @@ def ConvertTosaToLinalgExtensionPass : Pass<"convert-tosa-to-linalg-extension"> 
                             ];
 }
 
+//===----------------------------------------------------------------------===//
+// stablehlo --> linalg
+//===----------------------------------------------------------------------===//
+def ConvertStablehloToLinalgExtensionPass : Pass<"convert-stablehlo-to-linalg-extension"> {
+  let summary = "convert tosa to linalg IR";
+  let description = [{
+
+  }];
+  let dependentDialects = [ "::mlir::tensor::TensorDialect",
+                            "::mlir::func::FuncDialect",
+                            "::mlir::stablehlo::StablehloDialect",
+                            "::mlir::linalg::LinalgDialect",
+                            ];
+}
+
 
 #endif // INCLUDE_LLCOMPILER_CONVERSION_PASSES_TD_

@@ -21,6 +21,7 @@
 #include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
 #include "llcompiler/Conversion/TosaToLinalgExtension/TosaToLinalgExtension.h"
+#include "llcompiler/Conversion/StablehlotoLinalgExtension/StablehlotoLinalgExtension.h"
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/SparseTensor/IR/SparseTensor.h"
 #include "mlir/Pass/PassRegistry.h"
