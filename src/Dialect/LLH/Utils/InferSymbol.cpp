@@ -13,15 +13,16 @@
 //    limitations under the License.
 //
 
-#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/InferSymbol.h"
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/BuiltinAttributes.h"
 namespace mlir::llh {
@@ -36,11 +37,11 @@ llvm::StringRef buildBinaryOpSymbol(Operation* op) {
   if (!SymbolAnalysis::hasSymbolAttr(rhs)) return SymbolAnalysis::UNKOW_SYMBOL;
   llvm::SmallString<4> symbol;
   llh::SymbolRelation relation;
-  if (isa<MulOp>(op)) {
+  if (isa<MulOp, arith::MulIOp>(op)) {
     relation = SymbolRelation::Mul;
-  } else if (isa<AddOp>(op)) {
+  } else if (isa<AddOp, arith::AddIOp>(op)) {
     relation = SymbolRelation::Add;
-  } else if (isa<SubOp>(op)) {
+  } else if (isa<SubOp, arith::SubIOp>(op)) {
     relation = SymbolRelation::Sub;
   } else if (isa<DivOp>(op)) {
     relation = SymbolRelation::FloorDiv;
@@ -94,13 +95,22 @@ void checkAndInferSymbol(Operation* op) {
     symbol_op.inferSymbolicShape();
     return;
   }
-  if (SymbolAnalysis::isExtraSymbolicInferOp(op)) {
-    SymbolAnalysis::getInstance(op)->getOrBuildSymbolAttrFrom(op);
+  if (SymbolAnalysis::isExtraSymbolAttrInferOp(op)) {
+    SymbolAnalysis::getInstance(op)->BuildSymbolAttrFrom(op);
   }
 }
 
+bool SymbolAnalysis ::isExtraSymbolAttrInferOp(Operation* op) {
+  return isa<DimOp, tensor::DimOp, arith::ConstantOp, arith::SubIOp,
+             arith::AddIOp, arith::MulIOp>(op);
+}
+
+bool SymbolAnalysis ::isExtraSymbolEncodingInferOp(Operation* op) {
+  return isa<memref::AllocaOp>(op);
+}
+
 bool SymbolAnalysis ::isExtraSymbolicInferOp(Operation* op) {
-  return isa<DimOp, arith::ConstantOp,tensor::DimOp>(op);
+  return isExtraSymbolAttrInferOp(op) || isExtraSymbolEncodingInferOp(op);
 }
 
 bool SymbolAnalysis ::isSymbolicInferOp(Operation* op) {
@@ -109,6 +119,15 @@ bool SymbolAnalysis ::isSymbolicInferOp(Operation* op) {
 
 llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Operation* op) {
   if (hasSymbolAttr(op)) return _getSymbolAttr(op);
+  return BuildSymbolAttrFrom(op);
+}
+
+llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Value value) {
+  auto op = value.getDefiningOp();
+  return getOrBuildSymbolAttrFrom(op);
+}
+
+llvm::StringRef SymbolAnalysis::BuildSymbolAttrFrom(Operation* op) {
   if (isa<DimOp, mlir::tensor::DimOp>(op)) {
     return buildDimOpSymbol(op, op->getOperand(0), op->getOperand(1));
   }
@@ -116,15 +135,16 @@ llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Operation* op) {
           mlir::arith::ConstantIndexOp, llh::ConstantOp>(op)) {
     return buildConstSymbol(op);
   }
-  if (isa<DivOp, MulOp, SubOp, AddOp>(op)) {
+  if (isa<DivOp, MulOp, SubOp, AddOp, arith::SubIOp, arith::AddIOp,
+          arith::MulIOp>(op)) {
     return buildBinaryOpSymbol(op);
   }
   return SymbolAnalysis::UNKOW_SYMBOL;
 }
 
-llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Value value) {
+llvm::StringRef SymbolAnalysis::BuildSymbolAttrFrom(Value value) {
   auto op = value.getDefiningOp();
-  return getOrBuildSymbolAttrFrom(op);
+  return BuildSymbolAttrFrom(op);
 }
 
 }  // namespace mlir::llh

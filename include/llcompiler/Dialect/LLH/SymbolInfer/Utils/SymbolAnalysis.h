@@ -13,8 +13,8 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_SYMBOLANALYSIS_H_
-#define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_SYMBOLANALYSIS_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_SYMBOLINFER_UTILS_SYMBOLANALYSIS_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_SYMBOLINFER_UTILS_SYMBOLANALYSIS_H_
 
 #include <cstddef>
 #include <cstdint>
@@ -56,6 +56,8 @@ class SymbolAnalysis {
   static SymbolAnalysis *getInstance(Operation *op);
   static SymbolAnalysis *getInstance(Value value);
   static bool isExtraSymbolicInferOp(Operation *op);
+  static bool isExtraSymbolAttrInferOp(Operation *op);
+  static bool isExtraSymbolEncodingInferOp(Operation *op);
   static bool isSymbolicInferOp(Operation *op);
   static bool hasSymbolAttr(Operation *op);
   static bool hasSymbolAttr(Value value);
@@ -63,7 +65,7 @@ class SymbolAnalysis {
   static int64_t getIntValue(const llvm::StringRef name);
   static bool hasEncodingOrBind(Value value);
   static llvm::SmallVector<llvm::StringRef> getEncodingShapes(Value value);
-  static  Operation *getEncodingBindOp(Value value);
+  static Operation *getEncodingBindOp(Value value);
 
  public:
   bool cleanCache();
@@ -73,7 +75,7 @@ class SymbolAnalysis {
                                bool greater_zore = false);
   SymbolicIntOp getOrBuildSymbol(const llvm::StringRef val,
                                  bool greater_zore = false);
-  SymbolicIntOp getOrBuildConstSymbol(size_t val);
+  SymbolicIntOp getOrBuildConstSymbol(int64_t val);
   SymbolicIntOp buildNewSymbolWithRelation(const llvm::StringRef relation_lhs,
                                            const llvm::StringRef relation_rhs,
                                            SymbolRelation relation_kind);
@@ -83,6 +85,8 @@ class SymbolAnalysis {
 
   llvm::StringRef getOrBuildSymbolAttrFrom(Operation *op);
   llvm::StringRef getOrBuildSymbolAttrFrom(Value value);
+  llvm::StringRef BuildSymbolAttrFrom(Operation *op);
+  llvm::StringRef BuildSymbolAttrFrom(Value value);
   SymbolBindOp buildSymbolBindFromAttr(Value value);
   EncodingBindOp buildEncodingBindFrom(Value value);
   EncodingBindOp buildEncodingBindFrom(Value value,
@@ -159,4 +163,4 @@ class SymbolAnalysisManager {
   std::map<ModuleOp, SymbolAnalysis *> analysis_map_;
 };
 }  // namespace mlir::llh
-#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_SYMBOLANALYSIS_H_
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_SYMBOLINFER_UTILS_SYMBOLANALYSIS_H_

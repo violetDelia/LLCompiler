@@ -13,21 +13,27 @@
 //    limitations under the License.
 //
 
-#ifndef INCLUDE_LLCOMPILER_DIALECT_BUFFERIZATIONEXTENSION_TRANSFORMS_PASSES_H_
-#define INCLUDE_LLCOMPILER_DIALECT_BUFFERIZATIONEXTENSION_TRANSFORMS_PASSES_H_
+#ifndef INCLUDE_LLCOMPILER_DIALECT_LLH_SYMBOLINFER_PASSES_H_
+#define INCLUDE_LLCOMPILER_DIALECT_LLH_SYMBOLINFER_PASSES_H_
 
 #include <memory>
 
+#include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
+#include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
-#include "mlir/Dialect/Func/IR/FuncOps.h"
-#include "mlir/Dialect/Index/IR/IndexOps.h"
+#include "mlir/Dialect/Complex/IR/Complex.h"
+#include "mlir/Dialect/ControlFlow/IR/ControlFlow.h"
+#include "mlir/Dialect/Math/IR/Math.h"
+#include "mlir/Dialect/Shape/IR/Shape.h"
 #include "mlir/Pass/Pass.h"
-namespace mlir::bufferization::ex {
+
+namespace mlir::llh {
 
 #define GEN_PASS_DECL
 #define GEN_PASS_REGISTRATION
-#include "llcompiler/Dialect/BufferizationExtension/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h.inc"
 
-}  // namespace mlir::bufferization::ex
+}  // namespace mlir::llh
 
-#endif  // INCLUDE_LLCOMPILER_DIALECT_BUFFERIZATIONEXTENSION_TRANSFORMS_PASSES_H_
+#endif  //  INCLUDE_LLCOMPILER_DIALECT_LLH_SYMBOLINFER_PASSES_H_

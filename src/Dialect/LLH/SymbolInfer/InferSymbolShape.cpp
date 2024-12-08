@@ -22,15 +22,17 @@
 #include <vector>
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/InferSymbol.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
+#include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/Builders.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -46,7 +48,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::llh {
 #define GEN_PASS_DEF_INFERSYMBOLSHAPEPASS
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;
@@ -157,6 +159,7 @@ void InferSymbolShapePass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
+  auto analysis = SymbolAnalysis::getInstance(module);
   if (UseEncoding) {
     generateEntranceSymbol(module);
   } else {
@@ -165,7 +168,6 @@ void InferSymbolShapePass::runOnOperation() {
   module.walk([](Operation* op) { checkAndInferSymbol(op); });
   RewritePatternSet patterns(context);
   populateSymbolCanonicalizePatterns(patterns);
-  auto analysis = SymbolAnalysis::getInstance(module);
   auto config = GreedyRewriteConfig();
   config.useTopDownTraversal = true;
   if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))

@@ -19,23 +19,15 @@
 #include "llcompiler/Dialect/BufferizationExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h"
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Pipeline/CommonPipeline.h"
 #include "llcompiler/Pipeline/TransFromPipeline.h"
-#include "mlir/Dialect/Tosa/IR/TosaOps.h"
-#include "mlir/Dialect/Transform/Transforms/Passes.h"
-#include "mlir/IR/AsmState.h"
-#include "mlir/IR/Dialect.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/IR/MLIRContext.h"
 #include "mlir/InitAllDialects.h"
 #include "mlir/InitAllExtensions.h"
 #include "mlir/InitAllPasses.h"
-#include "mlir/Pass/Pass.h"
-#include "mlir/Pass/PassManager.h"
-#include "mlir/Target/LLVMIR/Dialect/All.h"
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
 #include "stablehlo/dialect/Register.h"
@@ -52,6 +44,7 @@ int main(int argc, char **argv) {
   mlir::registerAllExtensions(registry);
 
   mlir::llh::registerLLHOptPasses();
+  mlir::llh::registerLLCSymbolOptPasses();
   mlir::registerLLCConversionPasses();
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();

@@ -15,6 +15,7 @@
 #include "llcompiler/Pipeline/CommonPipeline.h"
 
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
 #include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"

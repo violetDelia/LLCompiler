@@ -67,3 +67,19 @@ func.func @tensor_dim(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", fu
   %dim_0 = tensor.dim %arg0, %c2 : tensor<?x?x?x?xf32>
   return %dim_0: index
 }
+
+// -----
+// CHECK-ENCODING-LABEL: arith_subi
+func.func @arith_subi(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s0", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> (index) attributes {entrance} {
+    // CHECK-ENCODING: encoding_bind
+    // CHECK-ENCODING-SAME: shapes = @s0, @s0, @s1, @s1
+    %c0 = arith.constant 0 : index
+    %c1 = arith.constant 1 : index
+    // CHECK-ENCODING: tensor.dim
+    // CHECK-ENCODING-SAME: symbol = @s0
+    %dim_2 = tensor.dim %arg0, %c0 : tensor<?x?x?x?xf32>
+    // CHECK-ENCODING: arith.subi
+    // CHECK-ENCODING-SAME: symbol = @s2
+    %2 = arith.subi %dim_2, %c1 : index
+  return %2: index
+}

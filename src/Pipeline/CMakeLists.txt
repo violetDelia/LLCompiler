@@ -15,6 +15,7 @@ llcompiler_add_library(LLCPipelines
 
     LLCLLHUtils
     LLCLLHTransforms
+    LLCSymbolInferTransforms
     LLCLLHToTosa
     LLCCLLHToArith
     LLCCLLHToTensor

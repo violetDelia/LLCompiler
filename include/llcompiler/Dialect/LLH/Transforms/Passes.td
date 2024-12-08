@@ -44,30 +44,6 @@ def LoadWeightPass : Pass<"load-weight","ModuleOp"> {
 //   let constructor = "mlir::llh::createStoreConstToWeightPass()";
 // }
 
-def InferSymbolShapePass : Pass<"infer-symbol-shape","ModuleOp"> {
-  let summary = "generate symbol";
-  let description = [{
-      形状推导并生成符号信息;
-      ```mlir
-      %0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
-      ```
-      ====>
-      ```mlir
-      "llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
-      "llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
-      "llh.symbolic_int"() <{sym_name = "s1"}> : () -> ()
-      "llh.symbolic_int"() <{sym_name = "s0"}> : () -> ()
-      %0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>) -> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
-      ```
-  }];
-  let dependentDialects = ["mlir::llh::LLHDialect"];
-  let options = [
-    Option<"CleanSymbolCache", "clean-symbol-cache", "bool", /*default=*/"true",
-           "测试用,防止多个相同地址的module.">,
-    Option<"UseEncoding", "use-encoding", "bool", /*default=*/"true",
-           "use llh.encoding.">,
-  ];
-}
 
 def OperationlegalizationPass : Pass<"operation-legalization","ModuleOp"> {
   let summary = "合法化Op";
@@ -118,28 +94,6 @@ def ReshapeBeforeBraodcastPass : Pass<"reshape-before-braodcast","ModuleOp">{
 
 def InsertBroadCastPass : Pass<"insert-broadcast","ModuleOp">{
   let summary = "插入braodcast";
-  let description = [{
-    
-  }];
-}
-
-def UnloadAndBindEncoding : Pass<"unload-and-bind-encoding","ModuleOp">{
-  let summary = "卸载tensor上的EncodingAttr到EncodingBindOp代替";
-  let description = [{
-    1.防止与其他第三方库和标准MLIR不兼容。
-  }];
-}
-
-def SinkBindEncoding : Pass<"sink-bind-encoding","ModuleOp">{
-  let summary = "Bufferize的预处理";
-  let description = [{
-    
-  }];
-
-}
-
-def RemoveSymbolPass : Pass<"remove-symbol","ModuleOp">{
-  let summary = "去除符号";
   let description = [{
     
   }];

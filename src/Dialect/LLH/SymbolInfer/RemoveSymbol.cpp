@@ -17,8 +17,8 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
@@ -40,7 +40,7 @@
 
 namespace mlir::llh {
 #define GEN_PASS_DEF_REMOVESYMBOLPASS
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;
@@ -68,7 +68,9 @@ void populateRemoveSymbolPassPatterns(RewritePatternSet& patterns) {
   patterns.add<RemoveOp<SymbolicIntOp>>(context);
   patterns.add<RemoveOp<SymbolicCastOp>>(context);
   patterns.add<RemoveOp<SymbolBindOp>>(context);
-  //patterns.add<RemoveOp<SymbolRelationMapOp>>(context);
+  patterns.add<RemoveOp<SymbolRelationMapOp>>(context);
+  patterns.add<RemoveOp<SymbolRelationOp>>(context);
+  patterns.add<RemoveOp<SymbolBinaryRelationOp>>(context);
   patterns.add<RemoveOp<EncodingBindOp>>(context);
 }
 }  // namespace
@@ -91,7 +93,7 @@ void RemoveSymbolPass::runOnOperation() {
   populateRemoveSymbolPassPatterns(patterns);
   if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
     signalPassFailure();
-  // auto analysis = SymbolAnalysis::getInstance(module);
-  //  analysis->cleanCache();
+  auto analysis = SymbolAnalysis::getInstance(module);
+  analysis->cleanCache();
   LLC_RUN_OUT_PASS
 }

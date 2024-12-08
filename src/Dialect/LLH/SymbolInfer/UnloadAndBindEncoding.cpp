@@ -18,7 +18,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
@@ -38,7 +38,7 @@
 
 namespace mlir::llh {
 #define GEN_PASS_DEF_UNLOADANDBINDENCODING
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h.inc"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
 using namespace ::mlir::llh;

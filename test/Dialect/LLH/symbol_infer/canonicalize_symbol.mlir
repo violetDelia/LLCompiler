@@ -53,16 +53,16 @@ module @__remove_const__ {
 func.func @sink_symbol_bind(%arg1: tensor<?x3x?x?xf32>) ->(i64,i64){
   // CHECK : llh.encoding_bind
   // CHECK-NEXT : index.constant
-  %idx0 = index.constant 0
-  %idx2 = index.constant 2
+  %idx0 = arith.constant 0 : index
+  %idx2 = arith.constant 2 : index
   // CHECK : tensor.dim
   // CHECK-NEXT : llh.symbol_bind
   // CHECK : tensor.dim
   // CHECK-NEXT : llh.symbol_bind
   %dim = tensor.dim {symbol = @s0} %arg1, %idx0 : tensor<?x3x?x?xf32>
-  %0 = index.castu %dim : index to i64
+  %0 = arith.index_cast  %dim : index to i64
   %dim_0 = tensor.dim {symbol = @s2} %arg1, %idx2 : tensor<?x3x?x?xf32>
-  %1 = index.castu %dim_0 : index to i64
+  %1 = arith.index_cast %dim_0 : index to i64
   "llh.symbol_bind"(%0) <{symbol = @s0}> : (i64) -> ()
   "llh.symbol_bind"(%1) <{symbol = @s2}> : (i64) -> ()
   "llh.encoding_bind"(%arg1) <{encoding = #llh.encoding<shapes = @s0, @c3, @s2, @s2>}> : (tensor<?x3x?x?xf32>) -> ()
@@ -72,7 +72,7 @@ func.func @sink_symbol_bind(%arg1: tensor<?x3x?x?xf32>) ->(i64,i64){
 
 // -----
 func.func @main(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s3"}) attributes {entrance} {
-    %idx0 = index.constant 0
+    %idx0 = arith.constant 0 : index
     // CHECK-NOT : arith.index_cast
     %dim = tensor.dim {symbol = @s0} %arg0, %idx0 : tensor<?x?x?x?xf32>
     %2 = arith.index_cast %dim : index to i64

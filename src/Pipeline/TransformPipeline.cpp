@@ -20,8 +20,8 @@
 #include "llcompiler/Dialect/BufferizationExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
@@ -31,34 +31,13 @@
 #include "llcompiler/TransformLibrary/LibraryEntry.h"
 #include "llcompiler/TransformLibrary/LibraryPath.h"
 #include "mlir/Conversion/AffineToStandard/AffineToStandard.h"
-#include "mlir/Conversion/ArithToLLVM/ArithToLLVM.h"
-#include "mlir/Conversion/BufferizationToMemRef/BufferizationToMemRef.h"
-#include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
-#include "mlir/Conversion/ControlFlowToSCF/ControlFlowToSCF.h"
-#include "mlir/Conversion/ControlFlowToSPIRV/ControlFlowToSPIRVPass.h"
-#include "mlir/Conversion/ConvertToLLVM/ToLLVMPass.h"
-#include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
-#include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVMPass.h"
-#include "mlir/Conversion/IndexToLLVM/IndexToLLVM.h"
-#include "mlir/Conversion/MathToLLVM/MathToLLVM.h"
 #include "mlir/Conversion/Passes.h"
-#include "mlir/Conversion/ReconcileUnrealizedCasts/ReconcileUnrealizedCasts.h"
-#include "mlir/Conversion/SCFToControlFlow/SCFToControlFlow.h"
-#include "mlir/Conversion/SCFToGPU/SCFToGPUPass.h"
 #include "mlir/Conversion/ShapeToStandard/ShapeToStandard.h"
 #include "mlir/Conversion/TensorToLinalg/TensorToLinalgPass.h"
-#include "mlir/Conversion/TosaToArith/TosaToArith.h"
-#include "mlir/Conversion/TosaToLinalg/TosaToLinalg.h"
-#include "mlir/Conversion/TosaToSCF/TosaToSCF.h"
-#include "mlir/Conversion/TosaToTensor/TosaToTensor.h"
 #include "mlir/Conversion/VectorToSCF/VectorToSCF.h"
 #include "mlir/Dialect/Affine/Passes.h"
 #include "mlir/Dialect/Affine/Utils.h"
 #include "mlir/Dialect/Arith/Transforms/Passes.h"
-#include "mlir/Dialect/Bufferization/IR/BufferizableOpInterface.h"
-#include "mlir/Dialect/Bufferization/IR/Bufferization.h"
-#include "mlir/Dialect/Bufferization/Pipelines/Passes.h"
-#include "mlir/Dialect/Bufferization/Transforms/OneShotAnalysis.h"
 #include "mlir/Dialect/Bufferization/Transforms/Passes.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Func/Transforms/Passes.h"
@@ -86,10 +65,10 @@
 #include "stablehlo/conversions/tosa/transforms/Passes.h"
 #include "stablehlo/transforms/Passes.h"
 namespace llc::pipeline {
-
 namespace {
 void registerPasses() {
   mlir::llh::registerLLHOptPasses();
+  mlir::llh::registerLLCSymbolOptPasses();
   mlir::registerLLCConversionPasses();
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
@@ -176,6 +155,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::createConvertTensorToLinalgPass());
   pm.addPass(mlir::llh::createInferSymbolShapePass(
       {.CleanSymbolCache = false, .UseEncoding = false}));
+  pm.addPass(mlir::llh::createSymbolFoldPass());
   pm.addPass(mlir::llh::createRemoveSymbolPass());
   //===----------------------------------------------------------------------===//
   //  linalg opt
@@ -205,6 +185,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   // lowing to csf
   //===----------------------------------------------------------------------===//
   // lowing affine to scf
+  pm.addPass(mlir::affine::createLoopFusionPass());
   mlir::VectorTransferToSCFOptions vec_scf_options;
   vec_scf_options.unroll = true;
   vec_scf_options.lowerScalable = true;

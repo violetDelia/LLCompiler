@@ -14,7 +14,8 @@
 2024.12.5  :    refactor fx_op_translate 
                 add extract test
                 fix build error
-2024.12.7 :     add arith.constant shape infer
+2024.12.7 :     add arith.constant symbol infer
+                add tensor.dim symbol infer
                 
 TODO:
     slice     

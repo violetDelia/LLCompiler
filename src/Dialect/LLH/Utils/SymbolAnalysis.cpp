@@ -13,7 +13,7 @@
 //    limitations under the License.
 //
 
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
 
 #include <algorithm>
 #include <charconv>
@@ -160,7 +160,7 @@ SymbolAnalysis* SymbolAnalysis::getInstance(Value value) {
   }
   return SymbolAnalysisManager::getInstance().analysis_map_[module];
 }
-
+// TODO(lfr):need delete content of analysis
 bool SymbolAnalysis::cleanCache() {
   auto module = getRootModule();
   auto& manager = SymbolAnalysisManager::getInstance();
@@ -181,7 +181,8 @@ bool SymbolAnalysis::hasEncodingOrBind(Value value) {
   return false;
 }
 
-llvm::SmallVector<llvm::StringRef> SymbolAnalysis::getEncodingShapes(Value value) {
+llvm::SmallVector<llvm::StringRef> SymbolAnalysis::getEncodingShapes(
+    Value value) {
   llvm::SmallVector<llvm::StringRef> shapes;
   if (llc::hasEncoding(value)) {
     auto encoding = llc::getEncodingFrom(value);
@@ -233,6 +234,10 @@ SymbolicIntOp SymbolAnalysis::buildNewSymbol(
     llvm::ArrayRef<llvm::StringRef> relations, bool greater_zore) {
   auto refined_symbol = SymEngine::simplify(symbol);
   auto express = SymEngine::ccode(*refined_symbol);
+  if (!express.empty() &&
+      std::all_of(express.begin(), express.end(), ::isdigit)) {
+    return getOrBuildConstSymbol(std::stoi(express));
+  }
   if (expressions_map_.contains(express))
     return symbol_op_table_[expressions_map_[express]];
   auto module = symbol_module_->getParentRegion()->getParentOfType<ModuleOp>();
@@ -275,9 +280,9 @@ SymbolicIntOp SymbolAnalysis::getOrBuildSymbol(const llvm::StringRef symbol,
   return symbol_op;
 }
 
-SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(size_t val) {
+SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(int64_t val) {
   llvm::SmallString<1> symbol("c" + std::to_string(val));
-  return getOrBuildSymbol(symbol,true);
+  return getOrBuildSymbol(symbol, true);
 }
 
 SymbolBindOp SymbolAnalysis::buildSymbolBindFromAttr(Value value) {
@@ -575,7 +580,7 @@ SymbolicIntOp SymbolAnalysis::_insertNewSymbol(
     buildSymbolRelation(symbol_name, one.getSymName(), SymbolRelation::GE);
   }
   return symbol_op;
-};
+}
 
 SymbolicIntOp SymbolAnalysis::_insertNewSymbol(
     const llvm::StringRef symbol_name, LLHPatternRewriter* builder,

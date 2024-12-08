@@ -76,7 +76,7 @@ struct AllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
     auto alloc = llvm::cast<memref::AllocOp>(getRootAllocOp(source));
     rewriter.replaceAllUsesWith(alloc, target);
     rewriter.eraseOp(op);
-  };
+  }
 
   Operation* getRootAllocOp(Value source) const {
     if (isa<BlockArgument>(source)) return nullptr;

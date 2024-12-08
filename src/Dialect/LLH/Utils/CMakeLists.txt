@@ -1,9 +1,9 @@
 llcompiler_add_library(LLCLLHUtils
   SRC_FILES
   Utils.cpp
-  SymbolAnalysis.cpp
-  InferSymbol.cpp
   Broadcast.cpp
+  InferSymbol.cpp
+  SymbolAnalysis.cpp
 
   ADDITIONAL_INCLUDE_DIRS
   ${SYMENGINE_INCLUDE_DIRS}

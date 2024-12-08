@@ -15,7 +15,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 
 #include "llcompiler/Dialect/LLH/Utils/Broadcast.h"
-#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/InferSymbol.h"
 #include "llcompiler/Support/Logger.h"
 namespace mlir {
 // 不要再这个方法里面创建非symbolOp

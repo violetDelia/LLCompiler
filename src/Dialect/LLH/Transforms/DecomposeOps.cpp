@@ -23,8 +23,8 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
-#include "llcompiler/Dialect/LLH/Utils/InferSymbol.h"
-#include "llcompiler/Dialect/LLH/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/InferSymbol.h"
+#include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
