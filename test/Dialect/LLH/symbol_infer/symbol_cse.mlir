@@ -1,5 +1,5 @@
-// RUN: llc-opt --split-input-file -infer-symbol-shape="use-encoding=false" --symbol-fold %s| FileCheck %s
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false" --symbol-fold /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/symbol_fold.mlir
+// RUN: llc-opt --split-input-file -infer-symbol-shape="use-encoding=false" --symbol-cse %s| FileCheck %s
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false" --symbol-cse /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/symbol_fold.mlir
 
 
 

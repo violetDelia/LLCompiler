@@ -38,7 +38,7 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::llh {
-#define GEN_PASS_DEF_SYMBOLFOLDPASS
+#define GEN_PASS_DEF_SYMBOLCSEPASS
 #include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -94,7 +94,7 @@ void foldSymbol(func::FuncOp func) {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateSymbolFoldPassPatterns(RewritePatternSet& patterns) {
+void populateSymbolCSEPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
   // populateWithGenerated(patterns);
 }
@@ -103,19 +103,19 @@ void populateSymbolFoldPassPatterns(RewritePatternSet& patterns) {
 // pass defination
 //===----------------------------------------------------------------------===//
 namespace {
-struct SymbolFoldPass : llh::impl::SymbolFoldPassBase<SymbolFoldPass> {
+struct SymbolCSEPass : llh::impl::SymbolCSEPassBase<SymbolCSEPass> {
   void runOnOperation() override;
 };
 
 }  // namespace
-void SymbolFoldPass::runOnOperation() {
+void SymbolCSEPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
   auto fold_symbol_dim = [](func::FuncOp func) { foldSymbol(func); };
   module->walk(fold_symbol_dim);
   RewritePatternSet patterns(context);
-  populateSymbolFoldPassPatterns(patterns);
+  populateSymbolCSEPassPatterns(patterns);
   if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
     signalPassFailure();
   LLC_RUN_OUT_PASS

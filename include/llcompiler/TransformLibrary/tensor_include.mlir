@@ -10,6 +10,10 @@ transform.named_sequence @tensor_basic_opt(%module: !transform.any_op {transform
     } : !transform.any_op
     transform.bufferization.buffer_loop_hoisting %funcs : !transform.any_op
     transform.bufferization.eliminate_empty_tensors %funcs : !transform.any_op
+    transform.apply_patterns to %funcs {
+      transform.apply_patterns.canonicalization
+    } : !transform.any_op
+    transform.apply_cse to %funcs : !transform.any_op
     transform.yield
   }
 

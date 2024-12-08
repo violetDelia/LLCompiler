@@ -17,7 +17,9 @@
 2024.12.7  :    add arith.constant symbol infer
                 add tensor.dim symbol infer
 2024.12.8  :    split llh opt and symbol opt
-                add symbol fold pass            
+                add symbol fold pass   
+                add stablehlo to linalg extension
+                add stablehlo.RealDynamicSlice to linalg         
 TODO:
     slice     
     torch frezen

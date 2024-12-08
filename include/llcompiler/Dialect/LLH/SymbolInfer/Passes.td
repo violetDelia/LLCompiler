@@ -45,7 +45,7 @@ def InferSymbolShapePass : Pass<"infer-symbol-shape","ModuleOp"> {
   ];
 }
 
-def SymbolFoldPass : Pass<"symbol-fold","ModuleOp"> {
+def SymbolCSEPass : Pass<"symbol-cse","ModuleOp"> {
   let summary = "symbol fold";
   let description = [{
   }];

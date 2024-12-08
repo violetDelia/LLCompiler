@@ -155,7 +155,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::createConvertTensorToLinalgPass());
   pm.addPass(mlir::llh::createInferSymbolShapePass(
       {.CleanSymbolCache = false, .UseEncoding = false}));
-  pm.addPass(mlir::llh::createSymbolFoldPass());
+  pm.addPass(mlir::llh::createSymbolCSEPass());
   pm.addPass(mlir::llh::createRemoveSymbolPass());
   //===----------------------------------------------------------------------===//
   //  linalg opt

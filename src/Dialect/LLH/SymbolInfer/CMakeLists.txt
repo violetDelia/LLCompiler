@@ -5,7 +5,7 @@ llcompiler_add_library(LLCSymbolInferTransforms
   RemoveSymbol.cpp
   SinkBindEncoding.cpp
   UnloadAndBindEncoding.cpp
-  SymbolFold.cpp
+  SymbolCSE.cpp
 
 
 
