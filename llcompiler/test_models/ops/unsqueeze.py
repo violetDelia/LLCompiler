@@ -7,5 +7,7 @@ class Unsqueeze(nn.Module):
         super().__init__()
 
     def forward(self, x: torch.Tensor):
-        x = x.unsqueeze(1)
+        x1 = x.unsqueeze(1)
+        x2 = x.unsqueeze(1)
+        x = x1+x2
         return x

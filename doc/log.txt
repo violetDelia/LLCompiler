@@ -19,7 +19,9 @@
 2024.12.8  :    split llh opt and symbol opt
                 add symbol fold pass   
                 add stablehlo to linalg extension
-                add stablehlo.RealDynamicSlice to linalg         
+                add stablehlo.RealDynamicSlice to linalg   
+                符号专题<3>
+      
 TODO:
     slice     
     torch frezen

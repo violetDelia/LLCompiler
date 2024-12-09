@@ -17,8 +17,8 @@ class Decompose_BatchNorm(nn.Module):
         x = self.linear1(x)
         x = self.batch1(x)
         x = self.rule(x)
-        # x = self.linear2(x)
-        # x = self.batch2(x)
-        # x = self.rule(x)
-        # x = self.flaten(x)
+        x = self.linear2(x)
+        x = self.batch2(x)
+        x = self.rule(x)
+        x = self.flaten(x)
         return x

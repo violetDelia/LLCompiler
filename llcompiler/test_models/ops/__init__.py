@@ -6,5 +6,5 @@ from .linear import Linear
 from .pooling import MaxPool2D
 from .elewise_fusion import ElewiseFusion1
 from .unsqueeze import Unsqueeze
-from .slice import Extract
+from .slice import Extract,Slice
 from .decompose import Decompose_BatchNorm

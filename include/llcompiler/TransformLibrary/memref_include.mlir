@@ -7,7 +7,7 @@ transform.named_sequence @memref_basic_opt(%module: !transform.any_op {transform
     : (!transform.any_op) -> !transform.any_op
     %liveness_opted_funcs = transform.apply_registered_pass "optimize-allocation-liveness" to %add_deallocation_funcs : (!transform.any_op) -> !transform.any_op
     transform.apply_patterns to %liveness_opted_funcs {
-        transform.apply_patterns.memref.alloc_to_alloca size_limit(32)
+        transform.apply_patterns.memref.alloc_to_alloca size_limit(128)
         transform.apply_patterns.memref.resolve_ranked_shaped_type_result_dims
         transform.apply_patterns.memref.expand_strided_metadata
         transform.apply_patterns.canonicalization
