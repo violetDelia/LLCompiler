@@ -21,6 +21,7 @@
                 add stablehlo to linalg extension
                 add stablehlo.RealDynamicSlice to linalg   
                 符号专题<3>
+2024.12.8  :    support Unsqueeze
       
 TODO:
     slice     

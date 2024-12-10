@@ -24,3 +24,4 @@ from .transpose import transpose_convert, permute_convert
 from .slice import aten_select_convert
 from .linear import torch_linear_convert
 from .matmul import matmul_convert
+from .broadcast import broadcast_in_dim_convert

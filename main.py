@@ -51,15 +51,13 @@ module_dict = {
     # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Abs: [torch.randn((200,3,224,256), device="cpu")],
-    # Extract: [torch.randn((200, 200, 224, 224), device="cpu")],
     # Slice: [torch.randn((200, 200, 224, 224), device="cpu")],
-    Unsqueeze: [torch.randn((200,3,224,256), device="cpu")],
-    # MultiHeadedAttention: [
-    #     torch.randn((2, 24, 8), device="cpu"),
-    #     torch.randn((2, 24, 8), device="cpu"),
-    #     torch.randn((2, 24, 8), device="cpu"),
-    #     torch.tril(torch.ones((24, 24)), diagonal=0).unsqueeze(0),
-    # ]
+    MultiHeadedAttention: [
+        torch.randn((2, 24, 8), device="cpu"),
+        torch.randn((2, 24, 8), device="cpu"),
+        torch.randn((2, 24, 8), device="cpu"),
+        torch.tril(torch.ones((24, 24)), diagonal=0).unsqueeze(0),
+    ]
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
     # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
@@ -81,7 +79,7 @@ module_dict = {
 def run_model_dict(dict):
     modes = [
         "inference",
-        # "training"
+        "training"
     ]
     for mode in modes:
         for func, inputs in dict.items():

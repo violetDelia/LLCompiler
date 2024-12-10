@@ -67,6 +67,7 @@ class MLIR_Builder:
         raise NotImplementedError
 
     def _fx_mlir_gen(self, model: torch.fx.GraphModule, **kwargs):
+        model.graph.print_tabular()
         params = {
             **dict(model.named_parameters(remove_duplicate=False)),
             **dict(model.named_buffers(remove_duplicate=False)),

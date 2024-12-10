@@ -73,6 +73,10 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         aten = torch.ops.aten
         self.decompositions = {
             aten._native_batch_norm_legit_no_training.default,
+            aten.addmm,
+            aten.expand,
+            aten.transpose.int
+            #aten.unsqueeze
             
         }
 
@@ -102,10 +106,8 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         return execut
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
-        if self.mode == "training":
             return aot_autograd(
                 fw_compiler=self.compiler,
                 decompositions=get_decompositions(self.decompositions),
             )(model, inputs)
-        if self.mode == "inference":
-            return self.compiler(model, inputs)
+        

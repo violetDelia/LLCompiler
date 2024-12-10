@@ -82,8 +82,30 @@ def view_convert(
     return ReshapeOp(operands=[input, dims], result_types=[result_type])
 
 
+@TORCH_FUNCTION_TRANSLATE("aten::unsqueeze")
+def unsqueeze_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    res_tensor: FakeTensor = get_result_type(node)
+    result_type = torch_fake_tensor_translate(res_tensor)
+    input = get_arg_value(node.args[0], value_map, block)
+    dims = []
+    for dim in res_tensor.shape:
+        if isinstance(dim, int):
+            const = build_llh_constant(dim)
+            block.add_op(const)
+            dims.append(const)
+        elif isinstance(dim, torch.SymInt):
+            symbol = torch_symbol_translate(dim,symbol_map)
+            block.add_op(symbol)
+            dims.append(symbol)
+    return ReshapeOp(operands=[input, dims], result_types=[result_type])
+
 @TORCH_METHOD_TRANSLATE("unsqueeze")
-def aten_view_convert(
+def unsqueeze_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
