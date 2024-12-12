@@ -8,3 +8,4 @@ from .elewise_fusion import ElewiseFusion1
 from .unsqueeze import Unsqueeze
 from .slice import Extract,Slice
 from .decompose import Decompose_BatchNorm
+from .braodcast import Braodcast

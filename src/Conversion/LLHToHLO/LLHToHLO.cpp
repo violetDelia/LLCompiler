@@ -132,8 +132,7 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
     auto unexpand_dims_attr = rewriter.getDenseI64ArrayAttr(unexpand_dims);
     auto known_expanding_dimensions_attr = op.getCastDimsAttr();
     auto new_op = rewriter.create<stablehlo::DynamicBroadcastInDimOp>(
-        loc, res_type, operand, output_dimensions, broadcast_dimensions_attr,
-        known_expanding_dimensions_attr, unexpand_dims_attr);
+        loc, res_type, operand, output_dimensions, broadcast_dimensions_attr);
     rewriter.replaceOp(op, new_op);
     return success();
   }

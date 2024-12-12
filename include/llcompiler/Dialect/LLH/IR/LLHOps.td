@@ -203,7 +203,9 @@ def LLH_BroadCastToOp          : LLH_SymbolOp<"broadcast_to",[]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         Variadic<LLH_Int64>:$out_shapes,
-        DenseI64ArrayAttr:$cast_dims
+        DenseI64ArrayAttr:$cast_dims,
+        OptionalAttr<DenseI64ArrayAttr>:$expand_dims,
+        OptionalAttr<DenseI64ArrayAttr>:$noexpand_dims
         );
     let results = (outs 
         LLH_Tensor);

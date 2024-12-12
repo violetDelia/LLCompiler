@@ -35,8 +35,7 @@ from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import MulOp, TorchSymbolicIntOp
 
 
-
-@TORCH_FUNCTION_TRANSLATE("mul", "aten::mul.Tensor")
+@TORCH_FUNCTION_TRANSLATE("mul", "aten::mul.Tensor", "prims::mul")
 def mul_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

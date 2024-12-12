@@ -160,7 +160,7 @@ LogicalResult insertBroadcastBeforeBinary(Operation* op,
   }
   auto cast_op = rewriter.create<BroadCastToOp>(
       loc, result_type, will_be_broadcast,
-      llh::buildTensorDims(target_operand, &rewriter), cast_dims);
+      llh::buildTensorDims(target_operand, &rewriter), cast_dims,DenseI64ArrayAttr{},DenseI64ArrayAttr{});
   if (lhs_type == result_type) {
     rewriter.replaceOpWithNewOp<BinaryOp>(op, result_type,
                                           ValueRange{lhs, cast_op});

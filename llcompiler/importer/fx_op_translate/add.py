@@ -34,7 +34,7 @@ from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import TorchSymbolicIntOp, AddOp
 
-@TORCH_FUNCTION_TRANSLATE("aten::add.Tensor", "add", "iadd")
+@TORCH_FUNCTION_TRANSLATE("aten::add.Tensor", "add", "iadd","prims::add")
 def add_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

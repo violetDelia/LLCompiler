@@ -75,7 +75,10 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             aten._native_batch_norm_legit_no_training.default,
             aten.addmm,
             aten.expand,
-            aten.transpose.int
+            aten._unsafe_view,
+            aten.transpose,
+            aten.add,
+            aten.mul
             #aten.unsqueeze
             
         }

@@ -22,8 +22,10 @@
                 add stablehlo.RealDynamicSlice to linalg   
                 符号专题<3>
 2024.12.8  :    support Unsqueeze
-      
+2024.12.11 :    aten::permute support
 TODO:
+
+    refine braodcast
     slice     
     torch frezen
 

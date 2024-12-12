@@ -100,7 +100,7 @@ BroadCastToOp reshapeAndBroadcastTo(LLHPatternRewriter& rewriter,
   auto reshape =
       rewriter.create<ReshapeOp>(loc, reshape_type, value, reshape_dims);
   auto broadcast_to =
-      rewriter.create<BroadCastToOp>(loc, input_type, reshape, dims, cast_dims);
+      rewriter.create<BroadCastToOp>(loc, input_type, reshape, dims, cast_dims,DenseI64ArrayAttr{},DenseI64ArrayAttr{});
   return broadcast_to;
 }
 //===----------------------------------------------------------------------===//
