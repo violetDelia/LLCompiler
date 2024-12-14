@@ -209,7 +209,6 @@ def LLH_BroadCastToOp          : LLH_SymbolOp<"broadcast_to",[]>{
         );
     let results = (outs 
         LLH_Tensor);
-    let hasCanonicalizer = 1;
 }
 
 def LLH_WeightOp : LLH_SymbolOp<"weight">{

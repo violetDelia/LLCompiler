@@ -19,8 +19,8 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
 #include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"

@@ -150,26 +150,6 @@ func.func @binary(%arg0: tensor<?x3x?x?xf32>, %arg2: tensor<1x1x?x?xf32>) ->() a
 
 // -----
 // CHECK-ENCODING: llh.encoding_bind
-func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
-  %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
-  %1 = "llh.constant"() <{value = 1 : i64}> : () -> i64
-  %2 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
-  %3 = "llh.constant"() <{value = 2 : i64}> : () -> i64
-  %4 = "llh.constant"() <{value = 0 : i64}> : () -> i64
-  %5 = "llh.mul"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
-  %6 = "llh.reshape"(%2, %1, %1, %1, %1) : (tensor<1xf32>, i64, i64, i64, i64) -> tensor<*xf32>
-  %7 = "llh.dim"(%5, %4) : (tensor<?x?x?x?xf32>, i64) -> i64
-  %8 = "llh.dim"(%5, %1) : (tensor<?x?x?x?xf32>, i64) -> i64
-  %9 = "llh.dim"(%5, %3) : (tensor<?x?x?x?xf32>, i64) -> i64
-  %10 = "llh.dim"(%5, %0) : (tensor<?x?x?x?xf32>, i64) -> i64
-  // CHECK: llh.broadcast_to
-  // CHECK-SAME:-> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
-  %11 = "llh.broadcast_to"(%6, %7, %8, %9, %10) <{cast_dims = array<i64: 0, 1, 2, 3>}> : (tensor<*xf32>, i64, i64, i64, i64) -> tensor<*xf32>
-  return 
-}
-
-// -----
-// CHECK-ENCODING: llh.encoding_bind
 func.func @matmul(%arg0: tensor<?x512xf32>) -> tensor<*xf32> attributes {entrance} {
     // CHECK: llh.matmul
     // CHECK-SAME: tensor<?x10xf32, #llh.encoding<shapes = @s0, @c10>>
@@ -247,4 +227,24 @@ func.func @extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.
     // CHECK-SAME:-> tensor<1xf32, #llh.encoding<shapes = @c1>>
     %8 = "llh.extract"(%7, %3) : (tensor<*xf32>, i64) -> tensor<*xf32>
     return %8 : tensor<*xf32>
+}
+
+// -----
+// CHECK-ENCODING: llh.encoding_bind
+func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
+  %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
+  %1 = "llh.constant"() <{value = 1 : i64}> : () -> i64
+  %2 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+  %3 = "llh.constant"() <{value = 2 : i64}> : () -> i64
+  %4 = "llh.constant"() <{value = 0 : i64}> : () -> i64
+  %5 = "llh.mul"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+  %6 = "llh.reshape"(%2, %1, %1, %1, %1) : (tensor<1xf32>, i64, i64, i64, i64) -> tensor<*xf32>
+  %7 = "llh.dim"(%5, %4) : (tensor<?x?x?x?xf32>, i64) -> i64
+  %8 = "llh.dim"(%5, %1) : (tensor<?x?x?x?xf32>, i64) -> i64
+  %9 = "llh.dim"(%5, %3) : (tensor<?x?x?x?xf32>, i64) -> i64
+  %10 = "llh.dim"(%5, %0) : (tensor<?x?x?x?xf32>, i64) -> i64
+  // CHECK: llh.broadcast_to
+  // CHECK-SAME:-> tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>
+  %11 = "llh.broadcast_to"(%6, %7, %8, %9, %10) <{cast_dims = array<i64: 0, 1, 2, 3>}> : (tensor<*xf32>, i64, i64, i64, i64) -> tensor<*xf32>
+  return 
 }

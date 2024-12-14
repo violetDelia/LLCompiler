@@ -620,8 +620,23 @@ INFER_FUNCTION(BroadCastToOp) {
     WARN_UNIMPLEMENTED(llc::SymbolInfer);
     return llvm::failure();
   }
+  auto input_symbols = llc::getEncodingFrom(getInput()).getShapeSymbols();
+  auto res_symbols = llc::getEncodingFrom(getResult()).getShapeSymbols();
+  auto cast_dims = getCastDims();
+  auto input_rank = input_symbols.size();
+  auto expand_dims = llvm::SmallVector<int64_t>();
+  auto unexpand_dims = llvm::SmallVector<int64_t>();
+  for (int i = 0; i < input_rank; i++) {
+    auto in_symbol = input_symbols[i];
+    auto out_symbol = res_symbols[cast_dims[i]];
+    if (in_symbol == out_symbol)
+      unexpand_dims.push_back(i);
+    else
+      expand_dims.push_back(i);
+  }
+  setExpandDims(expand_dims);
+  setNoexpandDims(unexpand_dims);
   COMMON_CHECK
-  INFO_UNIMPLEMENTED(llc::SymbolInfer) << "symbol relations";
   return llvm::success();
 }
 

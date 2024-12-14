@@ -98,41 +98,19 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
 
   LogicalResult matchAndRewrite(BroadCastToOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
-    auto mode = op->getParentOfType<ModuleOp>();
     auto loc = op->getLoc();
     auto res = op.getResult();
     auto res_type = llc::getRankTensorFrom(res);
     auto out_shapes = op.getOutShapes();
-    auto cast_dims = op.getCastDims();
     auto operand = op.getInput();
-    llvm::SmallVector<int64_t> unexpand_dims;
-    llvm::SmallVector<int64_t> broadcast_dimensions;
-    auto rank = res_type.getRank();
-    for (int64_t i{}; i < rank; i++) {
-      bool is_expand = false;
-      for (auto dim : cast_dims) {
-        if (dim == i) {
-          is_expand = true;
-        }
-      }
-      if (!is_expand) {
-        unexpand_dims.push_back(i);
-      }
-      broadcast_dimensions.push_back(i);
-    }
     auto output_dimensions = rewriter.create<tensor::FromElementsOp>(
         loc, castToIndex(&rewriter, out_shapes, loc));
-    auto i64_type = rewriter.getI64Type();
-    auto broadcast_dimensions_shape = RankedTensorType::get(
-        {static_cast<int64_t>(broadcast_dimensions.size())}, i64_type);
-    auto broadcast_dimensions_attr =
-        rewriter.getDenseI64ArrayAttr(broadcast_dimensions);
-    auto unexpand_dims_shape = RankedTensorType::get(
-        {static_cast<int64_t>(unexpand_dims.size())}, i64_type);
-    auto unexpand_dims_attr = rewriter.getDenseI64ArrayAttr(unexpand_dims);
-    auto known_expanding_dimensions_attr = op.getCastDimsAttr();
+    auto broadcast_dimensions_attr = op.getCastDimsAttr();
+    auto unexpand_dims_attr = op.getNoexpandDimsAttr();
+    auto known_expanding_dimensions_attr = op.getExpandDimsAttr();
     auto new_op = rewriter.create<stablehlo::DynamicBroadcastInDimOp>(
-        loc, res_type, operand, output_dimensions, broadcast_dimensions_attr);
+        loc, res_type, operand, output_dimensions, broadcast_dimensions_attr,
+        known_expanding_dimensions_attr, unexpand_dims_attr);
     rewriter.replaceOp(op, new_op);
     return success();
   }
