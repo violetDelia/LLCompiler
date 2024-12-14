@@ -49,10 +49,11 @@
 using namespace mlir;
 using namespace mlir::llh;
 #include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
-constexpr inline size_t SinkOpBenfit = 101;
-constexpr inline size_t RefineOpBenefit = 101;
+
 constexpr inline size_t ReshapeBenefit = 100;
 constexpr inline size_t BroadcastBenefit = 99;
+constexpr inline size_t RefineOpBenefit = 98;
+constexpr inline size_t SinkOpBenfit = 97;
 
 //===----------------------------------------------------------------------===//
 // ConstantOp.

@@ -1,6 +1,6 @@
 // RUN: llc-opt --split-input-file --remove-redundant-ops %s| FileCheck %s
 
-///home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --remove-redundant-ops /home/lfr/LLCompiler/test/Dialect/LLH/remove_redundant_ops.mlir
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --remove-redundant-ops /home/lfr/LLCompiler/test/Dialect/LLH/remove_redundant_ops.mlir
 
 
 #map1 = affine_map<()[s0, s1, s2] -> (s0, s1, s2, s1)>

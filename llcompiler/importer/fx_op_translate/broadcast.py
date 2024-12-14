@@ -46,18 +46,18 @@ def broadcast_in_dim_convert(
     res_tensor = get_result_type(node)
     result_type = torch_fake_tensor_translate(res_tensor)
     input = get_arg_value(node.args[0], value_map, block)
-    dims = []
+    cast_dims = []
     res_dims = node.args[1]
     for dim in res_dims:
         if isinstance(dim, int):
             const_dim = build_llh_constant(dim)
             block.add_op(const_dim)
-            dims.append(const_dim.result)
+            cast_dims.append(const_dim.result)
         else:
             dim = value_map[dim.name][0]
-            dims.append(dim)
+            cast_dims.append(dim)
     attrs = {"cast_dims": DenseArrayBase.from_list(i64, node.args[2])}
     op = BroadCastToOp(
-        operands=[input, dims], attributes=attrs, result_types=[result_type]
+        operands=[input, cast_dims], attributes=attrs, result_types=[result_type]
     )
     return op

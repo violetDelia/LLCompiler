@@ -23,6 +23,7 @@
                 符号专题<3>
 2024.12.8  :    support Unsqueeze
 2024.12.11 :    aten::permute support
+2024.12.11 :    prims::broadcast_in_dim support
 TODO:
 
     refine braodcast

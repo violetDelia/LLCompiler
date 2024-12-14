@@ -115,7 +115,6 @@ struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
     return llvm::failure();
   }
   void rewrite(ConstantOp op, LLHPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
     for (auto user : op->getUsers()) {
       if (user->hasTrait<::mlir::BraodcastableOpInterface::Trait>()) {
         auto operand_num = user->getNumOperands();
@@ -135,7 +134,6 @@ template <class Op>
 struct ResultScaleRefine : public LLHOpRewritePattern<Op> {
   using LLHOpRewritePattern<Op>::LLHOpRewritePattern;
   LogicalResult match(Op op) const final {
-    auto res = op->getResults();
     for (auto res : op->getResults()) {
       auto tensor = llc::getRankTensorFrom(res);
       if (tensor.getRank() == 0) return llvm::success();
@@ -143,7 +141,6 @@ struct ResultScaleRefine : public LLHOpRewritePattern<Op> {
     return llvm::failure();
   }
   void rewrite(Op op, LLHPatternRewriter& rewriter) const final {
-    auto res = op->getResults();
     for (auto res : op->getResults()) {
       auto tensor = llc::getRankTensorFrom(res);
       auto new_tensor = RankedTensorType::get({1}, tensor.getElementType());
@@ -176,6 +173,51 @@ struct ResultScaleRefine : public LLHOpRewritePattern<Op> {
   }
 };
 
+struct RefineBroadcast : public LLHOpRewritePattern<BroadCastToOp> {
+  using LLHOpRewritePattern<BroadCastToOp>::LLHOpRewritePattern;
+  LogicalResult match(BroadCastToOp op) const final {
+    auto cast_dims = op.getCastDims();
+    auto res = op.getResult();
+    auto res_type = llc::getRankTensorFrom(res);
+    if (res_type.getRank() == cast_dims.size()) return llvm::failure();
+    return llvm::success();
+  }
+
+  void rewrite(BroadCastToOp op, LLHPatternRewriter& rewriter) const final {
+    auto loc = op->getLoc();
+    auto input = op.getInput();
+    auto cast_dims = op.getCastDims();
+    auto dims = op.getOutShapes();
+    auto res = op.getResult();
+    auto res_tensor = llc::getRankTensorFrom(res);
+    auto ele_type = res_tensor.getElementType();
+    auto res_rank = res_tensor.getRank();
+    auto new_cast_dims = llvm::SmallVector<int64_t>();
+    auto one = rewriter.create<ConstantOp>(
+        loc, IntegerAttr::get(rewriter.getI64Type(), 1));
+    auto reshape_dims = llvm::SmallVector<Value>(res_rank, one);
+    auto reshape_res_shapes = llvm::SmallVector<int64_t>(res_rank, 1);
+    for (int i = 0; i < res_rank; i++) {
+      new_cast_dims.push_back(i);
+    }
+    for (auto cast_dim : cast_dims) {
+      reshape_dims[cast_dim] = dims[cast_dim];
+      if (llh::isConstIntegerValue(reshape_dims[cast_dim])) {
+        reshape_res_shapes[cast_dim] =
+            llh::getConstIntegerValue(reshape_dims[cast_dim]);
+      } else {
+        reshape_res_shapes[cast_dim] = ShapedType::kDynamic;
+      }
+    }
+    auto reshape_res_type = RankedTensorType::get(reshape_res_shapes, ele_type);
+    auto reshape =
+        rewriter.create<ReshapeOp>(loc, reshape_res_type, input, reshape_dims);
+    auto new_braodcast = rewriter.create<BroadCastToOp>(
+        loc, res_tensor, reshape, dims, new_cast_dims, DenseI64ArrayAttr(),
+        DenseI64ArrayAttr());
+    rewriter.replaceOp(op, new_braodcast);
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -184,6 +226,7 @@ void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   patterns.add<BraodcastableScalarToTensor>(context);
   patterns.add<ResultScaleRefine<WeightOp>>(context);
   patterns.add<ResultScaleRefine<ExtractOp>>(context);
+  patterns.add<RefineBroadcast>(context);
 }
 
 //===----------------------------------------------------------------------===//

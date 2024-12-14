@@ -63,6 +63,7 @@ bool isConstIntegerValue(Value value) {
   auto type = value.getType();
   if (!llvm::isa<IntegerType, IndexType>(type)) return false;
   auto op = value.getDefiningOp();
+  if (isa<TorchSymbolicIntOp>(op)) return false;
   if (llvm::isa<mlir::arith::ConstantOp>(op)) return true;
   if (llvm::isa<DimOp>(op)) {
     auto dim_op = cast<DimOp>(op);

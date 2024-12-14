@@ -63,24 +63,6 @@ func.func @transpose(%arg0: tensor<?x?x?x4xf32>) -> () attributes {entrance} {
     return 
 }
 
-// -----
-func.func @braodcast_to(%arg0: tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32> attributes {entrance} {
-  %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
-  %1 = "llh.constant"() <{value = 2 : i64}> : () -> i64
-  %2 = "llh.constant"() <{value = 0 : i64}> : () -> i64
-  %3 = "llh.constant"() <{value = 1 : i64}> : () -> i64
-  %4 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
-  %5 = "llh.reshape"(%4, %3, %3, %3, %3) : (tensor<1xf32>, i64, i64, i64, i64) -> tensor<1x1x1x1xf32>
-  %6 = "llh.dim"(%arg0, %2) : (tensor<1x?x?x?xf32>, i64) -> i64
-  %7 = "llh.dim"(%arg0, %3) : (tensor<1x?x?x?xf32>, i64) -> i64
-  %8 = "llh.dim"(%arg0, %1) : (tensor<1x?x?x?xf32>, i64) -> i64
-  %9 = "llh.dim"(%arg0, %0) : (tensor<1x?x?x?xf32>, i64) -> i64
-  // CHECK: stablehlo.dynamic_broadcast_in_dim
-  // CHECK-NOT: llh.broadcast_to
-  %10 = "llh.broadcast_to"(%5, %6, %7, %8, %9) <{cast_dims = array<i64: 1, 2, 3>}> : (tensor<1x1x1x1xf32>, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
-  %11 = "llh.add"(%arg0, %10) : (tensor<1x?x?x?xf32>, tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32>
-  return %11 : tensor<1x?x?x?xf32>
-}
 
 // -----
 func.func @batch_norm(%arg0: tensor<3x3x100x100xf32> ) -> tensor<3x3x100x100xf32> attributes {entrance} {
@@ -130,5 +112,24 @@ func.func @slice(%arg0: tensor<?x?x?x?xf32> ) -> tensor<1x?x?x?xf32> attributes 
     %3 = "llh.stride_slice"(%arg0, %c0_i64, %c0_i64, %c0_i64, %c0_i64, %c1_i64, %0, %1, %2, %c1_i64, %c1_i64, %c1_i64, %c1_i64) <{operandSegmentSizes = array<i32: 1, 4, 4, 4>}> : (tensor<?x?x?x?xf32>, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
     return %3 : tensor<1x?x?x?xf32>
   }
+
+// -----
+func.func @braodcast_to(%arg0: tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32> attributes {entrance} {
+  %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
+  %1 = "llh.constant"() <{value = 2 : i64}> : () -> i64
+  %2 = "llh.constant"() <{value = 0 : i64}> : () -> i64
+  %3 = "llh.constant"() <{value = 1 : i64}> : () -> i64
+  %4 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32>
+  %5 = "llh.reshape"(%4, %3, %3, %3, %3) : (tensor<1xf32>, i64, i64, i64, i64) -> tensor<1x1x1x1xf32>
+  %6 = "llh.dim"(%arg0, %2) : (tensor<1x?x?x?xf32>, i64) -> i64
+  %7 = "llh.dim"(%arg0, %3) : (tensor<1x?x?x?xf32>, i64) -> i64
+  %8 = "llh.dim"(%arg0, %1) : (tensor<1x?x?x?xf32>, i64) -> i64
+  %9 = "llh.dim"(%arg0, %0) : (tensor<1x?x?x?xf32>, i64) -> i64
+  // CHECK: stablehlo.dynamic_broadcast_in_dim
+  // CHECK-NOT: llh.broadcast_to
+  %10 = "llh.broadcast_to"(%5, %6, %7, %8, %9) <{cast_dims = array<i64: 0, 1, 2, 3>}> : (tensor<1x1x1x1xf32>, i64, i64, i64, i64) -> tensor<1x?x?x?xf32>
+  %11 = "llh.add"(%arg0, %10) : (tensor<1x?x?x?xf32>, tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32>
+  return %11 : tensor<1x?x?x?xf32>
+}
 
 
