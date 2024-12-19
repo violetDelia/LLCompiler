@@ -248,3 +248,15 @@ func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
   %11 = "llh.broadcast_to"(%6, %7, %8, %9, %10) <{cast_dims = array<i64: 0, 1, 2, 3>}> : (tensor<*xf32>, i64, i64, i64, i64) -> tensor<*xf32>
   return 
 }
+
+
+// -----
+// CHECK-ENCODING: llh.encoding_bind
+func.func @batch_matmul(%arg0: tensor<12x?x512xf32>) -> tensor<*xf32> attributes {entrance} {
+    // CHECK: llh.batch_matmul
+    // CHECK-SAME:  tensor<12x?x10xf32, #llh.encoding<shapes = @c12, @s0, @c10>>
+    %const = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<12x512x10xf32>
+    %matmul = "llh.batch_matmul"(%arg0, %const) : (tensor<12x?x512xf32>, tensor<12x512x10xf32>) -> tensor<*xf32>
+    // llh.symbol_relation
+    return %matmul : tensor<*xf32>
+}

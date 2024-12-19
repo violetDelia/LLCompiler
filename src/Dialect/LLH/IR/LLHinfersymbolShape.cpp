@@ -501,6 +501,35 @@ INFER_FUNCTION(MatMulOp) {
   return llvm::success();
 }
 
+INFER_FUNCTION(BatchMatMulOp) {
+  HAS_ENCODING_RETURN(getResult())
+  NO_ENCODING_RETURN(getLhs())
+  NO_ENCODING_RETURN(getRhs())
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbols = llvm::SmallVector<StringRef>();
+  auto new_shapes = llvm::SmallVector<int64_t>();
+  auto lhs_type = llc::getRankTensorFrom(getLhs());
+  auto rhs_type = llc::getRankTensorFrom(getRhs());
+  auto lhs_symbols = llc::getEncodingFrom(lhs_type).getShapeSymbols();
+  auto rhs_symbols = llc::getEncodingFrom(rhs_type).getShapeSymbols();
+  new_shapes.push_back(lhs_type.getShape()[0]);
+  new_shapes.push_back(lhs_type.getShape()[1]);
+  new_shapes.push_back(rhs_type.getShape()[2]);
+  symbols.push_back(lhs_symbols[0].getValue());
+  symbols.push_back(lhs_symbols[1].getValue());
+  symbols.push_back(rhs_symbols[2].getValue());
+  auto new_tensor =
+      RankedTensorType::get(new_shapes, lhs_type.getElementType());
+  getResult().setType(new_tensor);
+  auto res = getResult();
+  symbol_analsis->addEncoding(res, symbols);
+  COMMON_CHECK
+  symbol_analsis->buildSymbolRelation(lhs_symbols[2].getAttr().strref(),
+                                      rhs_symbols[1].getAttr().strref(),
+                                      SymbolRelation::EQ);
+  return llvm::success();
+}
+
 INFER_FUNCTION(AdaptiveAvgPoolOp) {
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
   HAS_ENCODING_RETURN(getOperation()->getResult(0))
