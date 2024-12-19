@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Benefit.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
@@ -50,17 +51,12 @@ using namespace mlir;
 using namespace mlir::llh;
 #include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
 
-constexpr inline size_t ReshapeBenefit = 100;
-constexpr inline size_t BroadcastBenefit = 99;
-constexpr inline size_t RefineOpBenefit = 98;
-constexpr inline size_t SinkOpBenfit = 97;
-
 //===----------------------------------------------------------------------===//
 // ConstantOp.
 //===----------------------------------------------------------------------===//
 void ConstantOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                              MLIRContext *context) {
-  results.add<EraseNoUserOp<ConstantOp>>(context);
+  results.add<EraseNoUserOp<ConstantOp>>(context, RemoveBenfit);
 }
 //===----------------------------------------------------------------------===//
 // AbsOp.
@@ -68,7 +64,7 @@ void ConstantOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
 void AbsOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
   results.add<FoldTwoAbsOpPattern>(context);
-  results.add<EraseNoUserOp<AbsOp>>(context);
+  results.add<EraseNoUserOp<AbsOp>>(context, RemoveBenfit);
 }
 //===----------------------------------------------------------------------===//
 // MaxOp.
@@ -111,6 +107,7 @@ void MinOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
   results.add<SimplyBinaryOpInsertBraodcast<MinOp>>(context, BroadcastBenefit);
   results.add<SimplyBinaryOpReshape<MinOp>>(context, ReshapeBenefit);
 }
+
 //===----------------------------------------------------------------------===//
 // DivOp.
 //===----------------------------------------------------------------------===//
@@ -154,160 +151,6 @@ void DimOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
 //===----------------------------------------------------------------------===//
 void AdaptiveAvgPoolOp::getCanonicalizationPatterns(
     mlir::RewritePatternSet &results, MLIRContext *context) {}
-
-//===----------------------------------------------------------------------===//
-// SymbolBindOp
-//===----------------------------------------------------------------------===//
-namespace {
-struct MoveSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-
-  LogicalResult match(SymbolBindOp op) const final {
-    auto operand = op.getOperand();
-    auto input = operand.getDefiningOp();
-    if (isa<mlir::index::CastUOp, mlir::index::CastSOp>(input))
-      return llvm::success();
-    return llvm::failure();
-  }
-  void rewrite(SymbolBindOp op, LLHPatternRewriter &rewriter) const final {
-    auto befor_cast = op.getOperand();
-    auto root = befor_cast.getDefiningOp()->getOperand(0);
-    auto new_op = rewriter.replaceOpWithNewOp<SymbolBindOp>(
-        op, TypeRange{}, ValueRange{root}, op->getAttrDictionary().getValue());
-    rewriter.moveOpAfter(new_op, root.getDefiningOp());
-  }
-};
-
-struct SinkSymbolBindOp : public LLHOpRewritePattern<SymbolBindOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-
-  LogicalResult match(SymbolBindOp op) const final {
-    auto input = op.getOperand();
-    if (!isa<mlir::arith::IndexCastOp>(input.getDefiningOp()))
-      return llvm::failure();
-    return llvm::success();
-  }
-  void rewrite(SymbolBindOp op, LLHPatternRewriter &rewriter) const final {
-    auto operand = op.getOperand().getDefiningOp();
-    op->setOperand(0, operand->getOperand(0));
-  }
-};
-}  // namespace
-
-void SymbolBindOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                               MLIRContext *context) {
-  results.add<SinkSymbolBindOp>(context, SinkOpBenfit);
-  results.add<MoveSymbolBindOp>(context);
-}
-//===----------------------------------------------------------------------===//
-// EncodingBindOp
-//===----------------------------------------------------------------------===//
-namespace {
-struct MoveEncodingBindOp : public LLHOpRewritePattern<EncodingBindOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-
-  LogicalResult match(EncodingBindOp op) const final { return llvm::success(); }
-  void rewrite(EncodingBindOp op, LLHPatternRewriter &rewriter) const final {
-    auto operand = op.getOperand();
-    if (isa<BlockArgument>(operand)) {
-      auto block = op->getBlock();
-      op->remove();
-      block->push_front(op);
-    } else {
-      rewriter.moveOpAfter(op, op.getOperand().getDefiningOp());
-    }
-  }
-};
-
-}  // namespace
-
-void EncodingBindOp::getCanonicalizationPatterns(
-    mlir::RewritePatternSet &results, MLIRContext *context) {
-  results.add<MoveEncodingBindOp>(context);
-}
-//===----------------------------------------------------------------------===//
-// SymbolBinaryRelationOp
-//===----------------------------------------------------------------------===//
-namespace {
-// 如果symbol表示常量就去除
-struct RemoveSymbolBinaryRelationIfAllConst
-    : public LLHOpRewritePattern<SymbolBinaryRelationOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-
-  LogicalResult match(SymbolBinaryRelationOp op) const final {
-    auto symbol = op.getSymbol();
-    if (!SymbolAnalysis::isConst(symbol)) return llvm::failure();
-    auto relation_lhs = op.getRelationsLhs();
-    if (!SymbolAnalysis::isConst(relation_lhs)) return llvm::failure();
-    auto relation_rhs = op.getRelationsRhs();
-    if (!SymbolAnalysis::isConst(relation_rhs)) return llvm::failure();
-    return llvm::success();
-  }
-  void rewrite(SymbolBinaryRelationOp op,
-               LLHPatternRewriter &rewriter) const final {
-    rewriter.eraseOp(op);
-  }
-};
-}  // namespace
-
-void SymbolBinaryRelationOp::getCanonicalizationPatterns(
-    mlir::RewritePatternSet &results, MLIRContext *context) {
-  results.add<RemoveSymbolBinaryRelationIfAllConst>(context);
-}
-
-//===----------------------------------------------------------------------===//
-// SymbolRelationOp
-//===----------------------------------------------------------------------===//
-namespace {
-// 替换相等的符号
-struct ReplaceSymbolIfEquel : public LLHOpRewritePattern<SymbolRelationOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-
-  LogicalResult match(SymbolRelationOp op) const final {
-    if (op.getRelationKind() != SymbolRelation::EQ) return llvm::failure();
-    auto analysis = SymbolAnalysis::getInstance(op);
-    auto symbol = op.getSymbol();
-    if (analysis->isConst(symbol)) return llvm::failure();
-    auto relation = op.getRelation();
-    if (analysis->isConst(relation)) return llvm::failure();
-    return llvm::success();
-  }
-  void rewrite(SymbolRelationOp op, LLHPatternRewriter &rewriter) const final {
-    auto symbol = op.getSymbol();
-    auto relation = op.getRelation();
-    auto analysis = SymbolAnalysis::getInstance(op);
-    if (symbol.str() != relation.str()) {
-      analysis->replaceSymbol(relation, symbol);
-      auto old_symbol = analysis->getOrBuildSymbol(relation);
-      rewriter.eraseOp(old_symbol);
-    }
-    rewriter.eraseOp(op);
-  }
-};
-
-// 如果symbol表示常量就去除
-struct RemoveSymbolRelationIfAllConst
-    : public LLHOpRewritePattern<SymbolRelationOp> {
-  using LLHOpRewritePattern::LLHOpRewritePattern;
-
-  LogicalResult match(SymbolRelationOp op) const final {
-    auto symbol = op.getSymbol();
-    if (!SymbolAnalysis::isConst(symbol)) return llvm::failure();
-    auto relation = op.getRelation();
-    if (!SymbolAnalysis::isConst(relation)) return llvm::failure();
-    return llvm::success();
-  }
-  void rewrite(SymbolRelationOp op, LLHPatternRewriter &rewriter) const final {
-    rewriter.eraseOp(op);
-  }
-};
-
-}  // namespace
-void SymbolRelationOp::getCanonicalizationPatterns(
-    mlir::RewritePatternSet &results, MLIRContext *context) {
-  results.add<ReplaceSymbolIfEquel>(context);
-  results.add<RemoveSymbolRelationIfAllConst>(context);
-}
 
 //===----------------------------------------------------------------------===//
 // Layout Pattern
@@ -467,10 +310,11 @@ struct FoldReshapeOp : public LLHOpRewritePattern<ReshapeOp> {
 void ReshapeOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                             MLIRContext *context) {
   results.add<FoldReshapeOp>(context);
+  results.add<EraseNoUserOp<ReshapeOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//
-// ReShapeOp.
+// BroadCastToOp.
 //===----------------------------------------------------------------------===//
 namespace {
 struct FoldBroadCastToOp : public LLHOpRewritePattern<BroadCastToOp> {
@@ -495,13 +339,5 @@ struct FoldBroadCastToOp : public LLHOpRewritePattern<BroadCastToOp> {
 void BroadCastToOp::getCanonicalizationPatterns(
     mlir::RewritePatternSet &results, MLIRContext *context) {
   results.add<FoldBroadCastToOp>(context);
-}
-
-void mlir::llh::populateSymbolCanonicalizePatterns(
-    RewritePatternSet &patterns) {
-  auto context = patterns.getContext();
-  patterns.add<ReplaceSymbolIfEquel>(context);
-  patterns.add<RemoveSymbolRelationIfAllConst>(context);
-  patterns.add<RemoveSymbolBinaryRelationIfAllConst>(context);
-  patterns.add<SinkSymbolBindOp>(context, SinkOpBenfit);
+  results.add<EraseNoUserOp<BroadCastToOp>>(context);
 }

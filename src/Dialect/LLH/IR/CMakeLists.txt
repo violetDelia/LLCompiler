@@ -12,6 +12,7 @@ llcompiler_add_library(MLIRLLHDialect
     LLHVerfy.cpp
     LLHCanonicalize.cpp
     LLHSymbolUses.cpp
+    LLHSymbolCanonicalize.cpp
 
     ADDITIONAL_INCLUDE_DIRS
     ${SYMENGINE_INCLUDE_DIRS}

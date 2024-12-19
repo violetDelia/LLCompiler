@@ -52,7 +52,7 @@
 #endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
 namespace mlir::llh {
+
 void populateSymbolCanonicalizePatterns(RewritePatternSet& patterns);
 void populateSinkSymbolBindPatterns(RewritePatternSet& patterns);
-}
-
+}  // namespace mlir::llh

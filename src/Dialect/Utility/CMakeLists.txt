@@ -5,6 +5,7 @@ llcompiler_add_library(LLCMLIRUtility
     Attribute.cpp
     File.cpp
     Tool.cpp
+    Benefit.cpp
 
     LINKS PUBLIC
     MLIRParser
