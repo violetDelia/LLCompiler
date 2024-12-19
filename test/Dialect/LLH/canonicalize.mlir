@@ -60,6 +60,21 @@ func.func @fold_reshape() -> (tensor<1x10xf32, #llh.encoding<shapes = @c1, @c10>
     return %11 : tensor<1x10xf32, #llh.encoding<shapes = @c1, @c10>>
 }
 
+// -----
+// CHECK-LABEL: fold_broadcast
+func.func @fold_broadcast(%arg0: tensor<?x?x?xf32>) -> tensor<?x?x?xf32> attributes {entrance} {
+    %0 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64
+    %1 = "llh.constant"() <{symbol = @c1, value = 1 : i64}> : () -> i64
+    %2 = "llh.constant"() <{symbol = @c0, value = 0 : i64}> : () -> i64
+    %3 = "llh.dim"(%arg0, %2) <{symbol = @s0}> : (tensor<?x?x?xf32>, i64) -> i64
+    %4 = "llh.dim"(%arg0, %1) <{symbol = @s1}> : (tensor<?x?x?xf32>, i64) -> i64
+    %5 = "llh.dim"(%arg0, %0) <{symbol = @s2}> : (tensor<?x?x?xf32>, i64) -> i64
+    %6 = "llh.transpose"(%arg0) <{perms = array<i64: 0, 2, 1>}> : (tensor<?x?x?xf32>) -> tensor<?x?x?xf32>
+    %7 = "llh.broadcast_to"(%arg0, %3, %4, %5) <{cast_dims = array<i64: 0, 1, 2>, expand_dims = array<i64>, noexpand_dims = array<i64: 0, 1, 2>}> : (tensor<?x?x?xf32>, i64, i64, i64) -> tensor<?x?x?xf32>
+    // CHECK: return %arg0
+    return %7 : tensor<?x?x?xf32>
+  }
+
 
 
 

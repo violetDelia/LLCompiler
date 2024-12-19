@@ -469,6 +469,34 @@ void ReshapeOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
   results.add<FoldReshapeOp>(context);
 }
 
+//===----------------------------------------------------------------------===//
+// ReShapeOp.
+//===----------------------------------------------------------------------===//
+namespace {
+struct FoldBroadCastToOp : public LLHOpRewritePattern<BroadCastToOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+  LogicalResult match(BroadCastToOp op) const final {
+    auto maybe_noexpand_dims = op.getNoexpandDims();
+    if (!maybe_noexpand_dims.has_value()) return llvm::failure();
+    auto noexpand_dims = maybe_noexpand_dims.value();
+    for (int i = 0; i < noexpand_dims.size(); ++i) {
+      if (noexpand_dims[i] != i) return llvm::failure();
+    }
+    if (noexpand_dims.size() != op.getOutShapes().size())
+      return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(BroadCastToOp op, LLHPatternRewriter &rewriter) const final {
+    auto input = op.getInput();
+    rewriter.replaceAllUsesWith(op.getResult(), input);
+  }
+};
+}  // namespace
+void BroadCastToOp::getCanonicalizationPatterns(
+    mlir::RewritePatternSet &results, MLIRContext *context) {
+  results.add<FoldBroadCastToOp>(context);
+}
+
 void mlir::llh::populateSymbolCanonicalizePatterns(
     RewritePatternSet &patterns) {
   auto context = patterns.getContext();
