@@ -55,13 +55,14 @@ class MultiHeadedAttention(nn.Module):
         if mask is not None:
             mask = mask.unsqueeze(1)
         batch_size = query.size(0)
+        
         query, key, value \
             = [proj_weight(x).view(batch_size, -1, self.num_heads, self.k_dim).transpose(1, 2)
                 for proj_weight, x in zip(self.proj_weights, [query, key, value])] 
         out, self.attention_score = attention(query, key, value, mask=mask, 
                                  dropout=self.dropout)
-        out = out.transpose(1, 2).contiguous() \
-             .view(batch_size, -1, self.num_heads * self.k_dim)
-        out = self.proj_weights[-1](out)
+        # out = out.transpose(1, 2).contiguous() \
+        #      .view(batch_size, -1, self.num_heads * self.k_dim)
+        # out = self.proj_weights[-1](out)
         return out
 

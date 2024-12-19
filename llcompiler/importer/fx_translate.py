@@ -236,17 +236,20 @@ def get_arg_value(
     value_map: dict[str:[SSAValue]],
     block: Block,
     index: int = 0,
-    make_tensor: bool = False,
+    tensor_const=False,
+    const_type=None,
 ):
     if isinstance(arg, torch.fx.node.Node):
         return value_map[arg.name][index]
     elif isinstance(arg, int) or isinstance(arg, float):
-        if make_tensor:
-            const = build_llh_constant(arg)
+        if tensor_const:
+            const = build_llh_scalar_tensor(arg, const_type)
+            block.add_op(const)
+            return const.result
         else:
             const = build_llh_constant(arg)
-        block.add_op(const)
-        return const.result
+            block.add_op(const)
+            return const.result
     elif isinstance(arg, torch.fx.immutable_collections.immutable_list):
         return [get_arg_value(arg[i], value_map, block) for i in range(len(arg))]
     else:
@@ -315,7 +318,13 @@ def commond_build_op(
         result_type = torch_fake_tensor_translate(out)
         return op_build(
             operands=[
-                get_arg_value(node.args[n], value_map, block)
+                get_arg_value(
+                    node.args[n],
+                    value_map,
+                    block,
+                    tensor_const=True,
+                    const_type=result_type.element_type,
+                )
                 for n in range(operand_nums)
             ],
             result_types=[result_type],
@@ -437,6 +446,7 @@ def torch_build_func(
             trav_args(node.args)
         elif node.op == "call_function":
             op = torch_function_translate(node, value_map, symbol_map, block)
+            # some op is identity
             if op is not None:
                 value_map[node.name] = op.results
                 block.add_op(op)

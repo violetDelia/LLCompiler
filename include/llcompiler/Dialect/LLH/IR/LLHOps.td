@@ -451,8 +451,6 @@ def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{
     let hasCanonicalizer = 1;
 }
 
-
-
 // def LLH_CeluOp        : LLH_UnaryElementwiseOp<"celu", [], LLH_FloatTensor, LLH_FloatTensor, (ins DefaultValuedAttr<F64Attr, "1">:$alpha)>;
 
 // def LLH_AbsOp           : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>;

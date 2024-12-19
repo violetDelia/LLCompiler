@@ -27,15 +27,15 @@ from xdsl.dialects.builtin import (
     DenseArrayBase,
 )
 
-from .llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp, TransposeOp
+from .llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp, TransposeOp, DimOp
 
 
-def build_llh_scalar_tensor(val: int | float):
+def build_llh_scalar_tensor(val: int | float, type):
     if isinstance(val, int):
-        type = TensorType([1], i64)
+        type = TensorType(type, [1])
         value = DenseIntOrFPElementsAttr.create_dense_int(type, [val])
     if isinstance(val, float):
-        type = TensorType([1], f32)
+        type = TensorType(type, [1])
         value = DenseIntOrFPElementsAttr.create_dense_float(type, [val])
     return ConstantOp.build(attributes={"value": value}, result_types=[type])
 
@@ -62,3 +62,17 @@ def build_llh_transpose(input: SSAValue, perms: list[int]):
         attributes={"perms": DenseArrayBase.from_list(i64, perms)},
         result_types=[result],
     )
+
+
+def build_value_dims(input: SSAValue, block: Block):
+    res: TensorType = input.type
+    assert isinstance(res, TensorType)
+    rank = res.get_num_dims()
+    dims = []
+    for i in range(rank):
+        index = build_llh_constant(i)
+        block.add_op(index)
+        dim_op = DimOp(operands=[input, index.result], result_types=[i64])
+        block.add_op(dim_op)
+        dims.append(dim_op)
+    return dims

@@ -78,8 +78,8 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             aten._unsafe_view,
             aten.transpose,
             aten.add,
-            aten.mul
-            #aten.unsqueeze
+            aten.mul,
+            aten.clone
             
         }
 
