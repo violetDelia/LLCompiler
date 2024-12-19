@@ -132,4 +132,10 @@ func.func @braodcast_to(%arg0: tensor<1x?x?x?xf32>) -> tensor<1x?x?x?xf32> attri
   return %11 : tensor<1x?x?x?xf32>
 }
 
-
+// -----
+func.func @batch_matmul(%arg0: tensor<12x?x512xf32>) -> tensor<12x?x10xf32> attributes {entrance} {
+    // CHECK-NOT: llh.batch_matmul
+    %const = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<12x512x10xf32>
+    %matmul = "llh.batch_matmul"(%arg0, %const) : (tensor<12x?x512xf32>, tensor<12x512x10xf32>) -> tensor<12x?x10xf32>
+    return %matmul : tensor<12x?x10xf32>
+}

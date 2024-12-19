@@ -270,6 +270,28 @@ struct SliceOpLowing : public OpConversionPattern<StrideSliceOp> {
         new_strides);
   }
 };
+
+struct BatchMatMulOpLowing : public OpConversionPattern<BatchMatMulOp> {
+  using OpConversionPattern<BatchMatMulOp>::OpConversionPattern;
+
+  LogicalResult match(BatchMatMulOp op) const { return llvm::success(); }
+
+  void rewrite(BatchMatMulOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const {
+    Value lhs = op.getLhs();
+    Value rhs = op.getRhs();
+    stablehlo::DotDimensionNumbersAttr dotDimensionNumbers =
+        stablehlo::DotDimensionNumbersAttr::get(
+            rewriter.getContext(),
+            /*lhsBatchingDimensions=*/{0},
+            /*rhsBatchingDimensions=*/{0},
+            /*lhsContractingDimensions=*/{2},
+            /*rhsContractingDimensions=*/{1});
+    rewriter.replaceOpWithNewOp<stablehlo::DotGeneralOp>(
+        op, op.getType(), lhs,rhs, dotDimensionNumbers,nullptr,
+        nullptr);
+  }
+};
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -294,6 +316,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<MaxPoolOpLowing>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
   patterns.add<SliceOpLowing>(converter, context);
+  patterns.add<BatchMatMulOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -303,7 +326,7 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
   target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp>();
   target.addIllegalOp<ReluOp, BatchNormOp, AbsOp, SqrtOp>();
-  target.addIllegalOp<ConvOp, MaxPoolOp>();
+  target.addIllegalOp<ConvOp, MaxPoolOp, MatMulOp, BatchMatMulOp>();
   target.addIllegalOp<TransposeOp, BroadCastToOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();
   target.addLegalDialect<mlir::arith::ArithDialect>();
