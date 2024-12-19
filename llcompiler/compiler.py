@@ -79,7 +79,10 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             aten.transpose,
             aten.add,
             aten.mul,
-            aten.clone
+            aten.clone,
+            aten.bmm,
+            aten.div,
+            aten.eq
             
         }
 

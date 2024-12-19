@@ -412,6 +412,14 @@ def LLH_MatMulOp          : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<Bra
         LLH_2DTensor:$result);
 }
 
+def LLH_Batch_MatMulOp          : LLH_SymbolOp<"batch_matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
+    let arguments = (ins
+        LLH_3DTensor:$lhs,
+        LLH_3DTensor:$rhs);
+    let results = (outs 
+        LLH_3DTensor:$result);
+}
+
 def LLH_LayerNormOp     : LLH_SymbolOp<"layer_norm">{
     let arguments = (ins
         LLH_Tensor:$input,

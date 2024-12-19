@@ -228,6 +228,12 @@ class MatmulOp(IRDLOperation):
     rhs = operand_def(TensorType)
     result = result_def(TensorType)
 
+@irdl_op_definition
+class BatchMatmulOp(IRDLOperation):
+    name = "llh.batch_matmul"
+    lhs = operand_def(TensorType)
+    rhs = operand_def(TensorType)
+    result = result_def(TensorType)
 
 @irdl_op_definition
 class TransposeOp(IRDLOperation):
@@ -411,6 +417,7 @@ LLH = Dialect(
         SliceOp,
         ExtractOp,
         BroadCastToOp,
+        BatchMatmulOp
     ],
     [],
 )

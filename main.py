@@ -51,6 +51,7 @@ module_dict = {
     # Slice: [torch.randn((200, 200, 224, 224), device="cpu")],
     # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
+    Matmul: [torch.randn((3,224,112), device="cpu")],
     MultiHeadedAttention: [
         torch.randn((2, 24, 8), device="cpu"),
         torch.randn((2, 24, 8), device="cpu"),

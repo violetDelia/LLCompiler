@@ -9,3 +9,4 @@ from .unsqueeze import Unsqueeze
 from .slice import Extract,Slice
 from .decompose import Decompose_BatchNorm
 from .braodcast import Braodcast
+from .matmul import Matmul

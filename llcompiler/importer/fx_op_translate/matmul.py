@@ -32,7 +32,7 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, MatmulOp
+from ...dialect.llh import TorchSymbolicIntOp, MatmulOp,BatchMatmulOp
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::mm")
@@ -43,3 +43,12 @@ def matmul_convert(
     block: Block,
 ):
     return commond_build_op(MatmulOp, 2, node, value_map, block)
+
+@TORCH_FUNCTION_TRANSLATE("aten::bmm")
+def matmul_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(BatchMatmulOp, 2, node, value_map, block)
