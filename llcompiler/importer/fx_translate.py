@@ -241,13 +241,13 @@ def get_arg_value(
     value_map: dict[str:[SSAValue]],
     block: Block,
     index: int = 0,
-    tensor_const=False,
+    const_tensor=False,
     const_type=None,
 ):
     if isinstance(arg, torch.fx.node.Node):
         return value_map[arg.name][index]
     elif isinstance(arg, int) or isinstance(arg, float):
-        if tensor_const:
+        if const_tensor:
             const = build_llh_scalar_tensor(arg, const_type)
             block.add_op(const)
             return const.result
@@ -327,7 +327,7 @@ def commond_build_op(
                     node.args[n],
                     value_map,
                     block,
-                    tensor_const=True,
+                    const_tensor=True,
                     const_type=TORCH_DTYPE_TO_MLIR_TYPE[out.dtype],
                 )
                 for n in range(operand_nums)
@@ -343,7 +343,7 @@ def commond_build_op(
                     node.args[n],
                     value_map,
                     block,
-                    tensor_const=True,
+                    const_tensor=True,
                     const_type=TORCH_DTYPE_TO_MLIR_TYPE(out.dtype),
                 )
                 for n in range(operand_nums)

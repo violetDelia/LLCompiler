@@ -113,9 +113,10 @@ def LLH_Compare_GE         : I32EnumAttrCase<"GE", 2>;
 def LLH_Compare_LE         : I32EnumAttrCase<"LE", 3>;
 def LLH_Compare_GT         : I32EnumAttrCase<"GT", 4>;
 def LLH_Compare_LT         : I32EnumAttrCase<"LT", 5>;
-def LLH_Compare : I32EnumAttr<"Compare",
+def LLH_Compare_NE         : I32EnumAttrCase<"NE", 6>;
+def LLH_Compare : I32EnumAttr<"CompareKind",
     "Compare",
-    [LLH_Compare_EQ, LLH_Compare_GE, LLH_Compare_LE, LLH_Compare_GT, LLH_Compare_LT]> {
+    [LLH_Compare_EQ, LLH_Compare_GE, LLH_Compare_LE, LLH_Compare_GT, LLH_Compare_LT, LLH_Compare_NE]> {
   let genSpecializedAttr = 0;
   let cppNamespace = "::mlir::llh";
 }

@@ -1,5 +1,6 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
+    TORCH_METHOD_TRANSLATE,
     torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
@@ -32,18 +33,14 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, CompareOp, CompareAttr, CompareEnum
+from ...dialect.llh import TorchSymbolicIntOp, ConvertToOp
 
 
-@TORCH_FUNCTION_TRANSLATE("prims::eq")
-def eq_convert(
+@TORCH_FUNCTION_TRANSLATE("aten::_to_copy")
+def aten_to_copy_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
-    lhs = get_arg_value(node.args[0], value_map, block, const_tensor=True)
-    rhs = get_arg_value(node.args[1], value_map, block, const_tensor=True)
-    attrs = {"kind": CompareAttr([CompareEnum.EQ])}
-    return CompareOp(operands=[lhs, rhs], result_types=[result_type], attributes=attrs)
+    return commond_build_op(ConvertToOp.build, 1, node, value_map, block)

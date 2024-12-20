@@ -382,6 +382,7 @@ def LLH_CompareOp           : LLH_SymbolOp<"compare", [ResultsBroadcastableShape
         );
     let results = (outs 
         LLH_Tensor);
+    let hasCanonicalizer = 1;
 }
 
 def LLH_ConvBiasOp : LLH_SymbolOp<"conv_bias">{

@@ -60,7 +60,8 @@ class Abs(nn.Module):
         x = x.abs()
         x = torch.abs(x)
         return x
-    
+
+
 class Sqrt(nn.Module):
     def __init__(self):
         super().__init__()
@@ -68,3 +69,12 @@ class Sqrt(nn.Module):
     def forward(self, x: torch.Tensor):
         x = x.sqrt()
         return x
+
+
+class EQ(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x: torch.Tensor):
+        x = x == x
+        return x == 2

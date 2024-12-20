@@ -127,6 +127,7 @@ class CompareEnum(StrEnum):
     LT = "LT"
     GE = "GE"
     GT = "GT"
+    NE = "NE"
 
 
 class CompareAttribute(BitEnumAttribute[CompareEnum]):
@@ -182,6 +183,12 @@ class AbsOp(IRDLOperation):
     input = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
 
+
+@irdl_op_definition
+class ConvertToOp(IRDLOperation):
+    name = "llh.convert_to"
+    input = operand_def(LLH_Computable_Type)
+    result = result_def(LLH_Computable_Type)
 
 @irdl_op_definition
 class SqrtOp(IRDLOperation):
@@ -456,7 +463,8 @@ LLH = Dialect(
         BroadCastToOp,
         BatchMatmulOp,
         SqrtOp,
-        CompareOp
+        CompareOp,
+        ConvertToOp
     ],
     [],
 )

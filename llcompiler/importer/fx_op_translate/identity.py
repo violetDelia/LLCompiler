@@ -46,6 +46,7 @@ def aten_clone_convert(
     value_map[node.name] = value_map[node.args[0].name]
     return None
 
+
 @TORCH_FUNCTION_TRANSLATE("prims::clone")
 def aten_clone_convert(
     node: torch.fx.node.Node,

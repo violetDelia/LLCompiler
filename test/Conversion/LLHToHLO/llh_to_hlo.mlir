@@ -139,3 +139,18 @@ func.func @batch_matmul(%arg0: tensor<12x?x512xf32>) -> tensor<12x?x10xf32> attr
     %matmul = "llh.batch_matmul"(%arg0, %const) : (tensor<12x?x512xf32>, tensor<12x512x10xf32>) -> tensor<12x?x10xf32>
     return %matmul : tensor<12x?x10xf32>
 }
+
+// -----
+func.func @compare(%arg0: tensor<?x?x?x?xf32>) -> (tensor<?x?x?x?xi1>) attributes {entrance} {
+    // CHECK-NOT: llh.compare
+    // CHECK: stablehlo.compare
+    // CHECK-SAME: EQ, %arg0, %arg0,  FLOAT
+    // CHECK: stablehlo.compare
+    // CHECK-SAME: GE, %arg0, %arg0,  FLOAT
+    // CHECK: stablehlo.compare
+    // CHECK-SAME: SIGNED
+    %f_eq = "llh.compare"(%arg0, %arg0) <{kind = #llh.Compare<EQ>}> : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xi1>
+    %f_ge = "llh.compare"(%arg0, %arg0) <{kind = #llh.Compare<GE>}> : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xi1>
+    %s_le = "llh.compare"(%f_eq, %f_ge) <{kind = #llh.Compare<LE>}> : (tensor<?x?x?x?xi1>, tensor<?x?x?x?xi1>) -> tensor<?x?x?x?xi1>
+    return %s_le: tensor<?x?x?x?xi1>
+}

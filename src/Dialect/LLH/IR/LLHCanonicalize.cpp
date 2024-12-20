@@ -341,3 +341,13 @@ void BroadCastToOp::getCanonicalizationPatterns(
   results.add<FoldBroadCastToOp>(context);
   results.add<EraseNoUserOp<BroadCastToOp>>(context);
 }
+
+
+//===----------------------------------------------------------------------===//
+// ConvertToOp.
+//===----------------------------------------------------------------------===//
+void ConvertToOp::getCanonicalizationPatterns(
+    mlir::RewritePatternSet &results, MLIRContext *context) {
+  results.add<SimplyBinaryOpInsertBraodcast<ConvertToOp>>(context, BroadcastBenefit);
+  results.add<SimplyBinaryOpReshape<ConvertToOp>>(context, ReshapeBenefit);
+}

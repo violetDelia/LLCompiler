@@ -288,8 +288,77 @@ struct BatchMatMulOpLowing : public OpConversionPattern<BatchMatMulOp> {
             /*lhsContractingDimensions=*/{2},
             /*rhsContractingDimensions=*/{1});
     rewriter.replaceOpWithNewOp<stablehlo::DotGeneralOp>(
-        op, op.getType(), lhs,rhs, dotDimensionNumbers,nullptr,
-        nullptr);
+        op, op.getType(), lhs, rhs, dotDimensionNumbers, nullptr, nullptr);
+  }
+};
+
+struct CompareOpLowing : public OpConversionPattern<CompareOp> {
+  using OpConversionPattern<CompareOp>::OpConversionPattern;
+
+  LogicalResult match(CompareOp op) const { return llvm::success(); }
+
+  void rewrite(CompareOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const {
+    auto context = op->getContext();
+    Value lhs = op.getLhs();
+    Value rhs = op.getRhs();
+    auto kind_attr = switchCompareAttr(context, op.getKind());
+    auto compare_type_attr = genCompareTypeAttr(context, lhs, rhs);
+    rewriter.replaceOpWithNewOp<stablehlo::CompareOp>(
+        op, op.getType(), lhs, rhs, kind_attr, compare_type_attr);
+  }
+
+  mlir::stablehlo::ComparisonTypeAttr genCompareTypeAttr(
+      mlir::MLIRContext* context, Value lhs, Value rhs) const {
+    Type lhs_type;
+    Type rhs_type;
+    if (isa<RankedTensorType>(lhs.getType()))
+      lhs_type = llc::getRankTensorFrom(lhs).getElementType();
+    else
+      lhs_type = lhs.getType();
+    if (isa<RankedTensorType>(rhs.getType()))
+      rhs_type = llc::getRankTensorFrom(rhs).getElementType();
+    else
+      rhs_type = rhs.getType();
+    CHECK(llc::MLIR_PASS, (lhs_type == rhs_type));
+    mlir::stablehlo::ComparisonType conversion_type;
+    if (isa<IntegerType>(lhs_type)) {
+      auto type = cast<IntegerType>(lhs_type);
+      if (type.isUnsigned())
+        mlir::stablehlo::ComparisonTypeAttr::get(
+            context, stablehlo::ComparisonType::UNSIGNED);
+      else
+        return mlir::stablehlo::ComparisonTypeAttr::get(
+            context, stablehlo::ComparisonType::SIGNED);
+    }
+    if (isa<FloatType>(lhs_type)) {
+      return mlir::stablehlo::ComparisonTypeAttr::get(
+          context, stablehlo::ComparisonType::FLOAT);
+    }
+    UNIMPLEMENTED(llc::MLIR);
+  }
+
+  mlir::stablehlo::ComparisonDirectionAttr switchCompareAttr(
+      mlir::MLIRContext* context, mlir::llh::CompareKind kind) const {
+    if (kind == CompareKind::EQ)
+      return mlir::stablehlo::ComparisonDirectionAttr::get(
+          context, ::mlir::stablehlo::ComparisonDirection::EQ);
+    if (kind == CompareKind::NE)
+      return mlir::stablehlo::ComparisonDirectionAttr::get(
+          context, ::mlir::stablehlo::ComparisonDirection::NE);
+    if (kind == CompareKind::GE)
+      return mlir::stablehlo::ComparisonDirectionAttr::get(
+          context, ::mlir::stablehlo::ComparisonDirection::GE);
+    if (kind == CompareKind::GT)
+      return mlir::stablehlo::ComparisonDirectionAttr::get(
+          context, ::mlir::stablehlo::ComparisonDirection::GT);
+    if (kind == CompareKind::LE)
+      return mlir::stablehlo::ComparisonDirectionAttr::get(
+          context, ::mlir::stablehlo::ComparisonDirection::LE);
+    if (kind == CompareKind::LT)
+      return mlir::stablehlo::ComparisonDirectionAttr::get(
+          context, ::mlir::stablehlo::ComparisonDirection::LT);
+    UNIMPLEMENTED(llc::MLIR);
   }
 };
 //===----------------------------------------------------------------------===//
@@ -317,6 +386,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
   patterns.add<SliceOpLowing>(converter, context);
   patterns.add<BatchMatMulOpLowing>(converter, context);
+  patterns.add<CompareOpLowing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -324,7 +394,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
 //===----------------------------------------------------------------------===//
 void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
-  target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp>();
+  target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp,CompareOp>();
   target.addIllegalOp<ReluOp, BatchNormOp, AbsOp, SqrtOp>();
   target.addIllegalOp<ConvOp, MaxPoolOp, MatMulOp, BatchMatMulOp>();
   target.addIllegalOp<TransposeOp, BroadCastToOp>();

@@ -55,7 +55,7 @@ func.func @fold_reshape() -> (tensor<1x10xf32, #llh.encoding<shapes = @c1, @c10>
     %1 = "llh.constant"() <{symbol = @c10, value = 10 : i64}> : () -> i64
     %3 = "llh.constant"() <{symbol = @c1, value = 1 : i64}> : () -> i64
     %5 = "llh.constant"() <{value = dense<[-0.00187645969, -0.0539493635, -0.0634634792, -0.0399834365, -0.0204222016, -0.030699648, 0.044618234, 0.0177833326, 0.0345337801, 0.0643900782]> : tensor<10xf32>}> : () -> tensor<10xf32>
-    //CHECK-NOT: llh.reshape
+    // CHECK-NOT: llh.reshape
     %11 = "llh.reshape"(%5, %3, %1) : (tensor<10xf32>, i64, i64) -> tensor<1x10xf32, #llh.encoding<shapes = @c1, @c10>>
     return %11 : tensor<1x10xf32, #llh.encoding<shapes = @c1, @c10>>
 }
