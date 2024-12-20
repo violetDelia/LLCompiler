@@ -163,6 +163,13 @@ class AbsOp(IRDLOperation):
 
 
 @irdl_op_definition
+class SqrtOp(IRDLOperation):
+    name = "llh.sqrt"
+    input = operand_def(LLH_Computable_Type)
+    result = result_def(LLH_Computable_Type)
+
+
+@irdl_op_definition
 class AddOp(IRDLOperation):
     name = "llh.add"
     lhs = operand_def(LLH_Computable_Type)
@@ -228,12 +235,14 @@ class MatmulOp(IRDLOperation):
     rhs = operand_def(TensorType)
     result = result_def(TensorType)
 
+
 @irdl_op_definition
 class BatchMatmulOp(IRDLOperation):
     name = "llh.batch_matmul"
     lhs = operand_def(TensorType)
     rhs = operand_def(TensorType)
     result = result_def(TensorType)
+
 
 @irdl_op_definition
 class TransposeOp(IRDLOperation):
@@ -417,7 +426,8 @@ LLH = Dialect(
         SliceOp,
         ExtractOp,
         BroadCastToOp,
-        BatchMatmulOp
+        BatchMatmulOp,
+        SqrtOp,
     ],
     [],
 )

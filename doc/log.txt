@@ -23,10 +23,18 @@
                 符号专题<3>
 2024.12.8  :    support Unsqueeze
 2024.12.11 :    aten::permute support
-2024.12.11 :    prims::broadcast_in_dim support
+2024.12.12 :    prims::broadcast_in_dim support
+2024.12.20 :    support aten::clone  prims::clone
+                add batch_matmul op
+                BatchMatMulOp infer shape
+                add fold_broadcast pattern
+                add batchmatmul lowing to hlo
+                
+
 TODO:
 
-    refine braodcast
+    add sqrt 
+    run --> MHA
     slice     
     torch frezen
 

@@ -82,7 +82,8 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             aten.clone,
             aten.bmm,
             aten.div,
-            aten.eq
+            aten.eq,
+            aten.sqrt
             
         }
 

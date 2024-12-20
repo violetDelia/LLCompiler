@@ -31,3 +31,4 @@ from .linear import torch_linear_convert
 from .matmul import matmul_convert
 from .broadcast import broadcast_in_dim_convert
 from .identity import aten_clone_convert
+from .sqrt import sqrt_convert

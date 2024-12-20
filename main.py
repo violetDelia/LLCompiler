@@ -51,13 +51,13 @@ module_dict = {
     # Slice: [torch.randn((200, 200, 224, 224), device="cpu")],
     # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
-    Matmul: [torch.randn((3,224,112), device="cpu")],
-    MultiHeadedAttention: [
-        torch.randn((2, 24, 8), device="cpu"),
-        torch.randn((2, 24, 8), device="cpu"),
-        torch.randn((2, 24, 8), device="cpu"),
-        torch.tril(torch.ones((24, 24)), diagonal=0).unsqueeze(0),
-    ]
+    Sqrt: [torch.randn((3,3,224,224), device="cpu")],
+    # MultiHeadedAttention: [
+    #     torch.randn((2, 24, 8), device="cpu"),
+    #     torch.randn((2, 24, 8), device="cpu"),
+    #     torch.randn((2, 24, 8), device="cpu"),
+    #     torch.tril(torch.ones((24, 24)), diagonal=0).unsqueeze(0),
+    # ]
     # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
     # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")],
     # torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
@@ -77,6 +77,7 @@ module_dict = {
     # Linear: [torch.randn((10,100000), device="cpu")],
     # ElewiseFusion1: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Braodcast: [torch.randn((10, 20), device="cpu")],
+    # Matmul: [torch.randn((3,224,112), device="cpu")],
 }
 
 
