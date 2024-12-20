@@ -11,6 +11,7 @@ from xdsl.dialects.builtin import (
     IntegerType,
     IntegerAttr,
     FloatAttr,
+    _FloatType,
     i64,
     i32,
     i16,
@@ -31,12 +32,12 @@ from .llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp, TransposeOp, Di
 
 
 def build_llh_scalar_tensor(val: int | float, type):
-    if isinstance(val, int):
+    if isinstance(type, IntegerType):
         type = TensorType(type, [1])
-        value = DenseIntOrFPElementsAttr.create_dense_int(type, [val])
-    if isinstance(val, float):
+        value = DenseIntOrFPElementsAttr.create_dense_int(type, [int(val)])
+    if isinstance(type, _FloatType):
         type = TensorType(type, [1])
-        value = DenseIntOrFPElementsAttr.create_dense_float(type, [val])
+        value = DenseIntOrFPElementsAttr.create_dense_float(type, [float(val)])
     return ConstantOp.build(attributes={"value": value}, result_types=[type])
 
 

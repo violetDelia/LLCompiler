@@ -107,4 +107,19 @@ def LLH_SymbolRelationsAttr : EnumAttr<LLH_Dialect, LLH_SymbolRelation, "SymbolR
   let assemblyFormat = "`<` $value `>`";
 }
 
+
+def LLH_Compare_EQ         : I32EnumAttrCase<"EQ", 1>;
+def LLH_Compare_GE         : I32EnumAttrCase<"GE", 2>;
+def LLH_Compare_LE         : I32EnumAttrCase<"LE", 3>;
+def LLH_Compare_GT         : I32EnumAttrCase<"GT", 4>;
+def LLH_Compare_LT         : I32EnumAttrCase<"LT", 5>;
+def LLH_Compare : I32EnumAttr<"Compare",
+    "Compare",
+    [LLH_Compare_EQ, LLH_Compare_GE, LLH_Compare_LE, LLH_Compare_GT, LLH_Compare_LT]> {
+  let genSpecializedAttr = 0;
+  let cppNamespace = "::mlir::llh";
+}
+def LLH_CompareAttr : EnumAttr<LLH_Dialect, LLH_Compare, "Compare">{
+  let assemblyFormat = "`<` $value `>`";
+}
 #endif //

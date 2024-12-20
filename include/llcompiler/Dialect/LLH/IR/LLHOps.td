@@ -373,6 +373,16 @@ def LLH_MinOp           : LLH_BinaryElementwiseOp<"min", [ResultsBroadcastableSh
     let hasCanonicalizer = 1;
 }
 
+def LLH_CompareOp           : LLH_SymbolOp<"compare", [ResultsBroadcastableShape]>{
+    let arguments = (ins 
+        LLH_Tensor:$lhs,
+        LLH_Tensor:$rhs,
+        LLH_CompareAttr:$kind,
+        OptionalAttr<FlatSymbolRefAttr>:$symbol
+        );
+    let results = (outs 
+        LLH_Tensor);
+}
 
 def LLH_ConvBiasOp : LLH_SymbolOp<"conv_bias">{
     let arguments = (ins 

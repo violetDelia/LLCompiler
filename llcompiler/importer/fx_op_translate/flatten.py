@@ -1,7 +1,7 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     TORCH_MODULE_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
@@ -56,7 +56,7 @@ def torch_flatten_convert(
 ):
     if module.end_dim != -1:
         raise ValueError("改成reshape")
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     dim = get_arg_value(module.start_dim, value_map, block)
     return FlattenOp.build(operands=[input, dim], result_types=[result_type])

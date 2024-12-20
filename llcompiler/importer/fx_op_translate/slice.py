@@ -1,7 +1,7 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     TORCH_METHOD_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
@@ -43,7 +43,7 @@ def aten_select_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     assert node.args[1] == 0
     input = get_arg_value(node.args[0], value_map, block)
     index = get_arg_value(node.args[2], value_map, block)

@@ -1,6 +1,6 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,

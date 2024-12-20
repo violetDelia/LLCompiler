@@ -29,8 +29,9 @@ from xdsl.dialects.builtin import (
     BoolAttr,
     SymbolNameAttr,
 )
+from enum import auto
 from xdsl.ir.affine.affine_expr import AffineExpr
-from xdsl.ir import Dialect
+from xdsl.ir import Dialect, BitEnumAttribute
 from xdsl.irdl import (
     AnyOf,
     ConstraintVar,
@@ -49,12 +50,14 @@ from xdsl.irdl import (
     TypeVar,
     AttrSizedOperandSegments,
 )
+from xdsl.utils.str_enum import StrEnum
 from xdsl.irdl.constraints import ParamAttrConstraint, AnyOf
 from typing import TypeAlias, Annotated
 from xdsl.parser import Parser
 from xdsl.printer import Printer
 from xdsl.utils.exceptions import VerifyException
 from xdsl.traits import SymbolTable
+from dataclasses import dataclass
 
 # python 验证速度比较慢
 i8 = IntegerType(8)
@@ -116,6 +119,24 @@ LLH_Computable_Type = ContainerOf(
         [TensorType, IntegerType, Float16Type, Float32Type, Float64Type, BFloat16Type]
     )
 )
+
+
+class CompareEnum(StrEnum):
+    EQ = "EQ"
+    LE = "LE"
+    LT = "LT"
+    GE = "GE"
+    GT = "GT"
+
+
+class CompareAttribute(BitEnumAttribute[CompareEnum]):
+    none_value = "none"
+    all_value = "all"
+
+
+@irdl_attr_definition
+class CompareAttr(CompareAttribute):
+    name = "llh.Compare"
 
 
 @irdl_op_definition
@@ -200,6 +221,13 @@ class MulOp(IRDLOperation):
     rhs = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
 
+@irdl_op_definition
+class CompareOp(IRDLOperation):
+    name = "llh.compare"
+    lhs = operand_def(LLH_Computable_Type)
+    rhs = operand_def(LLH_Computable_Type)
+    #kind = attr_def(CompareAttr)
+    result = result_def(LLH_Computable_Type)
 
 @irdl_op_definition
 class ConvBiasOp(IRDLOperation):
@@ -293,9 +321,9 @@ class BroadCastToOp(IRDLOperation):
     name = "llh.broadcast_to"
     input = operand_def(TensorType)
     out_shapes = var_operand_def(IntegerType)
-    # cast_dims = attr_def(ArrayAttr)
-    # expand_dims = opt_attr_def(ArrayAttr)
-    # noexpand_dims = opt_attr_def(ArrayAttr)
+    cast_dims = attr_def(ArrayAttr)
+    expand_dims = opt_attr_def(ArrayAttr)
+    noexpand_dims = opt_attr_def(ArrayAttr)
     result = result_def(TensorType)
 
 
@@ -428,6 +456,7 @@ LLH = Dialect(
         BroadCastToOp,
         BatchMatmulOp,
         SqrtOp,
+        CompareOp
     ],
     [],
 )

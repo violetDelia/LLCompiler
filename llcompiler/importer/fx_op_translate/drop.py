@@ -2,7 +2,7 @@ from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     TORCH_MODULE_TRANSLATE,
     TORCH_METHOD_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
@@ -45,7 +45,7 @@ def torch_drop_convert(
     module: torch.nn.modules.dropout.Dropout,
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     attrs = {"p": FloatAttr(module.p, f64)}
     return DropOp.build(operands=[input], attributes=attrs, result_types=[result_type])

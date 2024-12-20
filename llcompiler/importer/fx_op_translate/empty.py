@@ -1,6 +1,6 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
@@ -42,7 +42,7 @@ def empty_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     dims = get_arg_value(node.args[0], value_map, block)
     op = EmptyOp.build(operands=[dims], result_types=[result_type])
     return op
@@ -55,7 +55,7 @@ def empty_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     dims = [
         get_arg_value(node.args[i], value_map, block) for i in range(len(node.args))
     ]

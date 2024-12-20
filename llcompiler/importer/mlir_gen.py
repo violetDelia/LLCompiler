@@ -38,7 +38,7 @@ import numpy as np
 import os
 from .fx_translate import (
     torch_symbol_translate,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     torch_module_translate,
     torch_function_translate,
     torch_symbol_bind,
@@ -88,7 +88,7 @@ class MLIR_Builder:
             )
             np.save(weight_file, tensor.detach().numpy())
             op = WeightOp.build(
-                result_types=[torch_fake_tensor_translate(tensor)],
+                result_types=[torch_fake_or_mate_tensor_translate(tensor)],
                 attributes={"weight_file": StringAttr(weight_file)},
             )
             value_map[name] = op.results

@@ -1,7 +1,7 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     TORCH_METHOD_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
@@ -34,9 +34,9 @@ import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import TorchSymbolicIntOp, SqrtOp
+import math
 
-
-@TORCH_FUNCTION_TRANSLATE("_sym_sqrt","aten::sqrt","prims::sqrt")
+@TORCH_FUNCTION_TRANSLATE(torch._sym_sqrt,"aten::sqrt","prims::sqrt")
 def sqrt_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

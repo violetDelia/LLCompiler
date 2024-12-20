@@ -45,6 +45,7 @@ from ..dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
 from ..core.utility import Dict_Registry
 from datetime import datetime
 import torch.nn
+from torch.fx.passes.shape_prop import TensorMetadata
 from torch._subclasses.fake_tensor import FakeTensor
 from ..core.utility import run_time
 import os
@@ -156,7 +157,7 @@ def torch_symbol_bind(
     )
 
 
-def torch_fake_tensor_translate(tensor: FakeTensor):
+def torch_fake_or_mate_tensor_translate(tensor: FakeTensor):
     ele_type = torch_dtype_translate(tensor.dtype)
     shape = []
     for dim in tensor.shape:
@@ -202,6 +203,8 @@ def torch_dtype_translate(dtype: torch.dtype):
 
 
 def get_result_type_ext(node: torch.fx.node.Node, index: int):
+    if "tensor_meta" in node.meta:
+        return node.meta["tensor_meta"][index]
     if "val" in node.meta:
         return node.meta["val"][index]
     if "example_value" in node.meta:
@@ -224,6 +227,8 @@ def get_result_type(
     target_name = node.target.__str__()
     if target_name in SPECIAL_RESULT_FAKE_INDEX_MAP:
         return get_result_type_ext(node, SPECIAL_RESULT_FAKE_INDEX_MAP[target_name])
+    if "tensor_meta" in node.meta:
+        return node.meta["tensor_meta"]
     if "val" in node.meta:
         return node.meta["val"]
     if "example_value" in node.meta:
@@ -314,8 +319,8 @@ def commond_build_op(
     attrs: Mapping[str, Attribute | None] = None,
 ):
     out = get_result_type(node)
-    if isinstance(out, FakeTensor):
-        result_type = torch_fake_tensor_translate(out)
+    if isinstance(out, TensorMetadata):
+        result_type = torch_fake_or_mate_tensor_translate(out)
         return op_build(
             operands=[
                 get_arg_value(
@@ -323,14 +328,30 @@ def commond_build_op(
                     value_map,
                     block,
                     tensor_const=True,
-                    const_type=result_type.element_type,
+                    const_type=TORCH_DTYPE_TO_MLIR_TYPE[out.dtype],
                 )
                 for n in range(operand_nums)
             ],
             result_types=[result_type],
             attributes=attrs,
         )
-    if isinstance(out, torch.SymInt):
+    if isinstance(out, FakeTensor):
+        result_type = torch_fake_or_mate_tensor_translate(out)
+        return op_build(
+            operands=[
+                get_arg_value(
+                    node.args[n],
+                    value_map,
+                    block,
+                    tensor_const=True,
+                    const_type=TORCH_DTYPE_TO_MLIR_TYPE(out.dtype),
+                )
+                for n in range(operand_nums)
+            ],
+            result_types=[result_type],
+            attributes=attrs,
+        )
+    if isinstance(out, torch.SymInt) or isinstance(out, torch.SymFloat):
         return op_build(
             operands=[
                 get_arg_value(node.args[n], value_map, block)
@@ -365,7 +386,7 @@ def torch_build_func(
             # 张量输入
             if node.type is torch.Tensor:
                 fake_tensor = node.meta["example_value"]
-                tensor_type = torch_fake_tensor_translate(fake_tensor)
+                tensor_type = torch_fake_or_mate_tensor_translate(fake_tensor)
                 arg_attrs.append(make_input_tensor_symbol_attrs(fake_tensor))
                 arg_value = block.insert_arg(tensor_type, len(input_types))
                 value_map[node.name] = [arg_value]
@@ -377,7 +398,7 @@ def torch_build_func(
                 # 张量输入
                 if isinstance(val, FakeTensor):
                     fake_tensor = node.meta["val"]
-                    tensor_type = torch_fake_tensor_translate(fake_tensor)
+                    tensor_type = torch_fake_or_mate_tensor_translate(fake_tensor)
                     arg_attrs.append(make_input_tensor_symbol_attrs(fake_tensor))
                     arg_value = block.insert_arg(tensor_type, len(input_types))
                     value_map[node.name] = [arg_value]

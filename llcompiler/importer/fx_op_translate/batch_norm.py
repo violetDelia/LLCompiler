@@ -1,7 +1,7 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     TORCH_MODULE_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
@@ -43,7 +43,7 @@ def batch_norm_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     weight = get_arg_value(node.args[1], value_map, block)
     bias = get_arg_value(node.args[2], value_map, block)
@@ -68,7 +68,7 @@ def batch_norm_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     weight = get_arg_value(node.args[1], value_map, block)
     bias = get_arg_value(node.args[2], value_map, block)
@@ -96,7 +96,7 @@ def torch_adaptive_avgpool_convert(
     module: torch.nn.modules.batchnorm.BatchNorm2d,
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     weight = value_map[node.target + ".weight"][0]
     bias = value_map[node.target + ".bias"][0]

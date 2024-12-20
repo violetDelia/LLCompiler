@@ -1,6 +1,6 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
@@ -32,10 +32,10 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp,DivOp
+from ...dialect.llh import TorchSymbolicIntOp, DivOp
 
 
-@TORCH_FUNCTION_TRANSLATE("truediv", "aten::div.Tensor", "floordiv")
+@TORCH_FUNCTION_TRANSLATE("truediv", "aten::div.Tensor", "floordiv", "prims::div")
 def div_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

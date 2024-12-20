@@ -1,7 +1,7 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     TORCH_METHOD_TRANSLATE,
-    torch_fake_tensor_translate,
+    torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     torch_symbol_translate,
@@ -48,7 +48,7 @@ def aten_view_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     dims = []
     for dim in range(len(node.args[1])):
@@ -63,7 +63,7 @@ def torch_reshape_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     dims = []
     for dim in range(len(node.args) - 1):
@@ -78,7 +78,7 @@ def view_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     dims = []
     for dim in range(len(node.args[1:])):
@@ -94,7 +94,7 @@ def unsqueeze_convert(
     block: Block,
 ):
     res_tensor: FakeTensor = get_result_type(node)
-    result_type = torch_fake_tensor_translate(res_tensor)
+    result_type = torch_fake_or_mate_tensor_translate(res_tensor)
     input = get_arg_value(node.args[0], value_map, block)
     dims = []
     for dim in res_tensor.shape:
@@ -117,7 +117,7 @@ def unsqueeze_convert(
     block: Block,
 ):
     res_tensor: FakeTensor = get_result_type(node)
-    result_type = torch_fake_tensor_translate(res_tensor)
+    result_type = torch_fake_or_mate_tensor_translate(res_tensor)
     input = get_arg_value(node.args[0], value_map, block)
     dims = []
     for dim in res_tensor.shape:
@@ -141,7 +141,7 @@ def collapse_view_convert(
 ):
     input = get_arg_value(node.args[0], value_map, block)
     res_tensor: FakeTensor = get_result_type(node)
-    result_type: TensorType = torch_fake_tensor_translate(res_tensor)
+    result_type: TensorType = torch_fake_or_mate_tensor_translate(res_tensor)
     dims = build_value_dims(input, block)
     assert len(node.args[1:]) == 2
     new_dim = build_llh_constant(1)
