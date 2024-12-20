@@ -226,7 +226,7 @@ class CompareOp(IRDLOperation):
     name = "llh.compare"
     lhs = operand_def(LLH_Computable_Type)
     rhs = operand_def(LLH_Computable_Type)
-    #kind = attr_def(CompareAttr)
+    kind = attr_def(CompareAttr)
     result = result_def(LLH_Computable_Type)
 
 @irdl_op_definition

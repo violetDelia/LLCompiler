@@ -1,5 +1,6 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
+    TORCH_METHOD_TRANSLATE,
     torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
@@ -8,6 +9,7 @@ from ..fx_translate import (
     _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
+    TORCH_DTYPE_TO_MLIR_TYPE,
 )
 from xdsl.dialects.builtin import (
     TensorType,
@@ -26,21 +28,26 @@ from xdsl.dialects.builtin import (
     DenseIntOrFPElementsAttr,
     FloatAttr,
 )
-from ...dialect.llh_utility import build_llh_transpose, build_llh_constant
+from ...dialect.llh_utility import (
+    build_llh_transpose,
+    build_llh_constant,
+    build_llh_scalar_tensor,
+)
 import torch._ops as op
 import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, CompareOp, CompareAttr, CompareEnum
+from ...dialect.llh import TorchSymbolicIntOp, ConstantOp
 
 
-@TORCH_FUNCTION_TRANSLATE("prims::eq")
-def eq_convert(
+@TORCH_FUNCTION_TRANSLATE("aten::scalar_tensor")
+def scalar_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    attrs = {"kind": CompareAttr([CompareEnum.EQ])}
-    return commond_build_op(CompareOp.build, 2, node, value_map, block,attrs=attrs)
+    return build_llh_scalar_tensor(
+        node.args[0], TORCH_DTYPE_TO_MLIR_TYPE[get_result_type(node).dtype]
+    )
