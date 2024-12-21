@@ -29,11 +29,16 @@
                 BatchMatMulOp infer shape
                 add fold_broadcast pattern
                 add batchmatmul lowing to hlo
-                
+2024.12.21 :    support sqrt
+                support mata tensor
+                support aten::scalar_tenso
+                add CompareOp
+                add ConvertToOp
+                add ModeAttr
+                add BatchNormInferenceOp
 
 TODO:
 
-    add sqrt 
     run --> MHA
     slice     
     torch frezen

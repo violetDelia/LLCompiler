@@ -335,7 +335,7 @@ def commond_build_op(
                     value_map,
                     block,
                     const_tensor=True,
-                    const_type=torch_dtype_translate[out.dtype],
+                    const_type=torch_dtype_translate(out.dtype),
                 )
                 for n in range(operand_nums)
             ],

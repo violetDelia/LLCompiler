@@ -11,6 +11,16 @@ import os
 import onnx
 from torch._decomp import get_decompositions
 from torch._subclasses.fake_tensor import FakeTensor
+from torch._inductor.compile_fx import (
+    _recursive_pre_grad_passes,
+    _recursive_post_grad_passes,
+    fw_compiler_freezing,
+    _graph_counter,
+)
+from torch._inductor.utils import BoxedBool
+from torch._inductor import config
+from torch._inductor.cudagraph_utils import BoxedDeviceIndex
+import functools
 
 
 class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
@@ -89,10 +99,10 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             aten.zero_,
             aten.zeros,
             aten.zeros_like,
-            
         }
 
-    def compiler(self, model: Any, inputs: List[torch.Tensor]):
+    def compiler(self, model: Any, inputs: List[torch.Tensor],**kwargs):
+
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
@@ -118,8 +128,19 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         return execut
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
+        if isinstance(model, torch.fx.GraphModule):
+            model = _recursive_pre_grad_passes(model, inputs)
+            inference_compiler = functools.partial(
+                fw_compiler_freezing,
+                dynamo_model=model,
+                num_example_inputs=len(inputs),
+                inner_compile=self.compiler,
+                cudagraphs=BoxedBool(config.triton.cudagraphs),
+                graph_id=next(_graph_counter),
+                forward_device=BoxedDeviceIndex(None),
+            )
             return aot_autograd(
                 fw_compiler=self.compiler,
+                inference_compiler=inference_compiler,
                 decompositions=get_decompositions(self.decompositions),
             )(model, inputs)
-        

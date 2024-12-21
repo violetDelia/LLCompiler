@@ -402,7 +402,7 @@ LLH = Dialect(
         SqrtOp,
         CompareOp,
         ConvertToOp,
-        BatchNormInferenceOp
+        BatchNormInferenceOp,
     ],
     [],
 )

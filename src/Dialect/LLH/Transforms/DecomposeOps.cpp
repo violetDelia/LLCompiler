@@ -93,7 +93,7 @@ BroadCastToOp reshapeAndBroadcastTo(LLHPatternRewriter& rewriter,
 
   auto cast_dims = llvm::SmallVector<int64_t>();
   for (auto i = 0; i < rank; ++i) {
-    if (i != feature_index) cast_dims.push_back(i);
+    cast_dims.push_back(i);
   }
   auto dims = llh::buildTensorDims(input, &rewriter);
 

@@ -7,8 +7,7 @@ from time import time
 from llcompiler.core.utility import run_time
 
 
-TORCH_DTYPE_TO_TYPE = {torch.float32: 4,
-                       torch.int64: 3}
+TORCH_DTYPE_TO_TYPE = {torch.float32: 4, torch.int64: 3}
 
 
 # 负责执行c++的执行器
@@ -40,7 +39,7 @@ class Torch_ExecutionEngine(ExecutionEngine):
                 offset = arg.storage_offset()
                 tensor = Tensor(
                     arg.data_ptr(),
-                    arg.data_ptr()+offset,
+                    arg.data_ptr() + offset,
                     TORCH_DTYPE_TO_TYPE[arg.dtype],
                     offset,
                     arg.shape,
@@ -54,8 +53,16 @@ class Torch_ExecutionEngine(ExecutionEngine):
             else:
                 raise TypeError(f"Unsupported type: {type(arg)}")
         return inputs
+
     @run_time
     def run(self, *args) -> Any:
+        # ([inputs...]) case
+        if (
+            isinstance(args, tuple)
+            and len(args) == 1
+            and (isinstance(args[0], list)) == 1
+        ):
+            args = args[0]
         inputs = self.trans_to_tensor(*args)  # 将torch.Tensor 转变为C++定义的Tensor
         outputs = self.gen_outs_call(*args)  # 推导输出的tensor信息，并分配好内存
         outputs_ = self.trans_to_tensor(

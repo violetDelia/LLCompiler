@@ -49,8 +49,10 @@ from datetime import datetime
 import torch
 import onnx
 from torch._subclasses.fake_tensor import FakeTensor
-
-
+from torch._inductor.fx_passes.pre_grad import pre_grad_passes
+from torch._inductor.fx_passes.post_grad import post_grad_passes
+from torch._inductor.freezing import freeze
+from torch._inductor.compile_fx import _recursive_pre_grad_passes,_recursive_post_grad_passes
 class MLIR_Builder:
     def __init__(self, **kwargs) -> None:
         self.context = MLContext()

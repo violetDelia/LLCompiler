@@ -10,7 +10,7 @@ func.func @main(%arg0: tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2,
     %2 = "llh.constant"() <{value = dense<2.000000e+00> : tensor<1xf32>}> : () -> tensor<1xf32, #llh.encoding<shapes = @c1>>
     %15 = "llh.reshape"(%2, %0, %0, %0, %0) : (tensor<1xf32, #llh.encoding<shapes = @c1>>, i64, i64, i64, i64) -> tensor<1x1x1x1xf32, #llh.encoding<shapes = @c1, @c1, @c1, @c1>>
     // CHECK:  llh.broadcast_to
-    // CHECK-SAME: <{cast_dims = array<i64: 1, 2, 3>}> : (tensor<1x1x1x1xf32, #llh.encoding<shapes = @c1, @c1, @c1, @c1>>, i64, i64, i64, i64) -> tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>
+    // CHECK-SAME: <{cast_dims = array<i64: 0, 1, 2, 3>, expand_dims = array<i64: 1, 2, 3>, noexpand_dims = array<i64: 0>}> : (tensor<1x1x1x1xf32, #llh.encoding<shapes = @c1, @c1, @c1, @c1>>, i64, i64, i64, i64) -> tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>
     // CHECK:  llh.div
     // CHECK-SAME: (tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>, tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>) -> tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>
     %16 = "llh.div"(%arg0, %15) : (tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>, tensor<1x1x1x1xf32, #llh.encoding<shapes = @c1, @c1, @c1, @c1>>) -> tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>
