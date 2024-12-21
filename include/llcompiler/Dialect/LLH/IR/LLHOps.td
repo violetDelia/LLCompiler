@@ -191,14 +191,6 @@ def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike]>{
     let hasCanonicalizer = 1;
 }
 
-def LLH_ConvertToOp : LLH_SymbolOp<"convert_to", []>{
-    let arguments = (ins 
-        LLH_Tensor:$input
-        );
-    let results = (outs 
-        LLH_Tensor);
-}
-
 def LLH_BroadCastToOp          : LLH_SymbolOp<"broadcast_to",[]>{
     let arguments = (ins 
         LLH_Tensor:$input,
@@ -325,6 +317,7 @@ def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_
 
 def LLH_DropOp : LLH_UnaryOp<"drop", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
 
+def LLH_ConvertToOp : LLH_UnaryOp<"convert_to", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor>;
 
 def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$out_size)>{
     let hasCanonicalizer = 1;
@@ -338,6 +331,7 @@ def LLH_AbsOp          : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>{
 }
 
 def LLH_SqrtOp         : LLH_UnaryElementwiseOp<"sqrt", [], LLH_Tensor>;
+
 
 def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
@@ -452,9 +446,12 @@ def LLH_BatchNormOp     : LLH_SymbolOp<"batch_norm">{
         LLH_Tensor:$input_var,
         F64Attr:$epsilon,
         F64Attr:$momentum,
-        I64Attr:$feature_index);
+        I64Attr:$feature_index,
+        LLH_ModeAttr:$mode);
     let results = (outs 
-        LLH_Tensor:$result);
+        LLH_Tensor:$result,
+        LLH_Tensor:$running_mean,
+        LLH_Tensor:$running_var);
 }
 
 def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{

@@ -15,6 +15,7 @@ import sympy.core.power
 from inspect import isfunction
 from sympy.core.symbol import Symbol
 import sympy.core
+from torch.fx.passes.shape_prop import TensorMetadata
 
 
 def gen_outshape_form_faketensor(exp, symbol_dict: Dict[str, int]):
@@ -64,18 +65,18 @@ class GenOutput:
         raise NotImplementedError
 
     def _fx_get_out_call(self, model: torch.fx.GraphModule):
-        inputs_fake_or_symbol = []
-        outputs_fake_or_symbol = []
+        inputs_tensor_or_symbol = []
+        outputs_tensor_or_symbol = []
         for node in model.graph.nodes:
             if node.op == "placeholder":
                 if node.type is torch.Tensor:
                     fake_tensor = node.meta["example_value"]
-                    inputs_fake_or_symbol.append(fake_tensor)
+                    inputs_tensor_or_symbol.append(fake_tensor)
                 elif node.type is None:
                     val = node.meta["val"]
                     if isinstance(val, FakeTensor):
                         fake_tensor = node.meta["val"]
-                        inputs_fake_or_symbol.append(fake_tensor)
+                        inputs_tensor_or_symbol.append(fake_tensor)
                     # 符号输入
                     elif isinstance(val, torch.SymInt):
                         pass
@@ -95,7 +96,7 @@ class GenOutput:
                         elif isinstance(arg, list):
                             trav_args(arg)
                         elif isinstance(arg, torch.fx.node.Node):
-                            outputs_fake_or_symbol.append(get_result_type(arg))
+                            outputs_tensor_or_symbol.append(get_result_type(arg))
                         elif arg is None:
                             pass
                         else:
@@ -105,11 +106,13 @@ class GenOutput:
 
         def _get_out_form_inputs(*tensors):
             symbol_dict = dict()
-            input_fake_index = 0
+            input_tensor_index = 0
             for tensor in tensors:
                 if isinstance(tensor, torch.Tensor):
-                    tensor_fake: FakeTensor = inputs_fake_or_symbol[input_fake_index]
-                    input_fake_index += 1
+                    tensor_fake: FakeTensor = inputs_tensor_or_symbol[
+                        input_tensor_index
+                    ]
+                    input_tensor_index += 1
                     for symbol, real_dim in zip(tensor_fake.shape, tensor.shape):
                         if isinstance(symbol, torch.SymInt):
                             if str(symbol) not in symbol_dict:
@@ -121,11 +124,12 @@ class GenOutput:
                 else:
                     raise TypeError(f"Unsupported type: {type(tensor)}")
             outs = []
-
-            for out_fake_or_symbol in outputs_fake_or_symbol:
-                if isinstance(out_fake_or_symbol, torch.Tensor):
+            for out_tensor_or_symbol in outputs_tensor_or_symbol:
+                if isinstance(out_tensor_or_symbol, torch.Tensor) or isinstance(
+                    out_tensor_or_symbol, TensorMetadata
+                ):
                     shape = []
-                    for dim in out_fake_or_symbol.shape:
+                    for dim in out_tensor_or_symbol.shape:
                         if isinstance(dim, int):
                             shape.append(dim)
                         elif isinstance(dim, torch.SymInt):
@@ -140,8 +144,8 @@ class GenOutput:
                         else:
                             raise TypeError(f"Unsupported type: {type(dim)}")
                     outs.append(torch.empty(shape))
-                if isinstance(out_fake_or_symbol, torch.SymInt):
-                    outs.append(out_fake_or_symbol)
+                if isinstance(out_tensor_or_symbol, torch.SymInt):
+                    outs.append(out_tensor_or_symbol)
             return outs
 
         return _get_out_form_inputs

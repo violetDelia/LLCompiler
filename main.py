@@ -51,7 +51,7 @@ module_dict = {
     # Slice: [torch.randn((200, 200, 224, 224), device="cpu")],
     # Conv2D_NCHW_FCHW :[torch.randn((200, 3, 224,224), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
-    EQ: [torch.randn((3,3,224,224), device="cpu")],
+    # EQ: [torch.randn((3,3,224,224), device="cpu")],
     # MultiHeadedAttention: [
     #     torch.randn((2, 24, 8), device="cpu"),
     #     torch.randn((2, 24, 8), device="cpu"),
@@ -72,7 +72,7 @@ module_dict = {
     # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Abs: [torch.randn((200,3,224,256), device="cpu")],
     # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
-    # BatchNorm2D_Inference: [torch.randn(50, 3, 224, 224, device="cpu")],
+    BatchNorm2D_Inference: [torch.randn(50, 3, 224, 224, device="cpu")],
     # Decompose_BatchNorm: [torch.randn(1000, 224, device="cpu")],
     # Linear: [torch.randn((10,100000), device="cpu")],
     # ElewiseFusion1: [torch.randn((200, 3, 224, 224), device="cpu")],

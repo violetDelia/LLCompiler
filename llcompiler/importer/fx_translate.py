@@ -452,7 +452,7 @@ def torch_build_func(
                         trav_args(arg)
                     elif isinstance(arg, torch.fx.node.Node):
                         type = get_result_type(arg)
-                        if isinstance(type, FakeTensor):
+                        if isinstance(type, FakeTensor) or isinstance(type, TensorMetadata):
                             # None 是一些不需要多余输出的aten生成的
                             if value_map[arg.name] != None:
                                 output_types.append(value_map[arg.name][0].type)
@@ -471,6 +471,7 @@ def torch_build_func(
             if op is not None:
                 value_map[node.name] = op.results
                 block.add_op(op)
+                print(op)
                 _updata_torch_symbol_bind(op, block, symbol_map, node)
         elif node.op == "call_method":
             if node.target == "size":
@@ -501,5 +502,5 @@ def _updata_torch_symbol_bind(
     for i in range(len(op.results)):
         if not isinstance(op.results[i].type, TensorType):
             continue
-        shape_bind = torch_symbol_bind(op.results[0], get_result_type(node), symbol_map)
+        shape_bind = torch_symbol_bind(op.results[i], get_result_type_ext(node,i), symbol_map)
         block.add_op(shape_bind)

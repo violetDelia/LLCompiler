@@ -344,10 +344,10 @@ void BroadCastToOp::getCanonicalizationPatterns(
 
 
 //===----------------------------------------------------------------------===//
-// ConvertToOp.
+// CompareOp.
 //===----------------------------------------------------------------------===//
-void ConvertToOp::getCanonicalizationPatterns(
+void CompareOp::getCanonicalizationPatterns(
     mlir::RewritePatternSet &results, MLIRContext *context) {
-  results.add<SimplyBinaryOpInsertBraodcast<ConvertToOp>>(context, BroadcastBenefit);
-  results.add<SimplyBinaryOpReshape<ConvertToOp>>(context, ReshapeBenefit);
+  results.add<SimplyBinaryOpInsertBraodcast<CompareOp>>(context, BroadcastBenefit);
+  results.add<SimplyBinaryOpReshape<CompareOp>>(context, ReshapeBenefit);
 }

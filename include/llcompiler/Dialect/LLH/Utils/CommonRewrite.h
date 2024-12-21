@@ -83,6 +83,7 @@ template <class BinaryOp>
 struct SimplyBinaryOpReshape : public LLHOpRewritePattern<BinaryOp> {
   using LLHOpRewritePattern<BinaryOp>::LLHOpRewritePattern;
   LogicalResult match(BinaryOp op) const final {
+    if(op->getNumOperands()!= 2) return llvm::failure();
     auto lhs = op->getOperand(0);
     auto rhs = op->getOperand(1);
     if (!isa<RankedTensorType>(lhs.getType())) return llvm::failure();

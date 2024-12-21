@@ -80,4 +80,4 @@ def builtin_getitem_convert(
             raise ValueError(node, type(out))
 
     else:
-        raise NotImplementedError
+        value_map[node.name] = [value_map[node.args[0].name][node.args[1]]]

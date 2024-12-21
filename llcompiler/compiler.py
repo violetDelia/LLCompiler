@@ -72,7 +72,6 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.log_llvm = log_llvm
         aten = torch.ops.aten
         self.decompositions = {
-            aten._native_batch_norm_legit_no_training.default,
             aten.addmm,
             aten.expand,
             aten._unsafe_view,
@@ -85,6 +84,11 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             aten.eq,
             aten.sqrt,
             aten.masked_fill,
+            aten.masked_fill_,
+            aten.zero,
+            aten.zero_,
+            aten.zeros,
+            aten.zeros_like,
             
         }
 

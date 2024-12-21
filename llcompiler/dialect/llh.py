@@ -58,87 +58,7 @@ from xdsl.printer import Printer
 from xdsl.utils.exceptions import VerifyException
 from xdsl.traits import SymbolTable
 from dataclasses import dataclass
-
-# python 验证速度比较慢
-i8 = IntegerType(8)
-
-LLH_Bool: TypeAlias = I1
-LLH_Int8: TypeAlias = Annotated[IntegerType, i8]
-LLH_Int16: TypeAlias = I16
-LLH_Int32: TypeAlias = I32
-LLH_Int64: TypeAlias = I64
-
-LLH_UInt8: TypeAlias = Annotated[IntegerType, IntegerType(8, Signedness.UNSIGNED)]
-LLH_UInt16: TypeAlias = Annotated[IntegerType, IntegerType(16, Signedness.UNSIGNED)]
-LLH_UInt32: TypeAlias = Annotated[IntegerType, IntegerType(32, Signedness.UNSIGNED)]
-LLH_UInt64: TypeAlias = Annotated[IntegerType, IntegerType(64, Signedness.UNSIGNED)]
-
-LLH_SInt: TypeAlias = AnySignlessIntegerType
-LLH_UInt: TypeAlias = Annotated[
-    IntegerType,
-    ParamAttrConstraint(IntegerType, [IntAttr, SignednessAttr(Signedness.SIGNLESS)]),
-]
-LLH_Int: TypeAlias = IntegerType
-
-LLH_F16: TypeAlias = Float64Type
-LLH_F32: TypeAlias = Float32Type
-LLH_F64: TypeAlias = Float64Type
-LLH_BF16: TypeAlias = BFloat16Type
-
-LLH_Float = AnyFloat
-
-LLH_BoolTensor: TypeAlias = TensorType[LLH_Bool]
-
-LLH_Int8Tensor: TypeAlias = TensorType[LLH_Int8]
-LLH_Int16Tensor: TypeAlias = TensorType[LLH_Int16]
-LLH_Int32Tensor: TypeAlias = TensorType[LLH_Int32]
-LLH_Int64Tensor: TypeAlias = TensorType[LLH_Int64]
-
-
-LLH_UInt8Tensor: TypeAlias = TensorType[LLH_UInt8]
-LLH_UInt16Tensor: TypeAlias = TensorType[LLH_UInt16]
-LLH_UInt32Tensor: TypeAlias = TensorType[LLH_UInt32]
-LLH_UInt64Tensor: TypeAlias = TensorType[LLH_UInt64]
-
-LLH_SIntTensor: TypeAlias = TensorType[LLH_SInt]
-LLH_UIntTensor: TypeAlias = TensorType[LLH_UInt]
-LLH_IntTensor: TypeAlias = TensorType[LLH_Int]
-
-LLH_F16Tensor: TypeAlias = TensorType[LLH_F16]
-LLH_F32Tensor: TypeAlias = TensorType[LLH_F32]
-LLH_F64Tensor: TypeAlias = TensorType[LLH_F64]
-LLH_BF16Tensor: TypeAlias = TensorType[LLH_BF16]
-
-LLH_FloatTensor: TypeAlias = TensorType[LLH_Float]
-
-LLH_Tensor: TypeAlias = TensorType
-
-LLH_Symbolic_Type = ContainerOf(AnyOf([TensorType, IntegerType]))
-LLH_Computable_Type = ContainerOf(
-    AnyOf(
-        [TensorType, IntegerType, Float16Type, Float32Type, Float64Type, BFloat16Type]
-    )
-)
-
-
-class CompareEnum(StrEnum):
-    EQ = "EQ"
-    LE = "LE"
-    LT = "LT"
-    GE = "GE"
-    GT = "GT"
-    NE = "NE"
-
-
-class CompareAttribute(BitEnumAttribute[CompareEnum]):
-    none_value = "none"
-    all_value = "all"
-
-
-@irdl_attr_definition
-class CompareAttr(CompareAttribute):
-    name = "llh.Compare"
-
+from .llh_constraint import *
 
 @irdl_op_definition
 class AOTOp(IRDLOperation):
@@ -190,6 +110,7 @@ class ConvertToOp(IRDLOperation):
     input = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
 
+
 @irdl_op_definition
 class SqrtOp(IRDLOperation):
     name = "llh.sqrt"
@@ -228,6 +149,7 @@ class MulOp(IRDLOperation):
     rhs = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
 
+
 @irdl_op_definition
 class CompareOp(IRDLOperation):
     name = "llh.compare"
@@ -235,6 +157,7 @@ class CompareOp(IRDLOperation):
     rhs = operand_def(LLH_Computable_Type)
     kind = attr_def(CompareAttr)
     result = result_def(LLH_Computable_Type)
+
 
 @irdl_op_definition
 class ConvBiasOp(IRDLOperation):
@@ -402,7 +325,10 @@ class BatchNormOp(IRDLOperation):
     epsilon = attr_def(FloatAttr)
     momentum = attr_def(FloatAttr)
     feature_index = attr_def(IntAttr)
+    mode = attr_def(ModeAttr)
     result = result_def(TensorType)
+    running_mean = result_def(TensorType)
+    running_var = result_def(TensorType)
 
 
 @irdl_op_definition
@@ -464,7 +390,7 @@ LLH = Dialect(
         BatchMatmulOp,
         SqrtOp,
         CompareOp,
-        ConvertToOp
+        ConvertToOp,
     ],
     [],
 )
