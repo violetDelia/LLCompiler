@@ -168,12 +168,18 @@ def torch_fake_or_mate_tensor_translate(tensor: FakeTensor):
                 shape.append(dim.node.int_())
             else:
                 shape.append(DYNAMIC_INDEX)
+    if shape.__len__() == 0:
+        shape = [1]
     return TensorType(element_type=ele_type, shape=shape)
 
 
 def make_input_tensor_symbol_attrs(tensor: FakeTensor):
     shape = []
-    for dim in tensor.shape:
+    tensor_shape = tensor.shape
+    # if input is () , it will be (1)
+    if tensor_shape.__len__() == 0:
+        tensor_shape = [1]
+    for dim in tensor_shape:
         if isinstance(dim, int):
             shape.append(str("c") + str(dim))
         if isinstance(dim, torch.SymInt):
@@ -201,38 +207,39 @@ TORCH_DTYPE_TO_MLIR_TYPE = {
 def torch_dtype_translate(dtype: torch.dtype):
     return TORCH_DTYPE_TO_MLIR_TYPE[dtype]
 
-
-def get_result_type_ext(node: torch.fx.node.Node, index: int):
-    if "tensor_meta" in node.meta:
-        return node.meta["tensor_meta"][index]
-    if "val" in node.meta:
-        return node.meta["val"][index]
-    if "example_value" in node.meta:
-        return node.meta["example_value"][index]
-    raise ValueError("No example_value found in node meta")
-
-
+aten = torch.ops.aten
 # 一些特殊的op,val里面有多个fake tensor，但是只需要使用1个返回值，保存返回的索引。
 SPECIAL_RESULT_FAKE_INDEX_MAP = {
-    "aten.max_pool2d_with_indices.default": 0,
+    aten.max_pool2d_with_indices.default: 0,
+    aten._native_batch_norm_legit_no_training.default:0
 }
 
 # 一些特殊的op，实际getitem 拿到是输入
 SPECIAL_GETITEM_IS_OPERAND_MAP = {}
 
 
-def get_result_type(
-    node: torch.fx.node.Node,
-):
-    target_name = node.target.__str__()
-    if target_name in SPECIAL_RESULT_FAKE_INDEX_MAP:
-        return get_result_type_ext(node, SPECIAL_RESULT_FAKE_INDEX_MAP[target_name])
+def get_result_type(node: torch.fx.node.Node, index=None):
+    if index is None and node.target in SPECIAL_RESULT_FAKE_INDEX_MAP:
+        return get_result_type(node, SPECIAL_RESULT_FAKE_INDEX_MAP[node.target])
     if "tensor_meta" in node.meta:
-        return node.meta["tensor_meta"]
+        return (
+            node.meta["tensor_meta"]
+            if isinstance(node.meta["tensor_meta"], TensorMetadata)
+            else node.meta["tensor_meta"][index]
+        )
     if "val" in node.meta:
-        return node.meta["val"]
+        return (
+            node.meta["val"]
+            if isinstance(node.meta["val"], (FakeTensor, torch.SymInt))
+            else node.meta["val"][index]
+        )
     if "example_value" in node.meta:
-        return node.meta["example_value"]
+        raise ValueError("No example_value found in node meta")
+        return (
+            node.meta["example_value"][index]
+            if isinstance(node.meta["example_value"], tuple)
+            else node.meta["example_value"]
+        )
     raise ValueError("No example_value found in node meta")
 
 
@@ -328,7 +335,7 @@ def commond_build_op(
                     value_map,
                     block,
                     const_tensor=True,
-                    const_type=TORCH_DTYPE_TO_MLIR_TYPE[out.dtype],
+                    const_type=torch_dtype_translate[out.dtype],
                 )
                 for n in range(operand_nums)
             ],
@@ -344,7 +351,7 @@ def commond_build_op(
                     value_map,
                     block,
                     const_tensor=True,
-                    const_type=TORCH_DTYPE_TO_MLIR_TYPE(out.dtype),
+                    const_type=torch_dtype_translate(out.dtype),
                 )
                 for n in range(operand_nums)
             ],
@@ -452,7 +459,9 @@ def torch_build_func(
                         trav_args(arg)
                     elif isinstance(arg, torch.fx.node.Node):
                         type = get_result_type(arg)
-                        if isinstance(type, FakeTensor) or isinstance(type, TensorMetadata):
+                        if isinstance(type, FakeTensor) or isinstance(
+                            type, TensorMetadata
+                        ):
                             # None 是一些不需要多余输出的aten生成的
                             if value_map[arg.name] != None:
                                 output_types.append(value_map[arg.name][0].type)
@@ -471,7 +480,6 @@ def torch_build_func(
             if op is not None:
                 value_map[node.name] = op.results
                 block.add_op(op)
-                print(op)
                 _updata_torch_symbol_bind(op, block, symbol_map, node)
         elif node.op == "call_method":
             if node.target == "size":
@@ -502,5 +510,7 @@ def _updata_torch_symbol_bind(
     for i in range(len(op.results)):
         if not isinstance(op.results[i].type, TensorType):
             continue
-        shape_bind = torch_symbol_bind(op.results[i], get_result_type_ext(node,i), symbol_map)
+        shape_bind = torch_symbol_bind(
+            op.results[i], get_result_type(node, i), symbol_map
+        )
         block.add_op(shape_bind)

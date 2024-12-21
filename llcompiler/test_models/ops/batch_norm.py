@@ -10,9 +10,9 @@ class BatchNorm2D_Inference(nn.Module):
         x = self.batch(x)
         
         
-        x = self.batch(x)
-        x = self.batch(x)
-        x = self.batch(x)
+        # x = self.batch(x)
+        # x = self.batch(x)
+        # x = self.batch(x)
         return x
     
 class BatchNorm1D_Inference(nn.Module):

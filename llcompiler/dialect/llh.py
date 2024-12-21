@@ -325,11 +325,22 @@ class BatchNormOp(IRDLOperation):
     epsilon = attr_def(FloatAttr)
     momentum = attr_def(FloatAttr)
     feature_index = attr_def(IntAttr)
-    mode = attr_def(ModeAttr)
     result = result_def(TensorType)
     running_mean = result_def(TensorType)
     running_var = result_def(TensorType)
 
+@irdl_op_definition
+class BatchNormInferenceOp(IRDLOperation):
+    name = "llh.batch_norm_inference"
+    input = operand_def(TensorType)
+    scale = operand_def(TensorType)
+    bias = operand_def(TensorType)
+    input_mean = operand_def(TensorType)
+    input_var = operand_def(TensorType)
+    epsilon = attr_def(FloatAttr)
+    momentum = attr_def(FloatAttr)
+    feature_index = attr_def(IntAttr)
+    result = result_def(TensorType)
 
 @irdl_op_definition
 class ReluOp(IRDLOperation):
@@ -391,6 +402,7 @@ LLH = Dialect(
         SqrtOp,
         CompareOp,
         ConvertToOp,
+        BatchNormInferenceOp
     ],
     [],
 )

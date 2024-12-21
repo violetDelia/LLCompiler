@@ -4,7 +4,6 @@ from ..fx_translate import (
     torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
-    get_result_type_ext,
     commond_build_op,
     _expand_to_2_if_int,
     _updata_torch_symbol_bind,
@@ -34,7 +33,7 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, BatchNormOp, ModeAttr, ModeEnum
+from ...dialect.llh import TorchSymbolicIntOp, BatchNormOp, ModeAttr, ModeEnum,BatchNormInferenceOp
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::_native_batch_norm_legit_no_training")
@@ -44,9 +43,7 @@ def batch_norm_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    result_type = torch_fake_or_mate_tensor_translate(get_result_type_ext(node, 0))
-    running_mean = torch_fake_or_mate_tensor_translate(get_result_type_ext(node, 1))
-    running_var = torch_fake_or_mate_tensor_translate(get_result_type_ext(node, 2))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     input = get_arg_value(node.args[0], value_map, block)
     weight = get_arg_value(node.args[1], value_map, block)
     bias = get_arg_value(node.args[2], value_map, block)
@@ -56,11 +53,12 @@ def batch_norm_convert(
         "epsilon": FloatAttr(node.args[5], f64),
         "momentum": FloatAttr(node.args[6], f64),
         "feature_index": IntegerAttr(1, i64),
+        "mode":ModeAttr([ModeEnum.Inference])
     }
-    return BatchNormOp.build(
+    return BatchNormInferenceOp.build(
         operands=[input, weight, bias, input_mean, input_var],
         attributes=attrs,
-        result_types=[result_type, running_mean, running_var],
+        result_types=[result_type],
     )
 
 

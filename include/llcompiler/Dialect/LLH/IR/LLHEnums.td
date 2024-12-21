@@ -124,10 +124,9 @@ def LLH_CompareAttr : EnumAttr<LLH_Dialect, LLH_Compare, "Compare">{
   let assemblyFormat = "`<` $value `>`";
 }
 
-def LLH_Mode_Trainning         : I32EnumAttrCase<"Training", 0>;
-def LLH_Mode_Inference         : I32EnumAttrCase<"Inference", 1>;
-def LLH_Mode : I32EnumAttr<"ModeKind",
-    "Run mode",
+def LLH_Mode_Trainning         : I32EnumAttrCase<"training", 0>;
+def LLH_Mode_Inference         : I32EnumAttrCase<"inference", 1>;
+def LLH_Mode : I32EnumAttr<"ModeKind", "Mode",
     [LLH_Mode_Trainning, LLH_Mode_Inference]> {
   let genSpecializedAttr = 0;
   let cppNamespace = "::mlir::llh";

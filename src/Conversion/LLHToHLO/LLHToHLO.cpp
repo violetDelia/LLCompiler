@@ -177,9 +177,9 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   }
 };
 
-struct BatchNormOpLowing : public OpConversionPattern<BatchNormOp> {
-  using OpConversionPattern<BatchNormOp>::OpConversionPattern;
-  LogicalResult matchAndRewrite(BatchNormOp op, OpAdaptor adaptor,
+struct BatchNormInferenceOpLowing : public OpConversionPattern<BatchNormInferenceOp> {
+  using OpConversionPattern<BatchNormInferenceOp>::OpConversionPattern;
+  LogicalResult matchAndRewrite(BatchNormInferenceOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
     auto res = op.getResult();
     auto res_type = res.getType();
@@ -381,7 +381,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<SqrtOp, stablehlo::SqrtOp>>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(context);
-  patterns.add<BatchNormOpLowing>(converter, context);
+  patterns.add<BatchNormInferenceOpLowing>(converter, context);
   patterns.add<MaxPoolOpLowing>(converter, context);
   patterns.add<BroadCastToOpToOpLowing>(converter, context);
   patterns.add<SliceOpLowing>(converter, context);
@@ -395,7 +395,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
 void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
   target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp,CompareOp>();
-  target.addIllegalOp<ReluOp, BatchNormOp, AbsOp, SqrtOp>();
+  target.addIllegalOp<ReluOp, BatchNormOp, AbsOp, SqrtOp,BatchNormInferenceOp>();
   target.addIllegalOp<ConvOp, MaxPoolOp, MatMulOp, BatchMatMulOp>();
   target.addIllegalOp<TransposeOp, BroadCastToOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();

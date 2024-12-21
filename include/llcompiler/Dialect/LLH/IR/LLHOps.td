@@ -446,12 +446,25 @@ def LLH_BatchNormOp     : LLH_SymbolOp<"batch_norm">{
         LLH_Tensor:$input_var,
         F64Attr:$epsilon,
         F64Attr:$momentum,
-        I64Attr:$feature_index,
-        LLH_ModeAttr:$mode);
+        I64Attr:$feature_index);
     let results = (outs 
         LLH_Tensor:$result,
         LLH_Tensor:$running_mean,
         LLH_Tensor:$running_var);
+}
+
+def LLH_BatchNormInferenceOp     : LLH_SymbolOp<"batch_norm_inference">{
+    let arguments = (ins
+        LLH_Tensor:$input,
+        LLH_Tensor:$scale,
+        LLH_Tensor:$bias,
+        LLH_Tensor:$input_mean,
+        LLH_Tensor:$input_var,
+        F64Attr:$epsilon,
+        F64Attr:$momentum,
+        I64Attr:$feature_index);
+    let results = (outs 
+        LLH_Tensor:$result);
 }
 
 def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{

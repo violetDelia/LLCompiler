@@ -72,7 +72,7 @@ func.func @batch_norm(%arg0: tensor<3x3x100x100xf32> ) -> tensor<3x3x100x100xf32
     %4 = "llh.constant"() <{value = dense<1.000000e+00> : tensor<3xf32>}> : () -> tensor<3xf32>
     // CHECK: stablehlo.batch_norm_inference
     // CHECK-NOT: llh.batch_norm
-    %7 = "llh.batch_norm"(%arg0, %4, %3, %2, %1) <{epsilon = 1.23 : f64, feature_index = 1 : i64, momentum = 1.23 : f64}> : (tensor<3x3x100x100xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<3x3x100x100xf32>
+    %7 = "llh.batch_norm_inference"(%arg0, %4, %3, %2, %1) <{epsilon = 1.23 : f64, feature_index = 1 : i64, momentum = 1.23 : f64}> : (tensor<3x3x100x100xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>) -> tensor<3x3x100x100xf32>
     return %7 : tensor<3x3x100x100xf32>
 }
 

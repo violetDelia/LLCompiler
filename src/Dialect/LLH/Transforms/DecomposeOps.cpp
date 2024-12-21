@@ -22,9 +22,9 @@
 #include <vector>
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/SymbolInfer/Utils/InferSymbol.h"
 #include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
@@ -100,16 +100,18 @@ BroadCastToOp reshapeAndBroadcastTo(LLHPatternRewriter& rewriter,
   auto reshape =
       rewriter.create<ReshapeOp>(loc, reshape_type, value, reshape_dims);
   auto broadcast_to =
-      rewriter.create<BroadCastToOp>(loc, input_type, reshape, dims, cast_dims,DenseI64ArrayAttr{},DenseI64ArrayAttr{});
+      rewriter.create<BroadCastToOp>(loc, input_type, reshape, dims, cast_dims,
+                                     DenseI64ArrayAttr{}, DenseI64ArrayAttr{});
   return broadcast_to;
 }
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct DecomposeBatchNormOp : public LLHOpRewritePattern<BatchNormOp> {
+struct DecomposeBatchNormInferenceOp
+    : public LLHOpRewritePattern<BatchNormInferenceOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
 
-  LogicalResult matchAndRewrite(BatchNormOp op,
+  LogicalResult matchAndRewrite(BatchNormInferenceOp op,
                                 LLHPatternRewriter& rewriter) const final {
     auto val = op.getInputVar();
     auto val_type = llc::getRankTensorFrom(val);
@@ -154,7 +156,7 @@ struct DecomposeBatchNormOp : public LLHOpRewritePattern<BatchNormOp> {
 //===----------------------------------------------------------------------===//
 void populateDecomposeOpsPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<DecomposeBatchNormOp>(context);
+  patterns.add<DecomposeBatchNormInferenceOp>(context);
 }
 
 //===----------------------------------------------------------------------===//

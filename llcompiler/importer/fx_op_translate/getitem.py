@@ -42,18 +42,13 @@ def builtin_getitem_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    target_name = node.args[0].target.__str__()
-    if (
-        target_name in SPECIAL_GETITEM_IS_OPERAND_MAP
-        and node.args[1] in SPECIAL_GETITEM_IS_OPERAND_MAP[target_name]
-    ):
-        op_res_0: OpResult = value_map[node.args[0].name][0]
-        index = SPECIAL_GETITEM_IS_OPERAND_MAP[target_name][node.args[1]]
-        value_map[node.name] = [op_res_0.op.operands[index]]
-        return None
-    if target_name in SPECIAL_RESULT_FAKE_INDEX_MAP:
-        if SPECIAL_RESULT_FAKE_INDEX_MAP[target_name] == node.args[1]:
+    target = node.args[0].target
+    if target in SPECIAL_RESULT_FAKE_INDEX_MAP:
+        if SPECIAL_RESULT_FAKE_INDEX_MAP[target] == node.args[1]:
             value_map[node.name] = value_map[node.args[0].name]
+            return None
+        else:
+            value_map[node.name] = None
             return None
     inputs = value_map[node.args[0].name]
     if (len(inputs) == 1) and isinstance(inputs[0].type, TensorType):

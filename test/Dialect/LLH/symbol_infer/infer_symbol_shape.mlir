@@ -208,29 +208,6 @@ func.func @conv_static(%arg0: tensor<2x3x224x224xf32>) ->() attributes {entrance
 
 // -----
 // CHECK-ENCODING: llh.encoding_bind
-func.func @extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"}) -> tensor<*xf32> attributes {entrance} {
-    %0 = "llh.constant"() <{symbol = @c3, value = 3 : i64}> : () -> i64
-    %1 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64
-    %2 = "llh.constant"() <{symbol = @c1, value = 1 : i64}> : () -> i64
-    %3 = "llh.constant"() <{symbol = @c0, value = 0 : i64}> : () -> i64
-    %4 = "llh.constant"() <{symbol = @c18446744073709551615, value = -1 : i64}> : () -> i64
-    // CHECK: llh.extract
-    // CHECK-SAME:-> tensor<?x?x?xf32, #llh.encoding<shapes = @s1, @s2, @s2>>
-    %5 = "llh.extract"(%arg0, %3) : (tensor<?x?x?x?xf32>, i64) -> tensor<*xf32>
-    // CHECK: llh.extract
-    // CHECK-SAME:-> tensor<?x?xf32, #llh.encoding<shapes = @s2, @s2>>
-    %6 = "llh.extract"(%5, %4) : (tensor<*xf32>, i64) -> tensor<*xf32>
-    // CHECK: llh.extract
-    // CHECK-SAME:-> tensor<?xf32, #llh.encoding<shapes = @s2>>
-    %7 = "llh.extract"(%6, %3) : (tensor<*xf32>, i64) -> tensor<*xf32>
-    // CHECK: llh.extract
-    // CHECK-SAME:-> tensor<1xf32, #llh.encoding<shapes = @c1>>
-    %8 = "llh.extract"(%7, %3) : (tensor<*xf32>, i64) -> tensor<*xf32>
-    return %8 : tensor<*xf32>
-}
-
-// -----
-// CHECK-ENCODING: llh.encoding_bind
 func.func @broadcast_to(%arg0: tensor<?x?x?x?xf32>) ->() attributes {entrance} {
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = 1 : i64}> : () -> i64
@@ -259,4 +236,38 @@ func.func @batch_matmul(%arg0: tensor<12x?x512xf32>) -> tensor<*xf32> attributes
     %matmul = "llh.batch_matmul"(%arg0, %const) : (tensor<12x?x512xf32>, tensor<12x512x10xf32>) -> tensor<*xf32>
     // llh.symbol_relation
     return %matmul : tensor<*xf32>
+}
+
+// -----
+// CHECK-ENCODING: llh.encoding_bind
+func.func @batch_norm(%arg0: tensor<3xf32> {func.input_symbol_0 = "c3"}, %arg1: tensor<3xf32> {func.input_symbol_0 = "c3"}, %arg2: tensor<3xf32> {func.input_symbol_0 = "c3"}, %arg3: tensor<3xf32> {func.input_symbol_0 = "c3"}, %arg4: tensor<1xi64> {func.input_symbol_0 = "c1"}, %arg5: tensor<?x3x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "c3", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"}) -> (tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<?x3x?x?xf32>, tensor<0xf32>, tensor<0xf32>) attributes {entrance} {
+    %0 = "llh.constant"() <{symbol = @c0, value = 0 : i64}> : () -> i64
+    %1 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64
+    // CHECK: llh.batch_norm
+    // CHECK-SAME: : (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s2, @s2>>, tensor<3xf32, #llh.encoding<shapes = @c3>>, tensor<3xf32, #llh.encoding<shapes = @c3>>, tensor<3xf32, #llh.encoding<shapes = @c3>>, tensor<3xf32, #llh.encoding<shapes = @c3>>) -> (tensor<?x3x?x?xf32, #llh.encoding<shapes = @s0, @c3, @s2, @s2>>, tensor<0xf32, #llh.encoding<shapes = @c0>>, tensor<0xf32, #llh.encoding<shapes = @c0>>)
+    %result, %running_mean, %running_var = "llh.batch_norm"(%arg5, %arg0, %arg1, %arg2, %arg3) <{epsilon = 1.000000e-01 : f64, feature_index = 1 : i64, mode = #llh.Mode<inference>, momentum = 1.000000e-05 : f64}> : (tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>) -> (tensor<?x3x?x?xf32>, tensor<0xf32>, tensor<0xf32>)
+    return %result, %arg0, %arg2, %arg3, %arg5, %running_mean, %running_var : tensor<?x3x?x?xf32>, tensor<3xf32>, tensor<3xf32>, tensor<3xf32>, tensor<?x3x?x?xf32>, tensor<0xf32>, tensor<0xf32>
+  }
+
+// -----
+// CHECK-ENCODING: llh.encoding_bind
+func.func @extract(%arg0: tensor<?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2"}) -> tensor<*xf32> attributes {entrance} {
+    %0 = "llh.constant"() <{symbol = @c3, value = 3 : i64}> : () -> i64
+    %1 = "llh.constant"() <{symbol = @c2, value = 2 : i64}> : () -> i64
+    %2 = "llh.constant"() <{symbol = @c1, value = 1 : i64}> : () -> i64
+    %3 = "llh.constant"() <{symbol = @c0, value = 0 : i64}> : () -> i64
+    %4 = "llh.constant"() <{symbol = @c18446744073709551615, value = -1 : i64}> : () -> i64
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<?x?xf32, #llh.encoding<shapes = @s1, @s2>>
+    %5 = "llh.extract"(%arg0, %3) : (tensor<?x?x?xf32>, i64) -> tensor<*xf32>
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<?xf32, #llh.encoding<shapes = @s2>>
+    %6 = "llh.extract"(%5, %4) : (tensor<*xf32>, i64) -> tensor<*xf32>
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<1xf32, #llh.encoding<shapes = @c1>>
+    %7 = "llh.extract"(%6, %3) : (tensor<*xf32>, i64) -> tensor<*xf32>
+    // CHECK: llh.extract
+    // CHECK-SAME:-> tensor<1xf32, #llh.encoding<shapes = @c1>>
+    %8 = "llh.extract"(%7, %3) : (tensor<*xf32>, i64) -> tensor<*xf32>
+    return %8 : tensor<*xf32>
 }

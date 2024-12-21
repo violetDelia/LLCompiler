@@ -5,11 +5,11 @@ from ..fx_translate import (
     get_result_type,
     get_arg_value,
     commond_build_op,
+    torch_dtype_translate,
     _expand_to_2_if_int,
     _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
-    TORCH_DTYPE_TO_MLIR_TYPE,
 )
 from xdsl.dialects.builtin import (
     TensorType,
@@ -49,5 +49,5 @@ def scalar_convert(
     block: Block,
 ):
     return build_llh_scalar_tensor(
-        node.args[0], TORCH_DTYPE_TO_MLIR_TYPE[get_result_type(node).dtype]
+        node.args[0], torch_dtype_translate[get_result_type(node).dtype]
     )

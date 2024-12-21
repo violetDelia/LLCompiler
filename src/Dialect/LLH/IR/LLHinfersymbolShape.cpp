@@ -369,12 +369,12 @@ void ConvSymbolInfer(Operation* op) {
     return llvm::success();                                             \
   }
 
-INFER_UNARY_OP(BatchNormOp)
 INFER_UNARY_OP(DropOp)
 INFER_UNARY_OP(ReluOp)
 INFER_UNARY_OP(AbsOp)
 INFER_UNARY_OP(ConvertToOp)
 INFER_UNARY_OP(SqrtOp)
+INFER_UNARY_OP(BatchNormInferenceOp)
 
 INFER_BINARY(AddOp)
 INFER_BINARY(MulOp)
@@ -719,6 +719,17 @@ INFER_FUNCTION(TransposeOp) {
       RankedTensorType::get(new_shape, input_tensor.getElementType(),
                             EncodingAttr::get(getContext(), new_symbols));
   getResult().setType(new_res_type);
+  COMMON_CHECK
+  return llvm::success();
+}
+
+INFER_FUNCTION(BatchNormOp) {
+  NO_ENCODING_RETURN(getInput())
+  auto res = getResult();
+  res.setType(getInput().getType());
+  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  symbol_analsis->addEncoding(getRunningMean());
+  symbol_analsis->addEncoding(getRunningVar());
   COMMON_CHECK
   return llvm::success();
 }
