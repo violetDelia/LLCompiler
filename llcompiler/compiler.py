@@ -37,7 +37,6 @@ llc_decompositions = {
     aten.bmm,
     aten.threshold_backward,
     aten.native_batch_norm_backward,
-    aten.sum.dim_IntList
 }
 
 
@@ -102,6 +101,9 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         model = _recursive_pre_grad_passes(model, inputs)
         _recursive_post_grad_passes(model, inputs)
 
+    def not_compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
+        return model
+
     def compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
         if isinstance(model, torch.fx.GraphModule):
             self._process_fx(model, inputs, **kwargs)
@@ -135,11 +137,10 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
         if isinstance(model, torch.fx.GraphModule):
+            fw_compiler = self.compiler
+            bw_compiler = self.compiler
             if self.mode == "inference":
                 config.freezing = True
-            else:
-                config.freezing = False
-            if self.mode == "inference":
                 fw_compiler = functools.partial(
                     fw_compiler_freezing,
                     dynamo_model=model,
@@ -149,12 +150,13 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
                     graph_id=next(_graph_counter),
                     forward_device=BoxedDeviceIndex(None),
                 )
-                #fw_compiler = self.compiler
+                bw_compiler = self.not_compiler
             else:
-                fw_compiler = self.compiler
+                config.freezing = False
+
             return aot_autograd(
                 fw_compiler=fw_compiler,
-                bw_compiler=self.compiler,
+                bw_compiler=bw_compiler,
                 decompositions=get_decompositions(llc_decompositions),
             )(model, inputs)
         else:
