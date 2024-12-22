@@ -53,9 +53,9 @@ namespace llc {
   DEF_ATTR(name, Key)              \
   void add_##name##_attr(mlir::Operation* op, ::mlir::llh::Layout value);
 
-
-extern  const char* SymbolModule;
+extern const char* SymbolModule;
 extern const char* GloabalLayoutAttr;
+extern const char* GloabalModeKindAttr;
 ADD_LAYOUT_ATTR(layout, LayoutAttr)
 ADD_LAYOUT_ATTR(weight_layout, WeightLayoutAttr)
 ADD_STRING_ATTR(op_name, OperationNameAttr)

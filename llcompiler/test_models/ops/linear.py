@@ -20,9 +20,6 @@ class Linear(nn.Module):
             10,
             bias=False,
         )
-        self.linear1.train(False)
-        self.linear2.train(False)
-        self.linear3.train(False)
 
     def forward(self, x: torch.Tensor):
         x = self.linear1(x)

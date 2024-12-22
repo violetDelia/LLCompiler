@@ -173,6 +173,7 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   // ********* load to mlir *********//
   mlir::OwningOpRef<mlir::ModuleOp> module;
   file::str_to_mlir_module(context, module, xdsl_module);
+  preprocess_mlir_module(&module, options);
   // ********* run mlir *********//
   if (options.pipeline == "basic") {
     runBasicPipeline(options, module);

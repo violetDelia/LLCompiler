@@ -54,7 +54,6 @@ class Torch_ExecutionEngine(ExecutionEngine):
                 raise TypeError(f"Unsupported type: {type(arg)}")
         return inputs
 
-    @run_time
     def run(self, *args) -> Any:
         # ([inputs...]) case
         if (

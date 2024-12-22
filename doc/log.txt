@@ -37,9 +37,11 @@
                 add ModeAttr
                 add BatchNormInferenceOp
                 add torch frezen fold pass
-
+2024.12.21 :    add doc inductor
+                support frozen params
+                refine auto reshape and braodcast
 TODO:
-
+    static frozen support
     run --> MHA
     slice     
     torch frezen

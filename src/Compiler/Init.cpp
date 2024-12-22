@@ -21,11 +21,13 @@
 #include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/CommonPipeline.h"
@@ -183,5 +185,23 @@ void init_frontend(const front::FrontEndOption& front_option,
     INFO(GLOBAL) << "convert onnx to: " << front_option.onnx_convert_version;
   }
 }
+
+void preprocess_mlir_module(mlir::OwningOpRef<mlir::ModuleOp>* module,
+                            CompilerOptions compiler_options) {
+  auto context = module->get()->getContext();
+  auto maybe_layout =
+      mlir::llh::symbolizeLayout(compiler_options.target_layout);
+  CHECK(llc::GLOBAL, maybe_layout.has_value())
+      << "Layout error: " << compiler_options.target_layout;
+  auto layout = maybe_layout.value();
+  module->get()->setAttr(llc::GloabalLayoutAttr,
+                         mlir::llh::LayoutAttr::get(context, layout));
+  auto maybe_mode = mlir::llh::symbolizeModeKind(compiler_options.mode);
+  CHECK(llc::GLOBAL, maybe_mode.has_value())
+      << "mode error: " << compiler_options.target_layout;
+  auto mode = maybe_mode.value();
+  module->get()->setAttr(llc::GloabalModeKindAttr,
+                         mlir::llh::ModeKindAttr::get(context, mode));
+};
 
 }  // namespace llc::compiler

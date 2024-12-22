@@ -103,7 +103,13 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.log_llvm = log_llvm
         self.compile_count = 0
 
+    def _process_fx(self, model: Any, inputs: List[torch.Tensor], **kwargs):
+        model = _recursive_pre_grad_passes(model, inputs)
+        _recursive_post_grad_passes(model, inputs)
+
     def compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
+        if isinstance(model, torch.fx.GraphModule):
+            self._process_fx(model, inputs, **kwargs)
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
@@ -134,18 +140,17 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
                 config.freezing = True
             else:
                 config.freezing = False
-            model = _recursive_pre_grad_passes(model, inputs)
-            _recursive_post_grad_passes(model, inputs)
             if self.mode == "inference":
-                fw_compiler = functools.partial(
-                    fw_compiler_freezing,
-                    dynamo_model=model,
-                    num_example_inputs=len(inputs),
-                    inner_compile=self.compiler,
-                    cudagraphs=BoxedBool(config.triton.cudagraphs),
-                    graph_id=next(_graph_counter),
-                    forward_device=BoxedDeviceIndex(None),
-                )
+                # fw_compiler = functools.partial(
+                #     fw_compiler_freezing,
+                #     dynamo_model=model,
+                #     num_example_inputs=len(inputs),
+                #     inner_compile=self.compiler,
+                #     cudagraphs=BoxedBool(config.triton.cudagraphs),
+                #     graph_id=next(_graph_counter),
+                #     forward_device=BoxedDeviceIndex(None),
+                # )
+                fw_compiler = self.compiler
             else:
                 fw_compiler = self.compiler
             return aot_autograd(

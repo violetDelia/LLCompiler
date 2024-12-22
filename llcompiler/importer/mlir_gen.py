@@ -84,7 +84,7 @@ class MLIR_Builder:
         raise NotImplementedError
 
     def _fx_mlir_gen(self, model: torch.fx.GraphModule, **kwargs):
-        model.graph.print_tabular()
+        # model.graph.print_tabular()
         params: dict[str, torch.Tensor] = {
             **dict(model.named_parameters(remove_duplicate=False)),
             **dict(model.named_buffers(remove_duplicate=False)),
@@ -105,7 +105,7 @@ class MLIR_Builder:
             )
             np.save(
                 weight_file,
-                np.array(tensor.tolist(), TORCH_DTYPE_TO_NUMPY_DTYPE[tensor.dtype]),
+                tensor.numpy(force=True)
             )
             op = WeightOp.build(
                 result_types=[torch_fake_or_mate_tensor_translate(tensor)],
@@ -115,10 +115,7 @@ class MLIR_Builder:
             block.add_op(op)
         func = torch_build_func(model.graph, "main", block, value_map, symbol_map)
         func.attributes.update({"entrance": UnitAttr()})
-        module = ModuleOp(
-            [func],
-            attributes={"builtin.gloabal_layout": StringAttr("NCHW")},
-        )
+        module = ModuleOp([func])
         return module
 
     def _onnx_mlir_gen(self, model: onnx.GraphProto, **kwargs):
