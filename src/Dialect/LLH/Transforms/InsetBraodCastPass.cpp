@@ -81,7 +81,7 @@ struct InsertBroadCastPass
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
-
+#include <iostream>
 void InsertBroadCastPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();

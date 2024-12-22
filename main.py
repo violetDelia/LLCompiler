@@ -74,8 +74,8 @@ module_dict = {
     # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
     # BatchNorm2D_Inference: [torch.randn(50, 3, 224, 224, device="cpu")],
     # Decompose_BatchNorm: [torch.randn(1000, 224, device="cpu")],
-    #  Linear: [torch.randn((10,100000), device="cpu")],
-    ElewiseFusion1: [torch.randn((2,3,4,2), device="cpu")],
+    Linear: [torch.randn((10, 100000), device="cpu")],
+    # ElewiseFusion1: [torch.randn((2,3,4,2), device="cpu")],
     # Braodcast: [torch.randn((10, 20), device="cpu")],
     # Matmul: [torch.randn((3,224,112), device="cpu")],
     # Sqrt: [torch.randn((3,3,224,224), device="cpu")],
@@ -83,7 +83,8 @@ module_dict = {
 
 
 def run_model_dict(dict):
-    modes = ["inference", "training"]
+    modes = ["inference", #"training"
+             ]
     for mode in modes:
         for func, inputs in dict.items():
             print("模型: ", func.__name__, ", 模式: ", mode)
@@ -112,19 +113,18 @@ def run_model_dict(dict):
                 model=model,
                 backend=compiler,
                 dynamic=True,
-                fullgraph=True,
+                fullgraph=False,
             )
             torch_compiler: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 dynamic=True,
-                fullgraph=True,
+                fullgraph=False,
             )
             torch_res = torch_run_time(model, *inputs)
-            #loop_torch_run_time(100, model, *inputs)
+            # loop_torch_run_time(100, model, *inputs)
             torch_compiler_time(torch_compiler, *inputs)
             torch_compiler_time(torch_compiler, *inputs)
             engine_res = llcompiler_run_time(opt_model, *inputs)
-            llcompiler_run_time(opt_model, *inputs)
             # loop_llcompiler_run_time(100,opt_model, *inputs)
             # print(engine_res)
             # print(torch_res)

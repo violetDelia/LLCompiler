@@ -84,7 +84,7 @@ void generatePipelineOptions(
   pipleline_options.runMode = str_to_mode(options.mode.c_str());
   pipleline_options.target = str_to_target(options.target.c_str());
   pipleline_options.symbolInfer = options.symbol_infer;
-  pipleline_options.irTreeDir = options.ir_tree_dir;
+  pipleline_options.irTreeDir = options.log_root;
   pipleline_options.indexBitWidth = options.index_bit_width;
   auto maybe_target_layout = mlir::llh::symbolizeLayout(options.target_layout);
   CHECK(llc::GLOBAL, maybe_target_layout.has_value());
@@ -125,13 +125,14 @@ void generatePipelineOptions(
 }
 
 void setIRDumpConfig(CompilerOptions& options, mlir::PassManager& pm) {
-  if (std::filesystem::exists(options.ir_tree_dir)) {
-    INFO(GLOBAL) << "mlir ir tree dir is: " << options.ir_tree_dir;
-    pm.enableIRPrintingToFileTree(
-        [](mlir::Pass* pass, mlir::Operation*) { return false; },
-        [](mlir::Pass* pass, mlir::Operation*) { return true; }, false, false,
-        false, options.ir_tree_dir, mlir::OpPrintingFlags());
-  }
+  if (options.log_root.empty()) return;
+  if (!std::filesystem::exists(options.log_root))
+    std::filesystem::create_directory(options.log_root);
+  INFO(GLOBAL) << "mlir ir tree dir is: " << options.log_root;
+  pm.enableIRPrintingToFileTree(
+      [](mlir::Pass* pass, mlir::Operation*) { return false; },
+      [](mlir::Pass* pass, mlir::Operation*) { return true; }, false, false,
+      false, options.log_root, mlir::OpPrintingFlags());
 }
 
 void runBasicPipeline(CompilerOptions& options,
@@ -157,6 +158,7 @@ void runTransformPipeline(CompilerOptions& options,
 }
 
 Engine do_compile(const char* xdsl_module, CompilerOptions options) {
+  print_info << __func__;
   // ********* init logger *********//
   logger::LoggerOption logger_option;
   logger_option.level = logger::str_to_log_level(options.log_level.c_str());

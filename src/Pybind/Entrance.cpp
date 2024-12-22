@@ -107,7 +107,6 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
       .def_readwrite("L1_cache_size", &CompilerOptions::L1_cache_size)
       .def_readwrite("target_layout", &CompilerOptions::target_layout)
       .def_readwrite("index_bit_width", &CompilerOptions::index_bit_width)
-      .def_readwrite("ir_tree_dir", &CompilerOptions::ir_tree_dir)
       .def_readwrite("log_root", &CompilerOptions::log_root)
       .def_readwrite("log_level", &CompilerOptions::log_level)
       .def_readwrite("log_llvm", &CompilerOptions::log_llvm);

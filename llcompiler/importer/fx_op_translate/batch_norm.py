@@ -81,11 +81,12 @@ def batch_norm_convert(
         "feature_index": IntegerAttr(1, i64),
         "mode": ModeAttr([ModeEnum.Inference]),
     }
-    return BatchNormOp.build(
+    op =  BatchNormOp.build(
         operands=[input, weight, bias, input_mean, input_var],
         attributes=attrs,
         result_types=[result_type],
     )
+    return op
 
 
 @TORCH_MODULE_TRANSLATE(

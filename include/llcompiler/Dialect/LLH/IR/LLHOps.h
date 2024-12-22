@@ -51,7 +51,6 @@
 #define GET_OP_CLASSES
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"
 #undef PLACEHOLD_FOR_FIX_HEADER
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
 
 namespace mlir::llh {
 void populateSymbolCanonicalizePatterns(RewritePatternSet& patterns);
@@ -130,6 +129,7 @@ LogicalResult checkBinaryNeedBroadcast(Operation* op);
 template <class BinaryOp>
 LogicalResult insertBroadcastBeforeBinary(Operation* op,
                                           LLHPatternRewriter& rewriter) {
+  auto context = rewriter.getContext();
   auto loc = op->getLoc();
   auto lhs = op->getOperand(0);
   auto rhs = op->getOperand(1);
@@ -165,7 +165,8 @@ LogicalResult insertBroadcastBeforeBinary(Operation* op,
   auto cast_op = rewriter.create<BroadCastToOp>(
       loc, result_type, will_be_broadcast,
       detail::buildTensorDims(target_operand, &rewriter), cast_dims,
-      DenseI64ArrayAttr{}, DenseI64ArrayAttr{});
+      DenseI64ArrayAttr::get(context, expand_dims),
+      DenseI64ArrayAttr::get(context, noexpand_dims));
   if (lhs_type == result_type) {
     rewriter.replaceOpWithNewOp<BinaryOp>(op, result_type,
                                           ValueRange{lhs, cast_op});
@@ -176,3 +177,4 @@ LogicalResult insertBroadcastBeforeBinary(Operation* op,
   return llvm::success();
 }
 }  // namespace mlir::llh
+#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_

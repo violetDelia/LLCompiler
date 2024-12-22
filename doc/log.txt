@@ -36,6 +36,7 @@
                 add ConvertToOp
                 add ModeAttr
                 add BatchNormInferenceOp
+                add torch frezen fold pass
 
 TODO:
 

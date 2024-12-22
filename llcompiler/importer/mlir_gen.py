@@ -11,6 +11,7 @@ from .onnx_translate import (
     onnx_value_translate,
     onnx_node_translate,
 )
+import numpy as np
 from xdsl.dialects.builtin import (
     TensorType,
     i64,
@@ -52,7 +53,21 @@ from torch._subclasses.fake_tensor import FakeTensor
 from torch._inductor.fx_passes.pre_grad import pre_grad_passes
 from torch._inductor.fx_passes.post_grad import post_grad_passes
 from torch._inductor.freezing import freeze
-from torch._inductor.compile_fx import _recursive_pre_grad_passes,_recursive_post_grad_passes
+from torch._inductor.compile_fx import (
+    _recursive_pre_grad_passes,
+    _recursive_post_grad_passes,
+)
+
+TORCH_DTYPE_TO_NUMPY_DTYPE = {
+    torch.int64: np.int64,
+    torch.int32: np.int32,
+    torch.float16: np.float16,
+    torch.float32: np.float32,
+    torch.float64: np.float64,
+    torch.bool: bool,
+}
+
+
 class MLIR_Builder:
     def __init__(self, **kwargs) -> None:
         self.context = MLContext()
@@ -70,7 +85,7 @@ class MLIR_Builder:
 
     def _fx_mlir_gen(self, model: torch.fx.GraphModule, **kwargs):
         model.graph.print_tabular()
-        params = {
+        params: dict[str, torch.Tensor] = {
             **dict(model.named_parameters(remove_duplicate=False)),
             **dict(model.named_buffers(remove_duplicate=False)),
         }
@@ -88,7 +103,10 @@ class MLIR_Builder:
                 weight_dir,
                 name + ".npy",
             )
-            np.save(weight_file, tensor.detach().numpy())
+            np.save(
+                weight_file,
+                np.array(tensor.tolist(), TORCH_DTYPE_TO_NUMPY_DTYPE[tensor.dtype]),
+            )
             op = WeightOp.build(
                 result_types=[torch_fake_or_mate_tensor_translate(tensor)],
                 attributes={"weight_file": StringAttr(weight_file)},

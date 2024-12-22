@@ -17,10 +17,33 @@ from torch._inductor.compile_fx import (
     fw_compiler_freezing,
     _graph_counter,
 )
+from torch._functorch.partitioners import default_partition
 from torch._inductor.utils import BoxedBool
 from torch._inductor import config
 from torch._inductor.cudagraph_utils import BoxedDeviceIndex
 import functools
+
+aten = torch.ops.aten
+llc_decompositions = {
+    aten._native_batch_norm_legit_functional,
+    aten.addmm,
+    aten.expand,
+    aten._unsafe_view,
+    aten.transpose,
+    aten.add,
+    aten.mul,
+    aten.clone,
+    aten.bmm,
+    aten.div,
+    aten.eq,
+    aten.sqrt,
+    aten.masked_fill,
+    aten.masked_fill_,
+    aten.zero,
+    aten.zero_,
+    aten.zeros,
+    aten.zeros_like,
+}
 
 
 class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
@@ -76,33 +99,11 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.target_layout = target_layout
         assert opt_level > 0 and opt_level <= 3
         self.opt_level = opt_level
-        if ir_tree_dir != "":
-            os.makedirs(ir_tree_dir, exist_ok=True)
         self.ir_tree_dir = ir_tree_dir
         self.log_llvm = log_llvm
-        aten = torch.ops.aten
-        self.decompositions = {
-            aten.addmm,
-            aten.expand,
-            aten._unsafe_view,
-            aten.transpose,
-            aten.add,
-            aten.mul,
-            aten.clone,
-            aten.bmm,
-            aten.div,
-            aten.eq,
-            aten.sqrt,
-            aten.masked_fill,
-            aten.masked_fill_,
-            aten.zero,
-            aten.zero_,
-            aten.zeros,
-            aten.zeros_like,
-        }
+        self.compile_count = 0
 
-    def compiler(self, model: Any, inputs: List[torch.Tensor],**kwargs):
-
+    def compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
@@ -117,8 +118,8 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         compiler_options.L1_cache_size = self.L1_cache_size
         compiler_options.target_layout = self.target_layout
         compiler_options.index_bit_width = self.index_bit_width
-        compiler_options.ir_tree_dir = self.ir_tree_dir
-        compiler_options.log_root = self.log_root
+        compiler_options.log_root = self.log_root + "_" + str(self.compile_count)
+        self.compile_count = self.compile_count + 1
         compiler_options.log_level = self.log_level
         compiler_options.log_llvm = self.log_llvm
         # 初始化环境
@@ -129,18 +130,28 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
         if isinstance(model, torch.fx.GraphModule):
+            if self.mode == "inference":
+                config.freezing = True
+            else:
+                config.freezing = False
             model = _recursive_pre_grad_passes(model, inputs)
-            inference_compiler = functools.partial(
-                fw_compiler_freezing,
-                dynamo_model=model,
-                num_example_inputs=len(inputs),
-                inner_compile=self.compiler,
-                cudagraphs=BoxedBool(config.triton.cudagraphs),
-                graph_id=next(_graph_counter),
-                forward_device=BoxedDeviceIndex(None),
-            )
+            _recursive_post_grad_passes(model, inputs)
+            if self.mode == "inference":
+                fw_compiler = functools.partial(
+                    fw_compiler_freezing,
+                    dynamo_model=model,
+                    num_example_inputs=len(inputs),
+                    inner_compile=self.compiler,
+                    cudagraphs=BoxedBool(config.triton.cudagraphs),
+                    graph_id=next(_graph_counter),
+                    forward_device=BoxedDeviceIndex(None),
+                )
+            else:
+                fw_compiler = self.compiler
             return aot_autograd(
-                fw_compiler=self.compiler,
-                inference_compiler=inference_compiler,
-                decompositions=get_decompositions(self.decompositions),
+                fw_compiler=fw_compiler,
+                bw_compiler=self.compiler,
+                decompositions=get_decompositions(llc_decompositions),
             )(model, inputs)
+        else:
+            raise ValueError("Unsupported")

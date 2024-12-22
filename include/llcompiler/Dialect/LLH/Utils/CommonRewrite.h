@@ -26,7 +26,7 @@ template <class BinaryOp>
 struct SimplyBinaryOpInsertBraodcast : public LLHOpRewritePattern<BinaryOp> {
   using LLHOpRewritePattern<BinaryOp>::LLHOpRewritePattern;
   LogicalResult match(BinaryOp op) const final {
-    return checkBinaryNeedReshape(op);
+    return checkBinaryNeedBroadcast(op);
   }
   void rewrite(BinaryOp op, LLHPatternRewriter& rewriter) const final {
     insertBroadcastBeforeBinary<BinaryOp>(op, rewriter);
@@ -36,7 +36,9 @@ struct SimplyBinaryOpInsertBraodcast : public LLHOpRewritePattern<BinaryOp> {
 template <class BinaryOp>
 struct SimplyBinaryOpReshape : public LLHOpRewritePattern<BinaryOp> {
   using LLHOpRewritePattern<BinaryOp>::LLHOpRewritePattern;
-  LogicalResult match(BinaryOp op) const final { checkBinaryNeedReshape(op); }
+  LogicalResult match(BinaryOp op) const final {
+    return checkBinaryNeedReshape(op);
+  }
   void rewrite(BinaryOp op, LLHPatternRewriter& rewriter) const final {
     insertReshapeBeforeBinary<BinaryOp>(op, rewriter);
   }

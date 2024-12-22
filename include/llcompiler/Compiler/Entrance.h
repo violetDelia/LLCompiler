@@ -45,7 +45,6 @@ extern "C" struct CompilerOptions {
   uint64_t L2_cache_size;
   uint64_t L1_cache_size;
   unsigned index_bit_width;
-  std::string ir_tree_dir;    // dump 路径
   std::string target_layout;  // 数据布局
   std::string log_root;       // 日志路径
   std::string log_level;      // 日志等级
