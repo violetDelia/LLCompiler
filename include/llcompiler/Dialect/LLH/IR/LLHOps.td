@@ -481,107 +481,14 @@ def LLH_MaxPoolOp       : LLH_SymbolOp<"max_pool">{
     let hasCanonicalizer = 1;
 }
 
-// def LLH_CeluOp        : LLH_UnaryElementwiseOp<"celu", [], LLH_FloatTensor, LLH_FloatTensor, (ins DefaultValuedAttr<F64Attr, "1">:$alpha)>;
-
-// def LLH_AbsOp           : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>;
-
-// def LLH_AcosOp           : LLH_UnaryElementwiseOp<"acos", [], LLH_FloatTensor>;
-
-// def LLH_AcoshOp          : LLH_UnaryElementwiseOp<"acosh", [], LLH_FloatTensor>;
-
-// def LLH_AsinOp           : LLH_UnaryElementwiseOp<"asin", [], LLH_FloatTensor>;
-
-// def LLH_AsinhOp          : LLH_UnaryElementwiseOp<"asinh", [], LLH_FloatTensor>;
-
-// def LLH_AtanOp          : LLH_UnaryElementwiseOp<"atan", [], LLH_FloatTensor>;
-
-// def LLH_AtanhOp         : LLH_UnaryElementwiseOp<"atanh", [], LLH_FloatTensor>;
-
-// def LLH_CeilOp          : LLH_UnaryElementwiseOp<"ceil", [], LLH_FloatTensor>;
-
-// def LLH_BitwiseNotOp    : LLH_BinaryElementwiseOp<"bitwise_not", [], LLH_Tensor, LLH_Tensor>;
-
-// def LLH_AndOp           : LLH_BinaryElementwiseOp<"and", [], LLH_BoolTensor>;
-
-// def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [Commutative], LLH_Tensor>;
-
-// def LLH_BitShiftOp      : LLH_BinaryElementwiseOp<"bit_shift", [], LLH_IntTensor, LLH_IntTensor, (ins LLH_ShiftDirectionAttr:$direction)>;
-
-// def LLH_BitwiseAndOp    : LLH_BinaryElementwiseOp<"bitwise_and", [], LLH_Tensor, LLH_Tensor>;
-
-// def LLH_BitwiseOrOp     : LLH_BinaryElementwiseOp<"bitwise_or", [], LLH_Tensor, LLH_Tensor>;
-
-// def LLH_BitwiseXorOp    : LLH_BinaryElementwiseOp<"bitwise_xor", [], LLH_Tensor, LLH_Tensor>;
-
-// def LLH_CastLikeOp      : LLH_Op<"cast_like">{
-//     let arguments = (ins 
-//        LLH_Tensor:$input,
-//        LLH_Tensor:$target_type,
-//        DefaultValuedAttr<SI64Attr, "1">:$saturate);
-//     let results = (outs LLH_Tensor);
-// }
-
-// def LLH_ArgMaxOp        : LLH_Op<"argmax", [InferShapedTypeOpInterface, SameOperandsAndResultType]>{
-//     let arguments = (ins 
-//         LLH_Tensor:$input,
-//         DefaultValuedAttr<SI64Attr, "0">:$axis,
-//         DefaultValuedAttr<SI64Attr, "1">:$keepdims,
-//         DefaultValuedAttr<SI64Attr, "0">:$select_last_index);
-//     let results = (outs LLH_Tensor);
-// }
-
-// def LLH_ArgMinOp        : LLH_Op<"argmin", [InferShapedTypeOpInterface, SameOperandsAndResultType]>{
-//     let arguments = (ins 
-//         LLH_Tensor:$input,
-//         DefaultValuedAttr<SI64Attr, "0">:$axis,
-//         DefaultValuedAttr<SI64Attr, "1">:$keepdims,
-//         DefaultValuedAttr<SI64Attr, "0">:$select_last_index);
-//     let results = (outs LLH_Tensor);
-// }
-
-// def LLH_AveragePoolOp   : LLH_Op<"average_pool", [InferShapedTypeOpInterface, SameOperandsAndResultType, SameOperandsAndResultRank]>{
-//     let arguments = (ins 
-//         LLH_FloatTensor:$X,
-//         ArrayAttr:$dilations,
-//         ArrayAttr:$kernel_shape,
-//         ArrayAttr:$pads,
-//         ArrayAttr:$strides,
-//         DefaultValuedAttr<SI64Attr, "0">:$count_include_pad,
-//         DefaultValuedAttr<LLH_AutoPadAttr, "AutoPad::DEFAULT">:$auto_pad,
-//         DefaultValuedAttr<LLH_CeilModeAttr, "CeilMode::FLOOR">:$ceil_mode
-//         );
-//     let results = (outs LLH_FloatTensor);
-// }
-
-// def LLH_BatchNormalizationOp : LLH_Op<"batch_normal", [InferShapedTypeOpInterface]>{
-//     let arguments = (ins 
-//         LLH_FloatTensor:$x,
-//         LLH_FloatTensor:$scale,
-//         LLH_FloatTensor:$bals,
-//         LLH_FloatTensor:$mean,
-//         LLH_FloatTensor:$var,
-//         DefaultValuedAttr<F64Attr, "1e-05">:$epsilon,
-//         DefaultValuedAttr<F64Attr, "0.9">:$momentum,
-//         DefaultValuedAttr<F64Attr, "0">:$training_mode
-//         );
-//     let results = (outs LLH_FloatTensor);
-// }
-
-// def LLH_ClipOp : LLH_Op<"clip", [InferShapedTypeOpInterface, SameOperandsAndResultRank]>{
-//     let arguments = (ins 
-//         LLH_Tensor:$input,
-//         LLH_ScalarTensor:$min,
-//         LLH_ScalarTensor:$max);
-//     let results = (outs LLH_FloatTensor);
-// }
-
-// def LLH_CompressOp : LLH_Op<"compress", [InferShapedTypeOpInterface, SameOperandsAndResultRank]>{
-//     let arguments = (ins 
-//         LLH_Tensor:$input,
-//         LLH_Rank1BoolTensor:$condition,
-//         OptionalAttr<SI64Attr>:$axis);
-//     let results = (outs LLH_FloatTensor);
-// }
+def LLH_WhereOp : LLH_SymbolOp<"where", []>{
+    let arguments = (ins 
+        LLH_BoolTensor:$pred,
+        LLH_Tensor:$on_true,
+        LLH_Tensor:$on_false);
+    let results = (outs 
+        LLH_Tensor);
+}
 
 
 #endif // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_

@@ -32,6 +32,7 @@ from .matmul import matmul_convert
 from .broadcast import broadcast_in_dim_convert
 from .identity import aten_clone_convert
 from .sqrt import sqrt_convert
-from .compare import eq_convert
+from .compare import eq_convert,le_convert
 from .const import scalar_convert
 from .convert_to import aten_to_copy_convert
+from .where import where_convert

@@ -271,3 +271,12 @@ func.func @extract(%arg0: tensor<?x?x?xf32> {func.input_symbol_0 = "s0", func.in
     %8 = "llh.extract"(%7, %3) : (tensor<*xf32>, i64) -> tensor<*xf32>
     return %8 : tensor<*xf32>
 }
+
+// -----
+// CHECK-ENCODING: llh.encoding_bind
+func.func @where(%arg0: tensor<?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1"}, %arg1: tensor<?x?xi1> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1"}, %arg2: tensor<?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1"}) -> tensor<*xf32> attributes {entrance} {
+    // CHECK: llh.where
+    // CHECK-SAME:-> tensor<?x?xf32, #llh.encoding<shapes = @s0, @s1>>
+    %2 = "llh.where"(%arg1, %arg0, %arg0) : (tensor<?x?xi1>, tensor<?x?xf32>, tensor<?x?xf32>) -> tensor<*xf32>
+    return %2 : tensor<*xf32>
+  }

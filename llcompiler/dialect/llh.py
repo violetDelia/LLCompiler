@@ -60,6 +60,7 @@ from xdsl.traits import SymbolTable
 from dataclasses import dataclass
 from .llh_constraint import *
 
+
 @irdl_op_definition
 class AOTOp(IRDLOperation):
     name = "llh.aot"
@@ -329,6 +330,7 @@ class BatchNormOp(IRDLOperation):
     running_mean = result_def(TensorType)
     running_var = result_def(TensorType)
 
+
 @irdl_op_definition
 class BatchNormInferenceOp(IRDLOperation):
     name = "llh.batch_norm_inference"
@@ -341,6 +343,7 @@ class BatchNormInferenceOp(IRDLOperation):
     momentum = attr_def(FloatAttr)
     feature_index = attr_def(IntAttr)
     result = result_def(TensorType)
+
 
 @irdl_op_definition
 class ReluOp(IRDLOperation):
@@ -369,9 +372,19 @@ class AdaptiveAvgPoolOp(IRDLOperation):
     result = result_def(TensorType)
 
 
+@irdl_op_definition
+class WhereOp(IRDLOperation):
+    name = "llh.where"
+    pred = operand_def(TensorType)
+    on_true = operand_def(TensorType)
+    on_false = operand_def(TensorType)
+    result = result_def(TensorType)
+
+
 LLH = Dialect(
     "llh",
     [
+        WhereOp,
         ConstantOp,
         WeightOp,
         ConvBiasOp,

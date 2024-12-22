@@ -697,8 +697,8 @@ INFER_FUNCTION(EmptyOp) {
 }
 
 INFER_FUNCTION(TransposeOp) {
-  NO_ENCODING_RETURN(getOperation()->getOperand(0))
-  HAS_ENCODING_RETURN(getOperation()->getResult(0))
+  NO_ENCODING_RETURN(getInput())
+  HAS_ENCODING_RETURN(getResult())
   auto prem = getPerms();
   auto input_type = getInput().getType();
   CHECK(llc::SymbolInfer, llvm::isa<RankedTensorType>(input_type));
@@ -725,6 +725,7 @@ INFER_FUNCTION(TransposeOp) {
 
 INFER_FUNCTION(BatchNormOp) {
   NO_ENCODING_RETURN(getInput())
+  HAS_ENCODING_RETURN(getResult())
   auto res = getResult();
   res.setType(getInput().getType());
   auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
@@ -733,6 +734,18 @@ INFER_FUNCTION(BatchNormOp) {
   COMMON_CHECK
   return llvm::success();
 }
+
+INFER_FUNCTION(WhereOp) {
+  NO_ENCODING_RETURN(getPred())
+  NO_ENCODING_RETURN(getOnTrue())
+  NO_ENCODING_RETURN(getOnFalse())
+  HAS_ENCODING_RETURN(getResult())
+  auto res = getResult();
+  res.setType(getOnTrue().getType());
+  COMMON_CHECK
+  return llvm::success();
+}
+
 #undef INFER_FUNCTION
 #undef INFER_UNARY_OP
 #undef INFER_BINARY

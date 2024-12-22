@@ -49,5 +49,5 @@ def scalar_convert(
     block: Block,
 ):
     return build_llh_scalar_tensor(
-        node.args[0], torch_dtype_translate[get_result_type(node).dtype]
+        node.args[0], torch_dtype_translate(get_result_type(node).dtype)
     )

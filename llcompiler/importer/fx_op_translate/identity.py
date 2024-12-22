@@ -36,7 +36,7 @@ from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import DimOp, TorchSymbolicIntOp
 
 
-@TORCH_FUNCTION_TRANSLATE("aten::clone")
+@TORCH_FUNCTION_TRANSLATE("aten::clone","aten::alias","aten::detach")
 def aten_clone_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

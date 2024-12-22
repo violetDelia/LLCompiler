@@ -32,31 +32,18 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, CompareOp, CompareAttr, CompareEnum
+from ...dialect.llh import TorchSymbolicIntOp, WhereOp
 
 
-@TORCH_FUNCTION_TRANSLATE("prims::eq")
-def eq_convert(
+@TORCH_FUNCTION_TRANSLATE("aten::where.self", "prims::where")
+def where_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
-    lhs = get_arg_value(node.args[0], value_map, block, const_tensor=True)
-    rhs = get_arg_value(node.args[1], value_map, block, const_tensor=True)
-    attrs = {"kind": CompareAttr([CompareEnum.EQ])}
-    return CompareOp(operands=[lhs, rhs], result_types=[result_type], attributes=attrs)
-
-@TORCH_FUNCTION_TRANSLATE("prims::le","aten::le.Scalar")
-def le_convert(
-    node: torch.fx.node.Node,
-    value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    block: Block,
-):
-    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
-    lhs = get_arg_value(node.args[0], value_map, block, const_tensor=True)
-    rhs = get_arg_value(node.args[1], value_map, block, const_tensor=True)
-    attrs = {"kind": CompareAttr([CompareEnum.EQ])}
-    return CompareOp(operands=[lhs, rhs], result_types=[result_type], attributes=attrs)
+    pre = get_arg_value(node.args[0], value_map, block, const_tensor=True)
+    on_true = get_arg_value(node.args[1], value_map, block, const_tensor=True)
+    on_false = get_arg_value(node.args[1], value_map, block, const_tensor=True)
+    return WhereOp(operands=[pre, on_true, on_false], result_types=[result_type])

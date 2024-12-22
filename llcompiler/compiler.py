@@ -25,24 +25,15 @@ import functools
 
 aten = torch.ops.aten
 llc_decompositions = {
-    aten._native_batch_norm_legit_functional,
+    #aten._native_batch_norm_legit_functional,
     aten.addmm,
     aten.expand,
     aten._unsafe_view,
     aten.transpose,
     aten.add,
     aten.mul,
-    aten.clone,
     aten.bmm,
-    aten.div,
-    aten.eq,
-    aten.sqrt,
-    aten.masked_fill,
-    aten.masked_fill_,
-    aten.zero,
-    aten.zero_,
-    aten.zeros,
-    aten.zeros_like,
+    aten.threshold_backward,
 }
 
 
@@ -141,15 +132,15 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             else:
                 config.freezing = False
             if self.mode == "inference":
-                # fw_compiler = functools.partial(
-                #     fw_compiler_freezing,
-                #     dynamo_model=model,
-                #     num_example_inputs=len(inputs),
-                #     inner_compile=self.compiler,
-                #     cudagraphs=BoxedBool(config.triton.cudagraphs),
-                #     graph_id=next(_graph_counter),
-                #     forward_device=BoxedDeviceIndex(None),
-                # )
+                fw_compiler = functools.partial(
+                    fw_compiler_freezing,
+                    dynamo_model=model,
+                    num_example_inputs=len(inputs),
+                    inner_compile=self.compiler,
+                    cudagraphs=BoxedBool(config.triton.cudagraphs),
+                    graph_id=next(_graph_counter),
+                    forward_device=BoxedDeviceIndex(None),
+                )
                 fw_compiler = self.compiler
             else:
                 fw_compiler = self.compiler
