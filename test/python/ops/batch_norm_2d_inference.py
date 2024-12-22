@@ -20,6 +20,6 @@ from llcompiler.test_models import *
 
 if __name__ == "__main__":
     model = BatchNorm2D_Inference()
-    input = torch.randn(3, 3, 224, 224)
+    input = [torch.randn(3, 3, 224, 224)]
     check_static_model_inference(model, input)
     check_dynamic_model_inference(model, input)

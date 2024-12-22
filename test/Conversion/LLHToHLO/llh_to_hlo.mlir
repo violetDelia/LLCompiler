@@ -1,7 +1,5 @@
 // RUN: llc-opt --split-input-file --convert-llh-to-hlo %s| FileCheck %s
 
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --convert-llh-to-tensor --convert-llh-to-hlo --fold-index-cast --canonicalize /home/lfr/LLCompiler/test/Conversion/LLHToHLO/llh_to_hlo.mlir
-
 func.func @constant() ->() attributes {entrance}{
   // CHECK: stablehlo.constant
   // CHECK-SAME: tensor<384xf32>
@@ -154,3 +152,13 @@ func.func @compare(%arg0: tensor<?x?x?x?xf32>) -> (tensor<?x?x?x?xi1>) attribute
     %s_le = "llh.compare"(%f_eq, %f_ge) <{kind = #llh.Compare<LE>}> : (tensor<?x?x?x?xi1>, tensor<?x?x?x?xi1>) -> tensor<?x?x?x?xi1>
     return %s_le: tensor<?x?x?x?xi1>
 }
+
+// -----
+func.func @where(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xi1>) -> tensor<?x?xf32> attributes {entrance} {
+    // CHECK-NOT: llh.where
+    // CHECK: stablehlo.select
+    %2 = "llh.where"(%arg1, %arg0, %arg0) : (tensor<?x?xi1>, tensor<?x?xf32>, tensor<?x?xf32>) -> tensor<?x?xf32>
+    return %2 : tensor<?x?xf32>
+  }
+
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --convert-llh-to-tensor --convert-llh-to-hlo --fold-index-cast --canonicalize /home/lfr/LLCompiler/test/Conversion/LLHToHLO/llh_to_hlo.mlir

@@ -332,6 +332,7 @@ def LLH_AbsOp          : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>{
 
 def LLH_SqrtOp         : LLH_UnaryElementwiseOp<"sqrt", [], LLH_Tensor>;
 
+def LLH_RsqrtOp         : LLH_UnaryElementwiseOp<"rsqrt", [], LLH_Tensor>;
 
 def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;

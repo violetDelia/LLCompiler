@@ -1,5 +1,6 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
+    TORCH_METHOD_TRANSLATE,
     TORCH_MODULE_TRANSLATE,
     torch_fake_or_mate_tensor_translate,
     get_result_type,
@@ -33,7 +34,27 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, ReluOp
+from ...dialect.llh import TorchSymbolicIntOp, AbsOp, ReluOp, SqrtOp, RsqrtOp
+
+
+@TORCH_FUNCTION_TRANSLATE("aten::rsqrt", "prims::rsqrt")
+def rsqrt_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(RsqrtOp.build, 1, node, value_map, block)
+
+
+@TORCH_FUNCTION_TRANSLATE(torch._sym_sqrt, "aten::sqrt", "prims::sqrt")
+def sqrt_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(SqrtOp.build, 1, node, value_map, block)
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::relu", F.relu)
@@ -55,3 +76,23 @@ def torch_relu_convert(
     block: Block,
 ):
     return commond_build_op(ReluOp.build, 1, node, value_map, block)
+
+
+@TORCH_FUNCTION_TRANSLATE("abs", "aten::abs")
+def abs_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(AbsOp.build, 1, node, value_map, block)
+
+
+@TORCH_METHOD_TRANSLATE("abs")
+def abs_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(AbsOp.build, 1, node, value_map, block)

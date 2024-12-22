@@ -1,6 +1,7 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     TORCH_METHOD_TRANSLATE,
+    TORCH_MODULE_TRANSLATE,
     torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
@@ -38,7 +39,48 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, ReshapeOp,DivOp
+from ...dialect.llh import TorchSymbolicIntOp, ReshapeOp, DivOp, ExpandOp, FlattenOp
+
+
+@TORCH_FUNCTION_TRANSLATE("flatten")
+def flatten_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(FlattenOp.build, 2, node, value_map, block)
+
+
+@TORCH_MODULE_TRANSLATE(torch.nn.modules.flatten.Flatten)
+def torch_flatten_convert(
+    node: torch.fx.node.Node,
+    value_map: dict,
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    module: torch.nn.modules.flatten.Flatten,
+    block: Block,
+):
+    if module.end_dim != -1:
+        raise ValueError("改成reshape")
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
+    input = get_arg_value(node.args[0], value_map, block)
+    dim = get_arg_value(module.start_dim, value_map, block)
+    return FlattenOp.build(operands=[input, dim], result_types=[result_type])
+
+
+@TORCH_METHOD_TRANSLATE("expand")
+def expand_convert(
+    node: torch.fx.node.Node,
+    value_map: dict,
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
+    input = get_arg_value(node.args[0], value_map, block)
+    dims = []
+    for dim in range(len(node.args) - 1):
+        dims.append(get_arg_value(node.args[dim + 1], value_map, block))
+    return ExpandOp(operands=[input, dims], result_types=[result_type])
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::view")
@@ -148,7 +190,7 @@ def collapse_view_convert(
     for i in node.args[1:]:
         new_dim = DivOp(operands=[new_dim, dims[i]], result_types=[i64])
         block.add_op(new_dim)
-        dims[i]= None
+        dims[i] = None
     dims[node.args[-1]] = new_dim
     new_dims = [dim for dim in dims if dim is not None]
     return ReshapeOp(operands=[input, new_dims], result_types=[result_type])

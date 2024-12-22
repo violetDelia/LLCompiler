@@ -22,5 +22,5 @@ from llcompiler.test_models import *
 
 if __name__ == "__main__":
     model = Matmul()
-    input = torch.randn(224,112)
+    input = [torch.randn(224,112)]
     check_model(model, input)

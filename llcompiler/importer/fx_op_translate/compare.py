@@ -35,7 +35,7 @@ from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import TorchSymbolicIntOp, CompareOp, CompareAttr, CompareEnum
 
 
-@TORCH_FUNCTION_TRANSLATE("prims::eq")
+@TORCH_FUNCTION_TRANSLATE("prims::eq", "aten::eq.Scalar")
 def eq_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
@@ -48,7 +48,8 @@ def eq_convert(
     attrs = {"kind": CompareAttr([CompareEnum.EQ])}
     return CompareOp(operands=[lhs, rhs], result_types=[result_type], attributes=attrs)
 
-@TORCH_FUNCTION_TRANSLATE("prims::le","aten::le.Scalar")
+
+@TORCH_FUNCTION_TRANSLATE("prims::le", "aten::le.Scalar")
 def le_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

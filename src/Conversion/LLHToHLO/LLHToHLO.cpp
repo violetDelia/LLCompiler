@@ -177,7 +177,8 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   }
 };
 
-struct BatchNormInferenceOpLowing : public OpConversionPattern<BatchNormInferenceOp> {
+struct BatchNormInferenceOpLowing
+    : public OpConversionPattern<BatchNormInferenceOp> {
   using OpConversionPattern<BatchNormInferenceOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(BatchNormInferenceOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
@@ -378,6 +379,8 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<MatMulOp, stablehlo::DotOp>>(converter,
                                                              context);
   patterns.add<SimplyFullLowing<AbsOp, stablehlo::AbsOp>>(converter, context);
+  patterns.add<SimplyFullLowing<WhereOp, stablehlo::SelectOp>>(converter,
+                                                               context);
   patterns.add<SimplyFullLowing<SqrtOp, stablehlo::SqrtOp>>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(context);
@@ -394,10 +397,10 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
 //===----------------------------------------------------------------------===//
 void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
-  target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp,CompareOp>();
-  target.addIllegalOp<ReluOp, BatchNormOp, AbsOp, SqrtOp,BatchNormInferenceOp>();
-  target.addIllegalOp<ConvOp, MaxPoolOp, MatMulOp, BatchMatMulOp>();
-  target.addIllegalOp<TransposeOp, BroadCastToOp>();
+  target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp, CompareOp, ReluOp,
+                      BatchNormOp, AbsOp, SqrtOp, BatchNormInferenceOp, ConvOp,
+                      MaxPoolOp, MatMulOp, BatchMatMulOp, TransposeOp,
+                      BroadCastToOp, SliceOp, WhereOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();
   target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

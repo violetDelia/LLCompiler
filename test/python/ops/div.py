@@ -22,5 +22,5 @@ from llcompiler.test_models import *
 
 if __name__ == "__main__":
     model = Div()
-    input = torch.randn(3, 3, 100)
+    input = [torch.randn(3, 3, 100)]
     check_model(model, input)

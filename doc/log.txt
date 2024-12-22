@@ -40,6 +40,9 @@
 2024.12.21 :    add doc inductor
                 support frozen params
                 refine auto reshape and braodcast
+                add where op and support aten::where
+                add where symbol infre
+                add where to hlo
 TODO:
     static frozen support
     run --> MHA

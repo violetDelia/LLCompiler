@@ -25,15 +25,19 @@ import functools
 
 aten = torch.ops.aten
 llc_decompositions = {
-    #aten._native_batch_norm_legit_functional,
+    # aten._native_batch_norm_legit_functional,
     aten.addmm,
     aten.expand,
     aten._unsafe_view,
     aten.transpose,
     aten.add,
     aten.mul,
+    aten.sub,
+    aten.div,
     aten.bmm,
     aten.threshold_backward,
+    aten.native_batch_norm_backward,
+    aten.sum.dim_IntList
 }
 
 
@@ -115,7 +119,11 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         compiler_options.L1_cache_size = self.L1_cache_size
         compiler_options.target_layout = self.target_layout
         compiler_options.index_bit_width = self.index_bit_width
-        compiler_options.log_root = self.log_root + "_" + str(self.compile_count)
+        compiler_options.log_root = (
+            self.log_root
+            if self.log_root == " "
+            else self.log_root + "_" + str(self.compile_count)
+        )
         self.compile_count = self.compile_count + 1
         compiler_options.log_level = self.log_level
         compiler_options.log_llvm = self.log_llvm
@@ -141,7 +149,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
                     graph_id=next(_graph_counter),
                     forward_device=BoxedDeviceIndex(None),
                 )
-                fw_compiler = self.compiler
+                #fw_compiler = self.compiler
             else:
                 fw_compiler = self.compiler
             return aot_autograd(

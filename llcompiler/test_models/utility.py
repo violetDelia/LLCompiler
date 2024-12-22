@@ -37,7 +37,7 @@ def run_dynamic_training_compiler(model:torch.nn.Module, input):
         dynamic=True,
         fullgraph=True,
     )
-    return opt_model(input)
+    return opt_model(*input)
 
 
 def run_dynamic_inference_compiler(model:torch.nn.Module, input):
@@ -49,7 +49,7 @@ def run_dynamic_inference_compiler(model:torch.nn.Module, input):
         dynamic=True,
         fullgraph=True,
     )
-    return opt_model(input)
+    return opt_model(*input)
 
 
 def run_training_compiler(model, input):
@@ -61,7 +61,7 @@ def run_training_compiler(model, input):
         dynamic=False,
         fullgraph=True,
     )
-    return opt_model(input)
+    return opt_model(*input)
 
 
 def run_inference_compiler(model, input):
@@ -73,12 +73,12 @@ def run_inference_compiler(model, input):
         dynamic=False,
         fullgraph=True,
     )
-    return opt_model(input)
+    return opt_model(*input)
 
 
 def check_static_model_inference(model, input,eps = 1e-5):
     model.train(False)
-    torch_out = model(input)
+    torch_out = model(*input)
     compiler_out = run_inference_compiler(model, input)
     is_correct = check_same(torch_out, compiler_out,eps)
     if is_correct:
@@ -90,7 +90,7 @@ def check_static_model_inference(model, input,eps = 1e-5):
 
 
 def check_static_model_training(model, input,eps = 1e-5):
-    torch_out = model(input)
+    torch_out = model(*input)
     compiler_out = run_training_compiler(model, input)
     is_correct = check_same(torch_out, compiler_out,eps)
     if is_correct:
@@ -102,7 +102,7 @@ def check_static_model_training(model, input,eps = 1e-5):
 
 
 def check_dynamic_model_inference(model, input,eps = 1e-5):
-    torch_out = model(input)
+    torch_out = model(*input)
     compiler_out = run_dynamic_inference_compiler(model, input)
     is_correct = check_same(torch_out, compiler_out,eps)
     if is_correct:
@@ -114,7 +114,7 @@ def check_dynamic_model_inference(model, input,eps = 1e-5):
 
 
 def check_dynamic_model_training(model, input,eps = 1e-5):
-    torch_out = model(input)
+    torch_out = model(*input)
     compiler_out = run_dynamic_training_compiler(model, input)
     is_correct = check_same(torch_out, compiler_out,eps)
     if is_correct:

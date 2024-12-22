@@ -21,6 +21,6 @@ from llcompiler.test_models import *
 if __name__ == "__main__":
     model = BatchNorm1D_Inference()
     model.training = False
-    input = torch.randn(3, 3, 224)
+    input = [torch.randn(3, 3, 224)]
     check_static_model_inference(model, input)
     check_dynamic_model_inference(model, input)

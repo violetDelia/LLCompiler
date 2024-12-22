@@ -67,27 +67,8 @@ module_dict = {
     #     torch.randn((2, 24, 8), device="cpu"),
     #     torch.tril(torch.ones((24, 24)), diagonal=0).unsqueeze(0),
     # ]
-    # ElementaryArithmetic: [torch.ones((200, 3, 224, 224), device="cpu")],
-    # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")],
-    # torchvision.models.googlenet: [torch.randn((2, 3, 224, 224), device="cpu")],
-    # torchvision.models.alexnet: torch.randn((2, 3, 224, 224), device="cpu"),
-    # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
-    # torchvision.models.vit_b_16: torch.randn((2, 3, 224, 224), device="cpu")
-    # torchvision.models.convnext_tiny: torch.randn((2, 3, 224, 224), device="cpu"),
-    # torchvision.models.efficientnet_b0: torch.randn((2, 3, 224, 224), device="cpu"),
-    # Add: [torch.randn((200, 3, 224, 256), device="cpu")],
-    # Div: [torch.randn((200, 3, 224, 224), device="cpu")],
-    # Sub: [torch.randn((200, 3, 224, 224), device="cpu")],
-    # Mul: [torch.randn((200, 3, 224, 224), device="cpu")],
-    # Abs: [torch.randn((200,3,224,256), device="cpu")],
-    # Relu :[torch.randn((200, 3, 224, 224), device="cpu")],
-    # BatchNorm2D_Inference: [torch.randn(50, 3, 224, 224, device="cpu")],
-    # Decompose_BatchNorm: [torch.randn(1000, 224, device="cpu")],
-    Where: [
-        torch.ones(1000, 224, dtype=torch.bool, device="cpu"),
-        torch.randn(1000, 224, device="cpu"),
-        torch.randn(1000, 224, device="cpu"),
-    ]
+    # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")]
+    BatchNorm2D_Inference: [torch.randn(50, 3, 224, 224, device="cpu")],
     # Linear: [torch.randn((10, 100000), device="cpu")],
     # ElewiseFusion1: [torch.randn((200, 3, 224, 224), device="cpu")],
     # Braodcast: [torch.randn((10, 20), device="cpu")],

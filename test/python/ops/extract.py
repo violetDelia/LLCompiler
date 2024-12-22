@@ -22,5 +22,5 @@ from llcompiler.test_models import *
 
 if __name__ == "__main__":
     model = Extract()
-    input = torch.randn(3, 3, 224, 224)
+    input = [torch.randn(3, 3, 224, 224)]
     check_model(model, input)

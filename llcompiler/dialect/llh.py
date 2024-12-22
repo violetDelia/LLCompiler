@@ -99,11 +99,16 @@ class WeightOp(IRDLOperation):
 
 
 @irdl_op_definition
+class RsqrtOp(IRDLOperation):
+    name = "llh.rsqrt"
+    input = operand_def(LLH_Computable_Type)
+    result = result_def(LLH_Computable_Type)
+
+@irdl_op_definition
 class AbsOp(IRDLOperation):
     name = "llh.abs"
     input = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
-
 
 @irdl_op_definition
 class ConvertToOp(IRDLOperation):
@@ -416,6 +421,7 @@ LLH = Dialect(
         CompareOp,
         ConvertToOp,
         BatchNormInferenceOp,
+        RsqrtOp
     ],
     [],
 )

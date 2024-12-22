@@ -21,6 +21,10 @@ from llcompiler.test_models import *
 
 
 if __name__ == "__main__":
-    model = Linear()
-    input = [torch.randn(10,100000)]
+    model = Where()
+    input = [
+        torch.ones(1000, 224, dtype=torch.bool, device="cpu"),
+        torch.randn(1000, 224, device="cpu"),
+        torch.randn(1000, 224, device="cpu"),
+    ]
     check_model(model, input)
