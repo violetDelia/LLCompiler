@@ -161,4 +161,11 @@ func.func @where(%arg0: tensor<?x?xf32>, %arg1: tensor<?x?xi1>) -> tensor<?x?xf3
     return %2 : tensor<?x?xf32>
   }
 
+// -----
+func.func @convert_to(%arg0: tensor<?x?x?xf32>, %arg1: tensor<?x?xi1>) -> tensor<?x?x?xi1> attributes {entrance} {
+    // CHECK-NOT: llh.convert_to
+    // CHECK: stablehlo.convert
+    %0 = "llh.convert_to"(%arg0) : (tensor<?x?x?xf32>) -> tensor<?x?x?xi1>
+    return %0 : tensor<?x?x?xi1>
+  }
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --convert-llh-to-tensor --convert-llh-to-hlo --fold-index-cast --canonicalize /home/lfr/LLCompiler/test/Conversion/LLHToHLO/llh_to_hlo.mlir

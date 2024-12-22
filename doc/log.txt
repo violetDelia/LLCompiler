@@ -44,6 +44,9 @@
                 add where symbol infre
                 add where to hlo
                 add rsqrt op
+                add fold_convert_to
+                add add convet_to to hlo
+
 
 TODO:
     batch_norm

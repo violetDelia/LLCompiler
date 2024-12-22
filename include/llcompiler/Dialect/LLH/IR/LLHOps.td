@@ -36,7 +36,7 @@ class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultElementType, SameOperandsAndResultRank]>{
+        LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultRank]>{
         let arguments = !con((ins
             OperandType:$input),
             attributes);
@@ -55,7 +55,7 @@ class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type 
 }
 
 class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_UnaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
+        LLH_UnaryOp<mnemonic,traits# [SameOperandsAndResultElementType,], OperandType, ResultType, attributes>;
 
 class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
         LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
@@ -313,11 +313,7 @@ def LLH_FlattenOp : LLH_SymbolOp<"flatten", []>{
         LLH_Tensor);
 }
 
-def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
-
-def LLH_DropOp : LLH_UnaryOp<"drop", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
-
-def LLH_ConvertToOp : LLH_UnaryOp<"convert_to", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor>{
+def LLH_ConvertToOp : LLH_UnaryOp<"convert_to", [], LLH_Tensor, LLH_Tensor>{
     let hasCanonicalizer = 1;
 }
 
@@ -325,6 +321,9 @@ def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor,
     let hasCanonicalizer = 1;
 }
 
+def LLH_DropOp : LLH_UnaryElementwiseOp<"drop", [], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
+
+def LLH_TransposeOp : LLH_UnaryElementwiseOp<"transpose", [], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
 
 def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
