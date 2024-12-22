@@ -1,6 +1,4 @@
 // RUN: llc-opt --split-input-file --infer-symbol-shape --canonicalize %s| FileCheck %s
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --canonicalize /home/lfr/LLCompiler/test/Dialect/LLH/canonicalize_symbol.mlir 
-
 
 "llh.symbolic_int"() <{sym_name = "s5"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s4"}> : () -> ()
@@ -80,6 +78,7 @@ func.func @main(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.inp
     return
 }
 
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --canonicalize /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/canonicalize_symbol.mlir 
 
 
 

@@ -1,6 +1,4 @@
 // RUN: llc-opt --split-input-file --infer-symbol-shape --canonicalize %s| FileCheck %s
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --canonicalize /home/lfr/LLCompiler/test/Dialect/LLH/canonicalize.mlir 
-
 
 "llh.symbolic_int"() <{sym_name = "c512"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
@@ -75,9 +73,15 @@ func.func @fold_broadcast(%arg0: tensor<?x?x?xf32>) -> tensor<?x?x?xf32> attribu
     return %7 : tensor<?x?x?xf32>
   }
 
+// -----
+// CHECK-LABEL: fold_convert_to
+func.func @fold_convert_to(%arg0: tensor<?x?x?xf32>) -> tensor<?x?x?xf32> attributes {entrance} {
+    %0 = "llh.convert_to"(%arg0) : (tensor<?x?x?xf32>) -> tensor<?x?x?xf32>
+    // CHECK: return %arg0
+    return %0 : tensor<?x?x?xf32>
+  }
 
-
-
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape -canonicalize /home/lfr/LLCompiler/test/Dialect/LLH/canonicalize.mlir 
 
 
 

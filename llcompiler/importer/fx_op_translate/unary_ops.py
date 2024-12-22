@@ -6,6 +6,7 @@ from ..fx_translate import (
     get_result_type,
     get_arg_value,
     commond_build_op,
+    torch_dtype_translate,
     _expand_to_2_if_int,
     _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
@@ -34,7 +35,7 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, AbsOp, ReluOp, SqrtOp, RsqrtOp
+from ...dialect.llh import TorchSymbolicIntOp, AbsOp, ReluOp, SqrtOp, RsqrtOp, DivOp
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::rsqrt", "prims::rsqrt")
@@ -96,3 +97,26 @@ def abs_convert(
     block: Block,
 ):
     return commond_build_op(AbsOp.build, 1, node, value_map, block)
+
+
+@TORCH_FUNCTION_TRANSLATE("aten::reciprocal")
+def reciprocal_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    out = get_result_type(node)
+    result_type = torch_fake_or_mate_tensor_translate(out)
+    input = get_arg_value(node.args[0], value_map, block)
+    one = get_arg_value(
+        1,
+        value_map,
+        block,
+        const_tensor=True,
+        const_type=torch_dtype_translate(out.dtype),
+    )
+    return DivOp(
+        operands=[one, input],
+        result_types=[result_type],
+    )

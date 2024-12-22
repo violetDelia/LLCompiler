@@ -30,6 +30,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/CommandLine.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -189,8 +190,8 @@ struct RefineBroadcast : public LLHOpRewritePattern<BroadCastToOp> {
     auto loc = op->getLoc();
     auto input = op.getInput();
     auto cast_dims = op.getCastDims();
-    auto dims = op.getOutShapes();
     auto res = op.getResult();
+    auto dims = op.getOutShapes();
     auto res_tensor = llc::getRankTensorFrom(res);
     auto ele_type = res_tensor.getElementType();
     auto res_rank = res_tensor.getRank();
@@ -202,8 +203,8 @@ struct RefineBroadcast : public LLHOpRewritePattern<BroadCastToOp> {
     for (int i = 0; i < res_rank; i++) {
       new_cast_dims.push_back(i);
     }
-    for (auto cast_dim : cast_dims) {
-      reshape_dims[cast_dim] = dims[cast_dim];
+    for (auto [i, cast_dim] : llvm::enumerate(cast_dims)) {
+      reshape_dims[cast_dim] = llh::buildTensorDim(input, &rewriter, i);
       if (llh::isConstIntegerValue(reshape_dims[cast_dim])) {
         reshape_res_shapes[cast_dim] =
             llh::getConstIntegerValue(reshape_dims[cast_dim]);
@@ -218,6 +219,7 @@ struct RefineBroadcast : public LLHOpRewritePattern<BroadCastToOp> {
         loc, res_tensor, reshape, dims, new_cast_dims, DenseI64ArrayAttr(),
         DenseI64ArrayAttr());
     rewriter.replaceOp(op, new_braodcast);
+
   }
 };
 //===----------------------------------------------------------------------===//

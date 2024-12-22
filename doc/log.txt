@@ -43,7 +43,10 @@
                 add where op and support aten::where
                 add where symbol infre
                 add where to hlo
+                add rsqrt op
+
 TODO:
+    batch_norm
     static frozen support
     run --> MHA
     slice     

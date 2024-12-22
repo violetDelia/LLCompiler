@@ -9,6 +9,7 @@ from .unary_ops import (
     torch_relu_convert,
     sqrt_convert,
     rsqrt_convert,
+    reciprocal_convert,
 )
 from .reshape_ops import (
     expand_convert,

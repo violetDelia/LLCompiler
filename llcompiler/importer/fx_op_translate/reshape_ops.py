@@ -147,8 +147,9 @@ def unsqueeze_convert(
         elif isinstance(dim, torch.SymInt):
             symbol = torch_symbol_translate(dim, symbol_map)
             block.add_op(symbol)
-            dims.append(symbol)
-    return ReshapeOp(operands=[input, dims], result_types=[result_type])
+            dims.append(symbol)    
+    op = ReshapeOp(operands=[input, dims], result_types=[result_type])
+    return op
 
 
 @TORCH_METHOD_TRANSLATE("unsqueeze")

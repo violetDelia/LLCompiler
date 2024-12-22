@@ -55,7 +55,7 @@ def mul_convert(
     return commond_build_op(MulOp.build, 2, node, value_map, block)
 
 
-@TORCH_FUNCTION_TRANSLATE("sub", "aten::sub.Tensor")
+@TORCH_FUNCTION_TRANSLATE("sub", "aten::sub.Tensor","prims::sub")
 def sub_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

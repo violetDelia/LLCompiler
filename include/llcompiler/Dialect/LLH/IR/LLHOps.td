@@ -317,7 +317,9 @@ def LLH_TransposeOp : LLH_UnaryOp<"transpose", [SameOperandsAndResultRank], LLH_
 
 def LLH_DropOp : LLH_UnaryOp<"drop", [SameOperandsAndResultRank, SameOperandsAndResultType], LLH_Tensor, LLH_Tensor, (ins F64Attr:$p)>;
 
-def LLH_ConvertToOp : LLH_UnaryOp<"convert_to", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor>;
+def LLH_ConvertToOp : LLH_UnaryOp<"convert_to", [SameOperandsAndResultRank], LLH_Tensor, LLH_Tensor>{
+    let hasCanonicalizer = 1;
+}
 
 def LLH_AdaptiveAvgPoolOp : LLH_UnaryOp<"adaptive_average_pool", [], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$out_size)>{
     let hasCanonicalizer = 1;

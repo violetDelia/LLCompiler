@@ -55,11 +55,9 @@ class HasRankOf<int rank> :
                    "mlir::cast<ShapedType>($0.getType()).getRank() == " # rank>>;
 
 
-def HaveSameShapedType: Constraint<
-    CPred<"(isa<ShapedType>($0.getType()) &&"
-          "dyn_cast<ShapedType>($0.getType()) == "
-          "dyn_cast<ShapedType>($1.getType()))">,
-    "has same shaped type">;
+def HaveSameTensorType: Constraint<
+    CPred<"(llc::getRankTensorFrom($0) == llc::getRankTensorFrom($1)">,
+    "has same tensor type">;
 
 
 def HasOneUse : Constraint<CPred<"$0.hasOneUse()">>;
@@ -95,5 +93,6 @@ class EqualString<string s> : Constraint<CPred<"$0 == \"" # s # "\"">>;
 def FoldTwoAbsOpPattern : Pat<(LLH_AbsOp (LLH_AbsOp:$res $input)),
                                  (LLH_AbsOp $input),
                                  [(HasOneUse $res)]>;
+
 
 #endif // LLH_CANONICALIZE

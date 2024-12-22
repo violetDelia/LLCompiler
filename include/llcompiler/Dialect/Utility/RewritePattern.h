@@ -16,6 +16,7 @@
 #define INCLUDE_LLCOMPILER_DIALECT_UTILITY_REWRITEPATTERN_H_
 #include <utility>
 
+#include "llcompiler/Dialect/Utility/Benefit.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/Transforms/DialectConversion.h"
@@ -149,8 +150,10 @@ struct SimplyFullLowing : public OpConversionPattern<SourceOp> {
 
 template <class Op>
 struct EraseNoUserOp : public LLHOpRewritePattern<Op> {
-  using LLHOpRewritePattern<Op>::LLHOpRewritePattern;
-
+  explicit EraseNoUserOp(MLIRContext *context,
+                         PatternBenefit benefit = llh::RemoveBenfit,
+                         ArrayRef<StringRef> generatedNames = {})
+      : LLHOpRewritePattern<Op>(context, benefit, generatedNames){};
   LogicalResult match(Op op) const final {
     if (op->getUsers().empty()) return llvm::success();
     return llvm::failure();

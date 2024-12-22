@@ -17,14 +17,18 @@
 #define INCLUDE_LLCOMPILER_DIALECT_LLH_UTILS_COMMONREWRITE_H_
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
+#include "llcompiler/Dialect/Utility/Benefit.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/IR/Operation.h"
 namespace mlir::llh {
 template <class BinaryOp>
-struct SimplyBinaryOpInsertBraodcast : public LLHOpRewritePattern<BinaryOp> {
-  using LLHOpRewritePattern<BinaryOp>::LLHOpRewritePattern;
+struct SimplyBinaryOpInsertBroadcast : public LLHOpRewritePattern<BinaryOp> {
+  explicit SimplyBinaryOpInsertBroadcast(
+      MLIRContext* context, PatternBenefit benefit = llh::BroadcastBenefit,
+      ArrayRef<StringRef> generatedNames = {})
+      : LLHOpRewritePattern<BinaryOp>(context, benefit, generatedNames){};
   LogicalResult match(BinaryOp op) const final {
     return checkBinaryNeedBroadcast(op);
   }
@@ -35,7 +39,10 @@ struct SimplyBinaryOpInsertBraodcast : public LLHOpRewritePattern<BinaryOp> {
 
 template <class BinaryOp>
 struct SimplyBinaryOpReshape : public LLHOpRewritePattern<BinaryOp> {
-  using LLHOpRewritePattern<BinaryOp>::LLHOpRewritePattern;
+  explicit SimplyBinaryOpReshape(MLIRContext* context,
+                                 PatternBenefit benefit = llh::ReshapeBenefit,
+                                 ArrayRef<StringRef> generatedNames = {})
+      : LLHOpRewritePattern<BinaryOp>(context, benefit, generatedNames){};
   LogicalResult match(BinaryOp op) const final {
     return checkBinaryNeedReshape(op);
   }

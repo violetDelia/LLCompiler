@@ -17,5 +17,5 @@ const size_t ReshapeBenefit = 100;
 const size_t BroadcastBenefit = 99;
 const size_t RefineOpBenefit = 98;
 const size_t SinkOpBenfit = 97;
-const size_t RemoveBenfit = 0;
+const size_t RemoveBenfit = 1;
 }  // namespace mlir::llh

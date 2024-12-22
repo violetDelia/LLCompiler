@@ -56,12 +56,12 @@ namespace {
 //===----------------------------------------------------------------------===//
 void populateInsertBroadCastPassPatterns(RewritePatternSet& patterns) {
   auto context = patterns.getContext();
-  patterns.add<SimplyBinaryOpInsertBraodcast<AddOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBraodcast<SubOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBraodcast<DivOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBraodcast<MulOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBraodcast<MaxOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBraodcast<MinOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBroadcast<AddOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBroadcast<SubOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBroadcast<DivOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBroadcast<MulOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBroadcast<MaxOp>>(context);
+  patterns.add<SimplyBinaryOpInsertBroadcast<MinOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//

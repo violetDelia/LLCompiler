@@ -25,7 +25,8 @@ import functools
 
 aten = torch.ops.aten
 llc_decompositions = {
-    # aten._native_batch_norm_legit_functional,
+    aten._native_batch_norm_legit_no_training,
+    aten._native_batch_norm_legit,
     aten.addmm,
     aten.expand,
     aten._unsafe_view,
@@ -141,15 +142,15 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             bw_compiler = self.compiler
             if self.mode == "inference":
                 config.freezing = True
-                fw_compiler = functools.partial(
-                    fw_compiler_freezing,
-                    dynamo_model=model,
-                    num_example_inputs=len(inputs),
-                    inner_compile=self.compiler,
-                    cudagraphs=BoxedBool(config.triton.cudagraphs),
-                    graph_id=next(_graph_counter),
-                    forward_device=BoxedDeviceIndex(None),
-                )
+                # fw_compiler = functools.partial(
+                #     fw_compiler_freezing,
+                #     dynamo_model=model,
+                #     num_example_inputs=len(inputs),
+                #     inner_compile=self.compiler,
+                #     cudagraphs=BoxedBool(config.triton.cudagraphs),
+                #     graph_id=next(_graph_counter),
+                #     forward_device=BoxedDeviceIndex(None),
+                # )
                 bw_compiler = self.not_compiler
             else:
                 config.freezing = False
