@@ -33,13 +33,21 @@ from ...dialect.llh_utility import (
     build_llh_transpose,
     build_llh_constant,
     build_value_dims,
+    build_elements_and_dims_of_tensor,
 )
 import torch._ops as op
 import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, ReshapeOp, DivOp, ExpandOp, FlattenOp
+from ...dialect.llh import (
+    TorchSymbolicIntOp,
+    ReshapeOp,
+    DivOp,
+    ExpandOp,
+    FlattenOp,
+    MulOp,
+)
 
 
 @TORCH_FUNCTION_TRANSLATE("flatten")
@@ -83,7 +91,7 @@ def expand_convert(
     return ExpandOp(operands=[input, dims], result_types=[result_type])
 
 
-@TORCH_FUNCTION_TRANSLATE("aten::view")
+@TORCH_FUNCTION_TRANSLATE("aten::view", "aten::reshape")
 def aten_view_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
@@ -147,7 +155,7 @@ def unsqueeze_convert(
         elif isinstance(dim, torch.SymInt):
             symbol = torch_symbol_translate(dim, symbol_map)
             block.add_op(symbol)
-            dims.append(symbol)    
+            dims.append(symbol)
     op = ReshapeOp(operands=[input, dims], result_types=[result_type])
     return op
 
@@ -194,4 +202,34 @@ def collapse_view_convert(
         dims[i] = None
     dims[node.args[-1]] = new_dim
     new_dims = [dim for dim in dims if dim is not None]
+    return ReshapeOp(operands=[input, new_dims], result_types=[result_type])
+
+
+@TORCH_FUNCTION_TRANSLATE("prims::inductor_force_stride_order")
+def inductor_force_stride_order_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    input = get_arg_value(node.args[0], value_map, block)
+    res_tensor: FakeTensor = get_result_type(node)
+    result_type: TensorType = torch_fake_or_mate_tensor_translate(res_tensor)
+    elements, dims = build_elements_and_dims_of_tensor(input, block)
+    strides = [build_llh_constant(stride) for stride in node.args[1]]
+    for stride in strides:
+        block.add_op(stride)
+    first_dim = DivOp(operands=[elements.result, strides[0].result], result_types=[i64])
+    block.add_op(first_dim)
+    new_dims = [first_dim]
+    for first_stride, rear_stride in zip(strides[:-1], strides[1:]):
+        dim = DivOp(
+            operands=[
+                first_stride.result,
+                rear_stride.result,
+            ],
+            result_types=[i64],
+        )
+        block.add_op(dim)
+        new_dims.append(dim)
     return ReshapeOp(operands=[input, new_dims], result_types=[result_type])

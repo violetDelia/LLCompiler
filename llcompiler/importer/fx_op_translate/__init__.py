@@ -19,6 +19,7 @@ from .reshape_ops import (
     aten_view_convert,
     view_convert,
     collapse_view_convert,
+    inductor_force_stride_order_convert
 )
 from .alloc_ops import empty_convert
 from .binary_ops import add_convert

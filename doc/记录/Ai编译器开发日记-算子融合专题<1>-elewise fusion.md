@@ -34,7 +34,7 @@ class ElewiseFusion1(nn.Module):
 我们从前端获取到的计算图是这样的：
 
 ```
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "c3"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c2"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c0"}> : () -> ()
@@ -99,7 +99,7 @@ input（L3）--> L2 --> L1 --> add --> sub --> ... -->L2 --> out(L3)
 
 ```
 #map = affine_map<(d0, d1, d2, d3) -> (d0, d1, d2, d3)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<200x3x224x224xf32> {func.input_symbol_0 = "c200", func.input_symbol_1 = "c3", func.input_symbol_2 = "c224", func.input_symbol_3 = "c224"}) -> tensor<200x3x224x224xf32> attributes {entrance} {
     %cst = arith.constant dense<0.000000e+00> : tensor<200x3x224x224xf32>
     %cst_0 = arith.constant dense<2.000000e+00> : tensor<200x3x224x224xf32>
@@ -141,7 +141,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 
 ```
 #map = affine_map<(d0, d1, d2, d3) -> (d0, d1, d2, d3)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<200x3x224x224xf32> {func.input_symbol_0 = "c200", func.input_symbol_1 = "c3", func.input_symbol_2 = "c224", func.input_symbol_3 = "c224"}) -> tensor<200x3x224x224xf32> attributes {entrance} {
     %cst = arith.constant 3.000000e+00 : f32
     %cst_0 = arith.constant 2.000000e+00 : f32

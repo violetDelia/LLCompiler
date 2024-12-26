@@ -171,12 +171,9 @@ struct AddConvLayoutAttr : public LLHOpRewritePattern<OP> {
 
   void rewrite(OP op, LLHPatternRewriter &rewriter) const final {
     auto module = op->template getParentOfType<ModuleOp>();
-    auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
-    CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
-    auto maybe_layout =
-        symbolizeLayout(dyn_cast<StringAttr>(global_layout).getValue());
-    CHECK(llc::MLIR_PASS, maybe_layout.has_value());
-    auto layout = maybe_layout.value();
+    auto maybe_layout = module->getAttr(llc::GloabalLayoutAttr);
+    CHECK(llc::MLIR_PASS, isa<LayoutAttr>(maybe_layout));
+    auto layout = cast<LayoutAttr>(maybe_layout).getValue();
     auto tensor = llc::getRankTensorFrom(op);
     auto rank = tensor.getRank();
     auto input_layout = llh::getLayoutFromGloabalLayout(layout, rank);
@@ -200,12 +197,9 @@ struct AddLayoutAttr : public LLHOpRewritePattern<OP> {
 
   void rewrite(OP op, LLHPatternRewriter &rewriter) const final {
     auto module = op->template getParentOfType<ModuleOp>();
-    auto global_layout = module->getAttr(llc::GloabalLayoutAttr);
-    CHECK(llc::MLIR_PASS, llvm::isa<StringAttr>(global_layout));
-    auto maybe_layout =
-        symbolizeLayout(dyn_cast<StringAttr>(global_layout).getValue());
-    CHECK(llc::MLIR_PASS, maybe_layout.has_value());
-    auto layout = maybe_layout.value();
+    auto maybe_layout = module->getAttr(llc::GloabalLayoutAttr);
+    CHECK(llc::MLIR_PASS, isa<LayoutAttr>(maybe_layout));
+    auto layout = cast<LayoutAttr>(maybe_layout).getValue();
     auto tensor = llc::getRankTensorFrom(op);
     auto rank = tensor.getRank();
     auto input_layout = llh::getLayoutFromGloabalLayout(layout, rank);

@@ -25,8 +25,8 @@ import functools
 
 aten = torch.ops.aten
 llc_decompositions = {
-    aten._native_batch_norm_legit_no_training,
-    aten._native_batch_norm_legit,
+    # aten._native_batch_norm_legit_no_training,
+    # aten._native_batch_norm_legit,
     aten.addmm,
     aten.expand,
     aten._unsafe_view,
@@ -35,10 +35,11 @@ llc_decompositions = {
     aten.mul,
     aten.sub,
     aten.div,
-    aten.bmm,
     aten.threshold_backward,
     aten.native_batch_norm_backward,
 }
+
+
 
 
 class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
@@ -64,7 +65,6 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         L1_cache_size=0,
         target_layout="NCHW",
         vebose_first_ir=False,  # 输出构建的xdsl IR
-        ir_tree_dir: str = "",  # mlir ir tree dir
         log_root: str = "",  # 日志保存路径
         log_level: str = "debug",  # 日志级别
         log_llvm: bool = True,  #
@@ -94,13 +94,12 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.target_layout = target_layout
         assert opt_level > 0 and opt_level <= 3
         self.opt_level = opt_level
-        self.ir_tree_dir = ir_tree_dir
         self.log_llvm = log_llvm
         self.compile_count = 0
 
     def _process_fx(self, model: Any, inputs: List[torch.Tensor], **kwargs):
         model = _recursive_pre_grad_passes(model, inputs)
-        _recursive_post_grad_passes(model, inputs)
+        #_recursive_post_grad_passes(model, inputs)
 
     def not_compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
         return model
@@ -124,7 +123,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         compiler_options.index_bit_width = self.index_bit_width
         compiler_options.log_root = (
             self.log_root
-            if self.log_root == " "
+            if self.log_root == ""
             else self.log_root + "_" + str(self.compile_count)
         )
         self.compile_count = self.compile_count + 1
@@ -132,9 +131,9 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         compiler_options.log_llvm = self.log_llvm
         # 初始化环境
         engine = do_compile(self._mlir_module.__str__(), compiler_options)
-        execut = llcompiler.core.engine.Torch_ExecutionEngine(engine)
-        execut.gen_outs_call = self.get_out_call(model)
-        return execut
+        executor = llcompiler.core.engine.Torch_ExecutionEngine(engine)
+        executor.gen_outs_call = self.get_out_call(model)
+        return executor
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
         if isinstance(model, torch.fx.GraphModule):
@@ -142,15 +141,16 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
             bw_compiler = self.compiler
             if self.mode == "inference":
                 config.freezing = True
-                # fw_compiler = functools.partial(
-                #     fw_compiler_freezing,
-                #     dynamo_model=model,
-                #     num_example_inputs=len(inputs),
-                #     inner_compile=self.compiler,
-                #     cudagraphs=BoxedBool(config.triton.cudagraphs),
-                #     graph_id=next(_graph_counter),
-                #     forward_device=BoxedDeviceIndex(None),
-                # )
+                config.cpp.weight_prepack =False
+                fw_compiler = functools.partial(
+                    fw_compiler_freezing,
+                    dynamo_model=model,
+                    num_example_inputs=len(inputs),
+                    inner_compile=self.compiler,
+                    cudagraphs=BoxedBool(config.triton.cudagraphs),
+                    graph_id=next(_graph_counter),
+                    forward_device=BoxedDeviceIndex(None),
+                )
                 bw_compiler = self.not_compiler
             else:
                 config.freezing = False

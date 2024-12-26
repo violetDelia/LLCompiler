@@ -38,7 +38,7 @@ func.func@main(%arg0:tensor<?x3x?x?xf32>) -> tensor<?x1000xf32> attributes {entr
 #map6 = affine_map<()[s0, s1] -> (s0, 512, 1, 1)>
 #map7 = affine_map<()[s0, s1] -> (s0, 512)>
 #map8 = affine_map<()[s0, s1] -> (s0, 1000)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<?x3x?x?xf32, {"0" = "s0", "1" = "c3", "2" = "s2", "3" = "s2"}>) -> tensor<?x1000xf32> attributes {entrance} {
     %0 = "llh.constant"() <{value = 1 : i64}> : () -> i64
     %1 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-10-19T22:36:12.138957+08:00/L__self___conv1.weight.npy"}> : () -> tensor<64x3x7x7xf32>
@@ -351,7 +351,7 @@ func.func @main(%arg0: tensor<?x3x?x?xf32>) -> tensor<?x1000xf32> attributes {en
 
 ```
 
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "s43"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "s42"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "s41"}> : () -> ()

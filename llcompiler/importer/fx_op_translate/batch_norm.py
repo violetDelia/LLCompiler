@@ -50,8 +50,8 @@ def batch_norm_convert(
     input_mean = get_arg_value(node.args[3], value_map, block)
     input_var = get_arg_value(node.args[4], value_map, block)
     attrs = {
-        "epsilon": FloatAttr(node.args[5], f64),
-        "momentum": FloatAttr(node.args[6], f64),
+        "epsilon": FloatAttr(node.args[6], f64),
+        "momentum": FloatAttr(node.args[5], f64),
         "feature_index": IntegerAttr(1, i64),
         "mode":ModeAttr([ModeEnum.Inference])
     }

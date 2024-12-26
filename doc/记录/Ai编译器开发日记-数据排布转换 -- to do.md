@@ -23,7 +23,7 @@ def LLH_Layout : I32EnumAttr<"Layout",
 #map = affine_map<() -> (1, 3, 7, 7)>
 #map1 = affine_map<() -> (200, 3, 100, 100)>
 #map2 = affine_map<() -> (200, 1, 96, 96)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<1x3x7x7xf32> {func.input_symbol_0 = "c1", func.input_symbol_1 = "c3", func.input_symbol_2 = "c7", func.input_symbol_3 = "c7"}, %arg1: tensor<200x3x100x100xf32> {func.input_symbol_0 = "c200", func.input_symbol_1 = "c3", func.input_symbol_2 = "c100", func.input_symbol_3 = "c100"}) -> (tensor<200x1x96x96xf32>, tensor<1x3x7x7xf32>, tensor<200x3x100x100xf32>) attributes {entrance} {
     %0 = "llh.constant"() <{value = 96 : i64}> : () -> i64
     %1 = "llh.constant"() <{value = 1 : i64}> : () -> i64

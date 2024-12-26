@@ -8,7 +8,7 @@
 #map6 = affine_map<()[s0, s1] -> (s0, 512, 1, 1)>
 #map7 = affine_map<()[s0, s1] -> (s0, 512)>
 #map8 = affine_map<()[s0, s1] -> (s0, 1000)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<?x3x?x?xf32>) -> tensor<?x1000xf32> {
     %0 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-28T11:00:46.800008+08:00/L__self___conv1.weight.npy"}> : () -> tensor<64x3x7x7xf32>
     %1 = "llh.weight"() <{weight_file = "/home/lfr/LLCompiler/llcompiler/importer/LLcompiler_weight_temp/2024-09-28T11:00:46.800008+08:00/L__self___bn1.weight.npy"}> : () -> tensor<64xf32>

@@ -103,7 +103,7 @@ def torch_symbol_bind(
 #map4 = affine_map<()[s0] -> (1, (((s0 - 1) floordiv 8) * ((s0 - 1) floordiv 8)) * 128 + 128)>
 #map5 = affine_map<()[s0] -> (1, 512)>
 #map6 = affine_map<()[s0] -> (1, 10)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<1x3x?x?xf32> {func.input_symbol_0 = "c1", func.input_symbol_1 = "c3", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<1x10xf32> attributes {entrance} {
     %0 = "llh.constant"() <{value = 1 : i64}> : () -> i64
     %1 = "llh.weight"() <{weight_file = "xxx.npy"}> : () -> tensor<64x3x7x7xf32>
@@ -383,7 +383,7 @@ func.func @main(%arg0: tensor<1x3x?x?xf32> {func.input_symbol_0 = "c1", func.inp
 同时可以看到还保留了两条符号的关系：s24 = s23 * s22 、s23 = s21 * 128； 这些关系会保存在SymbolAnalysis的关系表中。
 
 ```mlir
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "s24"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "s23"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "s22"}> : () -> ()
@@ -521,7 +521,7 @@ module {
 }
 
 //to arith
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s3"}) -> tensor<?x?x?x?xf32> attributes {entrance} {
     "llh.encoding_bind"(%arg0) <{encoding = #llh.encoding<shapes = @s0, @s1, @s2, @s3>}> : (tensor<?x?x?x?xf32>) -> ()
     %0 = arith.addf %arg0, %arg0 : tensor<?x?x?x?xf32>
@@ -531,7 +531,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 }
 //to memref
 #map = affine_map<(d0, d1, d2, d3) -> (d0, d1, d2, d3)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: memref<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s3"}) -> memref<?x?x?x?xf32> attributes {entrance} {
     "llh.encoding_bind"(%arg0) <{encoding = #llh.encoding<shapes = @s0, @s1, @s2, @s3>}> : (tensor<?x?x?x?xf32>) -> ()
     %c3 = arith.constant 3 : index
@@ -553,7 +553,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
   }
 }
 //to llvm
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   llvm.func @main(%arg0: !llvm.ptr) attributes {entrance} {
     %0 = llvm.mlir.constant(dense<0.000000e+00> : vector<128xf32>) : vector<128xf32>
     %1 = llvm.mlir.constant(0 : i32) : i32

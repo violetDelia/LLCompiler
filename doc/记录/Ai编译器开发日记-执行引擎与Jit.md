@@ -7,7 +7,7 @@
 现在我们经过mlir的一系列pass获得的是一张llvm dialect'的IR图：
 
 ```
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   llvm.func @malloc(i64) -> !llvm.ptr
   llvm.func @main(%arg0: !llvm.ptr, %arg1: !llvm.ptr, %arg2: i64, %arg3: i64, %arg4: i64, %arg5: i64, %arg6: i64, %arg7: i64, %arg8: i64) -> !llvm.struct<(ptr, ptr, i64, array<3 x i64>, array<3 x i64>)> attributes {entrance} {
     %0 = llvm.mlir.constant(64 : index) : i64

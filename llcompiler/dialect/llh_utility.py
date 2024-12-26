@@ -28,7 +28,7 @@ from xdsl.dialects.builtin import (
     DenseArrayBase,
 )
 
-from .llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp, TransposeOp, DimOp
+from .llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp, TransposeOp, DimOp,MulOp
 
 
 def build_llh_scalar_tensor(val: int | float, type):
@@ -84,3 +84,12 @@ def build_value_dims(input: SSAValue, block: Block):
         block.add_op(dim_op)
         dims.append(dim_op)
     return dims
+
+def build_elements_and_dims_of_tensor(input: SSAValue, block: Block):
+    dims = build_value_dims(input,block)
+    elements = build_llh_constant(1)
+    block.add_op(elements)
+    for dim in dims:
+        elements = MulOp(operands=[elements, dim.result], result_types=[i64])
+        block.add_op(elements)
+    return elements,dims

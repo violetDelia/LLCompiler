@@ -4,7 +4,7 @@
 
 
 #map1 = affine_map<()[s0, s1, s2] -> (s0, s1, s2, s1)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
 // CHECK-LABEL: replaceTorchSymbolicIntOp
 func.func @replaceTorchSymbolicIntOp(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s2"}) ->() attributes {entrance}{
   // CHECK-NOT: llh.torch_symbolic_int

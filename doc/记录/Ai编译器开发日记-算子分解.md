@@ -50,7 +50,7 @@ class Decompose_BatchNorm(nn.Module):
 从框架拿到的原始图：
 
 ```
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "c100"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c10"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
@@ -107,7 +107,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 经过算子分解后：
 
 ```
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "c100"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c10"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()

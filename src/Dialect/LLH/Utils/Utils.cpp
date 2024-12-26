@@ -75,7 +75,7 @@ bool isConstIntegerValue(Value value) {
     auto constant_op = llvm::cast<ConstantOp>(op);
     return llvm::isa<IntegerAttr>(constant_op.getValueAttr());
   }
-  if (isa<MulOp, SubOp, AddOp>(op)) {
+  if (isa<MulOp, SubOp, AddOp, DivOp>(op)) {
     return isConstIntegerValue(op->getOperand(0)) &&
            isConstIntegerValue(op->getOperand(1));
   }
@@ -114,6 +114,10 @@ int64_t getConstIntegerValue(Value value) {
   }
   if (isa<AddOp>(op)) {
     return getConstIntegerValue(op->getOperand(0)) +
+           getConstIntegerValue(op->getOperand(1));
+  }
+  if (isa<DivOp>(op)) {
+    return getConstIntegerValue(op->getOperand(0)) /
            getConstIntegerValue(op->getOperand(1));
   }
   UNIMPLEMENTED(llc::UTILITY) << "unsupport get operator const value: "

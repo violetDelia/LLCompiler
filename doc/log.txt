@@ -37,7 +37,7 @@
                 add ModeAttr
                 add BatchNormInferenceOp
                 add torch frezen fold pass
-2024.12.21 :    add doc inductor
+2024.12.22 :    add doc inductor
                 support frozen params
                 refine auto reshape and braodcast
                 add where op and support aten::where
@@ -49,6 +49,7 @@
 
 
 TODO:
+    const reshape fold
     batch_norm
     static frozen support
     run --> MHA
@@ -60,8 +61,7 @@ TODO:
     动态conv 代码生成。
     batch norm traing op 
     添加GPU后端。
-    int8量化。
-    int4 量化指令调研。
+    int8量化。int4 量化。
     
     
     

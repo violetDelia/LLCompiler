@@ -158,7 +158,6 @@ void runTransformPipeline(CompilerOptions& options,
 }
 
 Engine do_compile(const char* xdsl_module, CompilerOptions options) {
-  print_info << __func__;
   // ********* init logger *********//
   logger::LoggerOption logger_option;
   logger_option.level = logger::str_to_log_level(options.log_level.c_str());

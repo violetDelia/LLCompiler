@@ -53,7 +53,7 @@ module {
 &emsp;推导前：
 
 ```mlir
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "c10"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c512"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c256"}> : () -> ()
@@ -149,7 +149,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 ```mlir
 #map = affine_map<(d0)[s0, s1] -> (s0 * s1)>
 #map1 = affine_map<(d0)[s0] -> ((s0 - 1) ceildiv 2 + 1)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "s6"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "s5"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "s4"}> : () -> ()
@@ -271,7 +271,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 
 ```mlir
     #map = affine_map<(d0)[s0, s1] -> (s0 + s1)>
-    module attributes {builtin.gloabal_layout = "NCHW"} {
+    module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
     "llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
     "llh.symbolic_int"() <{sym_name = "c-2"}> : () -> ()
     "llh.symbolic_int"() <{sym_name = "c2"}> : () -> ()
@@ -305,7 +305,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 ```mlir
     #map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
     #map1 = affine_map<(d0)[s0, s1] -> (s0 + s1)>
-    module attributes {builtin.gloabal_layout = "NCHW"} {
+    module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
     func.func @main(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s0", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<?x?x?xf32> attributes {entrance} {
         %c1 = arith.constant {symbol = @c1} 1 : index
         %c2 = arith.constant {symbol = @c2} 2 : index
@@ -360,7 +360,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 ```mlir
 #map = affine_map<(d0, d1, d2) -> (d0, d1, d2)>
 #map1 = affine_map<(d0)[s0, s1] -> (s0 + s1)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s0", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<?x?x?xf32> attributes {entrance} {
     %c1 = arith.constant {symbol = @c1} 1 : index
     %c2 = arith.constant {symbol = @c2} 2 : index

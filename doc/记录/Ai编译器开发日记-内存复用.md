@@ -103,7 +103,7 @@ class Decompose_BatchNorm(nn.Module):
 从框架拿到的图是这样的：
 
 ```
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "c100"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c0"}> : () -> ()
@@ -138,7 +138,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 将BatchNorm分解后是这样的：
 
 ```
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   "llh.symbolic_int"() <{sym_name = "c100"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c1"}> : () -> ()
   "llh.symbolic_int"() <{sym_name = "c0"}> : () -> ()
@@ -194,7 +194,7 @@ lowing到linalg 变成这样：
 #map1 = affine_map<(d0, d1) -> (d0, d1)>
 #map2 = affine_map<(d0) -> (d0)>
 #map3 = affine_map<(d0, d1) -> (0, 0)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<?x224xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "c224"}) -> tensor<?x100xf32> attributes {entrance} {
     %cst = arith.constant 1.00000501 : f32
     %cst_0 = arith.constant 0.000000e+00 : f32
@@ -301,7 +301,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 #map1 = affine_map<(d0, d1) -> (d0, d1)>
 #map2 = affine_map<(d0) -> (d0)>
 #map3 = affine_map<(d0, d1) -> (0, 0)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: tensor<?x224xf32> {bufferization.access = "read", func.input_symbol_0 = "s0", func.input_symbol_1 = "c224"}) -> tensor<?x100xf32> attributes {entrance} {
     %cst = arith.constant 1.00000501 : f32
     %cst_0 = arith.constant 0.000000e+00 : f32
@@ -408,7 +408,7 @@ module attributes {builtin.gloabal_layout = "NCHW"} {
 #map3 = affine_map<(d0, d1, d2) -> (d0, d1)>
 #map4 = affine_map<(d0) -> (d0)>
 #map5 = affine_map<(d0, d1) -> (0, d1)>
-module attributes {builtin.gloabal_layout = "NCHW"} {
+module attributes {builtin.gloabal_layout = #llh.Layout<NCHW>} {
   func.func @main(%arg0: memref<?x224xf32> {bufferization.access = "read", func.input_symbol_0 = "s0", func.input_symbol_1 = "c224"}, %arg1: memref<?x100xf32> {bufferize.result}) attributes {entrance} {
     %cst = arith.constant 0.000000e+00 : f32
     %cst_0 = arith.constant 1.00000501 : f32
