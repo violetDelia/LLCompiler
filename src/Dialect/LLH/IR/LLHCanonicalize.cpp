@@ -32,6 +32,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/CommonFolders.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/IR/Block.h"
@@ -41,16 +42,25 @@
 #include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/MLIRContext.h"
+#include "mlir/IR/Operation.h"
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/TypeRange.h"
 #include "mlir/IR/Value.h"
 #include "mlir/IR/ValueRange.h"
+#include "mlir/Interfaces/ValueBoundsOpInterface.h"
 #include "mlir/Support/LLVM.h"
 using namespace mlir;
 using namespace mlir::llh;
 #include "llcompiler/Dialect/LLH/IR/LLHCanonicalize.inc"
 
+namespace {
+bool binaryIsAllConstInteger(Operation *op) {
+  auto lhs = op->getOperand(0);
+  auto rhs = op->getOperand(1);
+  return llh::isConstIntegerValue(rhs) && llh::isConstIntegerValue(lhs);
+}
+}  // namespace
 //===----------------------------------------------------------------------===//
 // ConstantOp.
 //===----------------------------------------------------------------------===//
@@ -78,27 +88,126 @@ void MaxOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
 //===----------------------------------------------------------------------===//
 // MulOp.
 //===----------------------------------------------------------------------===//
+struct FlodConstIntegerMulOp : public LLHOpRewritePattern<MulOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(MulOp op) const final {
+    if (!binaryIsAllConstInteger(op)) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(MulOp op, LLHPatternRewriter &rewriter) const final {
+    auto res_type = op.getType();
+    auto lhs = op.getLhs();
+    auto rhs = op.getRhs();
+    auto lhs_value = llh::getConstIntegerValue(lhs);
+    auto rhs_value = llh::getConstIntegerValue(rhs);
+    int64_t value = lhs_value * rhs_value;
+    rewriter.replaceOpWithNewOp<ConstantOp>(
+        op, rewriter.getIntegerAttr(res_type, value));
+  }
+};
 void MulOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
   results.add<SimplyBinaryOpInsertBroadcast<MulOp>>(context);
   results.add<SimplyBinaryOpReshape<MulOp>>(context);
+  results.add<FlodConstIntegerMulOp>(context);
 }
 //===----------------------------------------------------------------------===//
 // AddOp.
 //===----------------------------------------------------------------------===//
+namespace {
+struct FlodConstIntegerAddOp : public LLHOpRewritePattern<AddOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(AddOp op) const final {
+    if (!binaryIsAllConstInteger(op)) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(AddOp op, LLHPatternRewriter &rewriter) const final {
+    auto res_type = op.getType();
+    auto lhs = op.getLhs();
+    auto rhs = op.getRhs();
+    auto lhs_value = llh::getConstIntegerValue(lhs);
+    auto rhs_value = llh::getConstIntegerValue(rhs);
+    int64_t value = lhs_value + rhs_value;
+    rewriter.replaceOpWithNewOp<ConstantOp>(
+        op, rewriter.getIntegerAttr(res_type, value));
+  }
+};
+}  // namespace
 void AddOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
   results.add<SimplyBinaryOpInsertBroadcast<AddOp>>(context);
   results.add<SimplyBinaryOpReshape<AddOp>>(context);
+  results.add<FlodConstIntegerAddOp>(context);
 }
 //===----------------------------------------------------------------------===//
 // SubOp.
 //===----------------------------------------------------------------------===//
+namespace {
+struct FlodConstIntegerSubOp : public LLHOpRewritePattern<SubOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(SubOp op) const final {
+    if (!binaryIsAllConstInteger(op)) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(SubOp op, LLHPatternRewriter &rewriter) const final {
+    auto res_type = op.getType();
+    auto lhs = op.getLhs();
+    auto rhs = op.getRhs();
+    auto lhs_value = llh::getConstIntegerValue(lhs);
+    auto rhs_value = llh::getConstIntegerValue(rhs);
+    int64_t value = lhs_value - rhs_value;
+    rewriter.replaceOpWithNewOp<ConstantOp>(
+        op, rewriter.getIntegerAttr(res_type, value));
+  }
+};
+}  // namespace
 void SubOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
   results.add<SimplyBinaryOpInsertBroadcast<SubOp>>(context);
   results.add<SimplyBinaryOpReshape<SubOp>>(context);
+  results.add<FlodConstIntegerSubOp>(context);
 }
+
+//===----------------------------------------------------------------------===//
+// DivOp.
+//===----------------------------------------------------------------------===//
+namespace {
+struct FlodConstIntegerDivOp : public LLHOpRewritePattern<DivOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+
+  LogicalResult match(DivOp op) const final {
+    if (!binaryIsAllConstInteger(op)) return llvm::failure();
+    auto lhs = op.getLhs();
+    auto rhs = op.getRhs();
+    auto lhs_value = llh::getConstIntegerValue(lhs);
+    auto rhs_value = llh::getConstIntegerValue(rhs);
+    if (lhs_value == 0 || rhs_value == 0) return llvm::failure();
+    if (int(lhs_value / rhs_value) * rhs_value != lhs_value)
+      return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(DivOp op, LLHPatternRewriter &rewriter) const final {
+    auto res_type = op.getType();
+    auto lhs = op.getLhs();
+    auto rhs = op.getRhs();
+    auto lhs_value = llh::getConstIntegerValue(lhs);
+    auto rhs_value = llh::getConstIntegerValue(rhs);
+    int64_t value = lhs_value / rhs_value;
+    rewriter.replaceOpWithNewOp<ConstantOp>(
+        op, rewriter.getIntegerAttr(res_type, value));
+  }
+};
+}  // namespace
+void DivOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                        MLIRContext *context) {
+  results.add<SimplyBinaryOpInsertBroadcast<DivOp>>(context);
+  results.add<SimplyBinaryOpReshape<DivOp>>(context);
+  results.add<FlodConstIntegerDivOp>(context);
+}
+
 //===----------------------------------------------------------------------===//
 // MinOp.
 //===----------------------------------------------------------------------===//
@@ -106,15 +215,6 @@ void MinOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
   results.add<SimplyBinaryOpInsertBroadcast<MinOp>>(context);
   results.add<SimplyBinaryOpReshape<MinOp>>(context);
-}
-
-//===----------------------------------------------------------------------===//
-// DivOp.
-//===----------------------------------------------------------------------===//
-void DivOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                        MLIRContext *context) {
-  results.add<SimplyBinaryOpInsertBroadcast<DivOp>>(context);
-  results.add<SimplyBinaryOpReshape<DivOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -300,10 +400,26 @@ struct FoldReshapeOp : public LLHOpRewritePattern<ReshapeOp> {
     rewriter.replaceOpWithNewOp<ConstantOp>(op, new_value);
   }
 };
+
+struct NonsenseReshapeFoldOp : public LLHOpRewritePattern<ReshapeOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+  LogicalResult match(ReshapeOp op) const final {
+    auto input = op.getInput();
+    auto res = op.getResult();
+    if (!SymbolAnalysis::shapeIsSame(input, res)) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(ReshapeOp op, LLHPatternRewriter &rewriter) const final {
+    auto input = op.getInput();
+    auto res = op.getResult();
+    rewriter.replaceAllUsesWith(res, input);
+  }
+};
 }  // namespace
 void ReshapeOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                             MLIRContext *context) {
   results.add<FoldReshapeOp>(context);
+  results.add<NonsenseReshapeFoldOp>(context);
   results.add<EraseNoUserOp<ReshapeOp>>(context);
 }
 

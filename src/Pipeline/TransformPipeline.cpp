@@ -113,9 +113,9 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
       __LLC_TRANSFORM_MEMREF_INCLUDE__);
   pm.addPass(mlir::transform::createPreloadLibraryPass(preload_options));
   pm.addPass(mlir::llh::createOperationlegalizationPass());
-  pm.addPass(mlir::llh::createMarkAotPass());
   pm.addPass(mlir::llh::createRemoveRedundantOpsPass());
   pm.addPass(::mlir::createInlinerPass());
+  pm.addPass(mlir::llh::createMarkAotPass());
   pm.addPass(mlir::llh::createInferSymbolShapePass(
       {.CleanSymbolCache = false, .UseEncoding = true}));
   pm.addPass(mlir::llh::createDecomposeOpsPass());

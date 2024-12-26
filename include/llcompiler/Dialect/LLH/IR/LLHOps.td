@@ -273,6 +273,7 @@ def LLH_ReshapeOp : LLH_SymbolOp<"reshape",[]>{
     let results = (outs 
         LLH_Tensor);
     let hasCanonicalizer = 1;
+    let hasFolder = 1;
 }
 
 def LLH_EmptyOp : LLH_SymbolOp<"empty",[NoMemoryEffect]>{

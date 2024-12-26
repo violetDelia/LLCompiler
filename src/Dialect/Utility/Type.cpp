@@ -27,6 +27,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/BuiltinTypeInterfaces.h"
 #include "mlir/IR/BuiltinTypes.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
@@ -51,6 +52,16 @@ mlir::RankedTensorType getRankTensorFrom(mlir::Type type) {
 mlir::RankedTensorType getRankTensorFrom(mlir::Value value) {
   auto type = value.getType();
   return getRankTensorFrom(type);
+}
+
+mlir::ShapedType getShapeTypeFrom(mlir::Type type) {
+  CHECK(::llc::UTILITY, mlir::isa<mlir::ShapedType>(type));
+  return mlir::cast<mlir::ShapedType>(type);
+}
+
+mlir::ShapedType getShapeTypeFrom(mlir::Value value) {
+  auto type = value.getType();
+  return getShapeTypeFrom(type);
 }
 
 bool hasEncoding(mlir::Type type) {

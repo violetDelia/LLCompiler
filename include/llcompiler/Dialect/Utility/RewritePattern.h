@@ -63,8 +63,9 @@ class LLHPatternRewriter : public RewriterBase {
 
   template <typename OpTy, typename... Args>
   OpTy replaceOpWithNewOp(Operation *op, Args &&...args) {
-    auto newOp = create<OpTy>(op->getLoc(), std::forward<Args>(args)...);
+    auto newOp = RewriterBase::create<OpTy>(op->getLoc(), std::forward<Args>(args)...);
     replaceOp(op, newOp.getOperation());
+    processWileBuildOperation(newOp);
     return newOp;
   }
 };

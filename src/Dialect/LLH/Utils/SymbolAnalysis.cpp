@@ -33,11 +33,13 @@
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Hashing.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/AffineExpr.h"
@@ -214,6 +216,31 @@ bool SymbolAnalysis::hasSymbolAttr(Value value) {
   auto op = value.getDefiningOp();
   return hasSymbolAttr(op);
 }
+
+bool SymbolAnalysis::shapeIsSame(Value lhs, Value rhs) {
+  auto lhs_type = llc::getShapeTypeFrom(lhs);
+  auto rhs_type = llc::getShapeTypeFrom(rhs);
+  if (rhs_type.getRank() != lhs_type.getRank()) return false;
+  if (lhs_type.hasStaticShape() && rhs_type.hasStaticShape()) {
+    auto lhs_shapes = lhs_type.getShape();
+    auto rhs_shapes = rhs_type.getShape();
+    for (auto [lhs_shape, rhs_shape] : llvm::zip(lhs_shapes, rhs_shapes)) {
+      if (lhs_shape != rhs_shape) return false;
+      return true;
+    }
+  }
+  if (llc::hasEncoding(lhs_type) && llc::hasEncoding(rhs_type)) {
+    auto lhs_encoding = llc::getEncodingFrom(lhs);
+    auto rhs_encoding = llc::getEncodingFrom(rhs);
+    auto lhs_symbols = lhs_encoding.getShapeSymbols();
+    auto rhs_symbols = rhs_encoding.getShapeSymbols();
+    for (auto [lhs_symbol, rhs_symbol] : llvm::zip(lhs_symbols, rhs_symbols)) {
+      if (lhs_symbol != rhs_symbol) return false;
+    }
+    return true;
+  }
+  return false;
+};
 
 llvm::StringRef SymbolAnalysis::_getSymbolAttr(Operation* op) {
   if (!hasSymbolAttr(op)) return UNKOW_SYMBOL;

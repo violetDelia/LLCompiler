@@ -32,6 +32,8 @@ std::vector<int64_t> getShapeFrom(mlir::Type shapeType);
 std::vector<int64_t> getShapeFrom(mlir::Value value);
 mlir::RankedTensorType getRankTensorFrom(mlir::Type type);
 mlir::RankedTensorType getRankTensorFrom(mlir::Value value);
+mlir::ShapedType getShapeTypeFrom(mlir::Type type);
+mlir::ShapedType getShapeTypeFrom(mlir::Value value);
 bool hasEncoding(mlir::Type type);
 bool hasEncoding(mlir::Value value);
 ::mlir::llh::EncodingAttr getEncodingFrom(mlir::Type type);

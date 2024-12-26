@@ -309,4 +309,21 @@ OpFoldResult MulOp::fold(FoldAdaptor adaptor) {
   return {};
 }
 
+OpFoldResult ReshapeOp::fold(FoldAdaptor adaptor) {
+  auto res = getResult();
+  auto tensor = llc::getRankTensorFrom(res);
+  if (!tensor.hasStaticShape()) return {};
+  auto input = getInput();
+  if (isa<BlockArgument>(input)) return {};
+  if (!isa<ConstantOp>(input.getDefiningOp())) return {};
+  auto type = llc::getRankTensorFrom(res);
+  auto const_op = llvm::dyn_cast<ConstantOp>(getInput().getDefiningOp());
+  auto value = llvm::dyn_cast_or_null<DenseElementsAttr>(const_op.getValue());
+  CHECK(llc::MLIR, value);
+  auto new_type = RankedTensorType::get(type.getShape(), type.getElementType());
+  auto new_value =
+      DenseElementsAttr::getFromRawBuffer(new_type, value.getRawData());
+  return new_value;
+}
+
 }  // namespace mlir::llh
