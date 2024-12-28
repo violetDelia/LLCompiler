@@ -32,7 +32,7 @@ class LLH_Op<string mnemonic, list<Trait> traits = [Pure]> :
 }
 
 class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
-        LLH_Op<mnemonic,traits#[DeclareOpInterfaceMethods<SymbolicInferShapeOpInterface>]>{}
+        LLH_Op<mnemonic,traits#[Pure, DeclareOpInterfaceMethods<SymbolicInferShapeOpInterface>]>{}
 
 
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:

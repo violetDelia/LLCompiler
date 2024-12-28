@@ -65,16 +65,13 @@ bool binaryIsAllConstInteger(Operation *op) {
 // ConstantOp.
 //===----------------------------------------------------------------------===//
 void ConstantOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
-                                             MLIRContext *context) {
-  results.add<EraseNoUserOp<ConstantOp>>(context, RemoveBenfit);
-}
+                                             MLIRContext *context) {}
 //===----------------------------------------------------------------------===//
 // AbsOp.
 //===----------------------------------------------------------------------===//
 void AbsOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                         MLIRContext *context) {
   results.add<FoldTwoAbsOpPattern>(context);
-  results.add<EraseNoUserOp<AbsOp>>(context, RemoveBenfit);
 }
 //===----------------------------------------------------------------------===//
 // MaxOp.
@@ -420,7 +417,6 @@ void ReshapeOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                             MLIRContext *context) {
   results.add<FoldReshapeOp>(context);
   results.add<NonsenseReshapeFoldOp>(context);
-  results.add<EraseNoUserOp<ReshapeOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -449,7 +445,6 @@ struct FoldBroadCastToOp : public LLHOpRewritePattern<BroadCastToOp> {
 void BroadCastToOp::getCanonicalizationPatterns(
     mlir::RewritePatternSet &results, MLIRContext *context) {
   results.add<FoldBroadCastToOp>(context);
-  results.add<EraseNoUserOp<BroadCastToOp>>(context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -484,5 +479,4 @@ struct FoldConvertToOpPattern : public LLHOpRewritePattern<ConvertToOp> {
 void ConvertToOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                               MLIRContext *context) {
   results.add<FoldConvertToOpPattern>(context);
-  results.add<EraseNoUserOp<ConvertToOp>>(context);
 }

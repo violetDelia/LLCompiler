@@ -13,10 +13,6 @@ func.func @batch_norm(%arg0: tensor<?x3x?x?xf32> {func.input_symbol_0 = "s0", fu
     // CHECK: llh.broadcast_to
     // CHECK: llh.reshape
     // CHECK: llh.broadcast_to
-    // CHECK: llh.reshape
-    // CHECK: llh.broadcast_to
-    // CHECK: llh.reshape
-    // CHECK: llh.broadcast_to
     // CHECK: llh.sub
     // CHECK: llh.mul
     // CHECK: llh.div

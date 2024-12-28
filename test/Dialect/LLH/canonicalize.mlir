@@ -27,7 +27,7 @@ func.func @fold_two_abs(%arg0: tensor<?x?x?x?xf32>) ->  tensor<?x?x?x?xf32> attr
 
 // -----
 // CHECK-LABEL: decompose_extract
-func.func @decompose_extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s3"}) -> () attributes {entrance} {
+func.func @decompose_extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1", func.input_symbol_2 = "s2", func.input_symbol_3 = "s3"}) -> (tensor<?x?x?xf32>, tensor<?x?x?xf32>) attributes {entrance} {
   %0 = "llh.constant"() <{value = -1 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = -5 : i64}> : () -> i64
   // CHECK: llh.dim
@@ -38,7 +38,7 @@ func.func @decompose_extract(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "
   // CHECK: llh.add
   // CHECK: llh.extract
   %7 = "llh.extract"(%arg0, %1) : (tensor<?x?x?x?xf32>, i64) -> tensor<?x?x?xf32>
-  return 
+  return %6, %7: tensor<?x?x?xf32>, tensor<?x?x?xf32>
 }
 
 // -----
@@ -62,16 +62,16 @@ func.func @fold_broadcast(%arg0: tensor<?x?x?xf32>) -> tensor<?x?x?xf32> attribu
     %4 = "llh.dim"(%arg0, %1) : (tensor<?x?x?xf32>, i64) -> i64
     %5 = "llh.dim"(%arg0, %0) : (tensor<?x?x?xf32>, i64) -> i64
     %6 = "llh.transpose"(%arg0) <{perms = array<i64: 0, 2, 1>}> : (tensor<?x?x?xf32>) -> tensor<?x?x?xf32>
-    %7 = "llh.broadcast_to"(%arg0, %3, %4, %5) <{cast_dims = array<i64: 0, 1, 2>, expand_dims = array<i64>, noexpand_dims = array<i64: 0, 1, 2>}> : (tensor<?x?x?xf32>, i64, i64, i64) -> tensor<?x?x?xf32>
-    // CHECK: return %arg0
+    // CHECK-NOT: llh.broadcast_to
+    %7 = "llh.broadcast_to"(%6, %3, %4, %5) <{cast_dims = array<i64: 0, 1, 2>, expand_dims = array<i64>, noexpand_dims = array<i64: 0, 1, 2>}> : (tensor<?x?x?xf32>, i64, i64, i64) -> tensor<?x?x?xf32>
     return %7 : tensor<?x?x?xf32>
   }
 
 // -----
 // CHECK-LABEL: fold_convert_to
 func.func @fold_convert_to(%arg0: tensor<?x?x?xf32>) -> tensor<?x?x?xf32> attributes {entrance} {
+    // CHECK-NOT: llh.convert_to
     %0 = "llh.convert_to"(%arg0) : (tensor<?x?x?xf32>) -> tensor<?x?x?xf32>
-    // CHECK: return %arg0
     return %0 : tensor<?x?x?xf32>
   }
 
@@ -81,8 +81,8 @@ func.func @fold_reshape(%arg0: tensor<200x3x224x224xf32>) -> tensor<200x3x224x22
     %0 = "llh.constant"() <{value = 200 : i64}> : () -> i64
     %1 = "llh.constant"() <{value = 3 : i64}> : () -> i64
     %2 = "llh.constant"() <{value = 224 : i64}> : () -> i64
+    // CHECK-NOT: llh.reshape
     %33 = "llh.reshape"(%arg0, %0, %1, %2, %2) : (tensor<200x3x224x224xf32>, i64, i64, i64, i64) -> tensor<200x3x224x224xf32>
-    // CHECK: return %arg0
     return %33 : tensor<200x3x224x224xf32>
   }
 

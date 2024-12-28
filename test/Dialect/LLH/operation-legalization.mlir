@@ -1,11 +1,11 @@
 // RUN: llc-opt --split-input-file --operation-legalization %s | FileCheck %s
 
 // CHECK-LABEL: weight_refine
-func.func @weight_refine() ->()  attributes {entrance}{
+func.func @weight_refine() ->(tensor<f32>)  attributes {entrance}{
   // CHECK: llh.weight
   // CHECK-SAME: -> tensor<1xf32>
   %0 = "llh.weight"() <{weight_file = "xxx"}> : () -> tensor<f32>
-  return 
+  return %0: tensor<f32>
 }
 // -----
 // CHECK-LABEL: extract

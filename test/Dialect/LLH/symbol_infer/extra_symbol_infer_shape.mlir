@@ -1,29 +1,26 @@
 // RUN: llc-opt --split-input-file --infer-symbol-shape %s| FileCheck %s
 // RUN: llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " %s | FileCheck %s --check-prefix=CHECK-ENCODING
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape /home/lfr/LLCompiler/test/Dialect/LLH/extra_symbol_infer_shape.mlir
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " /home/lfr/LLCompiler/test/Dialect/LLH/extra_symbol_infer_shape.mlir
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/extra_symbol_infer_shape.mlir
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/extra_symbol_infer_shape.mlir
 
 // CHECK-LABEL: const
-func.func @const(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
+func.func @const(%arg0: tensor<?x512x1x1xf32>) -> (i64, i64, i64) attributes {entrance} {
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = 2 : i64}> : () -> i64
   %2 = "llh.constant"() <{value = 0 : i64}> : () -> i64
-  %3 = "llh.constant"() <{value = 1 : i64}> : () -> i64
   // CHECK: llh.constant
   // CHECK-SAME: symbol = @c3
   // CHECK: llh.constant
   // CHECK-SAME: symbol = @c2
   // CHECK: llh.constant
   // CHECK-SAME: symbol = @c0
-  // CHECK: llh.constant
-  // CHECK-SAME: symbol = @c1
-  return 
+  return %0, %1, %2: i64, i64, i64
 }
 
 // -----
 // CHECK: #map = affine_map<(d0)[s0, s1] -> (s0 * s1)>
 // CHECK-LABEL: mul
-func.func @mul(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
+func.func @mul(%arg0: tensor<?x512x1x1xf32>) -> (i64,i64,i64) attributes {entrance} {
   %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
   %1 = "llh.constant"() <{value = 2 : i64}> : () -> i64
   %2 = "llh.constant"() <{value = 0 : i64}> : () -> i64
@@ -41,7 +38,7 @@ func.func @mul(%arg0: tensor<?x512x1x1xf32>) -> () attributes {entrance} {
   %197 = "llh.mul"(%193, %194) : (i64, i64) -> i64
   %198 = "llh.mul"(%194, %195) : (i64, i64) -> i64
   %199 = "llh.mul"(%196, %195) : (i64, i64) -> i64
-  return 
+  return %197,%198,%199: i64, i64, i64
 }
 // CHECK-LABEL: __symbol__
 // CHECK: llh.symbol_relation_map
