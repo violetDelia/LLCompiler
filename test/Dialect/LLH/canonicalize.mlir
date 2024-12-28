@@ -81,8 +81,8 @@ func.func @fold_reshape(%arg0: tensor<200x3x224x224xf32>) -> tensor<200x3x224x22
     %0 = "llh.constant"() <{value = 200 : i64}> : () -> i64
     %1 = "llh.constant"() <{value = 3 : i64}> : () -> i64
     %2 = "llh.constant"() <{value = 224 : i64}> : () -> i64
-    // CHECK-NOT: llh.reshape
     %33 = "llh.reshape"(%arg0, %0, %1, %2, %2) : (tensor<200x3x224x224xf32>, i64, i64, i64, i64) -> tensor<200x3x224x224xf32>
+    // CHECK: return %arg0
     return %33 : tensor<200x3x224x224xf32>
   }
 

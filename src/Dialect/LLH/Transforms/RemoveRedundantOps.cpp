@@ -21,10 +21,11 @@
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
@@ -168,7 +169,7 @@ struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
 };
 
 std::pair<std::vector<std::string>, mlir::AffineExpr*> generateBindShapeMapKey(
-     AffineBinaryOpExpr& exp, const SmallVector<size_t>& symbol_pos,
+    AffineBinaryOpExpr& exp, const SmallVector<size_t>& symbol_pos,
     SymbolicBindOp& op) {
   std::vector<std::string> symbols;
   auto bind_symbols = op.getBindSymbols();
@@ -189,21 +190,41 @@ struct replaceTorchSymbolicIntOp
   }
   void rewrite(TorchSymbolicIntOp op,
                LLHPatternRewriter& rewriter) const final {
-    // rewriter.eraseOp(op);
     auto func = op->getParentOfType<func::FuncOp>();
     CHECK(llc::MLIR, func);
     auto loc = op->getLoc();
-    auto symbol = op.getSymName().str();
+    auto symbol = op.getSymName();
+    auto maybe_attrs = func.getArgAttrs();
     auto& blocks = func.getBlocks();
+    if (maybe_attrs.has_value()) {
+      auto func_type = func.getFunctionType();
+      auto& block = func.getFunctionBody().getBlocks().front();
+      auto input_num = block.getNumArguments();
+      auto attrs = maybe_attrs.value().getValue();
+      for (int i{}; i < input_num; i++) {
+        auto arg = block.getArgument(i);
+        if (!isa<RankedTensorType>(arg.getType())) continue;
+        auto tensor = llvm::cast<RankedTensorType>(arg.getType());
+        auto arg_attr = llvm::cast<DictionaryAttr>(attrs[i]);
+        for (size_t dim{}; dim < tensor.getRank(); dim++) {
+          auto dim_symbol_attr = arg_attr.getAs<StringAttr>(
+              "func.input_symbol_" + std::to_string(dim));
+          if (!dim_symbol_attr) continue;
+          if (dim_symbol_attr.getValue() == symbol) {
+            auto dim_op = llh::buildTensorDim(arg, &rewriter, dim);
+            rewriter.replaceOp(op, dim_op);
+            return;
+          }
+        }
+      }
+    }
     for (auto& block : blocks) {
       if (!block.isEntryBlock()) continue;
       for (auto arg : block.getArguments()) {
         auto type = arg.getType();
         if (!isa<RankedTensorType>(type)) continue;
-        auto has_encode = llvm::cast<RankedTensorType>(type).getEncoding();
-        if (!has_encode) continue;
-        if (isa<EncodingAttr>(has_encode)) {
-          auto encoding = cast<EncodingAttr>(has_encode);
+        if (llc::hasEncoding(type)) {
+          auto encoding = llc::getEncodingFrom(type);
           auto symbols = encoding.getShapeSymbols();
           for (size_t i{}; i < symbols.size(); i++) {
             auto name = symbols[i].getValue();
@@ -265,7 +286,7 @@ void RemoveRedundantOpsPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  generateEntranceTensorEncoding(module);
+  //generateEntranceTensorEncoding(module);
   RewritePatternSet patterns(context);
   populateRemoveRedundantOpsPassPatterns(patterns);
   auto config = GreedyRewriteConfig();
