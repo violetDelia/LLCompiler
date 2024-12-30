@@ -104,11 +104,13 @@ class RsqrtOp(IRDLOperation):
     input = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
 
+
 @irdl_op_definition
 class AbsOp(IRDLOperation):
     name = "llh.abs"
     input = operand_def(LLH_Computable_Type)
     result = result_def(LLH_Computable_Type)
+
 
 @irdl_op_definition
 class ConvertToOp(IRDLOperation):
@@ -386,6 +388,45 @@ class WhereOp(IRDLOperation):
     result = result_def(TensorType)
 
 
+@irdl_op_definition
+class SoftmaxOp(IRDLOperation):
+    name = "llh.softmax"
+    input = operand_def(TensorType)
+    axis = attr_def(IntegerAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class ReduceMaxOp(IRDLOperation):
+    name = "llh.reduce_max"
+    input = operand_def(TensorType)
+    axis = attr_def(IntegerAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class ReduceMinOp(IRDLOperation):
+    name = "llh.reduce_min"
+    input = operand_def(TensorType)
+    axis = attr_def(IntegerAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class ReduceMeanOp(IRDLOperation):
+    name = "llh.reduce_mean"
+    input = operand_def(TensorType)
+    axis = attr_def(IntegerAttr)
+    result = result_def(TensorType)
+
+
+@irdl_op_definition
+class ExpOp(IRDLOperation):
+    name = "llh.exp"
+    input = operand_def(TensorType)
+    result = result_def(TensorType)
+
+
 LLH = Dialect(
     "llh",
     [
@@ -421,7 +462,12 @@ LLH = Dialect(
         CompareOp,
         ConvertToOp,
         BatchNormInferenceOp,
-        RsqrtOp
+        RsqrtOp,
+        SoftmaxOp,
+        ExpOp,
+        ReduceMaxOp,
+        ReduceMeanOp,
+        ReduceMinOp,
     ],
     [],
 )

@@ -37,6 +37,7 @@ class Torch_ExecutionEngine(ExecutionEngine):
         for arg in args:
             if isinstance(arg, torch.Tensor):
                 offset = arg.storage_offset()
+                print(arg.data_ptr())
                 tensor = Tensor(
                     arg.data_ptr(),
                     arg.data_ptr() + offset,

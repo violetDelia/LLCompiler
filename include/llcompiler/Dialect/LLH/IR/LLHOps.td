@@ -38,20 +38,20 @@ class LLH_SymbolOp <string mnemonic, list<Trait> traits = []>:
 class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
         LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultRank]>{
         let arguments = !con((ins
-            OperandType:$input),
-            attributes);
+     OperandType:$input),
+     attributes);
         let results = (outs 
-            ResultType:$result);
+     ResultType:$result);
 }
 
 class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
         LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultElementType, DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
         let arguments = !con((ins
-            OperandType:$lhs,
-            OperandType:$rhs),
-            attributes);
+     OperandType:$lhs,
+     OperandType:$rhs),
+     attributes);
         let results = (outs 
-            ResultType:$result);
+     ResultType:$result);
 }
 
 class LLH_UnaryElementwiseOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
@@ -61,7 +61,7 @@ class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type Operand
         LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
 
 
-def LLH_TorchSymbolicIntOp : LLH_Op<"torch_symbolic_int",[]>{
+def LLH_TorchSymbolicIntOp  : LLH_Op<"torch_symbolic_int",[]>{
     let description = [{
         torch 框架从fx_graph直接获取的符号信息。
     }];
@@ -71,7 +71,7 @@ def LLH_TorchSymbolicIntOp : LLH_Op<"torch_symbolic_int",[]>{
     let results = (outs LLH_Int64);
 }
 
-def LLH_SymbolicBindOp: Op<LLH_Dialect,"symbolic_bind">{
+def LLH_SymbolicBindOp  : LLH_Op<"symbolic_bind",[]>{
     let description = [{
         根据fake tensor 的信息,每创建一个op,就相应创建一个symbolic_bind将torch_symbolic_int与Op的结果绑定。
     }];
@@ -81,7 +81,7 @@ def LLH_SymbolicBindOp: Op<LLH_Dialect,"symbolic_bind">{
        AffineMapAttr:$expressions);
 }
 
-def LLH_EncodingBindOp : Op<LLH_Dialect,"encoding_bind">{
+def LLH_EncodingBindOp  : LLH_Op<"encoding_bind",[]>{
     let description = [{
         将tensor的encoding信息绑到这个Op上,防止用标准的Pass或者第三方库的Pass出现不识别encoding导致的错误。
     }];
@@ -92,7 +92,7 @@ def LLH_EncodingBindOp : Op<LLH_Dialect,"encoding_bind">{
     let hasCanonicalizer = 1;
 }
 
-def LLH_SymbolBindOp : Op<LLH_Dialect, "symbol_bind">{
+def LLH_SymbolBindOp : LLH_Op< "symbol_bind",[]>{
     let description = [{
         单符号
     }];
@@ -114,7 +114,7 @@ def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
        );
 }
 
-def LLH_SymbolicCastOp: Op<LLH_Dialect,"symbolic_cast",[DeclareOpInterfaceMethods<CastOpInterface>]>{
+def LLH_SymbolicCastOp: LLH_Op<"symbolic_cast",[DeclareOpInterfaceMethods<CastOpInterface>]>{
     let arguments = (ins 
        LLH_Symbolic_Type:$operand);
     let results = (outs 
@@ -173,25 +173,25 @@ def LLH_ConstantOp : LLH_SymbolOp<"constant", [ConstantLike]>{
     let builders = [
         OpBuilder<(ins "DenseElementsAttr":$value),
         [{
-            $_state.getOrAddProperties<Properties>().value = value;
-            $_state.addTypes(value.getType());
+     $_state.getOrAddProperties<Properties>().value = value;
+     $_state.addTypes(value.getType());
         }]>,
         OpBuilder<(ins "IntegerAttr":$value),
         [{
-            $_state.getOrAddProperties<Properties>().value = value;
-            $_state.addTypes(value.getType());
+     $_state.getOrAddProperties<Properties>().value = value;
+     $_state.addTypes(value.getType());
         }]>,
         OpBuilder<(ins "FloatAttr":$value),
         [{
-            $_state.getOrAddProperties<Properties>().value = value;
-            $_state.addTypes(value.getType());
+     $_state.getOrAddProperties<Properties>().value = value;
+     $_state.addTypes(value.getType());
         }]>
     ];
     let hasFolder = 1;
     let hasCanonicalizer = 1;
 }
 
-def LLH_BroadCastToOp          : LLH_SymbolOp<"broadcast_to",[]>{
+def LLH_BroadCastToOp    : LLH_SymbolOp<"broadcast_to",[]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         Variadic<LLH_Int64>:$out_shapes,
@@ -225,12 +225,12 @@ def LLH_DimOp : LLH_Op<"dim">{
     let builders = [
         OpBuilder<(ins "Value":$input, "size_t":$dim),
         [{
-            llvm::SmallVector<mlir::Value> operands;
-            auto const_dim = $_builder.create<mlir::llh::ConstantOp>(input.getLoc(),$_builder.getI64IntegerAttr(dim));
-            operands.push_back(input);
-            operands.push_back(const_dim);
-            $_state.addOperands(operands);
-            $_state.addTypes($_builder.getI64Type());
+     llvm::SmallVector<mlir::Value> operands;
+     auto const_dim = $_builder.create<mlir::llh::ConstantOp>(input.getLoc(),$_builder.getI64IntegerAttr(dim));
+     operands.push_back(input);
+     operands.push_back(const_dim);
+     $_state.addOperands(operands);
+     $_state.addTypes($_builder.getI64Type());
         }]>,
     ];
     let hasCanonicalizer = 1;
@@ -326,51 +326,53 @@ def LLH_DropOp : LLH_UnaryElementwiseOp<"drop", [], LLH_Tensor, LLH_Tensor, (ins
 
 def LLH_TransposeOp : LLH_UnaryElementwiseOp<"transpose", [], LLH_Tensor, LLH_Tensor, (ins DenseI64ArrayAttr:$perms)>;
 
-def LLH_ReluOp          : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
+def LLH_ReluOp   : LLH_UnaryElementwiseOp<"relu", [], LLH_Tensor>;
 
-def LLH_AbsOp          : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>{
+def LLH_AbsOp    : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>{
     let hasCanonicalizer = 1;
 }
 
-def LLH_SqrtOp         : LLH_UnaryElementwiseOp<"sqrt", [], LLH_Tensor>;
+def LLH_SqrtOp  : LLH_UnaryElementwiseOp<"sqrt", [], LLH_Tensor>;
 
-def LLH_RsqrtOp         : LLH_UnaryElementwiseOp<"rsqrt", [], LLH_Tensor>;
+def LLH_ExpOp   : LLH_UnaryElementwiseOp<"exp", [], LLH_Tensor>;
 
-def LLH_AddOp           : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+def LLH_RsqrtOp : LLH_UnaryElementwiseOp<"rsqrt", [], LLH_Tensor>;
+
+def LLH_AddOp   : LLH_BinaryElementwiseOp<"add", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
     let hasCanonicalizer = 1;
 }
 
-def LLH_MulOp           : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+def LLH_MulOp   : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
     let hasCanonicalizer = 1;
 }
 
-def LLH_DivOp           : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+def LLH_DivOp   : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
     let hasCanonicalizer = 1;
 }
 
-def LLH_SubOp           : LLH_BinaryElementwiseOp<"sub", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+def LLH_SubOp   : LLH_BinaryElementwiseOp<"sub", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;
     let hasCanonicalizer = 1;
 }
 
-def LLH_MaxOp           : LLH_BinaryElementwiseOp<"max", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+def LLH_MaxOp   : LLH_BinaryElementwiseOp<"max", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasCanonicalizer = 1;
 }
 
-def LLH_MinOp           : LLH_BinaryElementwiseOp<"min", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+def LLH_MinOp   : LLH_BinaryElementwiseOp<"min", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasCanonicalizer = 1;
 }
 
-def LLH_CompareOp           : LLH_SymbolOp<"compare", [ResultsBroadcastableShape]>{
+def LLH_CompareOp   : LLH_SymbolOp<"compare", [ResultsBroadcastableShape]>{
     let arguments = (ins 
         LLH_Tensor:$lhs,
         LLH_Tensor:$rhs,
@@ -413,7 +415,7 @@ def LLH_ConvOp : LLH_SymbolOp<"conv">{
     let hasCanonicalizer = 1;
 }
 
-def LLH_MatMulOp          : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
+def LLH_MatMulOp     : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
     let arguments = (ins
         LLH_2DTensor:$lhs,
         LLH_2DTensor:$rhs);
@@ -421,7 +423,7 @@ def LLH_MatMulOp          : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<Bra
         LLH_2DTensor:$result);
 }
 
-def LLH_BatchMatMulOp          : LLH_SymbolOp<"batch_matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
+def LLH_BatchMatMulOp    : LLH_SymbolOp<"batch_matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
     let arguments = (ins
         LLH_3DTensor:$lhs,
         LLH_3DTensor:$rhs);
@@ -493,5 +495,40 @@ def LLH_WhereOp : LLH_SymbolOp<"where", []>{
         LLH_Tensor);
 }
 
+// def LLH_SoftmaxOp   : LLH_SymbolOp<"softmax", [SameOperandsAndResultRank]>{
+    // let arguments = (ins 
+    //     LLH_Tensor:$input,
+    //     I64Attr:$axis
+    //     );
+//     let results = (outs 
+//         LLH_Tensor);
+// }
+
+def LLH_ReduceMaxOp   : LLH_SymbolOp<"reduce_max", [SameOperandsAndResultRank]>{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        I64Attr:$axis
+        );
+    let results = (outs 
+        LLH_Tensor);
+}
+
+def LLH_ReduceMinOp   : LLH_SymbolOp<"reduce_min", [SameOperandsAndResultRank]>{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        I64Attr:$axis
+        );
+    let results = (outs 
+        LLH_Tensor);
+}
+
+def LLH_ReduceMeanOp   : LLH_SymbolOp<"reduce_mean", [SameOperandsAndResultRank]>{
+    let arguments = (ins 
+        LLH_Tensor:$input,
+        I64Attr:$axis
+        );
+    let results = (outs 
+        LLH_Tensor);
+}
 
 #endif // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_

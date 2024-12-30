@@ -189,7 +189,7 @@ INFER_FUNCTION(MatMulOp) {
   HAS_ENCODING_RETURN(getResult()) // 如果已经生成了Encoding属性，说明该Op的符号信息已经推导过了。退出推导。
   NO_ENCODING_RETURN(getLhs()) // 输入没有Encoding属性，退出推导
   NO_ENCODING_RETURN(getRhs()) // 输入没有Encoding属性，退出推导
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation()); // 获取全局符号分析实例
+  auto symbol_analysis = SymbolAnalysis::getInstance(getOperation()); // 获取全局符号分析实例
   // 生成返回值的符号信息
   auto symbols = llvm::SmallVector<StringRef>();  
   auto lhs_type = llc::getRankTensorFrom(getLhs());
@@ -200,11 +200,11 @@ INFER_FUNCTION(MatMulOp) {
   symbols.push_back(rhs_symbols[1].getValue());
 
   auto res = getResult();
-  symbol_analsis->addEncoding(res, symbols); // 将符号信息附加到Op上
+  symbol_analysis->addEncoding(res, symbols); // 将符号信息附加到Op上
   COMMON_CHECK //一些特殊情况的处理
 
   // 创建符号之间的关系，matmul的lhs dim1 和 rhs dim0 符号相等
-  symbol_analsis->buildSymbolRelation(lhs_symbols[1].getAttr().strref(),
+  symbol_analysis->buildSymbolRelation(lhs_symbols[1].getAttr().strref(),
                                       rhs_symbols[0].getAttr().strref(),
                                       SymbolRelation::EQ);
   return llvm::success();

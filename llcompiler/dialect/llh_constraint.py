@@ -150,3 +150,8 @@ class ModeAttr(BitEnumAttribute[ModeEnum]):
     name = "llh.Mode"
     none_value = "none"
     all_value = "all"
+    
+class ModeEnum(StrEnum):
+    Training = "training"
+    Inference = "inference"
+

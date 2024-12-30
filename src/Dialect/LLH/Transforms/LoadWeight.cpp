@@ -15,6 +15,8 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <iostream>
+#include <iterator>
 #include <regex>
 #include <string>
 
@@ -153,6 +155,7 @@ struct LoadWeightOp : public LLHOpRewritePattern<WeightOp> {
     INFO(llc::DEBUG) << weight_file.str();
     auto value = loadWeightFile(tensor, weight_file, &rewriter);
     auto const_op = rewriter.create<llh::ConstantOp>(op->getLoc(), value);
+    std::cout << std::endl << std::endl;
     rewriter.replaceOp(op, const_op);
   }
 };

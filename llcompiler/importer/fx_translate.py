@@ -230,7 +230,7 @@ def get_result_type(node: torch.fx.node.Node, index=None):
     if "val" in node.meta:
         return (
             node.meta["val"]
-            if isinstance(node.meta["val"], (FakeTensor, torch.SymInt))
+            if isinstance(node.meta["val"], (FakeTensor, torch.SymInt,torch.SymFloat))
             else node.meta["val"][index]
         )
     if "example_value" in node.meta:

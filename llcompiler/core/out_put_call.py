@@ -64,6 +64,8 @@ class GenOutput:
             raise NotImplementedError
         raise NotImplementedError
 
+
+    # TODO: support move inplace to out 
     def _fx_get_out_call(self, model: torch.fx.GraphModule):
         inputs_tensor_or_symbol = []
         outputs_tensor_or_symbol = []

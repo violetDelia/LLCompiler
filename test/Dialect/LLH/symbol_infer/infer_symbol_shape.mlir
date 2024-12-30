@@ -273,3 +273,13 @@ func.func @where(%arg0: tensor<?x?xf32> {func.input_symbol_0 = "s0", func.input_
     %2 = "llh.where"(%arg1, %arg0, %arg0) : (tensor<?x?xi1>, tensor<?x?xf32>, tensor<?x?xf32>) -> tensor<*xf32>
     return %2 : tensor<*xf32>
   }
+
+// -----
+// CHECK-ENCODING: llh.encoding_bind
+func.func @reduce(%arg0: tensor<3x3x?x?xf32> {func.input_symbol_0 = "c3", func.input_symbol_1 = "c3", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<3x3x1x?xf32> attributes {entrance} {
+    %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
+    // CHECK: llh.reduce_max
+    // CHECK-SAME:-> tensor<3x3x1x?xf32, #llh.encoding<shapes = @c3, @c3, @c1, @s1>>
+    %1 = "llh.reduce_max"(%arg0) <{axis = 2 : i64}> : (tensor<3x3x?x?xf32>) -> tensor<3x3x1x?xf32>
+    return %1 : tensor<3x3x1x?xf32>
+  }

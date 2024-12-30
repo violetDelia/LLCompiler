@@ -17,6 +17,8 @@ from torch._inductor.compile_fx import (
     fw_compiler_freezing,
     _graph_counter,
 )
+from torch._inductor.fx_passes.dedupe_symint_uses import dedupe_symints
+from torch._inductor.fx_passes.reinplace import reinplace_inplaceable_ops
 from torch._functorch.partitioners import default_partition
 from torch._inductor.utils import BoxedBool
 from torch._inductor import config
@@ -37,6 +39,10 @@ llc_decompositions = {
     aten.div,
     aten.threshold_backward,
     aten.native_batch_norm_backward,
+    aten.masked_fill,
+    aten._softmax,
+    aten.squeeze.dim,
+    aten.squeeze.dims,
 }
 
 
@@ -99,7 +105,9 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
 
     def _process_fx(self, model: Any, inputs: List[torch.Tensor], **kwargs):
         model = _recursive_pre_grad_passes(model, inputs)
-        #_recursive_post_grad_passes(model, inputs)
+        dedupe_symints(model.graph)
+        reinplace_inplaceable_ops(model.graph)
+        _recursive_post_grad_passes(model, inputs)
 
     def not_compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
         return model

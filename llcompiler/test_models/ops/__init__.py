@@ -10,3 +10,4 @@ from .decompose import Decompose_BatchNorm
 from .braodcast import Braodcast
 from .matmul import Matmul
 from .where import Where
+from .reduce import Max

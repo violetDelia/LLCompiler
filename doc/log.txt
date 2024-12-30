@@ -49,13 +49,11 @@
 
 
 TODO:
-    const reshape fold
     batch_norm
     static frozen support
     run --> MHA
     slice     
-    torch frezen
-
+    torch 框架 support op list, 将graph 的输出去除，防止分配过多内存
 备忘：
     哪些指令不能并行？
     动态conv 代码生成。

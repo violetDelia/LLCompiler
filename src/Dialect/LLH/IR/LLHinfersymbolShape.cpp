@@ -86,11 +86,11 @@ void checkIsReturnOperand(Value& value) {
 // 遍历shapes ()
 bool encodingWithDims(mlir::Operation* op, OperandRange dims,
                       ShapedType input_type) {
-  auto symbol_analsis = SymbolAnalysis::getInstance(op);
+  auto symbol_analysis = SymbolAnalysis::getInstance(op);
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
   for (auto dim : dims) {
-    auto symbol = symbol_analsis->getOrBuildSymbolAttrFrom(dim);
+    auto symbol = symbol_analysis->getOrBuildSymbolAttrFrom(dim);
     symbols.push_back(symbol);
     if (llh::isConstIntegerValue(dim)) {
       new_shapes.push_back(llh::getConstIntegerValue(dim));
@@ -102,7 +102,7 @@ bool encodingWithDims(mlir::Operation* op, OperandRange dims,
       RankedTensorType::get(new_shapes, input_type.getElementType());
   op->getResult(0).setType(new_tensor);
   auto res = op->getResult(0);
-  symbol_analsis->addEncoding(res, symbols);
+  symbol_analysis->addEncoding(res, symbols);
   return true;
 }
 
@@ -131,7 +131,7 @@ void simplyBinarySymbolInfer(Value& value) {
     value.setType(base_type);
     return;
   }
-  auto symbol_analsis = SymbolAnalysis::getInstance(op);
+  auto symbol_analysis = SymbolAnalysis::getInstance(op);
   auto rank = input1_type.getRank();
   auto new_shape = llvm::SmallVector<int64_t>();
   auto new_shape_symbol = llvm::SmallVector<StringRef>();
@@ -166,20 +166,46 @@ void simplyBinarySymbolInfer(Value& value) {
       new_shape_symbol.push_back(symbol_1);
     } else {
       new_shape_symbol.push_back(symbol_1);
-      symbol_analsis->buildSymbolRelation(symbol_1, symbol_2,
-                                          SymbolRelation::EQ);
+      symbol_analysis->buildSymbolRelation(symbol_1, symbol_2,
+                                           SymbolRelation::EQ);
     }
   }
   auto new_tensor =
       RankedTensorType::get(new_shape, input1_type.getElementType());
   op->getResult(0).setType(new_tensor);
   auto res = op->getResult(0);
-  symbol_analsis->addEncoding(res, new_shape_symbol);
+  symbol_analysis->addEncoding(res, new_shape_symbol);
+}
+
+void simplyReduceSymbolInfer(Value& value, int axis) {
+  auto op = value.getDefiningOp();
+  auto symbol_analysis = SymbolAnalysis::getInstance(op);
+  auto symbols = llvm::SmallVector<StringRef>();
+  auto new_shapes = llvm::SmallVector<int64_t>();
+  auto input = op->getOperand(0);
+  auto input_type = llc::getRankTensorFrom(input);
+  auto input_symbols = llc::getEncodingFrom(input_type).getShapeSymbols();
+  auto res_type = llc::getRankTensorFrom(op->getResult(0));
+  auto rank = input_type.getRank();
+  for (int i = 0; i < rank; ++i) {
+    if (i == axis) {
+      symbols.push_back(SymbolAnalysis::UNKOW_SYMBOL);
+      new_shapes.push_back(1);
+    } else {
+      symbols.push_back(input_symbols[i].getValue());
+      new_shapes.push_back(input_type.getDimSize(i));
+    }
+  }
+  auto new_tensor =
+      RankedTensorType::get(new_shapes, res_type.getElementType());
+  op->getResult(0).setType(new_tensor);
+  auto res = op->getResult(0);
+  symbol_analysis->addEncoding(res, symbols);
 }
 
 void ConvSymbolInfer(Operation* op) {
   // first compute the space shape
-  auto symbol_analsis = SymbolAnalysis::getInstance(op);
+  auto symbol_analysis = SymbolAnalysis::getInstance(op);
   auto context = op->getContext();
   size_t space_index = 0;
   auto layout_attr =
@@ -235,7 +261,7 @@ void ConvSymbolInfer(Operation* op) {
     } else {
       auto out = ShapedType::kDynamic;
       new_shape.push_back(out);
-      auto in_basic_symbol = symbol_analsis->getBasicSymbol(
+      auto in_basic_symbol = symbol_analysis->getBasicSymbol(
           input_symbols[i + space_rank].getValue());
       (in + pad_h + pad_l - dilation * (kernel_size - 1) - 1) / stride + 1;
 
@@ -251,7 +277,7 @@ void ConvSymbolInfer(Operation* op) {
                                 getAffineConstantExpr(stride, context)) +
           1;
       auto affine_map = AffineMap::get(1, 1, exp);
-      auto symbol_op = symbol_analsis->buildNewSymbol(
+      auto symbol_op = symbol_analysis->buildNewSymbol(
           new_symbol, affine_map, {input_symbols[i + space_rank].getValue()},
           true);
       new_shape_symbol.push_back(symbol_op.getSymName());
@@ -293,7 +319,7 @@ void ConvSymbolInfer(Operation* op) {
       RankedTensorType::get(new_shape, input_type.getElementType());
   op->getResult(0).setType(new_tensor);
   auto res = op->getResult(0);
-  symbol_analsis->addEncoding(res, new_shape_symbol);
+  symbol_analysis->addEncoding(res, new_shape_symbol);
 }
 }  // namespace
 
@@ -329,21 +355,32 @@ void ConvSymbolInfer(Operation* op) {
     return llvm::success();                           \
   }
 // binary op
-#define INFER_BINARY(OP)                                                 \
-  INFER_FUNCTION(OP) {                                                   \
-    HAS_ENCODING_RETURN(getOperation()->getResult(0))                    \
-    HAS_SYMBOLATTR_RETURN(getOperation())                                \
-    if (isa<IntegerType, IntegerType>(getOperand(0).getType())) {        \
-      auto symbol_analsis = SymbolAnalysis::getInstance(getOperation()); \
-      symbol_analsis->getOrBuildSymbolAttrFrom(getOperation());          \
-      return llvm::success();                                            \
-    }                                                                    \
-    NO_ENCODING_RETURN(getOperation()->getOperand(0))                    \
-    NO_ENCODING_RETURN(getOperation()->getOperand(1))                    \
-    auto res = getResult();                                              \
-    simplyBinarySymbolInfer(res);                                        \
-    COMMON_CHECK                                                         \
-    return llvm::success();                                              \
+#define INFER_BINARY(OP)                                                  \
+  INFER_FUNCTION(OP) {                                                    \
+    HAS_ENCODING_RETURN(getOperation()->getResult(0))                     \
+    HAS_SYMBOLATTR_RETURN(getOperation())                                 \
+    if (isa<IntegerType, IntegerType>(getOperand(0).getType())) {         \
+      auto symbol_analysis = SymbolAnalysis::getInstance(getOperation()); \
+      symbol_analysis->getOrBuildSymbolAttrFrom(getOperation());          \
+      return llvm::success();                                             \
+    }                                                                     \
+    NO_ENCODING_RETURN(getOperation()->getOperand(0))                     \
+    NO_ENCODING_RETURN(getOperation()->getOperand(1))                     \
+    auto res = getResult();                                               \
+    simplyBinarySymbolInfer(res);                                         \
+    COMMON_CHECK                                                          \
+    return llvm::success();                                               \
+  }
+
+#define INFER_REDUCE(OP)                \
+  INFER_FUNCTION(OP) {                  \
+    HAS_ENCODING_RETURN(getResult())    \
+    NO_ENCODING_RETURN(getInput())      \
+    auto axis = getAxis();              \
+    auto res = getResult();             \
+    simplyReduceSymbolInfer(res, axis); \
+    COMMON_CHECK                        \
+    return llvm::success();             \
   }
 
 // conv类op
@@ -369,6 +406,12 @@ void ConvSymbolInfer(Operation* op) {
     return llvm::success();                                             \
   }
 
+UNIMPLEMENTED_INFER_FUNCTION(LayerNormOp)
+UNIMPLEMENTED_INFER_FUNCTION(CatOp)
+UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
+UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
+UNIMPLEMENTED_INFER_FUNCTION(SliceOp)
+
 INFER_UNARY_OP(DropOp)
 INFER_UNARY_OP(ReluOp)
 INFER_UNARY_OP(AbsOp)
@@ -376,6 +419,7 @@ INFER_UNARY_OP(ConvertToOp)
 INFER_UNARY_OP(SqrtOp)
 INFER_UNARY_OP(RsqrtOp)
 INFER_UNARY_OP(BatchNormInferenceOp)
+INFER_UNARY_OP(ExpOp)
 
 INFER_BINARY(AddOp)
 INFER_BINARY(MulOp)
@@ -384,6 +428,10 @@ INFER_BINARY(SubOp)
 INFER_BINARY(MaxOp)
 INFER_BINARY(MinOp)
 INFER_BINARY(CompareOp)
+
+INFER_REDUCE(ReduceMaxOp)
+INFER_REDUCE(ReduceMinOp)
+INFER_REDUCE(ReduceMeanOp)
 
 INFER_CONV(ConvBiasOp)
 INFER_CONV(ConvOp)
@@ -412,15 +460,10 @@ INFER_FUNCTION(ConstantOp) {
   return llvm::failure();
 }
 
-UNIMPLEMENTED_INFER_FUNCTION(LayerNormOp)
-UNIMPLEMENTED_INFER_FUNCTION(CatOp)
-UNIMPLEMENTED_INFER_FUNCTION(FlattenOp)
-UNIMPLEMENTED_INFER_FUNCTION(ExpandOp)
-UNIMPLEMENTED_INFER_FUNCTION(SliceOp)
 INFER_FUNCTION(StrideSliceOp) {
   HAS_ENCODING_RETURN(getResult())
   NO_ENCODING_RETURN(getInput())
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
   auto input_type = llc::getRankTensorFrom(getInput());
@@ -430,21 +473,21 @@ INFER_FUNCTION(StrideSliceOp) {
   auto strides = getStrides();
   for (auto [input_symbol, start, end, stride] :
        llvm::zip(input_symbols, start_indexs, end_indexs, strides)) {
-    auto start_symbol = symbol_analsis->getOrBuildSymbolAttrFrom(start);
-    auto end_symbol = symbol_analsis->getOrBuildSymbolAttrFrom(end);
-    auto stride_symbol = symbol_analsis->getOrBuildSymbolAttrFrom(stride);
-    auto tem_symbol = symbol_analsis->buildNewSymbolWithRelation(
+    auto start_symbol = symbol_analysis->getOrBuildSymbolAttrFrom(start);
+    auto end_symbol = symbol_analysis->getOrBuildSymbolAttrFrom(end);
+    auto stride_symbol = symbol_analysis->getOrBuildSymbolAttrFrom(stride);
+    auto tem_symbol = symbol_analysis->buildNewSymbolWithRelation(
         end_symbol, start_symbol, SymbolRelation::Sub);
-    auto res_symbol = symbol_analsis->buildNewSymbolWithRelation(
+    auto res_symbol = symbol_analysis->buildNewSymbolWithRelation(
         tem_symbol.getSymName(), stride_symbol, SymbolRelation::FloorDiv);
-    new_shapes.push_back(symbol_analsis->getIntValue(res_symbol.getSymName()));
+    new_shapes.push_back(symbol_analysis->getIntValue(res_symbol.getSymName()));
     symbols.push_back(res_symbol.getSymName());
   }
   auto new_tensor =
       RankedTensorType::get(new_shapes, input_type.getElementType());
   getResult().setType(new_tensor);
   auto res = getResult();
-  symbol_analsis->addEncoding(res, symbols);
+  symbol_analysis->addEncoding(res, symbols);
   COMMON_CHECK
   return llvm::success();
 }
@@ -452,7 +495,7 @@ INFER_FUNCTION(StrideSliceOp) {
 INFER_FUNCTION(ExtractOp) {
   HAS_ENCODING_RETURN(getResult())
   NO_ENCODING_RETURN(getInput())
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
   auto input_type = llc::getRankTensorFrom(getInput());
@@ -471,7 +514,7 @@ INFER_FUNCTION(ExtractOp) {
       RankedTensorType::get(new_shapes, input_type.getElementType());
   getResult().setType(new_tensor);
   auto res = getResult();
-  symbol_analsis->addEncoding(res, symbols);
+  symbol_analysis->addEncoding(res, symbols);
   COMMON_CHECK
   return llvm::success();
 }
@@ -480,7 +523,7 @@ INFER_FUNCTION(MatMulOp) {
   HAS_ENCODING_RETURN(getResult())
   NO_ENCODING_RETURN(getLhs())
   NO_ENCODING_RETURN(getRhs())
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
   auto lhs_type = llc::getRankTensorFrom(getLhs());
@@ -495,11 +538,11 @@ INFER_FUNCTION(MatMulOp) {
       RankedTensorType::get(new_shapes, lhs_type.getElementType());
   getResult().setType(new_tensor);
   auto res = getResult();
-  symbol_analsis->addEncoding(res, symbols);
+  symbol_analysis->addEncoding(res, symbols);
   COMMON_CHECK
-  symbol_analsis->buildSymbolRelation(lhs_symbols[1].getAttr().strref(),
-                                      rhs_symbols[0].getAttr().strref(),
-                                      SymbolRelation::EQ);
+  symbol_analysis->buildSymbolRelation(lhs_symbols[1].getAttr().strref(),
+                                       rhs_symbols[0].getAttr().strref(),
+                                       SymbolRelation::EQ);
   return llvm::success();
 }
 
@@ -507,7 +550,7 @@ INFER_FUNCTION(BatchMatMulOp) {
   HAS_ENCODING_RETURN(getResult())
   NO_ENCODING_RETURN(getLhs())
   NO_ENCODING_RETURN(getRhs())
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
   auto lhs_type = llc::getRankTensorFrom(getLhs());
@@ -524,18 +567,18 @@ INFER_FUNCTION(BatchMatMulOp) {
       RankedTensorType::get(new_shapes, lhs_type.getElementType());
   getResult().setType(new_tensor);
   auto res = getResult();
-  symbol_analsis->addEncoding(res, symbols);
+  symbol_analysis->addEncoding(res, symbols);
   COMMON_CHECK
-  symbol_analsis->buildSymbolRelation(lhs_symbols[2].getAttr().strref(),
-                                      rhs_symbols[1].getAttr().strref(),
-                                      SymbolRelation::EQ);
+  symbol_analysis->buildSymbolRelation(lhs_symbols[2].getAttr().strref(),
+                                       rhs_symbols[1].getAttr().strref(),
+                                       SymbolRelation::EQ);
   return llvm::success();
 }
 
 INFER_FUNCTION(AdaptiveAvgPoolOp) {
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
   HAS_ENCODING_RETURN(getOperation()->getResult(0))
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
   auto out_size = getOutSize();
   auto symbols = llvm::SmallVector<StringRef>();
   auto new_shapes = llvm::SmallVector<int64_t>();
@@ -555,7 +598,7 @@ INFER_FUNCTION(AdaptiveAvgPoolOp) {
       RankedTensorType::get(new_shapes, input_type.getElementType());
   getResult().setType(new_tensor);
   auto res = getResult();
-  symbol_analsis->addEncoding(res, symbols);
+  symbol_analysis->addEncoding(res, symbols);
   COMMON_CHECK
   return llvm::success();
 }
@@ -563,7 +606,7 @@ INFER_FUNCTION(AdaptiveAvgPoolOp) {
 INFER_FUNCTION(MaxPoolOp) {
   NO_ENCODING_RETURN(getOperation()->getOperand(0))
   HAS_ENCODING_RETURN(getOperation()->getResult(0))
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
+  auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
   auto context = getContext();
   auto layout_attr =
       llvm::cast_or_null<LayoutAttr>(getOperation()->getAttr(llc::LayoutAttr));
@@ -600,7 +643,7 @@ INFER_FUNCTION(MaxPoolOp) {
     } else {
       auto out = ShapedType::kDynamic;
       new_shape.push_back(out);
-      auto in_basic_symbol = symbol_analsis->getBasicSymbol(
+      auto in_basic_symbol = symbol_analysis->getBasicSymbol(
           input_symbols[i + space_rank].getValue());
       auto new_symbol = div(
           sub(add(add(in_basic_symbol, integer(pad_h)), integer(pad_l)),
@@ -613,7 +656,7 @@ INFER_FUNCTION(MaxPoolOp) {
                                 getAffineConstantExpr(stride, context)) +
           1;
       auto affine_map = AffineMap::get(1, 1, exp);
-      auto symbol_op = symbol_analsis->buildNewSymbol(
+      auto symbol_op = symbol_analysis->buildNewSymbol(
           new_symbol, affine_map, {input_symbols[i + space_rank].getValue()},
           true);
       new_shape_symbol.push_back(symbol_op.getSymName());
@@ -637,7 +680,7 @@ INFER_FUNCTION(MaxPoolOp) {
       RankedTensorType::get(new_shape, input_type.getElementType());
   getResult().setType(new_tensor);
   auto res = getResult();
-  symbol_analsis->addEncoding(res, new_shape_symbol);
+  symbol_analysis->addEncoding(res, new_shape_symbol);
   COMMON_CHECK
   return llvm::success();
 }
@@ -729,9 +772,9 @@ INFER_FUNCTION(BatchNormOp) {
   HAS_ENCODING_RETURN(getResult())
   auto res = getResult();
   res.setType(getInput().getType());
-  auto symbol_analsis = SymbolAnalysis::getInstance(getOperation());
-  symbol_analsis->addEncoding(getRunningMean());
-  symbol_analsis->addEncoding(getRunningVar());
+  auto symbol_analysis = SymbolAnalysis::getInstance(getOperation());
+  symbol_analysis->addEncoding(getRunningMean());
+  symbol_analysis->addEncoding(getRunningVar());
   COMMON_CHECK
   return llvm::success();
 }

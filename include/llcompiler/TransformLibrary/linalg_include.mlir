@@ -82,19 +82,20 @@ transform.named_sequence @flatten_elementwise(%module: !transform.any_op {transf
   }
 
 transform.named_sequence @linalg_basic_fuse(%module: !transform.any_op {transform.consumed}) {
-  transform.apply_patterns to %module {
-      transform.apply_patterns.linalg.erase_unnecessary_inputs
-    } : !transform.any_op
-  %convert_elementwise_module = transform.include @convert_elementwise_to_linalg failures(suppress) (%module) : (!transform.any_op) -> (!transform.any_op )
-  transform.include @linalg_specialize failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
-  transform.include @linalg_decompose failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
-  // not run dynamic mode
-  // transform.include @flatten_elementwise failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
-  transform.include @linalg_generalize failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
-  %elementwise_fused_module = transform.include @elementwise_fuse failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> (!transform.any_op)
-  transform.apply_patterns to %elementwise_fused_module {
-      transform.apply_patterns.canonicalization
-    } : !transform.any_op
+    transform.apply_patterns to %module {
+        transform.apply_patterns.linalg.erase_unnecessary_inputs
+      } : !transform.any_op
+    %convert_elementwise_module = transform.include @convert_elementwise_to_linalg failures(suppress) (%module) : (!transform.any_op) -> (!transform.any_op )
+    transform.include @linalg_specialize failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
+    transform.include @linalg_decompose failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
+    // not run dynamic mode
+    // transform.include @flatten_elementwise failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
+    transform.include @linalg_generalize failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> ()
+    %elementwise_fused_module = transform.include @elementwise_fuse failures(suppress) (%convert_elementwise_module) : (!transform.any_op) -> (!transform.any_op)
+    transform.apply_patterns to %elementwise_fused_module {
+        transform.apply_patterns.canonicalization
+      } : !transform.any_op
+    transform.include @linalg_analysis failures(suppress) (%elementwise_fused_module) : (!transform.any_op) -> !transform.any_op
     transform.yield
   }
 
@@ -111,9 +112,9 @@ transform.named_sequence @linalg_bufferization(%module: !transform.any_op {trans
           test_analysis_only= false,
           memcpy_op = "linalg.copy" }
         : (!transform.any_op) -> !transform.any_op
-    %res_to_para_module = transform.apply_registered_pass "buffer-results-to-out-params" to %bufferized_module {options = "hoist-static-allocs=true add-result-attr=true"}: (!transform.any_op) -> !transform.any_op
-    %alloc_to_arg_module = transform.apply_registered_pass "alloc-to-arg" to %res_to_para_module : (!transform.any_op) -> !transform.any_op
-    transform.include @linalg_analysis failures(suppress) (%alloc_to_arg_module) : (!transform.any_op) -> !transform.any_op
+    %res_to_para_module = transform.apply_registered_pass "buffer-results-to-out-params" to %bufferized_module {options = "hoist-static-allocs=false add-result-attr=true"}: (!transform.any_op) -> !transform.any_op
+    // %alloc_to_arg_module = transform.apply_registered_pass "alloc-to-arg" to %res_to_para_module : (!transform.any_op) -> !transform.any_op
+    transform.include @linalg_analysis failures(suppress) (%res_to_para_module) : (!transform.any_op) -> !transform.any_op
     transform.yield
   }
 } // transform module

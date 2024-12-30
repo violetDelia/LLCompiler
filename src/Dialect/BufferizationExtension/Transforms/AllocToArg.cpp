@@ -52,7 +52,59 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+void allocToArg(func::FuncOp funcOp) {
+  auto &blocks = funcOp.getFunctionBody().getBlocks();
+  if (blocks.size() != 1) {
+    return;
+  }
+  Block &bodyBlock = blocks.front();
+  auto returnOp = llvm::cast<func::ReturnOp>(bodyBlock.getTerminator());
 
+  IRRewriter rewriter(funcOp.getContext());
+  BitVector resultsToErase(funcOp.getNumResults());
+  Location loc = returnOp.getLoc();
+
+  for (auto [i, result] : llvm::enumerate(returnOp.getOperands())) {
+    Operation *resultDef = result.getDefiningOp();
+    Type resultTy = result.getType();
+
+    // Case: plain alloc.
+    if (auto allocOp = llvm::dyn_cast_or_null<memref::AllocOp>(resultDef)) {
+      resultsToErase.set(i);
+      auto attrs = funcOp.getResultAttrDict(i);
+      funcOp.insertArgument(funcOp.getNumArguments(), resultTy, attrs, loc);
+      rewriter.replaceOp(allocOp, funcOp.getArguments().back());
+      continue;
+    }
+
+    // Case: shape-expanded alloc.
+    if (auto expandOp =
+            llvm::dyn_cast_or_null<memref::ExpandShapeOp>(resultDef)) {
+      Operation *expandDef = expandOp.getOperand(0).getDefiningOp();
+      if (auto allocOp = llvm::dyn_cast_or_null<memref::AllocOp>(expandDef)) {
+        resultsToErase.set(i);
+        auto attrs = funcOp.getResultAttrDict(i);
+        funcOp.insertArgument(funcOp.getNumArguments(), resultTy, attrs, loc);
+
+        // Collapse buffer argument to replace possible uses of the unexpanded
+        // buffer.
+        rewriter.setInsertionPoint(allocOp);
+        Value arg = funcOp.getArguments().back();
+        Value collapsedArg = rewriter.create<memref::CollapseShapeOp>(
+            loc, arg, expandOp.getReassociationIndices());
+
+        // Replace alloc and its expansion.
+        rewriter.replaceOp(allocOp, collapsedArg);
+        rewriter.replaceOp(expandOp, arg);
+        continue;
+      }
+    }
+    return;
+  }
+
+  funcOp.eraseResults(resultsToErase);
+  returnOp->eraseOperands(resultsToErase);
+}
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
@@ -70,7 +122,7 @@ struct AllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
     return llvm::success();
   }
 
-  void rewrite(mlir::memref::CopyOp op, PatternRewriter& rewriter) const {
+  void rewrite(mlir::memref::CopyOp op, PatternRewriter &rewriter) const {
     auto source = op.getSource();
     auto target = op.getTarget();
     auto alloc = llvm::cast<memref::AllocOp>(getRootAllocOp(source));
@@ -78,7 +130,7 @@ struct AllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
     rewriter.eraseOp(op);
   }
 
-  Operation* getRootAllocOp(Value source) const {
+  Operation *getRootAllocOp(Value source) const {
     if (isa<BlockArgument>(source)) return nullptr;
     auto maybe_root = source.getDefiningOp();
     if (dyn_cast<memref::AllocOp>(maybe_root)) return maybe_root;
@@ -88,7 +140,7 @@ struct AllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateAllocToArgPassPatterns(RewritePatternSet& patterns) {
+void populateAllocToArgPassPatterns(RewritePatternSet &patterns) {
   auto context = patterns.getContext();
   patterns.add<AllocToArg>(context);
 }
@@ -102,14 +154,20 @@ struct AllocToArgPass
   void runOnOperation() override;
 };
 }  // namespace
+
 //===----------------------------------------------------------------------===//
 // pass implement
 //===----------------------------------------------------------------------===//
 
 void AllocToArgPass::runOnOperation() {
   LLC_RUN_IN_PASS
-  auto* context = &getContext();
+
+  auto *context = &getContext();
   auto module = getOperation();
+  // auto funcs = module.getOps<func::FuncOp>();
+  // for (auto func : funcs) {
+  //   allocToArg(func);
+  // }
   RewritePatternSet patterns(context);
   populateAllocToArgPassPatterns(patterns);
   auto op = getOperation();
