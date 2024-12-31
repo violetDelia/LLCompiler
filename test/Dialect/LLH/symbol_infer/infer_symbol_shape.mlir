@@ -1,7 +1,5 @@
 // RUN: llc-opt --split-input-file --infer-symbol-shape %s| FileCheck %s
 // RUN: llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " %s | FileCheck %s --check-prefix=CHECK-ENCODING
-//  /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/infer_symbol_shape.mlir
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/infer_symbol_shape.mlir
 
 // CHECK-LABEL: block
 // CHECK-SAME: (%arg0: tensor<?x3x?x?xbf16, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>, %arg1: bf16) -> tensor<?x3x?x?xbf16, #llh.encoding<shapes = @s0, @c3, @s1, @s2>>
@@ -276,10 +274,12 @@ func.func @where(%arg0: tensor<?x?xf32> {func.input_symbol_0 = "s0", func.input_
 
 // -----
 // CHECK-ENCODING: llh.encoding_bind
-func.func @reduce(%arg0: tensor<3x3x?x?xf32> {func.input_symbol_0 = "c3", func.input_symbol_1 = "c3", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<3x3x1x?xf32> attributes {entrance} {
-    %0 = "llh.constant"() <{value = 3 : i64}> : () -> i64
+func.func @reduce(%arg0: tensor<3x3x?x?xf32> {func.input_symbol_0 = "c3", func.input_symbol_1 = "c3", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<3x?xf32> attributes {entrance} {
     // CHECK: llh.reduce_max
-    // CHECK-SAME:-> tensor<3x3x1x?xf32, #llh.encoding<shapes = @c3, @c3, @c1, @s1>>
-    %1 = "llh.reduce_max"(%arg0) <{axis = 2 : i64}> : (tensor<3x3x?x?xf32>) -> tensor<3x3x1x?xf32>
-    return %1 : tensor<3x3x1x?xf32>
+    // CHECK-SAME:-> tensor<3x?xf32, #llh.encoding<shapes = @c3, @s1>>
+    %0 = "llh.reduce_max"(%arg0) <{axis = array<i64:1, 2>}> : (tensor<3x3x?x?xf32>) -> tensor<3x?xf32>
+    return %0 : tensor<3x?xf32>
   }
+
+//  /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/infer_symbol_shape.mlir
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/infer_symbol_shape.mlir

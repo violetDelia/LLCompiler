@@ -177,7 +177,7 @@ void simplyBinarySymbolInfer(Value& value) {
   symbol_analysis->addEncoding(res, new_shape_symbol);
 }
 
-void simplyReduceSymbolInfer(Value& value, int axis) {
+void simplyReduceSymbolInfer(Value& value, llvm::ArrayRef<int64_t> axis) {
   auto op = value.getDefiningOp();
   auto symbol_analysis = SymbolAnalysis::getInstance(op);
   auto symbols = llvm::SmallVector<StringRef>();
@@ -188,13 +188,16 @@ void simplyReduceSymbolInfer(Value& value, int axis) {
   auto res_type = llc::getRankTensorFrom(op->getResult(0));
   auto rank = input_type.getRank();
   for (int i = 0; i < rank; ++i) {
-    if (i == axis) {
-      symbols.push_back(SymbolAnalysis::UNKOW_SYMBOL);
-      new_shapes.push_back(1);
-    } else {
-      symbols.push_back(input_symbols[i].getValue());
-      new_shapes.push_back(input_type.getDimSize(i));
+    bool is_reduce_dim = false;
+    for (auto dim : axis) {
+      if (dim == i) {
+        is_reduce_dim = true;
+        continue;
+      };
     }
+    if (is_reduce_dim) continue;
+    symbols.push_back(input_symbols[i].getValue());
+    new_shapes.push_back(input_type.getDimSize(i));
   }
   auto new_tensor =
       RankedTensorType::get(new_shapes, res_type.getElementType());

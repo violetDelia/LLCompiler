@@ -136,7 +136,7 @@ def view_convert(
     return ReshapeOp(operands=[input, dims], result_types=[result_type])
 
 
-@TORCH_FUNCTION_TRANSLATE("aten::unsqueeze")
+@TORCH_FUNCTION_TRANSLATE("aten::unsqueeze", "prims::squeeze")
 def unsqueeze_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],

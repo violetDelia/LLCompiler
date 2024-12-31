@@ -496,36 +496,36 @@ def LLH_WhereOp : LLH_SymbolOp<"where", []>{
 }
 
 // def LLH_SoftmaxOp   : LLH_SymbolOp<"softmax", [SameOperandsAndResultRank]>{
-    // let arguments = (ins 
-    //     LLH_Tensor:$input,
-    //     I64Attr:$axis
-    //     );
+//     let arguments = (ins 
+//         LLH_Tensor:$input,
+//         I64Attr:$axis
+//         );
 //     let results = (outs 
 //         LLH_Tensor);
 // }
 
-def LLH_ReduceMaxOp   : LLH_SymbolOp<"reduce_max", [SameOperandsAndResultRank]>{
+def LLH_ReduceMaxOp   : LLH_SymbolOp<"reduce_max", [SameOperandsAndResultElementType]>{
     let arguments = (ins 
         LLH_Tensor:$input,
-        I64Attr:$axis
+        DenseI64ArrayAttr:$axis
         );
     let results = (outs 
         LLH_Tensor);
 }
 
-def LLH_ReduceMinOp   : LLH_SymbolOp<"reduce_min", [SameOperandsAndResultRank]>{
+def LLH_ReduceMinOp   : LLH_SymbolOp<"reduce_min", [SameOperandsAndResultElementType]>{
     let arguments = (ins 
         LLH_Tensor:$input,
-        I64Attr:$axis
+        DenseI64ArrayAttr:$axis
         );
     let results = (outs 
         LLH_Tensor);
 }
 
-def LLH_ReduceMeanOp   : LLH_SymbolOp<"reduce_mean", [SameOperandsAndResultRank]>{
+def LLH_ReduceMeanOp   : LLH_SymbolOp<"reduce_mean", [SameOperandsAndResultElementType]>{
     let arguments = (ins 
         LLH_Tensor:$input,
-        I64Attr:$axis
+        DenseI64ArrayAttr:$axis
         );
     let results = (outs 
         LLH_Tensor);

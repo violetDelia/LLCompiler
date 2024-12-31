@@ -69,10 +69,91 @@ llvm::SmallVector<Value> castToIndex(ConversionPatternRewriter* rewriter,
                                      Location loc) {
   llvm::SmallVector<Value> new_values;
   for (auto value : values) {
-    new_values.push_back(rewriter->create<mlir::arith::IndexCastOp>(
-        loc, rewriter->getIndexType(), value));
+    auto cast = rewriter->create<mlir::arith::IndexCastOp>(
+        loc, rewriter->getIndexType(), value);
+    new_values.push_back(cast);
   }
   return new_values;
+}
+
+Value createInitialValueForReduceOp(Operation* op, Type element_type,
+                                    PatternRewriter& rewriter) {
+  auto const_type = RankedTensorType::get({}, element_type);
+  if (isa<ReduceMaxOp>(op)) {
+    if (isa<mlir::FloatType>(element_type)) {
+      auto const_value = DenseElementsAttr::get(
+          const_type,
+          {APFloat::getInf(
+              cast<mlir::FloatType>(element_type).getFloatSemantics(),
+              /*negative=*/true)});
+      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
+                                                    const_value);
+    } else if (isa<mlir::IntegerType>(element_type)) {
+      auto const_value = DenseElementsAttr::get(
+          const_type,
+          {APInt::getSignedMinValue(element_type.getIntOrFloatBitWidth())});
+      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
+                                                    const_value);
+    }
+  }
+
+  if (isa<ReduceMinOp>(op)) {
+    if (isa<mlir::FloatType>(element_type)) {
+      auto const_value = DenseElementsAttr::get(
+          const_type,
+          {APFloat::getInf(
+              cast<mlir::FloatType>(element_type).getFloatSemantics(),
+              /*negative=*/false)});
+      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
+                                                    const_value);
+    } else if (isa<mlir::IntegerType>(element_type)) {
+      auto const_value = DenseElementsAttr::get(
+          const_type,
+          {APInt::getSignedMaxValue(element_type.getIntOrFloatBitWidth())});
+      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
+                                                    const_value);
+    }
+  }
+  UNIMPLEMENTED(llc::MLIR_PASS);
+  return nullptr;
+}
+
+Value createReduceOpWithSingleRegionOp(Operation* op, Value input,
+                                       Type out_type, ArrayRef<int64_t> dims,
+                                       PatternRewriter& rewriter) {
+  auto input_type = llc::getRankTensorFrom(input);
+  Value init_value =
+      createInitialValueForReduceOp(op, input_type.getElementType(), rewriter);
+  if (!init_value) return nullptr;
+
+  stablehlo::ReduceOp reduce = rewriter.create<stablehlo::ReduceOp>(
+      op->getLoc(), out_type, input, init_value,
+      rewriter.getDenseI64ArrayAttr(dims));
+
+  Block& block = reduce.getBody().emplaceBlock();
+  auto block_arg_type = RankedTensorType::get({}, input_type.getElementType());
+  block.addArgument(block_arg_type, op->getLoc());
+  block.addArgument(block_arg_type, op->getLoc());
+  auto* first_arg = block.args_begin();
+  auto second_arg = block.args_rbegin();
+
+  {
+    OpBuilder::InsertionGuard guard(rewriter);
+    rewriter.setInsertionPointToStart(&block);
+    Value result;
+    if (isa<ReduceMaxOp>(op)) {
+      result = rewriter.create<stablehlo::MaxOp>(op->getLoc(), block_arg_type,
+                                                 *first_arg, *second_arg);
+    } else if (isa<ReduceMinOp>(op)) {
+      result = rewriter.create<stablehlo::MinOp>(op->getLoc(), block_arg_type,
+                                                 *first_arg, *second_arg);
+    } else {
+      UNIMPLEMENTED(llc::MLIR_PASS);
+      return nullptr;
+    }
+    rewriter.create<stablehlo::ReturnOp>(op->getLoc(), result);
+  }
+  return reduce.getResults()[0];
 }
 //===----------------------------------------------------------------------===//
 // legal func
@@ -121,11 +202,8 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   // curent only supported, need add layout attr and layout pass for more
   LogicalResult matchAndRewrite(ConvOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
     auto input = op.getX();
     auto weight = op.getW();
-    auto kernal_shape = op.getKernelShape();
-    auto kernel_size = kernal_shape.size();
     auto pad = op.getPad();
     auto stride_attr = op.getStrideAttr();
     auto dilation_attr = op.getDilationAttr();
@@ -244,7 +322,7 @@ struct MaxPoolOpLowing : public OpConversionPattern<MaxPoolOp> {
     rewriter.setInsertionPointToEnd(&block);
     auto max = rewriter.create<stablehlo::MaxOp>(loc, block.getArgument(0),
                                                  block.getArgument(1));
-    auto return_op = rewriter.create<stablehlo::ReturnOp>(loc, ValueRange{max});
+    rewriter.create<stablehlo::ReturnOp>(loc, ValueRange{max});
     rewriter.replaceOp(op, reduce_winodw_op);
   }
 };
@@ -362,6 +440,23 @@ struct CompareOpLowing : public OpConversionPattern<CompareOp> {
     UNIMPLEMENTED(llc::MLIR);
   }
 };
+
+struct ReduceOplwoing : public OpConversionPattern<ReduceMaxOp> {
+  using OpConversionPattern<ReduceMaxOp>::OpConversionPattern;
+  LogicalResult match(ReduceMaxOp op) const { return llvm::success(); }
+
+  void rewrite(ReduceMaxOp op, OpAdaptor adaptor,
+               ConversionPatternRewriter& rewriter) const {
+    auto input = op->getOperand(0);
+    auto axis = op.getAxis();
+    auto res = op->getResult(0);
+    auto res_type = llc::getRankTensorFrom(res);
+    auto reduce_res =
+        createReduceOpWithSingleRegionOp(op, input, res_type, axis, rewriter);
+    rewriter.replaceOp(op, reduce_res);
+  }
+};
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -382,7 +477,8 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<WhereOp, stablehlo::SelectOp>>(converter,
                                                                context);
   patterns.add<SimplyFullLowing<SqrtOp, stablehlo::SqrtOp>>(converter, context);
-  patterns.add<SimplyFullLowing<ConvertToOp, stablehlo::ConvertOp>>(converter, context);
+  patterns.add<SimplyFullLowing<ConvertToOp, stablehlo::ConvertOp>>(converter,
+                                                                    context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(context);
   patterns.add<BatchNormInferenceOpLowing>(converter, context);
@@ -391,6 +487,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SliceOpLowing>(converter, context);
   patterns.add<BatchMatMulOpLowing>(converter, context);
   patterns.add<CompareOpLowing>(converter, context);
+  patterns.add<ReduceOplwoing>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -401,7 +498,7 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp, CompareOp, ReluOp,
                       BatchNormOp, AbsOp, SqrtOp, BatchNormInferenceOp, ConvOp,
                       MaxPoolOp, MatMulOp, BatchMatMulOp, TransposeOp,
-                      BroadCastToOp, SliceOp, WhereOp,ConvertToOp>();
+                      BroadCastToOp, SliceOp, WhereOp, ConvertToOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();
   target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

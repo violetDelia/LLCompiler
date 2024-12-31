@@ -400,7 +400,7 @@ class SoftmaxOp(IRDLOperation):
 class ReduceMaxOp(IRDLOperation):
     name = "llh.reduce_max"
     input = operand_def(TensorType)
-    axis = attr_def(IntegerAttr)
+    axis = attr_def(ArrayAttr)
     result = result_def(TensorType)
 
 
@@ -408,7 +408,7 @@ class ReduceMaxOp(IRDLOperation):
 class ReduceMinOp(IRDLOperation):
     name = "llh.reduce_min"
     input = operand_def(TensorType)
-    axis = attr_def(IntegerAttr)
+    axis = attr_def(ArrayAttr)
     result = result_def(TensorType)
 
 
@@ -416,7 +416,7 @@ class ReduceMinOp(IRDLOperation):
 class ReduceMeanOp(IRDLOperation):
     name = "llh.reduce_mean"
     input = operand_def(TensorType)
-    axis = attr_def(IntegerAttr)
+    axis = attr_def(ArrayAttr)
     result = result_def(TensorType)
 
 
