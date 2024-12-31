@@ -46,7 +46,12 @@
                 add rsqrt op
                 add fold_convert_to
                 add add convet_to to hlo
-
+2024.1.1:       support prims::inductor_force_stride_order
+                add rehspe fold pattern
+                refine test
+                add reduce ops and infer shape
+                support aten::amax
+                support prims::squeeze
 
 TODO:
     batch_norm

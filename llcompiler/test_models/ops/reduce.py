@@ -2,7 +2,7 @@ import torch.nn as nn
 import torch
 
 
-class Max(nn.Module):
+class RecudeMax(nn.Module):
     def __init__(self):
         super().__init__()
 
@@ -11,5 +11,5 @@ class Max(nn.Module):
         x1 = x.amax(x.shape[0]-1, keepdim=True)
         x1 = x1.squeeze(x.shape[0]-1) 
         x = x1+x2
-        # x = x.amax(-1, keepdim=True)
+        x = x.amax(-1, keepdim=True)
         return x

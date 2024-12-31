@@ -47,8 +47,11 @@ def amax_convert(
     symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
-    input: OpResult = get_arg_value(node.args[0], value_map, block)
+    input: SSAValue = get_arg_value(node.args[0], value_map, block)
+    input_type: TensorType = input.type
+    rank = input_type.get_shape().__len__()
     axis = node.args[1]
+    axis = [dim if dim > 0 else dim + rank for dim in axis]
     keep_dim = node.args[2] if len(node.args) > 2 else False
     result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
     attrs = {"axis": DenseArrayBase.from_list(i64, axis)}
