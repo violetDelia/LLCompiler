@@ -7,6 +7,7 @@ from ..fx_translate import (
     get_arg_value,
     torch_symbol_translate,
     commond_build_op,
+    get_fake_or_mate_tensor_dims,
     _expand_to_2_if_int,
     _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
@@ -146,16 +147,7 @@ def unsqueeze_convert(
     res_tensor: FakeTensor = get_result_type(node)
     result_type = torch_fake_or_mate_tensor_translate(res_tensor)
     input = get_arg_value(node.args[0], value_map, block)
-    dims = []
-    for dim in res_tensor.shape:
-        if isinstance(dim, int):
-            const = build_llh_constant(dim)
-            block.add_op(const)
-            dims.append(const)
-        elif isinstance(dim, torch.SymInt):
-            symbol = torch_symbol_translate(dim, symbol_map)
-            block.add_op(symbol)
-            dims.append(symbol)
+    dims = get_fake_or_mate_tensor_dims(res_tensor)
     op = ReshapeOp(operands=[input, dims], result_types=[result_type])
     return op
 
@@ -170,16 +162,7 @@ def unsqueeze_convert(
     res_tensor: FakeTensor = get_result_type(node)
     result_type = torch_fake_or_mate_tensor_translate(res_tensor)
     input = get_arg_value(node.args[0], value_map, block)
-    dims = []
-    for dim in res_tensor.shape:
-        if isinstance(dim, int):
-            const = build_llh_constant(dim)
-            block.add_op(const)
-            dims.append(const)
-        elif isinstance(dim, torch.SymInt):
-            symbol = torch_symbol_translate(dim, symbol_map)
-            block.add_op(symbol)
-            dims.append(symbol)
+    dims = get_fake_or_mate_tensor_dims(res_tensor)
     return ReshapeOp(operands=[input, dims], result_types=[result_type])
 
 

@@ -157,6 +157,27 @@ def torch_symbol_bind(
     )
 
 
+def get_fake_or_mate_tensor_dims(
+    tensor: FakeTensor, block: Block, symbol_map: dict[str, TorchSymbolicIntOp]
+):
+    dims = []
+    for dim in tensor.shape:
+        if isinstance(dim, int):
+            const = build_llh_constant(dim)
+            block.add_op(const)
+            dims.append(const)
+        elif isinstance(dim, torch.SymInt):
+            symbol = torch_symbol_translate(dim, symbol_map)
+            block.add_op(symbol)
+            dims.append(symbol)
+    # shape=torch.Size([])
+    if dims.__len__() == 0:
+        one = build_llh_constant(1)
+        dims.append(one)
+        block.add_op(one)
+    return dims
+
+
 def torch_fake_or_mate_tensor_translate(tensor: FakeTensor):
     ele_type = torch_dtype_translate(tensor.dtype)
     shape = []
@@ -168,6 +189,7 @@ def torch_fake_or_mate_tensor_translate(tensor: FakeTensor):
                 shape.append(dim.node.int_())
             else:
                 shape.append(DYNAMIC_INDEX)
+    # shape=torch.Size([])
     if shape.__len__() == 0:
         shape = [1]
     return TensorType(element_type=ele_type, shape=shape)
@@ -207,11 +229,13 @@ TORCH_DTYPE_TO_MLIR_TYPE = {
 def torch_dtype_translate(dtype: torch.dtype):
     return TORCH_DTYPE_TO_MLIR_TYPE[dtype]
 
+
 aten = torch.ops.aten
 # 一些特殊的op,val里面有多个fake tensor，但是只需要使用1个返回值，保存返回的索引。
 SPECIAL_RESULT_FAKE_INDEX_MAP = {
     aten.max_pool2d_with_indices.default: 0,
-    aten._native_batch_norm_legit_no_training.default:0
+    aten._native_batch_norm_legit_no_training.default: 0,
+    aten.native_dropout.default: 0,
 }
 
 # 一些特殊的op，实际getitem 拿到是输入
@@ -230,7 +254,7 @@ def get_result_type(node: torch.fx.node.Node, index=None):
     if "val" in node.meta:
         return (
             node.meta["val"]
-            if isinstance(node.meta["val"], (FakeTensor, torch.SymInt,torch.SymFloat))
+            if isinstance(node.meta["val"], (FakeTensor, torch.SymInt, torch.SymFloat))
             else node.meta["val"][index]
         )
     if "example_value" in node.meta:
@@ -326,23 +350,7 @@ def commond_build_op(
     attrs: Mapping[str, Attribute | None] = None,
 ):
     out = get_result_type(node)
-    if isinstance(out, TensorMetadata):
-        result_type = torch_fake_or_mate_tensor_translate(out)
-        return op_build(
-            operands=[
-                get_arg_value(
-                    node.args[n],
-                    value_map,
-                    block,
-                    const_tensor=True,
-                    const_type=torch_dtype_translate(out.dtype),
-                )
-                for n in range(operand_nums)
-            ],
-            result_types=[result_type],
-            attributes=attrs,
-        )
-    if isinstance(out, FakeTensor):
+    if isinstance(out, (TensorMetadata, FakeTensor)):
         result_type = torch_fake_or_mate_tensor_translate(out)
         return op_build(
             operands=[
@@ -374,6 +382,21 @@ def _expand_to_2_if_int(value):
     if isinstance(value, int):
         return [value, value]
     return value
+
+
+def _updata_torch_symbol_bind(
+    op: Operation,
+    block: Block,
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    node: torch.fx.node.Node,
+):
+    for i in range(len(op.results)):
+        if not isinstance(op.results[i].type, TensorType):
+            continue
+        shape_bind = torch_symbol_bind(
+            op.results[i], get_result_type(node, i), symbol_map
+        )
+        block.add_op(shape_bind)
 
 
 def torch_build_func(
@@ -491,18 +514,3 @@ def torch_build_func(
         name, (input_types, output_types), region=region, arg_attrs=ArrayAttr(arg_attrs)
     )
     return func
-
-
-def _updata_torch_symbol_bind(
-    op: Operation,
-    block: Block,
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    node: torch.fx.node.Node,
-):
-    for i in range(len(op.results)):
-        if not isinstance(op.results[i].type, TensorType):
-            continue
-        shape_bind = torch_symbol_bind(
-            op.results[i], get_result_type(node, i), symbol_map
-        )
-        block.add_op(shape_bind)

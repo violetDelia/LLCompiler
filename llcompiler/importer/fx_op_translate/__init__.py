@@ -9,6 +9,7 @@ from .unary_ops import (
     torch_relu_convert,
     sqrt_convert,
     rsqrt_convert,
+    exp_convert,
     reciprocal_convert,
 )
 from .reshape_ops import (
@@ -19,9 +20,9 @@ from .reshape_ops import (
     aten_view_convert,
     view_convert,
     collapse_view_convert,
-    inductor_force_stride_order_convert
+    inductor_force_stride_order_convert,
 )
-from .alloc_ops import empty_convert
+from .alloc_ops import empty_convert,full_convert
 from .binary_ops import add_convert
 from .batch_norm import batch_norm_convert
 from .cat import cat_convert
@@ -41,4 +42,4 @@ from .compare import eq_convert, le_convert
 from .alloc_ops import scalar_convert
 from .convert_to import aten_to_copy_convert
 from .where import where_convert
-from .reduce_ops import amax_convert,prims_sum_convert
+from .reduce_ops import amax_convert, prims_sum_convert

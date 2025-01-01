@@ -29,9 +29,8 @@ def attention(
     if mask is not None:
         scores = scores.masked_fill(mask == 0, -1e10)
     attention_score = F.softmax(scores, dim=-1)
-    if dropout is not None:
-        attention_score = dropout(attention_score)
     out = torch.matmul(attention_score, value)
+    return scores
     return out, attention_score  # shape: (seq_len, v_dim), (seq_len, seq_lem)
 
 class MultiHeadedAttention(nn.Module):

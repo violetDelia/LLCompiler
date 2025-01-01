@@ -15,6 +15,7 @@ from torch._inductor.compile_fx import (
     _recursive_pre_grad_passes,
     _recursive_post_grad_passes,
     fw_compiler_freezing,
+    _recursive_joint_graph_passes,
     _graph_counter,
 )
 from torch._inductor.fx_passes.dedupe_symint_uses import dedupe_symints
@@ -39,11 +40,7 @@ llc_decompositions = {
     aten.native_batch_norm_backward,
     aten.masked_fill,
     aten._softmax,
-    aten.squeeze.dim,
-    aten.squeeze.dims,
 }
-
-
 
 
 class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
@@ -102,6 +99,8 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.compile_count = 0
 
     def _process_fx(self, model: Any, inputs: List[torch.Tensor], **kwargs):
+        if self.mode == "inference":
+            _recursive_joint_graph_passes(model)
         model = _recursive_pre_grad_passes(model, inputs)
         dedupe_symints(model.graph)
         reinplace_inplaceable_ops(model.graph)
@@ -114,6 +113,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         if isinstance(model, torch.fx.GraphModule):
             self._process_fx(model, inputs, **kwargs)
         self._mlir_module = self.importer(model)
+        print(self._mlir_module)
         if self.vebose_first_ir:
             print(self._mlir_module)
         compiler_options = CompilerOptions()
@@ -145,10 +145,11 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         if isinstance(model, torch.fx.GraphModule):
             fw_compiler = self.compiler
             bw_compiler = self.compiler
+            inference_compiler = self.compiler
             if self.mode == "inference":
                 config.freezing = True
-                config.cpp.weight_prepack =False
-                fw_compiler = functools.partial(
+                config.cpp.weight_prepack = False
+                inference_compiler = functools.partial(
                     fw_compiler_freezing,
                     dynamo_model=model,
                     num_example_inputs=len(inputs),
@@ -157,13 +158,13 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
                     graph_id=next(_graph_counter),
                     forward_device=BoxedDeviceIndex(None),
                 )
-                bw_compiler = self.not_compiler
             else:
                 config.freezing = False
 
             return aot_autograd(
                 fw_compiler=fw_compiler,
                 bw_compiler=bw_compiler,
+                inference_compiler=inference_compiler,
                 decompositions=get_decompositions(llc_decompositions),
             )(model, inputs)
         else:

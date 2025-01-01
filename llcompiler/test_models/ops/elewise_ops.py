@@ -87,3 +87,12 @@ class Exp(nn.Module):
     def forward(self, x: torch.Tensor):
         x = x.exp()
         return x
+
+class Drop(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.drop = nn.Dropout()
+
+    def forward(self, x: torch.Tensor):
+        x = self.drop(x)
+        return x

@@ -332,7 +332,7 @@ def LLH_AbsOp    : LLH_UnaryElementwiseOp<"abs", [], LLH_Tensor>{
     let hasCanonicalizer = 1;
 }
 
-def LLH_SqrtOp  : LLH_UnaryElementwiseOp<"sqrt", [], LLH_Tensor>;
+def LLH_SqrtOp  : LLH_UnaryElementwiseOp<"sqrt", [], LLH_Computable_Type>;
 
 def LLH_ExpOp   : LLH_UnaryElementwiseOp<"exp", [], LLH_Tensor>;
 

@@ -6,6 +6,7 @@ from ..fx_translate import (
     get_arg_value,
     commond_build_op,
     torch_dtype_translate,
+    get_fake_or_mate_tensor_dims,
     _expand_to_2_if_int,
     _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
@@ -38,7 +39,7 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, ConstantOp, EmptyOp
+from ...dialect.llh import TorchSymbolicIntOp, ConstantOp, EmptyOp, BroadCastToOp
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::empty.memory_format")
@@ -78,4 +79,24 @@ def scalar_convert(
 ):
     return build_llh_scalar_tensor(
         node.args[0], torch_dtype_translate(get_result_type(node).dtype)
+    )
+
+
+@TORCH_FUNCTION_TRANSLATE("aten::full")
+def full_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    res_tensor: FakeTensor = get_result_type(node)
+    result_type = torch_fake_or_mate_tensor_translate(res_tensor)
+    const = build_llh_scalar_tensor(
+        node.args[1], torch_dtype_translate(res_tensor.dtype)
+    )
+    block.add_op(const)
+    dims = get_fake_or_mate_tensor_dims(result_type, block, symbol_map)
+    attrs = {"cast_dims": DenseArrayBase.from_list(i64, [i for i in range(len(dims))])}
+    return BroadCastToOp(
+        operands=[const.result, dims], attributes=attrs, result_types=[result_type]
     )
