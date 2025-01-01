@@ -42,52 +42,6 @@
 
 namespace mlir::llh {
 
-namespace detail {
-llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
-                          size_t dim) {
-  auto loc = operand.getLoc();
-  auto dim_const = rewrite->create<ConstantOp>(
-      loc, IntegerAttr::get(rewrite->getI64Type(), dim));
-  return rewrite->create<DimOp>(loc, ValueRange{operand, dim_const});
-}
-
-llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
-                                         LLHPatternRewriter* rewrite) {
-  auto tensor = llvm::dyn_cast_or_null<ShapedType>(operand.getType());
-  CHECK(llc::MLIR_PASS, tensor);
-  auto rank = tensor.getRank();
-  auto ranks = SmallVector<Value>();
-  for (int i{}; i < rank; i++) {
-    ranks.push_back(buildTensorDim(operand, rewrite, i));
-  }
-  return ranks;
-}
-}  // namespace detail
-
-LogicalResult checkBinaryNeedReshape(Operation* op) {
-  auto lhs = op->getOperand(0);
-  auto rhs = op->getOperand(1);
-  if (!isa<RankedTensorType>(lhs.getType())) return llvm::failure();
-  if (!isa<RankedTensorType>(rhs.getType())) return llvm::failure();
-  auto lhs_rank = llc::getRankTensorFrom(lhs).getRank();
-  auto rhs_rank = llc::getRankTensorFrom(rhs).getRank();
-  if (lhs_rank == rhs_rank) return llvm::failure();
-  return llvm::success();
-}
-
-LogicalResult checkBinaryNeedBroadcast(Operation* op) {
-  auto lhs = op->getOperand(0);
-  auto rhs = op->getOperand(1);
-  if (!isa<RankedTensorType>(lhs.getType())) return llvm::failure();
-  auto lhs_type = llc::getRankTensorFrom(lhs);
-  auto rhs_type = llc::getRankTensorFrom(rhs);
-  auto lhs_rank = lhs_type.getRank();
-  auto rhs_rank = rhs_type.getRank();
-  if (lhs_rank != rhs_rank) return llvm::failure();
-  if (llc::equalShape(lhs_type, rhs_type)) return llvm::failure();
-  return llvm::success();
-}
-
 #define RESHAPE_FOR_FUNCTION(OP) llvm::LogicalResult OP::reshapeAndBrodcast()
 
 #define UNIMPLEMENTED_RESHAPE_FOR_FUNCTION(OP)                                \

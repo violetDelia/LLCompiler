@@ -57,6 +57,7 @@
                 support aten::exp
                 add reduce_max to hlo
                 add reduce_sum to hlo
+                support aten::full
 TODO:
     batch_norm
     static frozen support

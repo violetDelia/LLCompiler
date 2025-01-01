@@ -35,6 +35,17 @@ from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import TorchSymbolicIntOp, CompareOp, CompareAttr, CompareEnum
 
 
+def get_compare_type(node: torch.fx.node.Node, value_map: dict[str:[SSAValue]]):
+    lhs = node.args[0]
+    rhs = node.args[1]
+    if (isinstance(lhs, (int, float))) and isinstance(rhs, (int, float)):
+        return i64 if isinstance(lhs, int) else f32
+    if isinstance(rhs, (int, float)):
+        return value_map[lhs.name][0].type
+    if isinstance(lhs, (int, float)):
+        return value_map[rhs.name][0].type
+
+
 @TORCH_FUNCTION_TRANSLATE("prims::eq", "aten::eq.Scalar")
 def eq_convert(
     node: torch.fx.node.Node,
@@ -43,8 +54,15 @@ def eq_convert(
     block: Block,
 ):
     result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
-    lhs = get_arg_value(node.args[0], value_map, block, const_tensor=True)
-    rhs = get_arg_value(node.args[1], value_map, block, const_tensor=True)
+    type: TensorType = get_compare_type(node, value_map)
+    if isinstance(type, TensorType):
+        type = type.element_type
+    lhs = get_arg_value(
+        node.args[0], value_map, block, const_tensor=True, const_type=type
+    )
+    rhs = get_arg_value(
+        node.args[1], value_map, block, const_tensor=True, const_type=type
+    )
     attrs = {"kind": CompareAttr([CompareEnum.EQ])}
     return CompareOp(operands=[lhs, rhs], result_types=[result_type], attributes=attrs)
 
@@ -57,7 +75,14 @@ def le_convert(
     block: Block,
 ):
     result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
-    lhs = get_arg_value(node.args[0], value_map, block, const_tensor=True)
-    rhs = get_arg_value(node.args[1], value_map, block, const_tensor=True)
+    type: TensorType = get_compare_type(node, value_map)
+    if isinstance(type, TensorType):
+        type = type.element_type
+    lhs = get_arg_value(
+        node.args[0], value_map, block, const_tensor=True, const_type=type
+    )
+    rhs = get_arg_value(
+        node.args[1], value_map, block, const_tensor=True, const_type=type
+    )
     attrs = {"kind": CompareAttr([CompareEnum.EQ])}
     return CompareOp(operands=[lhs, rhs], result_types=[result_type], attributes=attrs)

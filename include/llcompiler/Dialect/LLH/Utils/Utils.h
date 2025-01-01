@@ -28,10 +28,6 @@
 namespace mlir::llh {
 
 bool isLayoutSensitive(Operation* op);
-llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
-                          size_t dim);
-llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
-                                         LLHPatternRewriter* rewrite);
 RankedTensorType cloneTensorWithEncoding(RankedTensorType type,
                                          EncodingAttr encoding);
 int64_t getConstIntegerValue(Value value);

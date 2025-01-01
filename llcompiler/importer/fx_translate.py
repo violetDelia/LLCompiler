@@ -268,7 +268,7 @@ def get_result_type(node: torch.fx.node.Node, index=None):
 
 
 def get_arg_value(
-    arg: str | int | float,
+    arg: torch.fx.node.Node | int | float,
     value_map: dict[str:[SSAValue]],
     block: Block,
     index: int = 0,

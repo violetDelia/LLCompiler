@@ -217,29 +217,8 @@ bool SymbolAnalysis::hasSymbolAttr(Value value) {
   return hasSymbolAttr(op);
 }
 
-bool SymbolAnalysis::shapeIsSame(Value lhs, Value rhs) {
-  auto lhs_type = llc::getShapeTypeFrom(lhs);
-  auto rhs_type = llc::getShapeTypeFrom(rhs);
-  if (rhs_type.getRank() != lhs_type.getRank()) return false;
-  if (lhs_type.hasStaticShape() && rhs_type.hasStaticShape()) {
-    auto lhs_shapes = lhs_type.getShape();
-    auto rhs_shapes = rhs_type.getShape();
-    for (auto [lhs_shape, rhs_shape] : llvm::zip(lhs_shapes, rhs_shapes)) {
-      if (lhs_shape != rhs_shape) return false;
-      return true;
-    }
-  }
-  if (llc::hasEncoding(lhs_type) && llc::hasEncoding(rhs_type)) {
-    auto lhs_encoding = llc::getEncodingFrom(lhs);
-    auto rhs_encoding = llc::getEncodingFrom(rhs);
-    auto lhs_symbols = lhs_encoding.getShapeSymbols();
-    auto rhs_symbols = rhs_encoding.getShapeSymbols();
-    for (auto [lhs_symbol, rhs_symbol] : llvm::zip(lhs_symbols, rhs_symbols)) {
-      if (lhs_symbol != rhs_symbol) return false;
-    }
-    return true;
-  }
-  return false;
+bool SymbolAnalysis::isSameShape(Value lhs, Value rhs) {
+  return shapeIsSame(lhs, rhs);
 };
 
 llvm::StringRef SymbolAnalysis::_getSymbolAttr(Operation* op) {

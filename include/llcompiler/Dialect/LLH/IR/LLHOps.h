@@ -52,16 +52,14 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h.inc"
 #undef PLACEHOLD_FOR_FIX_HEADER
 
+// Utilitys
 namespace mlir::llh {
-void populateSymbolCanonicalizePatterns(RewritePatternSet& patterns);
-void populateSinkSymbolBindPatterns(RewritePatternSet& patterns);
-
-namespace detail {
 llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
                           size_t dim);
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
                                          LLHPatternRewriter* rewrite);
-}  // namespace detail
+
+bool shapeIsSame(Value lhs, Value rhs);
 
 LogicalResult checkBinaryNeedReshape(Operation* op);
 
@@ -102,7 +100,7 @@ LogicalResult insertReshapeBeforeBinary(Operation* op,
     } else if (((lower_dim > 1 || lower_dim < 0) && higher_dim == 1) ||
                (lower_dim == higher_dim)) {
       reshape_shapes[i] = lower_dim;
-      reshape_dims[i] = detail::buildTensorDim(lower_value, &rewriter, j);
+      reshape_dims[i] = buildTensorDim(lower_value, &rewriter, j);
     } else {
       WRONG(llc::MLIR) << "Invalid broadcast case";
       return llvm::failure();
@@ -139,10 +137,10 @@ LogicalResult insertBroadcastBeforeBinary(Operation* op,
   auto result_type = llc::getRankTensorFrom(result);
   Value will_be_broadcast;
   Value target_operand;
-  if (lhs_type == result_type) {
+  if (shapeIsSame(lhs, result)) {
     will_be_broadcast = rhs;
     target_operand = lhs;
-  } else if (rhs_type == result_type) {
+  } else if (shapeIsSame(rhs, result)) {
     will_be_broadcast = lhs;
     target_operand = rhs;
   } else {
@@ -164,7 +162,7 @@ LogicalResult insertBroadcastBeforeBinary(Operation* op,
   }
   auto cast_op = rewriter.create<BroadCastToOp>(
       loc, result_type, will_be_broadcast,
-      detail::buildTensorDims(target_operand, &rewriter), cast_dims,
+      buildTensorDims(target_operand, &rewriter), cast_dims,
       DenseI64ArrayAttr::get(context, expand_dims),
       DenseI64ArrayAttr::get(context, noexpand_dims));
   if (lhs_type == result_type) {
@@ -177,4 +175,12 @@ LogicalResult insertBroadcastBeforeBinary(Operation* op,
   return llvm::success();
 }
 }  // namespace mlir::llh
-#endif  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_
+// patterns
+namespace mlir::llh {
+void populateSymbolCanonicalizePatterns(RewritePatternSet& patterns);
+void populateSinkSymbolBindPatterns(RewritePatternSet& patterns);
+}  // namespace mlir::llh
+
+// reshape and broadcast
+namespace mlir::llh {}  // namespace mlir::llh
+#endif                  // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_H_

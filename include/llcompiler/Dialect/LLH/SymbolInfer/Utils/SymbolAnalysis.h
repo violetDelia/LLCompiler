@@ -66,7 +66,7 @@ class SymbolAnalysis {
   static bool hasEncodingOrBind(Value value);
   static llvm::SmallVector<llvm::StringRef> getEncodingShapes(Value value);
   static Operation *getEncodingBindOp(Value value);
-  static bool shapeIsSame(Value lhs, Value rhs);
+  static bool isSameShape(Value lhs, Value rhs);
 
  public:
   bool cleanCache();

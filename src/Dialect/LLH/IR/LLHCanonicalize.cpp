@@ -403,7 +403,7 @@ struct NonsenseReshapeFoldOp : public LLHOpRewritePattern<ReshapeOp> {
   LogicalResult match(ReshapeOp op) const final {
     auto input = op.getInput();
     auto res = op.getResult();
-    if (!SymbolAnalysis::shapeIsSame(input, res)) return llvm::failure();
+    if (!SymbolAnalysis::isSameShape(input, res)) return llvm::failure();
     return llvm::success();
   }
   void rewrite(ReshapeOp op, LLHPatternRewriter &rewriter) const final {
