@@ -79,6 +79,23 @@ llvm::SmallVector<Value> castToIndex(ConversionPatternRewriter* rewriter,
 Value createInitialValueForReduceOp(Operation* op, Type element_type,
                                     PatternRewriter& rewriter) {
   auto const_type = RankedTensorType::get({}, element_type);
+  if (isa<ReduceSumOp>(op)) {
+    if (isa<mlir::FloatType>(element_type)) {
+      auto const_value = DenseElementsAttr::get(
+          const_type,
+          {APFloat::getZero(
+              cast<mlir::FloatType>(element_type).getFloatSemantics(),
+              /*negative=*/false)});
+      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
+                                                    const_value);
+    } else if (isa<mlir::IntegerType>(element_type)) {
+      auto const_value = DenseElementsAttr::get(
+          const_type, {APInt::getZero(element_type.getIntOrFloatBitWidth())});
+      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
+                                                    const_value);
+    }
+  }
+
   if (isa<ReduceMaxOp>(op)) {
     if (isa<mlir::FloatType>(element_type)) {
       auto const_value = DenseElementsAttr::get(
@@ -146,6 +163,9 @@ Value createReduceOpWithSingleRegionOp(Operation* op, Value input,
                                                  *first_arg, *second_arg);
     } else if (isa<ReduceMinOp>(op)) {
       result = rewriter.create<stablehlo::MinOp>(op->getLoc(), block_arg_type,
+                                                 *first_arg, *second_arg);
+    } else if (isa<ReduceSumOp>(op)) {
+      result = rewriter.create<stablehlo::AddOp>(op->getLoc(), block_arg_type,
                                                  *first_arg, *second_arg);
     } else {
       UNIMPLEMENTED(llc::MLIR_PASS);
@@ -441,11 +461,13 @@ struct CompareOpLowing : public OpConversionPattern<CompareOp> {
   }
 };
 
-struct ReduceOplwoing : public OpConversionPattern<ReduceMaxOp> {
-  using OpConversionPattern<ReduceMaxOp>::OpConversionPattern;
-  LogicalResult match(ReduceMaxOp op) const { return llvm::success(); }
+template <class RecudeOp>
+struct ReduceOplwoing : public OpConversionPattern<RecudeOp> {
+  using OpConversionPattern<RecudeOp>::OpConversionPattern;
+  using OpAdaptor = typename RecudeOp::Adaptor;
+  LogicalResult match(RecudeOp op) const { return llvm::success(); }
 
-  void rewrite(ReduceMaxOp op, OpAdaptor adaptor,
+  void rewrite(RecudeOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const {
     auto input = op->getOperand(0);
     auto axis = op.getAxis();
@@ -479,6 +501,7 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SimplyFullLowing<SqrtOp, stablehlo::SqrtOp>>(converter, context);
   patterns.add<SimplyFullLowing<ConvertToOp, stablehlo::ConvertOp>>(converter,
                                                                     context);
+  patterns.add<SimplyFullLowing<ExpOp, stablehlo::ExpOp>>(converter, context);
   patterns.add<ConvOpLowing>(converter, context);
   patterns.add<TransposeOpLowing>(context);
   patterns.add<BatchNormInferenceOpLowing>(converter, context);
@@ -487,7 +510,8 @@ void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
   patterns.add<SliceOpLowing>(converter, context);
   patterns.add<BatchMatMulOpLowing>(converter, context);
   patterns.add<CompareOpLowing>(converter, context);
-  patterns.add<ReduceOplwoing>(converter, context);
+  patterns.add<ReduceOplwoing<ReduceMaxOp>>(converter, context);
+  patterns.add<ReduceOplwoing<ReduceSumOp>>(converter, context);
 }
 
 //===----------------------------------------------------------------------===//
@@ -498,7 +522,8 @@ void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
   target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp, CompareOp, ReluOp,
                       BatchNormOp, AbsOp, SqrtOp, BatchNormInferenceOp, ConvOp,
                       MaxPoolOp, MatMulOp, BatchMatMulOp, TransposeOp,
-                      BroadCastToOp, SliceOp, WhereOp, ConvertToOp>();
+                      BroadCastToOp, SliceOp, WhereOp, ConvertToOp, ReduceMaxOp,
+                      ReduceSumOp>();
   target.addLegalDialect<stablehlo::StablehloDialect>();
   target.addLegalDialect<mlir::arith::ArithDialect>();
   target.addLegalDialect<mlir::tensor::TensorDialect>();

@@ -172,8 +172,24 @@ func.func @convert_to(%arg0: tensor<?x?x?xf32>, %arg1: tensor<?x?xi1>) -> tensor
 // -----
 func.func @reduce_max(%arg0: tensor<3x3x?x?xf32> {func.input_symbol_0 = "c3", func.input_symbol_1 = "c3", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<3x?xf32> attributes {entrance} {
   // CHECK-NOT: llh.reduce_max
-  // stablehlo.reduce
+  // CHECK: stablehlo.reduce
   %0 = "llh.reduce_max"(%arg0) <{axis = array<i64:1, 2>}> : (tensor<3x3x?x?xf32>) -> tensor<3x?xf32>
   return %0 : tensor<3x?xf32>
 }
+
+// -----
+func.func @reduce_sum(%arg0: tensor<3x3x?x?xf32> {func.input_symbol_0 = "c3", func.input_symbol_1 = "c3", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<3x?xf32> attributes {entrance} {
+  // CHECK-NOT: llh.reduce_sum
+  // CHECK: stablehlo.reduce
+  %0 = "llh.reduce_sum"(%arg0) <{axis = array<i64:1, 2>}> : (tensor<3x3x?x?xf32>) -> tensor<3x?xf32>
+  return %0 : tensor<3x?xf32>
+}
+
+// -----
+func.func @exp(%arg0: tensor<?x?x?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s0", func.input_symbol_2 = "s1", func.input_symbol_3 = "s1"}) -> tensor<?x?x?x?xf32> attributes {entrance} {
+    // CHECK-NOT: llh.exp
+    // CHECK: stablehlo.exponential
+    %0 = "llh.exp"(%arg0) : (tensor<?x?x?x?xf32>) -> tensor<?x?x?x?xf32>
+    return %0 : tensor<?x?x?x?xf32>
+  }
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --convert-llh-to-tensor --convert-llh-to-hlo --fold-index-cast --canonicalize /home/lfr/LLCompiler/test/Conversion/LLHToHLO/llh_to_hlo.mlir

@@ -413,8 +413,8 @@ class ReduceMinOp(IRDLOperation):
 
 
 @irdl_op_definition
-class ReduceMeanOp(IRDLOperation):
-    name = "llh.reduce_mean"
+class ReduceSumOp(IRDLOperation):
+    name = "llh.reduce_sum"
     input = operand_def(TensorType)
     axis = attr_def(ArrayAttr)
     result = result_def(TensorType)
@@ -466,7 +466,7 @@ LLH = Dialect(
         SoftmaxOp,
         ExpOp,
         ReduceMaxOp,
-        ReduceMeanOp,
+        ReduceSumOp,
         ReduceMinOp,
     ],
     [],

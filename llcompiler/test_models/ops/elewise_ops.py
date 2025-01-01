@@ -8,7 +8,7 @@ class Add(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = x + x
-        #x = x + 3
+        # x = x + 3
         return x
 
 
@@ -78,3 +78,12 @@ class EQ(nn.Module):
     def forward(self, x: torch.Tensor):
         x = x == x
         return x == 2
+
+
+class Exp(nn.Module):
+    def __init__(self):
+        super().__init__()
+
+    def forward(self, x: torch.Tensor):
+        x = x.exp()
+        return x

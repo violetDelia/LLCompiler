@@ -35,8 +35,17 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import TorchSymbolicIntOp, AbsOp, ReluOp, SqrtOp, RsqrtOp, DivOp
+from ...dialect.llh import TorchSymbolicIntOp, AbsOp, ReluOp, SqrtOp, RsqrtOp, DivOp,ExpOp
 
+
+@TORCH_FUNCTION_TRANSLATE("aten::exp", "prims::exp")
+def rsqrt_convert(
+    node: torch.fx.node.Node,
+    value_map: dict[str:[SSAValue]],
+    symbol_map: dict[str, TorchSymbolicIntOp],
+    block: Block,
+):
+    return commond_build_op(ExpOp.build, 1, node, value_map, block)
 
 @TORCH_FUNCTION_TRANSLATE("aten::rsqrt", "prims::rsqrt")
 def rsqrt_convert(

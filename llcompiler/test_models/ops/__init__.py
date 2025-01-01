@@ -1,4 +1,4 @@
-from .elewise_ops import Abs,Add,Sub,Mul,Div,Relu,Sqrt,EQ
+from .elewise_ops import Abs,Add,Sub,Mul,Div,Relu,Sqrt,EQ,Exp
 from .batch_norm import BatchNorm1D_Inference,BatchNorm2D_Inference
 from .conv import Conv2D_NCHW_FCHW
 from .linear import Linear
@@ -10,4 +10,4 @@ from .decompose import Decompose_BatchNorm
 from .braodcast import Braodcast
 from .matmul import Matmul
 from .where import Where
-from .reduce import RecudeMax
+from .reduce import RecudeMax,RecudeSum

@@ -52,7 +52,11 @@
                 add reduce ops and infer shape
                 support aten::amax
                 support prims::squeeze
-
+                support prims::sum
+                support aten::sum.dim_IntList
+                support aten::exp
+                add reduce_max to hlo
+                add reduce_sum to hlo
 TODO:
     batch_norm
     static frozen support

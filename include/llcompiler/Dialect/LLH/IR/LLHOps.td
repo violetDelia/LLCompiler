@@ -522,7 +522,7 @@ def LLH_ReduceMinOp   : LLH_SymbolOp<"reduce_min", [SameOperandsAndResultElement
         LLH_Tensor);
 }
 
-def LLH_ReduceMeanOp   : LLH_SymbolOp<"reduce_mean", [SameOperandsAndResultElementType]>{
+def LLH_ReduceSumOp   : LLH_SymbolOp<"reduce_sum", [SameOperandsAndResultElementType]>{
     let arguments = (ins 
         LLH_Tensor:$input,
         DenseI64ArrayAttr:$axis

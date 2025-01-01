@@ -27,8 +27,6 @@ import functools
 
 aten = torch.ops.aten
 llc_decompositions = {
-    # aten._native_batch_norm_legit_no_training,
-    # aten._native_batch_norm_legit,
     aten.addmm,
     aten.expand,
     aten._unsafe_view,

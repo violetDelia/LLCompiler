@@ -41,4 +41,4 @@ from .compare import eq_convert, le_convert
 from .alloc_ops import scalar_convert
 from .convert_to import aten_to_copy_convert
 from .where import where_convert
-from .reduce_ops import amax_convert
+from .reduce_ops import amax_convert,prims_sum_convert

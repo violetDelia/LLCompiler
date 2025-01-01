@@ -434,7 +434,7 @@ INFER_BINARY(CompareOp)
 
 INFER_REDUCE(ReduceMaxOp)
 INFER_REDUCE(ReduceMinOp)
-INFER_REDUCE(ReduceMeanOp)
+INFER_REDUCE(ReduceSumOp)
 
 INFER_CONV(ConvBiasOp)
 INFER_CONV(ConvOp)
