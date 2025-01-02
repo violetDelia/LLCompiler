@@ -460,7 +460,7 @@ void CompareOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
 // ConvertToOp.
 //===----------------------------------------------------------------------===//
 namespace {
-struct FoldConvertToOpPattern : public LLHOpRewritePattern<ConvertToOp> {
+struct FoldConvertToOp : public LLHOpRewritePattern<ConvertToOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(ConvertToOp op) const final {
     auto input = op.getInput();
@@ -478,5 +478,69 @@ struct FoldConvertToOpPattern : public LLHOpRewritePattern<ConvertToOp> {
 }  // namespace
 void ConvertToOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                               MLIRContext *context) {
-  results.add<FoldConvertToOpPattern>(context);
+  results.add<FoldConvertToOp>(context);
+}
+
+//===----------------------------------------------------------------------===//
+// WhereOp.
+//===----------------------------------------------------------------------===//
+namespace {
+struct WhereOpInsertReshapeOp : public LLHOpRewritePattern<WhereOp> {
+  explicit WhereOpInsertReshapeOp(MLIRContext *context,
+                                  PatternBenefit benefit = llh::ReshapeBenefit,
+                                  ArrayRef<StringRef> generatedNames = {})
+      : LLHOpRewritePattern<WhereOp>(context, benefit, generatedNames){};
+  LogicalResult match(WhereOp op) const final {
+    auto pre = op.getPred();
+    auto on_true = op.getOnTrue();
+    auto on_false = op.getOnFalse();
+    auto pre_rank = llc::getRankTensorFrom(pre).getRank();
+    auto on_true_rank = llc::getRankTensorFrom(on_true).getRank();
+    if (pre_rank != on_true_rank) return llvm::success();
+    auto on_false_rank = llc::getRankTensorFrom(on_false).getRank();
+    if (pre_rank != on_false_rank) return llvm::success();
+    return llvm::failure();
+  }
+  void rewrite(WhereOp op, LLHPatternRewriter &rewriter) const final {
+    auto pre = op.getPred();
+    auto on_true = op.getOnTrue();
+    auto on_false = op.getOnFalse();
+    auto pre_rank = llc::getRankTensorFrom(pre).getRank();
+    auto on_true_rank = llc::getRankTensorFrom(on_true).getRank();
+    auto on_false_rank = llc::getRankTensorFrom(on_false).getRank();
+    if (pre_rank != on_true_rank)
+      op->setOperand(1, ReshapeValueTo(on_true, pre, &rewriter));
+    if (pre_rank != on_false_rank)
+      op->setOperand(2, ReshapeValueTo(on_false, pre, &rewriter));
+  }
+};
+struct WhereOpOpInsertBroadcast : public LLHOpRewritePattern<WhereOp> {
+  explicit WhereOpOpInsertBroadcast(
+      MLIRContext *context, PatternBenefit benefit = llh::BroadcastBenefit,
+      ArrayRef<StringRef> generatedNames = {})
+      : LLHOpRewritePattern<WhereOp>(context, benefit, generatedNames){};
+  LogicalResult match(WhereOp op) const final {
+    auto pre = op.getPred();
+    auto on_true = op.getOnTrue();
+    auto on_false = op.getOnFalse();
+    if (!shapeIsSame(pre, on_true)) return llvm::success();
+    if (!shapeIsSame(pre, on_false)) return llvm::success();
+    return llvm::failure();
+  }
+  void rewrite(WhereOp op, LLHPatternRewriter &rewriter) const final {
+    auto pre = op.getPred();
+    auto on_true = op.getOnTrue();
+    auto on_false = op.getOnFalse();
+    if (!shapeIsSame(pre, on_true))
+      op->setOperand(1, broadcastValueTo(on_true, pre, &rewriter));
+    if (!shapeIsSame(pre, on_false))
+      op->setOperand(2, broadcastValueTo(on_false, pre, &rewriter));
+  }
+};
+
+}  // namespace
+void WhereOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
+                                          MLIRContext *context) {
+  results.add<WhereOpInsertReshapeOp>(context);
+  results.add<WhereOpOpInsertBroadcast>(context);
 }

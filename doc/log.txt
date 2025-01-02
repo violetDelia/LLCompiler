@@ -59,8 +59,7 @@
                 add reduce_sum to hlo
                 support aten::full
 TODO:
-    batch_norm
-    static frozen support
+    broadcast where
     run --> MHA
     slice     
     torch 框架 support op list, 将graph 的输出去除，防止分配过多内存

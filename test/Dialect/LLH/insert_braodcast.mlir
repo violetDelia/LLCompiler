@@ -1,5 +1,4 @@
 // RUN: llc-opt --split-input-file --canonicalize %s| FileCheck %s
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --insert-broadcast /home/lfr/LLCompiler/test/Dialect/LLH/insert_braodcast.mlir
 
 "llh.symbolic_int"() <{sym_name = "s3"}> : () -> ()
 "llh.symbolic_int"() <{sym_name = "s2"}> : () -> ()
@@ -16,3 +15,14 @@ func.func @main(%arg0: tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2,
     %16 = "llh.div"(%arg0, %15) : (tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>, tensor<1x1x1x1xf32, #llh.encoding<shapes = @c1, @c1, @c1, @c1>>) -> tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>
     return  %16  : tensor<1x?x?x?xf32, #llh.encoding<shapes = @c1, @s1, @s2, @s3>>
   }
+
+// -----
+// CHECK-LABEL: where
+func.func @where(%arg0: tensor<1x?x?x?xi1>) -> tensor<1x?x?x?xi64> attributes {entrance} {
+    %1 = "llh.constant"() <{value = dense<-1> : tensor<1xi64>}> : () -> tensor<1xi64>
+    %0 = "llh.constant"() <{value = dense<1> : tensor<1xi64>}> : () -> tensor<1xi64>
+    %3 = "llh.where"(%arg0, %0, %1) : (tensor<1x?x?x?xi1>, tensor<1xi64>, tensor<1xi64>) -> tensor<1x?x?x?xi64>
+    return  %3  : tensor<1x?x?x?xi64>
+  }
+
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --insert-broadcast /home/lfr/LLCompiler/test/Dialect/LLH/insert_braodcast.mlir

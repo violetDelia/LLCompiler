@@ -170,8 +170,13 @@ void simplyBinarySymbolInfer(Value& value) {
                                            SymbolRelation::EQ);
     }
   }
-  auto new_tensor =
-      RankedTensorType::get(new_shape, input1_type.getElementType());
+  RankedTensorType new_tensor;
+  if (isa<CompareOp>(op)) {
+    new_tensor =
+        RankedTensorType::get(new_shape, IntegerType::get(op->getContext(), 1));
+  } else {
+    new_tensor = RankedTensorType::get(new_shape, input1_type.getElementType());
+  };
   op->getResult(0).setType(new_tensor);
   auto res = op->getResult(0);
   symbol_analysis->addEncoding(res, new_shape_symbol);

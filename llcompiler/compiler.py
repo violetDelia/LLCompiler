@@ -40,6 +40,7 @@ llc_decompositions = {
     aten.native_batch_norm_backward,
     aten.masked_fill,
     aten._softmax,
+    aten.where
 }
 
 

@@ -45,7 +45,7 @@ class LLH_UnaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type R
 }
 
 class LLH_BinaryOp <string mnemonic, list<Trait> traits, Type OperandType, Type ResultType = OperandType, dag attributes = (ins)>:
-        LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultElementType, DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
+        LLH_SymbolOp<mnemonic,traits#[SameOperandsAndResultElementType, ]>{
         let arguments = !con((ins
      OperandType:$lhs,
      OperandType:$rhs),
@@ -372,7 +372,7 @@ def LLH_MinOp   : LLH_BinaryElementwiseOp<"min", [ResultsBroadcastableShape], LL
     let hasCanonicalizer = 1;
 }
 
-def LLH_CompareOp   : LLH_SymbolOp<"compare", [ResultsBroadcastableShape]>{
+def LLH_CompareOp   : LLH_SymbolOp<"compare", [ResultsBroadcastableShape,]>{
     let arguments = (ins 
         LLH_Tensor:$lhs,
         LLH_Tensor:$rhs,
@@ -415,7 +415,7 @@ def LLH_ConvOp : LLH_SymbolOp<"conv">{
     let hasCanonicalizer = 1;
 }
 
-def LLH_MatMulOp     : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
+def LLH_MatMulOp     : LLH_SymbolOp<"matmul",[]>{
     let arguments = (ins
         LLH_2DTensor:$lhs,
         LLH_2DTensor:$rhs);
@@ -423,7 +423,7 @@ def LLH_MatMulOp     : LLH_SymbolOp<"matmul",[DeclareOpInterfaceMethods<Braodcas
         LLH_2DTensor:$result);
 }
 
-def LLH_BatchMatMulOp    : LLH_SymbolOp<"batch_matmul",[DeclareOpInterfaceMethods<BraodcastableOpInterface>]>{
+def LLH_BatchMatMulOp    : LLH_SymbolOp<"batch_matmul",[]>{
     let arguments = (ins
         LLH_3DTensor:$lhs,
         LLH_3DTensor:$rhs);
@@ -493,6 +493,7 @@ def LLH_WhereOp : LLH_SymbolOp<"where", []>{
         LLH_Tensor:$on_false);
     let results = (outs 
         LLH_Tensor);
+    let hasCanonicalizer = 1;
 }
 
 // def LLH_SoftmaxOp   : LLH_SymbolOp<"softmax", [SameOperandsAndResultRank]>{

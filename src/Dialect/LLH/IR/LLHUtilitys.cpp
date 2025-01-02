@@ -18,6 +18,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -59,14 +60,6 @@ bool shapeIsSame(Value lhs, Value rhs) {
   auto lhs_type = llc::getShapeTypeFrom(lhs);
   auto rhs_type = llc::getShapeTypeFrom(rhs);
   if (rhs_type.getRank() != lhs_type.getRank()) return false;
-  if (lhs_type.hasStaticShape() && rhs_type.hasStaticShape()) {
-    auto lhs_shapes = lhs_type.getShape();
-    auto rhs_shapes = rhs_type.getShape();
-    for (auto [lhs_shape, rhs_shape] : llvm::zip(lhs_shapes, rhs_shapes)) {
-      if (lhs_shape != rhs_shape) return false;
-      return true;
-    }
-  }
   if (llc::hasEncoding(lhs_type) && llc::hasEncoding(rhs_type)) {
     auto lhs_encoding = llc::getEncodingFrom(lhs);
     auto rhs_encoding = llc::getEncodingFrom(rhs);
@@ -77,8 +70,46 @@ bool shapeIsSame(Value lhs, Value rhs) {
     }
     return true;
   }
-  return false;
+  auto lhs_shapes = lhs_type.getShape();
+  auto rhs_shapes = rhs_type.getShape();
+  for (auto [lhs_shape, rhs_shape] : llvm::zip(lhs_shapes, rhs_shapes)) {
+    if (lhs_shape != rhs_shape) return false;
+  }
+  return true;
 }
+ReshapeOp ReshapeValueTo(Value lower_value, Value higher_value,
+                         LLHPatternRewriter* rewriter) {
+  auto loc = lower_value.getLoc();
+  auto higher_shapes = llc::getShapeFrom(higher_value);
+  auto lower_shapes = llc::getShapeFrom(lower_value);
+  auto higher_rank = higher_shapes.size();
+  auto lower_tensor = llc::getRankTensorFrom(lower_value);
+  auto one_const = rewriter->create<ConstantOp>(
+      loc, IntegerAttr::get(rewriter->getI64Type(), 1));
+  auto reshape_dims = llvm::SmallVector<mlir::Value>();
+  auto reshape_shapes = llvm::SmallVector<int64_t>();
+  reshape_shapes.assign(higher_rank, 1);
+  reshape_dims.assign(higher_rank, one_const);
+  for (int64_t i = higher_shapes.size() - 1, j = lower_shapes.size() - 1;
+       i >= 0 && j >= 0; i--, j--) {
+    auto higher_dim = higher_shapes[i];
+    auto lower_dim = lower_shapes[j];
+    if (lower_dim == 1 && (higher_dim > 1 || higher_dim < 0)) {
+    } else if (((lower_dim > 1 || lower_dim < 0) && higher_dim == 1) ||
+               (lower_dim == higher_dim)) {
+      reshape_shapes[i] = lower_dim;
+      reshape_dims[i] = buildTensorDim(lower_value, rewriter, j);
+    } else {
+      WRONG(llc::MLIR) << "Invalid broadcast case";
+      return nullptr;
+    }
+  }
+  auto reshape_res =
+      RankedTensorType::get(reshape_shapes, lower_tensor.getElementType());
+  auto reshape = rewriter->create<llh::ReshapeOp>(loc, reshape_res, lower_value,
+                                                  reshape_dims);
+  return reshape;
+};
 
 LogicalResult checkBinaryNeedReshape(Operation* op) {
   auto lhs = op->getOperand(0);
@@ -89,6 +120,33 @@ LogicalResult checkBinaryNeedReshape(Operation* op) {
   auto rhs_rank = llc::getRankTensorFrom(rhs).getRank();
   if (lhs_rank == rhs_rank) return llvm::failure();
   return llvm::success();
+}
+
+BroadCastToOp broadcastValueTo(Value value, Value target,
+                               LLHPatternRewriter* rewriter) {
+  auto context = rewriter->getContext();
+  auto loc = value.getLoc();
+  auto before_braodcast_type = llc::getRankTensorFrom(value);
+  auto target_type = llc::getRankTensorFrom(target);
+  llvm::SmallVector<int64_t> cast_dims;
+  llvm::SmallVector<int64_t> noexpand_dims;
+  llvm::SmallVector<int64_t> expand_dims;
+  auto before_type = llc::getRankTensorFrom(before_braodcast_type);
+  for (size_t i = 0; i < target_type.getRank(); i++) {
+    cast_dims.push_back(i);
+    if (before_type.isDynamicDim(i)) continue;
+    if (before_type.getDimSize(i) == target_type.getDimSize(i))
+      noexpand_dims.push_back(i);
+    else if (before_type.getDimSize(i) == 1)
+      expand_dims.push_back(i);
+  }
+  auto res_type = RankedTensorType::get(target_type.getShape(),
+                                        before_braodcast_type.getElementType());
+  auto cast_op = rewriter->create<BroadCastToOp>(
+      loc, res_type, value, buildTensorDims(target, rewriter), cast_dims,
+      DenseI64ArrayAttr::get(context, expand_dims),
+      DenseI64ArrayAttr::get(context, noexpand_dims));
+  return cast_op;
 }
 
 LogicalResult checkBinaryNeedBroadcast(Operation* op) {

@@ -84,5 +84,5 @@ def le_convert(
     rhs = get_arg_value(
         node.args[1], value_map, block, const_tensor=True, const_type=type
     )
-    attrs = {"kind": CompareAttr([CompareEnum.EQ])}
+    attrs = {"kind": CompareAttr([CompareEnum.LE])}
     return CompareOp(operands=[lhs, rhs], result_types=[result_type], attributes=attrs)
