@@ -211,7 +211,7 @@ Engine do_compile(const char* xdsl_module, CompilerOptions options) {
   }
 
   // ********* link *********//
-  // TODO(lfr): refine
+  // TODO(lfr): need to refine
   llvm::SmallVector<llvm::SmallString<256>, 4> sharedLibPaths;
   sharedLibPaths.push_back(llvm::StringRef(
       "/home/lfr/LLCompiler/build/third_party/llvm-project/llvm/lib/"

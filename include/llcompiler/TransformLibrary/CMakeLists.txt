@@ -1,16 +1,16 @@
-set(LLCOMPILER_TANSFORMLIB_INSTALL_DIR "${LLCOMPILER_INSTALL_INCLUDE_DIR}/TransformLibrary")
+set(LLCOMPILER_TANSFORMLIB_INSTALL_DIR "${LLCOMPILER_INSTALL_INCLUDE_DIR}/llcompiler/TransformLibrary")
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LibraryPath.h.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/LibraryPath.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/LibraryPath.h"
 )
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LibraryPath.install.h.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/LibraryPath.install.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/LibraryPath.install.h"
 )
 
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/LibraryEntry.h.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/LibraryEntry.h"
+    "${CMAKE_CURRENT_BINARY_DIR}/LibraryEntry.h"
 )
 
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/LibraryPath.install.h"
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/LibraryPath.install.h"
     DESTINATION ${LLCOMPILER_TANSFORMLIB_INSTALL_DIR} RENAME LibraryPath.h)

@@ -108,15 +108,17 @@ endif()
 include(CMakePackageConfigHelpers)
 
 # # 安装头文件
-install(DIRECTORY "${LLCOMPILER_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}" FILES_MATCHING
+install(DIRECTORY "${LLCOMPILER_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}"
+    FILES_MATCHING
+    
     PATTERN "*.h"
     PATTERN "*.mlir"
-    EXCLUDE
-    PATTERN "LibraryConfig.h"
-    PATTERN "LibraryConfig.install.h"
 )
+
 install(DIRECTORY "${LLCOMPILER_GENERATE_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}"
     FILES_MATCHING
+    PATTERN "LibraryPath.h" EXCLUDE
+    PATTERN "LibraryPath.install.h" EXCLUDE
     PATTERN "*.h"
     PATTERN "*.inc"
     PATTERN "*.inc.d"

@@ -15,3 +15,4 @@ from .importer import Importer
 from .utility import run_time,Dict_Registry
 from.engine import *
 from .out_put_call import GenOutput
+from .torch_compile_config import LLC_DECOMPOSITIONS,LLC_SUPPORT_DICT

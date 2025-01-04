@@ -43,7 +43,7 @@ def build_llh_scalar_tensor(val: int | float, type):
             type = TensorType(i64, [1])
             value = DenseIntOrFPElementsAttr.create_dense_int(type, [int(val)])
         if isinstance(val, float):
-            type = TensorType(f64, [1])
+            type = TensorType(f32, [1])
             value = DenseIntOrFPElementsAttr.create_dense_float(type, [float(val)])
     return ConstantOp.build(attributes={"value": value}, result_types=[type])
 

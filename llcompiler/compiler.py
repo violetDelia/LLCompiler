@@ -1,5 +1,11 @@
 import torch.fx
-import llcompiler.core
+from llcompiler.core import (
+    LLC_DECOMPOSITIONS,
+    LLC_SUPPORT_DICT,
+    Importer,
+    GenOutput,
+    Torch_ExecutionEngine,
+)
 from typing import Any, Union, List, Dict
 import sys
 from torch._functorch.aot_autograd import aot_module_simplified
@@ -24,27 +30,14 @@ from torch._functorch.partitioners import default_partition
 from torch._inductor.utils import BoxedBool
 from torch._inductor import config
 from torch._inductor.cudagraph_utils import BoxedDeviceIndex
+from torch.fx.passes.infra.partitioner import CapabilityBasedPartitioner
+from torch.fx.passes.operator_support import OperatorSupport
+
+
 import functools
 
-aten = torch.ops.aten
-llc_decompositions = {
-    aten.addmm,
-    aten.expand,
-    aten._unsafe_view,
-    aten.transpose,
-    aten.add,
-    aten.mul,
-    aten.sub,
-    aten.div,
-    aten.threshold_backward,
-    aten.native_batch_norm_backward,
-    aten.masked_fill,
-    aten._softmax,
-    aten.where
-}
 
-
-class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
+class LLCompiler(Importer, GenOutput):
     """
     LLCompiler
 
@@ -99,24 +92,25 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.log_llvm = log_llvm
         self.compile_count = 0
 
-    def _process_fx(self, model: Any, inputs: List[torch.Tensor], **kwargs):
+    def _process_fx(
+        self, model: torch.fx.GraphModule, inputs: List[torch.Tensor], **kwargs
+    ):
         if self.mode == "inference":
             _recursive_joint_graph_passes(model)
         model = _recursive_pre_grad_passes(model, inputs)
         dedupe_symints(model.graph)
         reinplace_inplaceable_ops(model.graph)
         _recursive_post_grad_passes(model, inputs)
+        # model.graph.print_tabular()
+        # op_support = OperatorSupport(LLC_SUPPORT_DICT)
+        # partition = CapabilityBasedPartitioner(model, op_support)
+        # model = partition.partition_and_fuse()
+        return model
 
     def not_compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
         return model
 
-    def compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
-        if isinstance(model, torch.fx.GraphModule):
-            self._process_fx(model, inputs, **kwargs)
-        self._mlir_module = self.importer(model)
-        print(self._mlir_module)
-        if self.vebose_first_ir:
-            print(self._mlir_module)
+    def _gen_compiler_options(self):
         compiler_options = CompilerOptions()
         compiler_options.pipeline = self.pipeline
         compiler_options.mode = self.mode
@@ -136,17 +130,24 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
         self.compile_count = self.compile_count + 1
         compiler_options.log_level = self.log_level
         compiler_options.log_llvm = self.log_llvm
-        # 初始化环境
+        return compiler_options
+
+    def compiler_fx(self, model: Any, inputs: List[torch.Tensor], **kwargs):
+        model = self._process_fx(model, inputs, **kwargs)
+        self._mlir_module = self.importer(model)
+        if self.vebose_first_ir:
+            print(self._mlir_module)
+        compiler_options = self._gen_compiler_options()
         engine = do_compile(self._mlir_module.__str__(), compiler_options)
-        executor = llcompiler.core.engine.Torch_ExecutionEngine(engine)
+        executor = Torch_ExecutionEngine(engine)
         executor.gen_outs_call = self.get_out_call(model)
         return executor
 
     def __call__(self, model, inputs: List[torch.Tensor]) -> Any:
         if isinstance(model, torch.fx.GraphModule):
-            fw_compiler = self.compiler
-            bw_compiler = self.compiler
-            inference_compiler = self.compiler
+            fw_compiler = self.compiler_fx
+            bw_compiler = self.compiler_fx
+            inference_compiler = self.compiler_fx
             if self.mode == "inference":
                 config.freezing = True
                 config.cpp.weight_prepack = False
@@ -154,7 +155,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
                     fw_compiler_freezing,
                     dynamo_model=model,
                     num_example_inputs=len(inputs),
-                    inner_compile=self.compiler,
+                    inner_compile=self.compiler_fx,
                     cudagraphs=BoxedBool(config.triton.cudagraphs),
                     graph_id=next(_graph_counter),
                     forward_device=BoxedDeviceIndex(None),
@@ -166,7 +167,7 @@ class LLCompiler(llcompiler.core.Importer, llcompiler.core.GenOutput):
                 fw_compiler=fw_compiler,
                 bw_compiler=bw_compiler,
                 inference_compiler=inference_compiler,
-                decompositions=get_decompositions(llc_decompositions),
+                decompositions=get_decompositions(LLC_DECOMPOSITIONS),
             )(model, inputs)
         else:
             raise ValueError("Unsupported")

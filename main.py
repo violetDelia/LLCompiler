@@ -107,7 +107,7 @@ def run_model_dict(dict):
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
-                dynamic=False,
+                dynamic=True,
                 fullgraph=False,
             )
             torch_compiler: torch._dynamo.eval_frame.OptimizedModule = torch.compile(

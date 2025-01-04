@@ -43,6 +43,8 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+namespace {
+
 llvm::SmallVector<size_t> analysisOriginalMemrefStart(
     llvm::ArrayRef<Type>& params) {
   llvm::SmallVector<size_t> original_memref_start;
@@ -233,6 +235,7 @@ void transformFunctionTypeFinal(LLVM::LLVMFuncOp& enter_func) {
       enter_func.getFunctionType().getReturnType(), new_params);
   enter_func.setType(new_enter_type);
 }
+}  // namespace
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
