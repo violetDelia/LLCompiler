@@ -57,6 +57,7 @@ class Torch_ExecutionEngine(ExecutionEngine):
 
     def run(self, *args) -> Any:
         # ([inputs...]) case
+        print(args)
         if (
             isinstance(args, tuple)
             and len(args) == 1

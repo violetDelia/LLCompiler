@@ -5,7 +5,7 @@ from ..fx_translate import (
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
-    _updata_torch_symbol_bind,
+    
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
 )
@@ -33,6 +33,7 @@ import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import TorchSymbolicIntOp, CompareOp, CompareAttr, CompareEnum
+from xdsl.irdl import IRDLOperation
 
 
 def get_compare_type(node: torch.fx.node.Node, value_map: dict[str:[SSAValue]]):
@@ -50,7 +51,7 @@ def get_compare_type(node: torch.fx.node.Node, value_map: dict[str:[SSAValue]]):
 def eq_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
@@ -71,7 +72,7 @@ def eq_convert(
 def le_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))

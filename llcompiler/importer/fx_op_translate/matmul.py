@@ -5,7 +5,7 @@ from ..fx_translate import (
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
-    _updata_torch_symbol_bind,
+    
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
 )
@@ -33,13 +33,14 @@ import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import TorchSymbolicIntOp, MatmulOp,BatchMatmulOp
+from xdsl.irdl import IRDLOperation
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::mm")
 def matmul_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     return commond_build_op(MatmulOp, 2, node, value_map, block)
@@ -48,7 +49,7 @@ def matmul_convert(
 def matmul_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     return commond_build_op(BatchMatmulOp, 2, node, value_map, block)

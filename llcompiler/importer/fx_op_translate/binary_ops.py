@@ -5,7 +5,7 @@ from ..fx_translate import (
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
-    _updata_torch_symbol_bind,
+    
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
 )
@@ -33,13 +33,14 @@ import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
 from ...dialect.llh import TorchSymbolicIntOp, AddOp, SubOp, MulOp, DivOp
+from xdsl.irdl import IRDLOperation
 
 
 @TORCH_FUNCTION_TRANSLATE("truediv", "aten::div.Tensor", "floordiv", "prims::div")
 def div_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     return commond_build_op(DivOp.build, 2, node, value_map, block)
@@ -49,7 +50,7 @@ def div_convert(
 def mul_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     return commond_build_op(MulOp.build, 2, node, value_map, block)
@@ -59,7 +60,7 @@ def mul_convert(
 def sub_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     return commond_build_op(SubOp.build, 2, node, value_map, block)
@@ -69,7 +70,7 @@ def sub_convert(
 def add_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     return commond_build_op(AddOp.build, 2, node, value_map, block)

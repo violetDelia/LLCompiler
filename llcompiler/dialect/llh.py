@@ -159,6 +159,14 @@ class MulOp(IRDLOperation):
 
 
 @irdl_op_definition
+class PowOp(IRDLOperation):
+    name = "llh.pow"
+    lhs = operand_def(LLH_Computable_Type)
+    rhs = operand_def(LLH_Computable_Type)
+    result = result_def(LLH_Computable_Type)
+
+
+@irdl_op_definition
 class CompareOp(IRDLOperation):
     name = "llh.compare"
     lhs = operand_def(LLH_Computable_Type)
@@ -468,6 +476,7 @@ LLH = Dialect(
         ReduceMaxOp,
         ReduceSumOp,
         ReduceMinOp,
+        PowOp
     ],
     [],
 )

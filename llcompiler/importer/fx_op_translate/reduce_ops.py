@@ -1,12 +1,12 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     torch_fake_or_mate_tensor_translate,
-    TORCH_MODULE_TRANSLATE,
+    
     get_result_type,
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
-    _updata_torch_symbol_bind,
+    
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
 )
@@ -43,13 +43,14 @@ from ...dialect.llh import (
     ReshapeOp,
     ReduceSumOp,
 )
+from xdsl.irdl import IRDLOperation
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::amax")
 def amax_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     input: SSAValue = get_arg_value(node.args[0], value_map, block)
@@ -85,7 +86,7 @@ def amax_convert(
 def prims_sum_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    
     block: Block,
 ):
     input: SSAValue = get_arg_value(node.args[0], value_map, block)

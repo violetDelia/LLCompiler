@@ -1,15 +1,14 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
-    TORCH_MODULE_TRANSLATE,
     torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
-    _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
 )
+from xdsl.irdl import IRDLOperation
 from xdsl.dialects.builtin import (
     TensorType,
     IntegerType,
@@ -40,19 +39,6 @@ from ...dialect.llh import TorchSymbolicIntOp, AdaptiveAvgPoolOp
 def adaptive_avg_pool2d_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(AdaptiveAvgPoolOp.build, 1, node, value_map, block)
-
-
-@TORCH_MODULE_TRANSLATE(torch.nn.modules.pooling.AdaptiveAvgPool2d)
-def torch_adaptive_avg_pool2d_convert(
-    node: torch.fx.node.Node,
-    value_map: dict,
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    module: torch.nn.modules.pooling.AdaptiveAvgPool2d,
-    block: Block,
-):
-    attrs = {"out_size": DenseArrayBase.from_list(i64, module.output_size)}
-    return commond_build_op(AdaptiveAvgPoolOp.build, 1, node, value_map, block, attrs)

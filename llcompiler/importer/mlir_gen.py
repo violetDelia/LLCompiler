@@ -40,9 +40,8 @@ import os
 from .fx_translate import (
     torch_symbol_translate,
     torch_fake_or_mate_tensor_translate,
-    torch_module_translate,
     torch_function_translate,
-    torch_symbol_bind,
+    torch_translate_to_mlir_module,
     get_result_type,
     torch_build_func,
 )
@@ -57,15 +56,7 @@ from torch._inductor.compile_fx import (
     _recursive_pre_grad_passes,
     _recursive_post_grad_passes,
 )
-
-TORCH_DTYPE_TO_NUMPY_DTYPE = {
-    torch.int64: np.int64,
-    torch.int32: np.int32,
-    torch.float16: np.float16,
-    torch.float32: np.float32,
-    torch.float64: np.float64,
-    torch.bool: bool,
-}
+from xdsl.irdl import IRDLOperation
 
 
 class MLIR_Builder:
@@ -85,37 +76,7 @@ class MLIR_Builder:
 
     def _fx_mlir_gen(self, model: torch.fx.GraphModule, **kwargs):
         model.graph.print_tabular()
-        params: dict[str, torch.Tensor] = {
-            **dict(model.named_parameters(remove_duplicate=False)),
-            **dict(model.named_buffers(remove_duplicate=False)),
-        }
-        value_map: dict[str, list[SSAValue]] = dict()
-        symbol_map: dict[str, TorchSymbolicIntOp] = dict()
-        block = Block()
-        weight_dir = os.path.join(
-            os.path.dirname(__file__),
-            "LLcompiler_weight_temp",
-            datetime.now().astimezone().isoformat(),
-        )
-        os.makedirs(weight_dir)
-        for name, tensor in params.items():
-            weight_file = os.path.join(
-                weight_dir,
-                name + ".npy",
-            )
-            np.save(
-                weight_file,
-                np.array(tensor.tolist(), TORCH_DTYPE_TO_NUMPY_DTYPE[tensor.dtype]),
-            )
-            op = WeightOp.build(
-                result_types=[torch_fake_or_mate_tensor_translate(tensor)],
-                attributes={"weight_file": StringAttr(weight_file)},
-            )
-            value_map[name] = op.results
-            block.add_op(op)
-        func = torch_build_func(model.graph, "main", block, value_map, symbol_map)
-        func.attributes.update({"entrance": UnitAttr()})
-        module = ModuleOp([func])
+        module = torch_translate_to_mlir_module(model)
         return module
 
     def _onnx_mlir_gen(self, model: onnx.GraphProto, **kwargs):

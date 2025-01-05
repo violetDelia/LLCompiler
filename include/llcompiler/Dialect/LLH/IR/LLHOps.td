@@ -350,6 +350,10 @@ def LLH_MulOp   : LLH_BinaryElementwiseOp<"mul", [ResultsBroadcastableShape], LL
     let hasCanonicalizer = 1;
 }
 
+def LLH_PowOp   : LLH_BinaryElementwiseOp<"pow", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
+    let hasVerifier = 1;
+}
+
 def LLH_DivOp   : LLH_BinaryElementwiseOp<"div", [ResultsBroadcastableShape], LLH_Computable_Type, LLH_Computable_Type, (ins OptionalAttr<FlatSymbolRefAttr>:$symbol)>{
     let hasVerifier = 1;
     let hasFolder = 1;

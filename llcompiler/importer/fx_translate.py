@@ -11,6 +11,7 @@ import torch._ops as op
 import torch.fx.experimental
 import torch.fx.experimental.sym_node
 from xdsl.ir import SSAValue, Block, Operation, Mapping, Attribute, Region
+from xdsl.irdl import IRDLOperation
 from xdsl.ir.affine.affine_expr import (
     AffineSymExpr,
     AffineConstantExpr,
@@ -39,6 +40,8 @@ from xdsl.dialects.builtin import (
     SymbolRefAttr,
     DictionaryAttr,
     ArrayAttr,
+    UnitAttr,
+    ModuleOp,
 )
 from xdsl.ir.affine.affine_map import AffineMap
 from ..dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
@@ -52,113 +55,121 @@ import os
 import numpy as np
 import torch.fx
 from torch.fx.experimental.sym_node import SymNode
-from ..dialect.llh import TorchSymbolicIntOp, SymbolicBindOp, ConstantOp
+from ..dialect.llh import (
+    TorchSymbolicIntOp,
+    SymbolicBindOp,
+    ConstantOp,
+    WeightOp,
+    PowOp,
+    MulOp,
+)
 from xdsl.dialects.func import Return, FuncOp
 import sympy
 
+TORCH_DTYPE_TO_MLIR_TYPE = {
+    torch.int64: i64,
+    torch.int32: i32,
+    torch.float16: f16,
+    torch.float32: f32,
+    torch.float64: f64,
+    torch.bool: i1,
+}
+
+
+def torch_dtype_translate(dtype: torch.dtype):
+    return TORCH_DTYPE_TO_MLIR_TYPE[dtype]
+
+
+TORCH_DTYPE_TO_NUMPY_DTYPE = {
+    torch.int64: np.int64,
+    torch.int32: np.int32,
+    torch.float16: np.float16,
+    torch.float32: np.float32,
+    torch.float64: np.float64,
+    torch.bool: bool,
+}
+
+
+def torch_dtype_to_numpy_dtype(dtype: torch.dtype):
+    return TORCH_DTYPE_TO_NUMPY_DTYPE[dtype]
+
+
+TORCH_FUNCTION_TRANSLATE = Dict_Registry()
+
+
+def torch_function_translate(
+    node: torch.fx.node.Node,
+    value_map: dict[str, list[SSAValue]],
+    block: Block,
+) -> Operation:
+    target: torch._ops.OpOverload = node.target
+    if type(target).__name__ == "builtin_function_or_method":
+        build_fn = TORCH_FUNCTION_TRANSLATE[target.__name__]
+    elif isfunction(target):
+        build_fn = TORCH_FUNCTION_TRANSLATE[target]
+    else:
+        build_fn = TORCH_FUNCTION_TRANSLATE[target.name()]
+    return build_fn(node, value_map, block)
+
 
 def torch_symbol_translate(
-    symbol: torch.SymInt, symbol_map: dict[str, TorchSymbolicIntOp]
+    symbol: torch.SymInt | Symbol,
+    value_map: dict[str:[SSAValue]],
+    block: Block,
 ):
-    name: str = symbol.node.expr.name
-    atts = {"sym_name": StringAttr(name)}
-    op = TorchSymbolicIntOp(attributes=atts, result_types=[i64])
-    symbol_map[name] = op
-    return op
-
-
-def _generate_affine_symbolic(
-    arg,
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    affine_expr_map: dict[str, AffineSymExpr],
-    bind_symbols: list[SSAValue],
-):
-    if isinstance(arg, sympy.core.Number):
-        return AffineConstantExpr(int(arg))
-    elif isinstance(arg, sympy.core.Add):
-        return AffineBinaryOpExpr(
-            AffineBinaryOpKind.Add,
-            _generate_affine_symbolic(
-                arg.args[1], symbol_map, affine_expr_map, bind_symbols
-            ),
-            _generate_affine_symbolic(
-                arg.args[0], symbol_map, affine_expr_map, bind_symbols
-            ),
-        )
-    elif isinstance(arg, sympy.core.mul.Mul):
-
-        return AffineBinaryOpExpr(
-            AffineBinaryOpKind.Mul,
-            _generate_affine_symbolic(
-                arg.args[1], symbol_map, affine_expr_map, bind_symbols
-            ),
-            _generate_affine_symbolic(
-                arg.args[0], symbol_map, affine_expr_map, bind_symbols
-            ),
-        )
-    elif type(arg).__name__ == "FloorDiv":
-        return AffineBinaryOpExpr(
-            AffineBinaryOpKind.FloorDiv,
-            _generate_affine_symbolic(
-                arg.args[0], symbol_map, affine_expr_map, bind_symbols
-            ),
-            _generate_affine_symbolic(
-                arg.args[1], symbol_map, affine_expr_map, bind_symbols
-            ),
-        )
-    elif isinstance(arg, sympy.core.power.Pow):
-        assert isinstance(arg.args[1], sympy.core.numbers.Integer)
-        pow = int(arg.args[1])
-        base = _generate_affine_symbolic(
-            arg.args[0], symbol_map, affine_expr_map, bind_symbols
-        )
-        while pow >= 2:
-            base = AffineBinaryOpExpr(AffineBinaryOpKind.Mul, base, base)
-            pow -= 1
-        return base
-
-    elif isinstance(arg, Symbol):
-        name: str = arg.name
-        if name in symbol_map:
-            if name not in affine_expr_map:
-                affine_expr = AffineSymExpr(len(bind_symbols))
-                affine_expr_map[name] = affine_expr
-                bind_symbols.append(symbol_map[name].result)
-            return affine_expr_map[name]
-        else:
-            raise NotImplementedError("name must in symbol map")
-
-    else:
-        raise NotImplementedError(arg, type(arg), type(arg).__name__)
-
-
-def torch_symbol_bind(
-    operand: SSAValue, tensor: FakeTensor, symbol_map: dict[str, TorchSymbolicIntOp]
-):
-    bind_symbols: list[SSAValue] = []
-    affine_expr_map: dict[str, AffineSymExpr] = dict()
-    results: list[AffineSymExpr] = []
-    for dim in tensor.shape:
-        if isinstance(dim, int):
-            results.append(AffineConstantExpr(dim))
-            continue
-        elif str(dim).isdigit():
-            results.append(AffineConstantExpr(int(dim)))
-            continue
-        else:
-            affine_exp = _generate_affine_symbolic(
-                dim.node.expr, symbol_map, affine_expr_map, bind_symbols
+    if isinstance(symbol, torch.SymInt):
+        return torch_symbol_translate(symbol.node.expr, symbol_map, value_map, block)
+    elif isinstance(symbol, Symbol):
+        name: str = symbol.name
+        if name not in symbol_map:
+            atts = {"sym_name": StringAttr(name)}
+            op = TorchSymbolicIntOp(attributes=atts, result_types=[i64])
+            symbol_map[name] = op
+            block.add_op(op)
+        return symbol_map[name]
+    elif isinstance(symbol, sympy.core.numbers.Integer):
+        name: str = str(symbol)
+        op = build_llh_constant(int(symbol))
+        block.add_op(op)
+        return op
+    elif isinstance(symbol, sympy.core.power.Pow):
+        name: str = str(symbol)
+        if name not in symbol_map:
+            left_op = torch_symbol_translate(
+                symbol.args[0], symbol_map, value_map, block
             )
-            results.append(affine_exp)
-    map = AffineMap(0, len(symbol_map), results=results)
-    expressions = AffineMapAttr(map)
-    return SymbolicBindOp(
-        operands=[operand, bind_symbols], attributes={"expressions": expressions}
-    )
+            right_op = torch_symbol_translate(
+                symbol.args[1], symbol_map, value_map, block
+            )
+            op = PowOp.build(
+                operands=[left_op.results[0], right_op.results[0]], result_types=[i64]
+            )
+            symbol_map[name] = op
+            block.add_op(op)
+        return symbol_map[name]
+    elif isinstance(symbol, sympy.core.mul.Mul):
+        name: str = str(symbol)
+        if name not in symbol_map:
+            left_op = torch_symbol_translate(
+                symbol.args[0], symbol_map, value_map, block
+            )
+            right_op = torch_symbol_translate(
+                symbol.args[1], symbol_map, value_map, block
+            )
+            op = MulOp.build(
+                operands=[left_op.results[0], right_op.results[0]], result_types=[i64]
+            )
+            symbol_map[name] = op
+            block.add_op(op)
+        return symbol_map[name]
+    else:
+        raise NotImplementedError(f"Unsupported type {type(symbol)}")
 
 
 def get_fake_or_mate_tensor_dims(
-    tensor: FakeTensor, block: Block, symbol_map: dict[str, TorchSymbolicIntOp]
+    tensor: FakeTensor,
+    block: Block,
+    value_map: dict[str:[SSAValue]],
 ):
     dims = []
     for dim in tensor.shape:
@@ -167,8 +178,7 @@ def get_fake_or_mate_tensor_dims(
             block.add_op(const)
             dims.append(const)
         elif isinstance(dim, torch.SymInt):
-            symbol = torch_symbol_translate(dim, symbol_map)
-            block.add_op(symbol)
+            symbol = torch_symbol_translate(dim, symbol_map, value_map, block)
             dims.append(symbol)
     # shape=torch.Size([])
     if dims.__len__() == 0:
@@ -216,18 +226,13 @@ def make_input_tensor_symbol_attrs(tensor: FakeTensor):
     return encode
 
 
-TORCH_DTYPE_TO_MLIR_TYPE = {
-    torch.int64: i64,
-    torch.int32: i32,
-    torch.float16: f16,
-    torch.float32: f32,
-    torch.float64: f64,
-    torch.bool: i1,
-}
-
-
-def torch_dtype_translate(dtype: torch.dtype):
-    return TORCH_DTYPE_TO_MLIR_TYPE[dtype]
+def make_input_symbol_attrs(symbol: torch.SymInt):
+    attr_dict = dict()
+    if str(symbol).isdigit():
+        attr_dict["func.input_symbol"] = StringAttr(str("c") + str(symbol))
+    else:
+        attr_dict["func.input_symbol"] = StringAttr(str(symbol))
+    return DictionaryAttr(attr_dict)
 
 
 aten = torch.ops.aten
@@ -243,8 +248,8 @@ SPECIAL_GETITEM_IS_OPERAND_MAP = {}
 
 
 def get_result_type(node: torch.fx.node.Node, index=None):
-    if index is None and node.target in SPECIAL_RESULT_FAKE_INDEX_MAP:
-        return get_result_type(node, SPECIAL_RESULT_FAKE_INDEX_MAP[node.target])
+    # if index is None and node.target in SPECIAL_RESULT_FAKE_INDEX_MAP:
+    #     return get_result_type(node, SPECIAL_RESULT_FAKE_INDEX_MAP[node.target])
     if "tensor_meta" in node.meta:
         return (
             node.meta["tensor_meta"]
@@ -292,55 +297,6 @@ def get_arg_value(
         raise NotImplementedError(arg, type(arg))
 
 
-TORCH_FUNCTION_TRANSLATE = Dict_Registry()
-
-
-def torch_function_translate(
-    node: torch.fx.node.Node,
-    value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    block: Block,
-) -> Operation:
-    target: op.OpOverload = node.target
-    if type(target).__name__ == "builtin_function_or_method":
-        build_fn = TORCH_FUNCTION_TRANSLATE[target.__name__]
-    elif isfunction(target):
-        build_fn = TORCH_FUNCTION_TRANSLATE[target]
-    else:
-        build_fn = TORCH_FUNCTION_TRANSLATE[target.name()]
-    return build_fn(node, value_map, symbol_map, block)
-
-
-TORCH_MODULE_TRANSLATE = Dict_Registry()
-
-
-def torch_module_translate(
-    node: torch.fx.node.Node,
-    value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    module: torch.nn.Module,
-    block: Block,
-) -> Operation:
-    module_stack = node.meta["nn_module_stack"]
-    target = node.target
-    build_fn = TORCH_MODULE_TRANSLATE[module_stack[target][1]]
-    return build_fn(node, value_map, symbol_map, module, block)
-
-
-TORCH_METHOD_TRANSLATE = Dict_Registry()
-
-
-def torch_method_translate(
-    node: torch.fx.node.Node,
-    value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    block: Block,
-) -> Operation:
-    target = node.target
-    build_fn = TORCH_METHOD_TRANSLATE[target]
-    return build_fn(node, value_map, symbol_map, block)
-
-
 def commond_build_op(
     op_build: callable,
     operand_nums: int,
@@ -384,133 +340,159 @@ def _expand_to_2_if_int(value):
     return value
 
 
-def _updata_torch_symbol_bind(
-    op: Operation,
-    block: Block,
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    node: torch.fx.node.Node,
-):
-    for i in range(len(op.results)):
-        if not isinstance(op.results[i].type, TensorType):
-            continue
-        shape_bind = torch_symbol_bind(
-            op.results[i], get_result_type(node, i), symbol_map
-        )
-        block.add_op(shape_bind)
-
-
-def torch_build_func(
+def build_tensor_inputs(
     graph: torch.fx.Graph,
-    name: str,
     block: Block,
     value_map: dict[str, list[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
+    input_types: list,
+    arg_attrs: list,
 ):
-    # 输入输出
-    input_types = []
-    output_types = []
-    return_values = []
-    arg_attrs = []
     for node in graph.nodes:
-        if node.op == "placeholder":
-            # 张量输入
-            if node.type is torch.Tensor:
-                fake_tensor = node.meta["example_value"]
-                tensor_type = torch_fake_or_mate_tensor_translate(fake_tensor)
-                arg_attrs.append(make_input_tensor_symbol_attrs(fake_tensor))
+        if node.op != "placeholder":
+            continue
+        # is symbol input
+        if node.type is torch.SymInt:
+            continue
+        if node.type is None:
+            val = node.meta["val"]
+            if isinstance(val, torch.SymInt):
+                continue
+            if isinstance(val, FakeTensor):
+                tensor_type = torch_fake_or_mate_tensor_translate(val)
+                arg_attrs.append(make_input_tensor_symbol_attrs(val))
                 arg_value = block.insert_arg(tensor_type, len(input_types))
                 value_map[node.name] = [arg_value]
                 input_types.append(tensor_type)
-                shape_bind = torch_symbol_bind(arg_value, fake_tensor, symbol_map)
-                block.add_op(shape_bind)
-            elif node.type is None:
-                val = node.meta["val"]
-                # 张量输入
-                if isinstance(val, FakeTensor):
-                    fake_tensor = node.meta["val"]
-                    tensor_type = torch_fake_or_mate_tensor_translate(fake_tensor)
-                    arg_attrs.append(make_input_tensor_symbol_attrs(fake_tensor))
-                    arg_value = block.insert_arg(tensor_type, len(input_types))
-                    value_map[node.name] = [arg_value]
-                    input_types.append(tensor_type)
-                    shape_bind = torch_symbol_bind(arg_value, fake_tensor, symbol_map)
-                    block.add_op(shape_bind)
-                # 符号输入
-                elif isinstance(val, torch.SymInt):
-                    op: TorchSymbolicIntOp = torch_symbol_translate(
-                        node.meta["val"], symbol_map
-                    )
-                    value_map[node.name] = op.results
-                    block.add_op(op)
-                else:
-                    print("unimplemented placeholder type: ", type(val))
-            # 符号输入
-            elif node.type is torch.SymInt:
-                symbol: torch.SymInt = node.meta["example_value"]
-                if isinstance(symbol.node.expr, sympy.core.numbers.Integer):
-                    op = build_llh_constant(int(symbol))
-                elif isinstance(symbol.node.expr, sympy.core.symbol.Symbol):
-                    op: TorchSymbolicIntOp = torch_symbol_translate(symbol, symbol_map)
-                else:
-                    raise NotImplementedError
-                value_map[node.name] = op.results
-                block.add_op(op)
-            else:
-                print("unimplemented placeholder type: ", node.type)
-        elif node.op == "call_module":
-            module = graph.owning_module.get_submodule(node.target)
-            op = torch_module_translate(node, value_map, symbol_map, module, block)
+
+
+def build_symbol_inputs(
+    graph: torch.fx.Graph,
+    block: Block,
+    value_map: dict[str, list[SSAValue]],
+    input_types: list,
+    arg_attrs: list,
+):
+    for node in graph.nodes:
+        if node.op != "placeholder":
+            continue
+        if node.type is torch.SymInt:
+            print(node.meta)
+            symbol: torch.SymInt = node.meta["example_value"]
+            raise ValueError
+        elif node.type is None and isinstance(node.meta["val"], torch.SymInt):
+            symbol: torch.SymInt = node.meta["val"]
+            arg_attrs.append(make_input_symbol_attrs(symbol))
+            arg_value = block.insert_arg(i64, len(input_types))
+            value_map[node.name] = [arg_value]
+            input_types.append(i64)
+
+
+def build_model_parameters(
+    model: torch.fx.GraphModule, block: Block, value_map: dict[str, list[SSAValue]]
+):
+    params: dict[str, torch.Tensor] = {
+        **dict(model.named_parameters(remove_duplicate=False)),
+        **dict(model.named_buffers(remove_duplicate=False)),
+    }
+    weight_dir = os.path.join(
+        os.path.dirname(__file__),
+        "LLcompiler_weight_temp",
+        datetime.now().astimezone().isoformat(),
+    )
+    os.makedirs(weight_dir)
+    for name, tensor in params.items():
+        weight_file = os.path.join(
+            weight_dir,
+            name + ".npy",
+        )
+        np.save(
+            weight_file,
+            np.array(tensor.tolist(), torch_dtype_to_numpy_dtype(tensor.dtype)),
+        )
+        op = WeightOp.build(
+            result_types=[torch_fake_or_mate_tensor_translate(tensor)],
+            attributes={"weight_file": StringAttr(weight_file)},
+        )
+        value_map[name] = op.results
+        block.add_op(op)
+
+
+def build_call_function(
+    graph: torch.fx.Graph, block: Block, value_map: dict[str, list[SSAValue]]
+):
+    for node in graph.nodes:
+        if node.op != "call_function":
+            continue
+        op = torch_function_translate(node, value_map, block)
+        # some op is identity
+        if op is not None:
             value_map[node.name] = op.results
             block.add_op(op)
-            _updata_torch_symbol_bind(op, block, symbol_map, node)
-        # 输出
-        elif node.op == "output":
 
-            def trav_args(args):
-                for arg in args:
-                    if isinstance(arg, tuple):
-                        trav_args(arg)
-                    elif isinstance(arg, list):
-                        trav_args(arg)
-                    elif isinstance(arg, torch.fx.node.Node):
-                        type = get_result_type(arg)
-                        if isinstance(type, FakeTensor) or isinstance(
-                            type, TensorMetadata
-                        ):
-                            # None 是一些不需要多余输出的aten生成的
-                            if value_map[arg.name] != None:
-                                output_types.append(value_map[arg.name][0].type)
-                                return_values.append(value_map[arg.name][0])
-                    elif arg is None:
-                        pass
-                    else:
-                        print(arg)
-                        print(type(arg))
-                        raise NotImplementedError(type(arg))
 
-            trav_args(node.args)
-        elif node.op == "call_function":
-            op = torch_function_translate(node, value_map, symbol_map, block)
-            # some op is identity
-            if op is not None:
-                value_map[node.name] = op.results
-                block.add_op(op)
-                _updata_torch_symbol_bind(op, block, symbol_map, node)
-        elif node.op == "call_method":
-            if node.target == "size":
-                value_map[node.name] = value_map[node.args[0].name]
+def build_get_attr(
+    graph: torch.fx.Graph, block: Block, value_map: dict[str, list[SSAValue]]
+):
+    for node in graph.nodes:
+        if node.op != "get_attr":
+            continue
+        value_map[node.name] = value_map[node.target]
+
+
+def build_output(
+    graph: torch.fx.Graph,
+    value_map: dict[str, list[SSAValue]],
+    output_types: list,
+    return_values: list,
+):
+    for node in graph.nodes:
+        if node.op != "output":
+            continue
+        for arg in node.args:
+            if isinstance(arg, torch.fx.node.Node):
+                type = get_result_type(arg)
+                if isinstance(type, FakeTensor) or isinstance(type, TensorMetadata):
+                    output_types.append(value_map[arg.name][0].type)
+                    return_values.append(value_map[arg.name][0])
+                # None 是一些不需要多余输出的aten生成的
+            elif arg is None:
+                pass
             else:
-                op = torch_method_translate(node, value_map, symbol_map, block)
-                value_map[node.name] = op.results
-                block.add_op(op)
-                _updata_torch_symbol_bind(op, block, symbol_map, node)
-        elif node.op == "get_attr":
-            value_map[node.name] = value_map[node.target]
-        else:
-            raise NotImplementedError(node.op, type(node.op))
+                print(arg)
+                print(type(arg))
+                raise NotImplementedError(type(arg))
+
+
+def torch_build_func(
+    model: torch.fx.GraphModule,
+    name: str,
+):
+    graph: torch.fx.Graph = model.graph
+    value_map: dict[str, list[SSAValue]] = dict()
+    block: Block = Block()
+    input_types: list = []
+    output_types: list = []
+    return_values: list = []
+    arg_attrs: list = []
+    build_model_parameters(model, block, value_map)
+    build_symbol_inputs(graph, block, value_map, input_types, arg_attrs)
+    build_tensor_inputs(graph, block, value_map, input_types, arg_attrs)
+    build_get_attr(graph, block, value_map)
+    build_call_function(graph, block, value_map)
+    build_output(graph, value_map, output_types, return_values)
     block.add_op(Return(*return_values))
-    region: Region = Region(block)
     func = FuncOp(
-        name, (input_types, output_types), region=region, arg_attrs=ArrayAttr(arg_attrs)
+        name,
+        (input_types, output_types),
+        region=Region(block),
+        arg_attrs=ArrayAttr(arg_attrs),
     )
     return func
+
+
+def torch_translate_to_mlir_module(model: torch.fx.GraphModule):
+    func: FuncOp = torch_build_func(model, "main")
+    func.attributes.update({"entrance": UnitAttr()})
+    module = ModuleOp([func])
+    print(module)
+    return module

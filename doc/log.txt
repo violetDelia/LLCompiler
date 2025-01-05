@@ -59,6 +59,7 @@
                 add reduce_sum to hlo
                 support aten::full
 TODO:
+    refine fx_translate
     broadcast where
     run --> MHA
     slice     

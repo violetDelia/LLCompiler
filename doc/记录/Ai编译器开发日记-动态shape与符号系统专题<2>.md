@@ -69,7 +69,7 @@ if node.op == "placeholder":
 def torch_symbol_bind(
     operand: SSAValue, # 创建的Op
     tensor: FakeTensor, # 绑定shape信息的FakeTensor
-    symbol_map: dict[str, TorchSymbolicIntOp] #全局符号表【符号名，torch_symbolic_int op】
+    symbol_map: dict[str, IRDLOperation] #全局符号表【符号名，torch_symbolic_int op】
 ):
     bind_symbols: list[SSAValue] = []
     affine_expr_map: dict[str, AffineSymExpr] = dict()

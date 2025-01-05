@@ -1,12 +1,10 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
     torch_fake_or_mate_tensor_translate,
-    TORCH_MODULE_TRANSLATE,
     get_result_type,
     get_arg_value,
     commond_build_op,
     _expand_to_2_if_int,
-    _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
 )
@@ -33,14 +31,14 @@ import torch.fx
 import torch.nn.functional as F
 from xdsl.ir import SSAValue, Operation, OpResult, Attribute, Mapping, Block
 from torch._subclasses.fake_tensor import FakeTensor
-from ...dialect.llh import MaxPoolOp,TorchSymbolicIntOp
+from ...dialect.llh import MaxPoolOp, TorchSymbolicIntOp
+from xdsl.irdl import IRDLOperation
 
 
 @TORCH_FUNCTION_TRANSLATE(F.max_pool2d, "aten::max_pool2d_with_indices")
 def max_pool2d_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     arg_len = len(node.args)
@@ -61,32 +59,6 @@ def max_pool2d_convert(
         ),
         "stride": DenseArrayBase.from_list(i64, _expand_to_2_if_int(stride)),
         "ceil_mode": BoolAttr(ceil_mode, i1),
-    }
-    return MaxPoolOp.build(
-        operands=[input], attributes=attrs, result_types=[result_type]
-    )
-
-@TORCH_MODULE_TRANSLATE(torch.nn.modules.pooling.MaxPool2d)
-def torch_maxpool_convert(
-    node: torch.fx.node.Node,
-    value_map: dict,
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    module: torch.nn.modules.pooling.MaxPool2d,
-    block: Block,
-):
-    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
-    input = get_arg_value(node.args[0], value_map, block)
-    padding = _expand_to_2_if_int(module.padding)
-    attrs = {
-        "dilation": DenseArrayBase.from_list(i64, _expand_to_2_if_int(module.dilation)),
-        "pad": DenseArrayBase.from_list(
-            i64, (padding[0], padding[1], padding[0], padding[1])
-        ),
-        "kernel_shape": DenseArrayBase.from_list(
-            i64, _expand_to_2_if_int(module.kernel_size)
-        ),
-        "stride": DenseArrayBase.from_list(i64, _expand_to_2_if_int(module.stride)),
-        "ceil_mode": BoolAttr(module.ceil_mode, i1),
     }
     return MaxPoolOp.build(
         operands=[input], attributes=attrs, result_types=[result_type]

@@ -64,8 +64,7 @@ class GenOutput:
             raise NotImplementedError
         raise NotImplementedError
 
-
-    # TODO: support move inplace to out 
+    # TODO: support move inplace to out
     def _fx_get_out_call(self, model: torch.fx.GraphModule):
         inputs_tensor_or_symbol = []
         outputs_tensor_or_symbol = []
@@ -148,7 +147,7 @@ class GenOutput:
                     outs.append(torch.empty(shape))
                 if isinstance(out_tensor_or_symbol, torch.SymInt):
                     outs.append(out_tensor_or_symbol)
-            return outs
+            return (outs[0]) if len(outs) == 1 else outs
 
         return _get_out_form_inputs
 

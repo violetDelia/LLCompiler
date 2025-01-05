@@ -1,14 +1,11 @@
 from ..fx_translate import (
     TORCH_FUNCTION_TRANSLATE,
-    TORCH_METHOD_TRANSLATE,
-    TORCH_MODULE_TRANSLATE,
     torch_fake_or_mate_tensor_translate,
     get_result_type,
     get_arg_value,
     commond_build_op,
     torch_dtype_translate,
     _expand_to_2_if_int,
-    _updata_torch_symbol_bind,
     SPECIAL_RESULT_FAKE_INDEX_MAP,
     SPECIAL_GETITEM_IS_OPERAND_MAP,
 )
@@ -45,13 +42,13 @@ from ...dialect.llh import (
     ExpOp,
     DropOp,
 )
+from xdsl.irdl import IRDLOperation
 
 
 @TORCH_FUNCTION_TRANSLATE("aten::native_dropout")
 def drop_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     out = get_result_type(node, 0)
@@ -65,7 +62,6 @@ def drop_convert(
 def exp_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(ExpOp.build, 1, node, value_map, block)
@@ -75,7 +71,6 @@ def exp_convert(
 def rsqrt_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(RsqrtOp.build, 1, node, value_map, block)
@@ -85,7 +80,6 @@ def rsqrt_convert(
 def sqrt_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(SqrtOp.build, 1, node, value_map, block)
@@ -95,18 +89,6 @@ def sqrt_convert(
 def relu_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    block: Block,
-):
-    return commond_build_op(ReluOp.build, 1, node, value_map, block)
-
-
-@TORCH_MODULE_TRANSLATE(torch.nn.modules.activation.ReLU)
-def torch_relu_convert(
-    node: torch.fx.node.Node,
-    value_map: dict,
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    module: torch.nn.modules.activation.ReLU,
     block: Block,
 ):
     return commond_build_op(ReluOp.build, 1, node, value_map, block)
@@ -116,17 +98,6 @@ def torch_relu_convert(
 def abs_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
-    block: Block,
-):
-    return commond_build_op(AbsOp.build, 1, node, value_map, block)
-
-
-@TORCH_METHOD_TRANSLATE("abs")
-def abs_convert(
-    node: torch.fx.node.Node,
-    value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     return commond_build_op(AbsOp.build, 1, node, value_map, block)
@@ -136,7 +107,6 @@ def abs_convert(
 def reciprocal_convert(
     node: torch.fx.node.Node,
     value_map: dict[str:[SSAValue]],
-    symbol_map: dict[str, TorchSymbolicIntOp],
     block: Block,
 ):
     out = get_result_type(node)

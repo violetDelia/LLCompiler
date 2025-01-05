@@ -1,7 +1,7 @@
 import torch.fx
 from llcompiler.core import (
     LLC_DECOMPOSITIONS,
-    LLC_SUPPORT_DICT,
+    LLCOperatorSupport,
     Importer,
     GenOutput,
     Torch_ExecutionEngine,
@@ -95,16 +95,14 @@ class LLCompiler(Importer, GenOutput):
     def _process_fx(
         self, model: torch.fx.GraphModule, inputs: List[torch.Tensor], **kwargs
     ):
+        op_support = LLCOperatorSupport()
+        partition = CapabilityBasedPartitioner(model, op_support)
+        model = partition.partition_and_fuse()
         if self.mode == "inference":
             _recursive_joint_graph_passes(model)
         model = _recursive_pre_grad_passes(model, inputs)
-        dedupe_symints(model.graph)
-        reinplace_inplaceable_ops(model.graph)
         _recursive_post_grad_passes(model, inputs)
-        # model.graph.print_tabular()
-        # op_support = OperatorSupport(LLC_SUPPORT_DICT)
-        # partition = CapabilityBasedPartitioner(model, op_support)
-        # model = partition.partition_and_fuse()
+
         return model
 
     def not_compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
@@ -132,8 +130,22 @@ class LLCompiler(Importer, GenOutput):
         compiler_options.log_llvm = self.log_llvm
         return compiler_options
 
-    def compiler_fx(self, model: Any, inputs: List[torch.Tensor], **kwargs):
+    def compiler_fx(
+        self, model: torch.fx.GraphModule, inputs: List[torch.Tensor], **kwargs
+    ):
         model = self._process_fx(model, inputs, **kwargs)
+        model.graph.print_tabular()
+        for name, submodule in dict(model._modules).items():
+            executor = self.compiler_fx_submodule(submodule)
+            model.delete_submodule(name)
+            setattr(model, name, executor)
+
+        def run_model(args):
+            return model(*args)
+
+        return run_model
+
+    def compiler_fx_submodule(self, model: torch.fx.GraphModule, **kwargs):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
