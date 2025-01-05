@@ -15,9 +15,11 @@ from typing import Any, Union
 import torch
 import torch.fx
 from torch.fx import symbolic_trace
-from ..importer import MLIR_Builder
+from . import MLIR_Builder
 import onnx
 from torch._export.passes.replace_sym_size_ops_pass import _replace_sym_size_ops_pass
+
+
 class Importer:
     """
     import model to MLIR module.

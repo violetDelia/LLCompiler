@@ -4,7 +4,7 @@ from typing import Any, Union, List, Dict
 import ctypes
 import numpy as np
 from time import time
-from llcompiler.core.utility import run_time
+from llcompiler.utility import run_time
 
 
 TORCH_DTYPE_TO_TYPE = {torch.float32: 4, torch.int64: 3, torch.bool: 6}

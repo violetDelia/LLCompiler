@@ -45,12 +45,11 @@ from xdsl.dialects.builtin import (
 )
 from xdsl.ir.affine.affine_map import AffineMap
 from ..dialect.llh_utility import build_llh_constant, build_llh_scalar_tensor
-from ..core.utility import Dict_Registry
+from ..utility import Dict_Registry
 from datetime import datetime
 import torch.nn
 from torch.fx.passes.shape_prop import TensorMetadata
 from torch._subclasses.fake_tensor import FakeTensor
-from ..core.utility import run_time
 import os
 import numpy as np
 import torch.fx

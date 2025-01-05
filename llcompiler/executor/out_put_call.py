@@ -1,5 +1,4 @@
 import torch.fx
-import llcompiler.core
 from typing import Any, Union, List, Dict
 import sys
 import os

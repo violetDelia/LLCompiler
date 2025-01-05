@@ -11,8 +11,6 @@
 #   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
-from .importer import Importer
-from .utility import run_time,Dict_Registry
-from.engine import *
+from ..importer.importer import Importer
+from .engine import Torch_ExecutionEngine
 from .out_put_call import GenOutput
-from .torch_compile_config import LLC_DECOMPOSITIONS,LLC_SUPPORT_DICT,LLCOperatorSupport

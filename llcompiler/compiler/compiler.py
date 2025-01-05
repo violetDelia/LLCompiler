@@ -1,11 +1,10 @@
 import torch.fx
-from llcompiler.core import (
-    LLC_DECOMPOSITIONS,
-    LLCOperatorSupport,
+from llcompiler.executor import (
     Importer,
     GenOutput,
     Torch_ExecutionEngine,
 )
+from llcompiler.compiler import LLC_DECOMPOSITIONS,LLCOperatorSupport
 from typing import Any, Union, List, Dict
 import sys
 from torch._functorch.aot_autograd import aot_module_simplified

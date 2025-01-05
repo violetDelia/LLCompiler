@@ -182,6 +182,7 @@ std::pair<std::vector<std::string>, mlir::AffineExpr*> generateBindShapeMapKey(
   return std::make_pair(symbols, &exp);
 }
 
+// TODO:(lfr) this pattern need check int input symbol
 struct replaceTorchSymbolicIntOp
     : public LLHOpRewritePattern<TorchSymbolicIntOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
@@ -286,7 +287,7 @@ void RemoveRedundantOpsPass::runOnOperation() {
   LLC_RUN_IN_PASS
   auto* context = &getContext();
   auto module = getOperation();
-  //generateEntranceTensorEncoding(module);
+  // generateEntranceTensorEncoding(module);
   RewritePatternSet patterns(context);
   populateRemoveRedundantOpsPassPatterns(patterns);
   auto config = GreedyRewriteConfig();

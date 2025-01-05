@@ -10,7 +10,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch._dynamo.backends.common import aot_autograd
 import torch.fx
-from llcompiler.core.utility import run_time
+from llcompiler.utility import run_time
 import onnx
 import torchgen
 import torch._dynamo
