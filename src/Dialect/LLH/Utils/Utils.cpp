@@ -60,6 +60,7 @@ llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
 }
 
 bool isConstIntegerValue(Value value) {
+  if (llvm::isa<BlockArgument>(value)) return false;
   auto type = value.getType();
   if (!llvm::isa<IntegerType, IndexType>(type)) return false;
   auto op = value.getDefiningOp();

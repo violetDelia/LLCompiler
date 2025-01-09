@@ -15,17 +15,6 @@ func.func @block(%arg2: tensor<?x3x?x?xbf16>,%arg3: bf16) ->(tensor<?x3x?x?xbf16
 // CHECK-SAME: relation_kind = #llh.SymbolRelation<GE>
 
 // -----
-// CHECK: func.func
-// CHECK-SAME: -> (tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64) 
-// CHECK-ENCODING: llh.encoding_bind
-func.func @checkIsReturnOperand(%arg0: tensor<?x?x?x?xf32>, %arg1: i64) -> (tensor<*xf32> , i64) attributes {entrance} {
-  %0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<*xf32>
-  // CHECK: return
-  // CHECK-SAME: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64
-  return %0, %arg1 : tensor<*xf32>, i64
-}
-
-// -----
 // CHECK-ENCODING: llh.encoding_bind
 // CHECK: llh.symbolic_int
 // CHECK-SAME: sym_name = "c384"
@@ -281,5 +270,16 @@ func.func @reduce(%arg0: tensor<3x3x?x?xf32> {func.input_symbol_0 = "c3", func.i
     return %0 : tensor<3x?xf32>
   }
 
+
+// -----
+// CHECK: func.func
+// CHECK-SAME: (%arg0: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, %arg1: i64 {func.symbol_int = @s4}) 
+// CHECK-ENCODING: llh.encoding_bind
+func.func @checkIsReturnOperand(%arg0: tensor<?x?x?x?xf32>, %arg1: i64) -> (tensor<*xf32> , i64) attributes {entrance} {
+  %0 = "llh.add"(%arg0, %arg0) : (tensor<?x?x?x?xf32>, tensor<?x?x?x?xf32>) -> tensor<*xf32>
+  // CHECK: return
+  // CHECK-SAME: tensor<?x?x?x?xf32, #llh.encoding<shapes = @s0, @s1, @s2, @s3>>, i64
+  return %0, %arg1 : tensor<*xf32>, i64
+}
 //  /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --infer-symbol-shape /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/infer_symbol_shape.mlir
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -infer-symbol-shape="use-encoding=false " /home/lfr/LLCompiler/test/Dialect/LLH/symbol_infer/infer_symbol_shape.mlir

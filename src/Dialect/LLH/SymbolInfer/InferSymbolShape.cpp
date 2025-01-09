@@ -56,78 +56,94 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
+
+void generateSymbolForFuncOp(func::FuncOp func, bool use_binding) {
+  llvm::SmallVector<Type> new_input;
+  auto symbol_analysis = SymbolAnalysis::getInstance(func);
+  auto context = func->getContext();
+  auto& block = func.getFunctionBody().getBlocks().front();
+  auto input_num = block.getNumArguments();
+  auto maybe_attrs = func.getArgAttrs();
+  if (maybe_attrs.has_value()) {
+    auto attrs = maybe_attrs.value().getValue();
+    CHECK(llc::MLIR_PASS,
+          attrs.size() == func.getFunctionType().getNumInputs());
+    for (int i{}; i < input_num; i++) {
+      auto arg = block.getArgument(i);
+      if (isa<RankedTensorType>(arg.getType())) {
+        auto tensor = llvm::cast<RankedTensorType>(arg.getType());
+        auto has_encode = tensor.getEncoding();
+        auto arg_attr = llvm::cast<DictionaryAttr>(attrs[i]);
+        CHECK(llc::SymbolInfer, arg_attr);
+        SmallVector<StringRef> symbols;
+        for (size_t dim{}; dim < tensor.getRank(); dim++) {
+          auto dim_symbol_attr = arg_attr.getAs<StringAttr>(
+              "func.input_symbol_" + std::to_string(dim));
+          CHECK(llc::SymbolInfer, dim_symbol_attr);
+          symbols.push_back(dim_symbol_attr.getValue());
+          symbol_analysis->getOrBuildSymbol(dim_symbol_attr.getValue(), true);
+        }
+        if (use_binding) {
+          symbol_analysis->buildEncodingBindFrom(arg, symbols);
+        } else {
+          symbol_analysis->addEncoding(arg, symbols);
+        }
+      } else if (isa<IntegerType>(arg.getType())) {
+        auto arg_attr = llvm::cast<DictionaryAttr>(attrs[i]);
+        auto symbol_attr = arg_attr.get(llc::FuncSymbolIntAttr);
+        if (isa<StringAttr>(symbol_attr)) {
+          auto symbol = cast<StringAttr>(symbol_attr).getValue();
+          auto symbol_op = symbol_analysis->getOrBuildSymbol(symbol);
+          func.setArgAttr(i, llc::FuncSymbolIntAttr,
+                          FlatSymbolRefAttr::get(symbol_op));
+        }
+      }
+      new_input.push_back(arg.getType());
+    }
+  } else {
+    for (int i{}; i < input_num; i++) {
+      auto arg = block.getArgument(i);
+      if (isa<RankedTensorType>(arg.getType())) {
+        if (use_binding) {
+          auto tensor = llc::getRankTensorFrom(arg);
+          llvm::SmallVector<StringRef> symbols;
+          for (auto dim : tensor.getShape()) {
+            if (dim == ShapedType::kDynamic) {
+              auto new_symbol = symbol_analysis->buildNewSymbol(true);
+              symbols.push_back(new_symbol.getSymName());
+            } else {
+              auto new_symbol = symbol_analysis->getOrBuildConstSymbol(dim);
+              symbols.push_back(new_symbol.getSymName());
+            }
+          }
+          symbol_analysis->buildEncodingBindFrom(arg, symbols);
+        } else {
+          auto new_arg = symbol_analysis->addEncoding(arg);
+        }
+      } else if (isa<IntegerType>(arg.getType())) {
+        auto symbol_op = symbol_analysis->buildNewSymbol(true);
+        symbol_op->dump();
+        func.setArgAttr(i, llc::FuncSymbolIntAttr,
+                        FlatSymbolRefAttr::get(symbol_op));
+      }
+      new_input.push_back(arg.getType());
+    }
+  }
+  auto& blocks = func.getFunctionBody().getBlocks();
+  for (auto& sub_block : blocks) {
+    if (!sub_block.isEntryBlock()) continue;
+    auto new_func_type = FunctionType::get(
+        context, new_input, sub_block.getTerminator()->getOperandTypes());
+    func.setType(new_func_type);
+  }
+  func->dump();
+}
+
 void generateEntranceSymbol(ModuleOp module, bool use_binding = false) {
   auto funcs = module.getOps<func::FuncOp>();
-  auto context = module->getContext();
-  auto builder = IRRewriter(context);
-  llvm::SmallVector<Type> new_input;
-  auto symbol_analysis = SymbolAnalysis::getInstance(module);
   for (auto func : funcs) {
     if (!func->hasAttr(llc::EntranceAttr)) continue;
-    auto func_type = func.getFunctionType();
-    auto& block = func.getFunctionBody().getBlocks().front();
-    auto input_num = block.getNumArguments();
-    auto maybe_attrs = func.getArgAttrs();
-    if (maybe_attrs.has_value()) {
-      auto attrs = maybe_attrs.value().getValue();
-      CHECK(llc::MLIR_PASS,
-            attrs.size() == func.getFunctionType().getNumInputs());
-      for (int i{}; i < input_num; i++) {
-        auto arg = block.getArgument(i);
-        if (isa<RankedTensorType>(arg.getType())) {
-          auto tensor = llvm::cast<RankedTensorType>(arg.getType());
-          auto has_encode = tensor.getEncoding();
-          auto arg_attr = llvm::cast<DictionaryAttr>(attrs[i]);
-          CHECK(llc::SymbolInfer, arg_attr);
-          SmallVector<StringRef> symbols;
-          for (size_t dim{}; dim < tensor.getRank(); dim++) {
-            auto dim_symbol_attr = arg_attr.getAs<StringAttr>(
-                "func.input_symbol_" + std::to_string(dim));
-            CHECK(llc::SymbolInfer, dim_symbol_attr);
-            symbols.push_back(dim_symbol_attr.getValue());
-            symbol_analysis->getOrBuildSymbol(dim_symbol_attr.getValue(), true);
-          }
-          if (use_binding) {
-            symbol_analysis->buildEncodingBindFrom(arg, symbols);
-          } else {
-            symbol_analysis->addEncoding(arg, symbols);
-          }
-        }
-        new_input.push_back(arg.getType());
-      }
-    } else {
-      for (int i{}; i < input_num; i++) {
-        auto arg = block.getArgument(i);
-        if (!use_binding) {
-          auto new_arg = symbol_analysis->addEncoding(arg);
-          new_input.push_back(new_arg.getType());
-        } else {
-          if (isa<RankedTensorType>(arg.getType())) {
-            auto tensor = llc::getRankTensorFrom(arg);
-            llvm::SmallVector<StringRef> symbols;
-            for (auto dim : tensor.getShape()) {
-              if (dim == ShapedType::kDynamic) {
-                auto new_symbol = symbol_analysis->buildNewSymbol(true);
-                symbols.push_back(new_symbol.getSymName());
-              } else {
-                auto new_symbol = symbol_analysis->getOrBuildConstSymbol(dim);
-                symbols.push_back(new_symbol.getSymName());
-              }
-            }
-            symbol_analysis->buildEncodingBindFrom(arg, symbols);
-          }
-          new_input.push_back(arg.getType());
-        }
-      }
-    }
-    auto& blocks = func.getFunctionBody().getBlocks();
-    for (auto& sub_block : blocks) {
-      if (sub_block.isEntryBlock()) {
-        auto new_func_type = FunctionType::get(
-            context, new_input, sub_block.getTerminator()->getOperandTypes());
-        func.setType(new_func_type);
-      }
-    }
+    generateSymbolForFuncOp(func, use_binding);
   }
 }
 

@@ -13,7 +13,7 @@ class Braodcast(nn.Module):
         x2 = x + x2
         x3 = x.reshape(x.shape[0], 1, x.shape[1])
         x = x1 + x2
-        x4 = x[0]
-        x5 = x4[0]
-        x = x * x5
+        # x4 = x[0]
+        # x5 = x4[0]
+        # x = x * x5
         return x

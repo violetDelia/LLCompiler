@@ -48,6 +48,7 @@ class Torch_ExecutionEngine(ExecutionEngine):
                 )
                 inputs.append(tensor)
             elif isinstance(arg, int):
+                print(arg)
                 pass
             elif isinstance(arg, torch.SymInt):
                 pass

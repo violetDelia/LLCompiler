@@ -228,9 +228,9 @@ def make_input_tensor_symbol_attrs(tensor: FakeTensor):
 def make_input_symbol_attrs(symbol: torch.SymInt):
     attr_dict = dict()
     if str(symbol).isdigit():
-        attr_dict["func.input_symbol"] = StringAttr(str("c") + str(symbol))
+        attr_dict["func.symbol_int"] = StringAttr(str("c") + str(symbol))
     else:
-        attr_dict["func.input_symbol"] = StringAttr(str(symbol))
+        attr_dict["func.symbol_int"] = StringAttr(str(symbol))
     return DictionaryAttr(attr_dict)
 
 

@@ -21,10 +21,13 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/Support/Casting.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/BuiltinAttributes.h"
+#include "mlir/IR/Value.h"
 namespace mlir::llh {
 
 namespace {
@@ -123,6 +126,20 @@ llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Operation* op) {
 }
 
 llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Value value) {
+  if (isa<BlockArgument>(value)) {
+    auto arg = llvm::cast<BlockArgument>(value);
+    auto index = arg.getArgNumber();
+    auto func = llvm::cast_or_null<mlir::func::FuncOp>(
+        value.getParentBlock()->getParentOp());
+    CHECK(llc::SymbolInfer, func);
+    auto maybe_attrs = func.getArgAttrs();
+    CHECK(llc::SymbolInfer, maybe_attrs.has_value());
+    auto attrs = maybe_attrs.value().getValue();
+    auto attr = llvm::cast<DictionaryAttr>(attrs[index]);
+    auto symbol = attr.getAs<FlatSymbolRefAttr>(llc::FuncSymbolIntAttr);
+    CHECK(llc::SymbolInfer, symbol);
+    return symbol.getValue();
+  }
   auto op = value.getDefiningOp();
   return getOrBuildSymbolAttrFrom(op);
 }

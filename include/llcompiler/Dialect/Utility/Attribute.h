@@ -56,6 +56,7 @@ namespace llc {
 extern const char* SymbolModule;
 extern const char* GloabalLayoutAttr;
 extern const char* GloabalModeKindAttr;
+extern const char* FuncSymbolIntAttr;
 ADD_LAYOUT_ATTR(layout, LayoutAttr)
 ADD_LAYOUT_ATTR(weight_layout, WeightLayoutAttr)
 ADD_STRING_ATTR(op_name, OperationNameAttr)

@@ -56,6 +56,7 @@ template <class CastOp>
 struct FoldCastOp : public OpRewritePattern<CastOp> {
   using OpRewritePattern<CastOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(CastOp op, PatternRewriter& rewriter) const {
+    if (isa<BlockArgument>(op->getOperand(0))) return llvm::failure();
     if (!isa<CastOp>(op->getOperand(0).getDefiningOp())) return llvm::failure();
     auto type = op->getResult(0).getType();
     auto front_cast_res = op->getOperand(0);
@@ -87,11 +88,14 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
     if (isa<IndexType>(ele_type)) return llvm::failure();
     auto operands = op.getElements();
     for (auto operand : operands) {
+      if (isa<BlockArgument>(operand)) return llvm::failure();
       if (!isa<CastUOp, CastSOp, arith::ConstantOp, arith::IndexCastOp>(
               operand.getDefiningOp()))
         return llvm::failure();
       if (isa<CastUOp, CastSOp, arith::IndexCastOp>(operand.getDefiningOp())) {
-        auto type = operand.getDefiningOp()->getOperand(0).getType();
+        auto value = operand.getDefiningOp()->getOperand(0);
+        if (isa<BlockArgument>(value)) return llvm::failure();
+        auto type = value.getType();
         if (!isa<IndexType>(type)) return llvm::failure();
       }
     }
