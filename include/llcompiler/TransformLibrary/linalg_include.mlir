@@ -112,7 +112,7 @@ transform.named_sequence @linalg_bufferization(%module: !transform.any_op {trans
           test_analysis_only= false,
           memcpy_op = "linalg.copy" }
         : (!transform.any_op) -> !transform.any_op
-    %res_to_para_module = transform.apply_registered_pass "buffer-results-to-out-params" to %bufferized_module {options = "hoist-static-allocs=false add-result-attr=true"}: (!transform.any_op) -> !transform.any_op
+    %res_to_para_module = transform.apply_registered_pass "buffer-results-to-out-params" to %bufferized_module {options = "hoist-static-allocs=true add-result-attr=true"}: (!transform.any_op) -> !transform.any_op
     // %alloc_to_arg_module = transform.apply_registered_pass "alloc-to-arg" to %res_to_para_module : (!transform.any_op) -> !transform.any_op
     transform.include @linalg_analysis failures(suppress) (%res_to_para_module) : (!transform.any_op) -> !transform.any_op
     transform.yield

@@ -8,7 +8,7 @@ class Add(nn.Module):
 
     def forward(self, x: torch.Tensor):
         x = x + x
-        # x = x + 3
+        x = x + 3
         return x
 
 

@@ -40,12 +40,14 @@ LLC_SUPPORT_DICT = {
     "torch.ops.prims.add.default": None,
     "torch.ops.prims.mul.default": None,
     "torch.ops.aten.relu.default": None,
+    "torch.ops.aten.abs.default": None,
     "torch.ops.aten.select.int": None,
     # "torch.ops.prims.where.default": None,
     # "torch.ops.aten.exp.default": None,
     # reduce
     # matmul
-    # "torch.ops.aten.bmm.default": None,
+    "torch.ops.aten.bmm.default": None,
+    # "torch.ops.aten.mm.default": None,
     # symbol
     "torch._sym_sqrt": None,
     "_operator.mul": None,

@@ -158,7 +158,7 @@ class GenOutput:
             if isinstance(out, (list, tuple)):
                 multi_results = True
             if not multi_results:
-                raise NotImplementedError
+                return [torch.empty(out.shape, dtype=out.dtype)], multi_results
             outputs = [None] * len(out)
             for index, output in enumerate(out):
                 if not isinstance(output, FakeTensor):

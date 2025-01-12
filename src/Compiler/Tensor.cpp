@@ -13,6 +13,7 @@
 //    limitations under the License.
 #include "llcompiler/Compiler/Tensor.h"
 
+#include <cstddef>
 #include <iostream>
 namespace llc::compiler {
 
@@ -29,8 +30,8 @@ Tensor::Tensor(size_t data_ptr, size_t base_ptr, size_t type, size_t offset,
 }
 
 void Tensor::print() {
-  std::cout << "data: " << data << std::endl;
-  std::cout << "base: " << base << std::endl;
+  std::cout << "data: " << (size_t)data << std::endl;
+  std::cout << "base: " << (size_t)base << std::endl;
   std::cout << "offset: " << offset << std::endl;
   std::cout << "type: " << static_cast<int64_t>(type) << std::endl;
   std::cout << "size: ";

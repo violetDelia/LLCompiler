@@ -122,7 +122,6 @@ void generateSymbolForFuncOp(func::FuncOp func, bool use_binding) {
         }
       } else if (isa<IntegerType>(arg.getType())) {
         auto symbol_op = symbol_analysis->buildNewSymbol(true);
-        symbol_op->dump();
         func.setArgAttr(i, llc::FuncSymbolIntAttr,
                         FlatSymbolRefAttr::get(symbol_op));
       }
@@ -136,7 +135,6 @@ void generateSymbolForFuncOp(func::FuncOp func, bool use_binding) {
         context, new_input, sub_block.getTerminator()->getOperandTypes());
     func.setType(new_func_type);
   }
-  func->dump();
 }
 
 void generateEntranceSymbol(ModuleOp module, bool use_binding = false) {

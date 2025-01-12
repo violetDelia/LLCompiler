@@ -57,6 +57,7 @@ loop_num = 10
 loop = False
 
 module_dict = {
+    Add: [torch.randn((1,2,2), device="cpu")],
     # Slice: [torch.randn((200, 200, 224, 224), device="cpu")],
     # Conv2D_NCHW_FCHW :[torch.randn((1, 3, 3,3), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
@@ -70,15 +71,16 @@ module_dict = {
     # BatchNorm2D_Inference: [torch.ones(1, 3, 2, 2, device="cpu")],
     # Linear: [torch.randn((10, 100000), device="cpu")],
     # ElewiseFusion1: [torch.randn((2,2), device="cpu")],
-    #Braodcast: [torch.randn((10, 20), device="cpu")],
-    Matmul: [torch.randn((1,3,3), device="cpu")],
+    # Braodcast: [torch.randn((10, 20), device="cpu")],
+    # Matmul: [torch.randn((1,3,3), device="cpu")],
     # Sqrt: [torch.randn((3,3,224,224), device="cpu")],
 }
 
+
 def run_model_dict(dict):
     modes = [
-        "inference",  
-        #"training"
+        "inference",
+        # "training"
     ]
     for mode in modes:
         for func, inputs in dict.items():
@@ -107,7 +109,7 @@ def run_model_dict(dict):
             opt_model: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
                 model=model,
                 backend=compiler,
-                dynamic=True,
+                dynamic=False,
                 fullgraph=False,
             )
             torch_compiler: torch._dynamo.eval_frame.OptimizedModule = torch.compile(
@@ -115,7 +117,7 @@ def run_model_dict(dict):
                 dynamic=True,
                 fullgraph=False,
             )
-            
+
             torch_res = torch_run_time(model, *inputs)
             torch_run_time(model, *inputs)
             torch_compiler_time(torch_compiler, *inputs)

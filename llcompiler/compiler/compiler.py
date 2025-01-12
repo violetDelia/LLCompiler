@@ -148,7 +148,6 @@ class LLCompiler(Importer, GenOutput):
         self._mlir_module = self.importer(model)
         if self.vebose_first_ir:
             print(self._mlir_module)
-        print(self._mlir_module)
         compiler_options = self._gen_compiler_options()
         engine = do_compile(self._mlir_module.__str__(), compiler_options)
         executor = Torch_ExecutionEngine(engine)

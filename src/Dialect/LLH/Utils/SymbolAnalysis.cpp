@@ -238,7 +238,7 @@ bool SymbolAnalysis::hasSymbolAttr(Value value) {
     auto attr_dict = maybe_attr_dict.value();
     auto maybe_symbol_attr = attr_dict.getNamed(llc::FuncSymbolIntAttr);
     if (!maybe_symbol_attr.has_value()) return false;
-    if (!isa<FlatSymbolRefAttr>(maybe_attr_dict.value())) return false;
+    if (!isa<FlatSymbolRefAttr>(maybe_symbol_attr->getValue())) return false;
     return true;
   }
   auto op = value.getDefiningOp();
