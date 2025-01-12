@@ -120,6 +120,13 @@ class ConvertToOp(IRDLOperation):
 
 
 @irdl_op_definition
+class ScalarCastOp(IRDLOperation):
+    name = "llh.scalar_cast"
+    input = operand_def(LLH_Computable_Type)
+    result = result_def(LLH_Computable_Type)
+
+
+@irdl_op_definition
 class SqrtOp(IRDLOperation):
     name = "llh.sqrt"
     input = operand_def(LLH_Computable_Type)
@@ -476,7 +483,8 @@ LLH = Dialect(
         ReduceMaxOp,
         ReduceSumOp,
         ReduceMinOp,
-        PowOp
+        PowOp,
+        ScalarCastOp,
     ],
     [],
 )

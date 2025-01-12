@@ -61,6 +61,8 @@ from ..dialect.llh import (
     WeightOp,
     PowOp,
     MulOp,
+    ConvertToOp,
+    ScalarCastOp,
 )
 from xdsl.dialects.func import Return, FuncOp
 import sympy
@@ -307,20 +309,25 @@ def commond_build_op(
     out = get_result_type(node)
     if isinstance(out, (TensorMetadata, FakeTensor)):
         result_type = torch_fake_or_mate_tensor_translate(out)
-        return op_build(
-            operands=[
-                get_arg_value(
-                    node.args[n],
-                    value_map,
-                    block,
-                    const_tensor=True,
-                    const_type=torch_dtype_translate(out.dtype),
+        operands = [
+            get_arg_value(
+                node.args[n],
+                value_map,
+                block,
+                const_tensor=True,
+                const_type=torch_dtype_translate(out.dtype),
+            )
+            for n in range(operand_nums)
+        ]
+        for index, operand in enumerate(operands):
+            if not isinstance(operand.type, TensorType):
+                scalar_cast = ScalarCastOp.build(
+                    operands=[operand],
+                    result_types=[TensorType(element_type=operand.type, shape=[1])],
                 )
-                for n in range(operand_nums)
-            ],
-            result_types=[result_type],
-            attributes=attrs,
-        )
+                block.add_op(scalar_cast)
+                operands[index] = scalar_cast.result
+        return op_build(operands=operands, result_types=[result_type], attributes=attrs)
     if isinstance(out, torch.SymInt) or isinstance(out, torch.SymFloat):
         return op_build(
             operands=[
@@ -356,12 +363,16 @@ def build_tensor_inputs(
             val = node.meta["val"]
             if isinstance(val, torch.SymInt):
                 continue
-            if isinstance(val, FakeTensor):
+            elif isinstance(val, torch.SymFloat):
+                continue
+            elif isinstance(val, FakeTensor):
                 tensor_type = torch_fake_or_mate_tensor_translate(val)
                 arg_attrs.append(make_input_tensor_symbol_attrs(val))
                 arg_value = block.insert_arg(tensor_type, len(input_types))
                 value_map[node.name] = [arg_value]
                 input_types.append(tensor_type)
+            else:
+                raise ValueError(val, type(val))
 
 
 def build_symbol_inputs(
@@ -377,12 +388,27 @@ def build_symbol_inputs(
         if node.type is torch.SymInt:
             symbol: torch.SymInt = node.meta["example_value"]
             raise ValueError
+        elif node.type is torch.SymFloat:
+            symbol: torch.SymFloat = node.meta["example_value"]
+            raise ValueError
         elif node.type is None and isinstance(node.meta["val"], torch.SymInt):
             symbol: torch.SymInt = node.meta["val"]
             arg_attrs.append(make_input_symbol_attrs(symbol))
             arg_value = block.insert_arg(i64, len(input_types))
             value_map[node.name] = [arg_value]
             input_types.append(i64)
+        elif node.type is None and isinstance(node.meta["val"], torch.SymFloat):
+            symbol: torch.SymFloat = node.meta["val"]
+            arg_attrs.append(make_input_symbol_attrs(symbol))
+            arg_value = block.insert_arg(i64, len(input_types))
+            input_types.append(i64)
+            cast = ScalarCastOp.build(operands=[arg_value], result_types=[f32])
+            block.add_op(cast)
+            value_map[node.name] = cast.results
+        elif node.type is None and isinstance(node.meta["val"], FakeTensor):
+            continue
+        else:
+            raise ValueError(node.meta, type(node.meta["val"]))
 
 
 def build_model_parameters(

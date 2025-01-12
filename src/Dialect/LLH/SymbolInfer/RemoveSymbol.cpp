@@ -26,6 +26,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
+#include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Bufferization/IR/Bufferization.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/IR/Attributes.h"
@@ -49,6 +50,17 @@ namespace {
 // common func
 //===----------------------------------------------------------------------===//
 
+void removeSymbolAttr(Operation* op) {
+  if (!op->hasAttr(llc::SymbolIntAttr)) return;
+  auto attrs = op->getAttrs();
+  llvm::SmallVector<NamedAttribute> new_attrs;
+  for (auto attr : attrs) {
+    if (attr.getName() == llc::SymbolIntAttr) continue;
+    new_attrs.push_back(attr);
+  }
+  op->setAttrs(new_attrs);
+}
+
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
@@ -58,6 +70,25 @@ struct RemoveOp : public LLHOpRewritePattern<Op> {
   LogicalResult match(Op op) const final { return llvm::success(); }
   void rewrite(Op op, LLHPatternRewriter& rewriter) const final {
     rewriter.eraseOp(op);
+  }
+};
+
+template <class Op>
+struct RemoveSymbolAttrOp : public OpRewritePattern<Op> {
+  using OpRewritePattern<Op>::OpRewritePattern;
+  LogicalResult match(Op op) const final {
+    if (op->hasAttr(llc::SymbolIntAttr)) return llvm::success();
+    return llvm::failure();
+  }
+  void rewrite(Op op, PatternRewriter& rewriter) const final {
+    auto attrs = op->getAttrs();
+    llvm::SmallVector<NamedAttribute> new_attrs;
+    for (auto attr : attrs) {
+      if (attr.getName() == llc::SymbolIntAttr) continue;
+      new_attrs.push_back(attr);
+    }
+    rewriter.replaceOpWithNewOp<Op>(op, op->getResultTypes(), op->getOperands(),
+                                    new_attrs);
   }
 };
 //===----------------------------------------------------------------------===//
@@ -72,6 +103,17 @@ void populateRemoveSymbolPassPatterns(RewritePatternSet& patterns) {
   patterns.add<RemoveOp<SymbolRelationOp>>(context);
   patterns.add<RemoveOp<SymbolBinaryRelationOp>>(context);
   patterns.add<RemoveOp<EncodingBindOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<MulOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<AddOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<DivOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<SubOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<ConstantOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<DimOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<arith::MulIOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<arith::SubIOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<arith::DivUIOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<arith::DivSIOp>>(context);
+  patterns.add<RemoveSymbolAttrOp<arith::MulIOp>>(context);
 }
 }  // namespace
 //===----------------------------------------------------------------------===//

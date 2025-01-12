@@ -236,7 +236,10 @@ bool SymbolAnalysis::hasSymbolAttr(Value value) {
     auto maybe_attr_dict = getArgAttrs(value);
     if (!maybe_attr_dict.has_value()) return false;
     auto attr_dict = maybe_attr_dict.value();
-    return attr_dict.getNamed(llc::FuncSymbolIntAttr).has_value();
+    auto maybe_symbol_attr = attr_dict.getNamed(llc::FuncSymbolIntAttr);
+    if (!maybe_symbol_attr.has_value()) return false;
+    if (!isa<FlatSymbolRefAttr>(maybe_attr_dict.value())) return false;
+    return true;
   }
   auto op = value.getDefiningOp();
   return hasSymbolAttr(op);
@@ -323,8 +326,8 @@ llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Operation* op) {
 
 llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Value value) {
   if (isa<BlockArgument>(value)) {
+    if (!hasSymbolAttr(value)) return UNKOW_SYMBOL;
     auto maybe_attr_dict = getArgAttrs(value);
-    if (!maybe_attr_dict.has_value()) return UNKOW_SYMBOL;
     auto attr_dict = maybe_attr_dict.value();
     auto symbol = attr_dict.getAs<FlatSymbolRefAttr>(llc::FuncSymbolIntAttr);
     CHECK(llc::SymbolInfer, symbol);
@@ -562,7 +565,7 @@ bool SymbolAnalysis::hasSymbol(const llvm::StringRef symbol) const {
   return symbol_op_table_.count(symbol.str());
 }
 
-void SymbolAnalysis::debugPrintSymbols() {
+void SymbolAnalysis::debugPrintSymbols() const {
   for (auto& map : this->symbol_table_) {
     auto name = map.first;
     auto symbol = map.second;

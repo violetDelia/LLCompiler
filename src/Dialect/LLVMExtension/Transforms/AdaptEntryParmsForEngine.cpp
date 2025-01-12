@@ -291,9 +291,6 @@ void AdaptEntryParmsForEnginePass::runOnOperation() {
       analysisOriginalMemrefStart(params, symbol_int_nums);
   auto original_memref_rank =
       analysisOriginalMemrefRank(params, symbol_int_nums);
-  for (auto [i, r] : llvm::zip(original_memref_start, original_memref_rank)) {
-    print_info << i << ":" << r;
-  }
   CHECK_EQ(llc::MLIR_PASS, original_memref_start.size(),
            original_memref_rank.size());
   transformBlockArgs(block, &rewriter, original_memref_start,

@@ -120,8 +120,6 @@ bool SymbolAnalysis ::isSymbolicInferOp(Operation* op) {
   return isExtraSymbolicInferOp(op) || isa<SymbolicInferShapeOpInterface>(op);
 }
 
-
-
 llvm::StringRef SymbolAnalysis::BuildSymbolAttrFrom(Operation* op) {
   if (isa<DimOp, mlir::tensor::DimOp>(op)) {
     return buildDimOpSymbol(op, op->getOperand(0), op->getOperand(1));
@@ -141,6 +139,5 @@ llvm::StringRef SymbolAnalysis::BuildSymbolAttrFrom(Value value) {
   auto op = value.getDefiningOp();
   return BuildSymbolAttrFrom(op);
 }
-
 
 }  // namespace mlir::llh

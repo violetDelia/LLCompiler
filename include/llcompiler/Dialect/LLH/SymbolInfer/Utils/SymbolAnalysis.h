@@ -103,7 +103,7 @@ class SymbolAnalysis {
   ModuleOp getSymbolModule() const;
   ModuleOp getRootModule() const;
   bool hasSymbol(const llvm::StringRef symbol) const;
-  void debugPrintSymbols();
+  void debugPrintSymbols() const;
   Symbol getBasicSymbol(const llvm::StringRef symbol);
 
  private:

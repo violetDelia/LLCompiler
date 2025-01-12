@@ -108,9 +108,7 @@ def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
         symbol 信息
     }];
     let arguments = (ins 
-       SymbolNameAttr:$sym_name//,
-    //    DefaultValuedAttr<I64Attr, "1">:$min,
-    //    DefaultValuedAttr<I64Attr, "INT64_MAX">:$max
+       SymbolNameAttr:$sym_name,
        );
 }
 
@@ -314,7 +312,11 @@ def LLH_FlattenOp : LLH_SymbolOp<"flatten", []>{
         LLH_Tensor);
 }
 
-def LLH_ConvertToOp : LLH_UnaryOp<"convert_to", [], LLH_Tensor, LLH_Tensor>{
+def LLH_ConvertToOp : LLH_SymbolOp<"convert_to", []>{
+    let arguments = (ins 
+        LLH_Tensor:$input);
+    let results = (outs 
+        LLH_Tensor);
     let hasCanonicalizer = 1;
 }
 
