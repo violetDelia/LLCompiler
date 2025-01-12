@@ -86,6 +86,20 @@ func.func @fold_reshape(%arg0: tensor<200x3x224x224xf32>) -> tensor<200x3x224x22
     return %33 : tensor<200x3x224x224xf32>
   }
 
+// -----
+// CHECK-LABEL: reshape_negative_dim_calization
+func.func @reshape_negative_dim_calization(%arg0: i64, %arg1: i64, %arg2: i64, %arg3: i64, %arg4: i64, %arg5: tensor<8xf32> , %arg6: tensor<?x8xf32>, %arg7: tensor<?x8xf32>, %arg8: tensor<8xf32>) -> (tensor<?x?x?x?xf32>) attributes {entrance, symbol_int_arg_nums = 5 : i64} {
+    %0 = "llh.constant"() <{value = -1 : i64}> : () -> i64
+    %1 = "llh.constant"() <{value = 8 : i64}> : () -> i64
+    %2 = "llh.constant"() <{value = 1 : i64}> : () -> i64
+    %3 = "llh.reshape"(%arg5, %2, %1) : (tensor<8xf32>, i64, i64) -> tensor<1x8xf32>
+    %4 = "llh.broadcast_to"(%3, %arg0, %1) <{cast_dims = array<i64: 0, 1>}> : (tensor<1x8xf32>, i64, i64) -> tensor<?x8xf32>
+    %7 = "llh.add"(%arg7, %4) : (tensor<?x8xf32>, tensor<?x8xf32>) -> tensor<?x8xf32>
+    %9 = "llh.reshape"(%7, %arg1, %arg2, %1) : (tensor<?x8xf32>, i64, i64, i64) -> tensor<?x?x8xf32>
+    
+    %11 = "llh.reshape"(%9, %arg1, %0, %arg3, %arg4) : (tensor<?x?x8xf32>, i64, i64, i64, i64) -> tensor<?x?x?x?xf32>
+    return %11 : tensor<?x?x?x?xf32>
+  }
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file -canonicalize /home/lfr/LLCompiler/test/Dialect/LLH/canonicalize.mlir 
 
 

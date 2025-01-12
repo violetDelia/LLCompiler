@@ -37,7 +37,6 @@ class Torch_ExecutionEngine(ExecutionEngine):
         for arg in args:
             if isinstance(arg, torch.Tensor):
                 offset = arg.storage_offset()
-                print(arg.data_ptr())
                 tensor = Tensor(
                     arg.data_ptr(),
                     arg.data_ptr() + offset,
@@ -48,9 +47,6 @@ class Torch_ExecutionEngine(ExecutionEngine):
                 )
                 inputs.append(tensor)
             elif isinstance(arg, int):
-                print(arg)
-                pass
-            elif isinstance(arg, torch.SymInt):
                 pass
             else:
                 raise TypeError(f"Unsupported type: {type(arg)}")
@@ -58,6 +54,7 @@ class Torch_ExecutionEngine(ExecutionEngine):
 
     def run(self, *args) -> Any:
         # ([inputs...]) case
+        
         print(args)
         if (
             isinstance(args, tuple)

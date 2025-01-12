@@ -104,35 +104,6 @@ ConstantOp buildConstTensorFromScalar(ConstantOp op,
 // transform patterns
 //===----------------------------------------------------------------------===//
 
-// this pattern is discarded
-// struct BraodcastableScalarToTensor : public LLHOpRewritePattern<ConstantOp> {
-//   using LLHOpRewritePattern::LLHOpRewritePattern;
-//   LogicalResult match(ConstantOp op) const final {
-//     if (op.use_empty()) return llvm::failure();
-//     if (!op->getResult(0).getType().isIntOrFloat()) return llvm::failure();
-//     for (auto user : op->getUsers()) {
-//       if (user->hasTrait<::mlir::BraodcastableOpInterface::Trait>()) {
-//         return llvm::success();
-//       }
-//     }
-//     return llvm::failure();
-//   }
-//   void rewrite(ConstantOp op, LLHPatternRewriter& rewriter) const final {
-//     for (auto user : op->getUsers()) {
-//       if (user->hasTrait<::mlir::BraodcastableOpInterface::Trait>()) {
-//         auto operand_num = user->getNumOperands();
-//         auto const_tensor = buildConstTensorFromScalar(op, &rewriter, user);
-//         for (int i = 0; i < operand_num; i++) {
-//           auto operand = user->getOperand(i);
-//           if (operand.getDefiningOp() == op) {
-//             user->setOperand(i, const_tensor);
-//           }
-//         }
-//       }
-//     }
-//   }
-// };
-
 template <class Op>
 struct ResultScaleRefine : public LLHOpRewritePattern<Op> {
   using LLHOpRewritePattern<Op>::LLHOpRewritePattern;
@@ -219,9 +190,31 @@ struct RefineBroadcast : public LLHOpRewritePattern<BroadCastToOp> {
         loc, res_tensor, reshape, dims, new_cast_dims, DenseI64ArrayAttr(),
         DenseI64ArrayAttr());
     rewriter.replaceOp(op, new_braodcast);
-
   }
 };
+
+struct AddSymbolIntArgNumsAttr : public LLHOpRewritePattern<func::FuncOp> {
+  using LLHOpRewritePattern<func::FuncOp>::LLHOpRewritePattern;
+  LogicalResult match(func::FuncOp op) const final {
+    if (!op->hasAttr(llc::EntranceAttr)) return llvm::failure();
+    if (op->hasAttr(llc::SymbolIntArgNumsAttr)) return llvm::failure();
+    return llvm::success();
+  }
+
+  void rewrite(func::FuncOp op, LLHPatternRewriter& rewriter) const final {
+    auto func_type = op.getFunctionType();
+    auto input_types = func_type.getInputs();
+    int symbol_int_nums = 0;
+    for (auto type : input_types) {
+      if (llvm::isa<IntegerType>(type))
+        symbol_int_nums++;
+      else
+        break;
+    }
+    llc::add_symbol_int_arg_nums_attr(op, symbol_int_nums);
+  }
+};
+
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
@@ -231,6 +224,7 @@ void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
   patterns.add<ResultScaleRefine<WeightOp>>(context);
   patterns.add<ResultScaleRefine<ExtractOp>>(context);
   patterns.add<RefineBroadcast>(context);
+  patterns.add<AddSymbolIntArgNumsAttr>(context);
 }
 
 //===----------------------------------------------------------------------===//

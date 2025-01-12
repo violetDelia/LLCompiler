@@ -27,6 +27,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
@@ -36,6 +37,7 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
 #include "mlir/IR/Block.h"
+#include "mlir/IR/BlockSupport.h"
 #include "mlir/IR/BuiltinAttributeInterfaces.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
@@ -412,10 +414,51 @@ struct NonsenseReshapeFoldOp : public LLHOpRewritePattern<ReshapeOp> {
     rewriter.replaceAllUsesWith(res, input);
   }
 };
+
+struct ReshapeNegativeDimCalization : public LLHOpRewritePattern<ReshapeOp> {
+  using LLHOpRewritePattern::LLHOpRewritePattern;
+  LogicalResult match(ReshapeOp op) const final {
+    auto negative_count = 0;
+    for (auto dim : op.getShapes()) {
+      if (!isConstIntegerValue(dim)) continue;
+      auto dim_value = getConstIntegerValue(dim);
+      if (dim_value == -1) negative_count++;
+    }
+    if (negative_count != 1) return llvm::failure();
+    return llvm::success();
+  }
+  void rewrite(ReshapeOp op, LLHPatternRewriter &rewriter) const final {
+    auto negative_index = 0;
+    auto input = op.getInput();
+    auto loc = op->getLoc();
+    llvm::SmallVector<Value> non_negative_dims;
+    llvm::SmallVector<Value> new_dims;
+    for (auto [index, dim] : llvm::enumerate(op.getShapes())) {
+      if (!isConstIntegerValue(dim)) continue;
+      auto dim_value = getConstIntegerValue(dim);
+      if (dim_value != -1) continue;
+      negative_index = index;
+      break;
+    }
+    auto all_elements = getElementNums(input, &rewriter);
+    for (auto [index, dim] : llvm::enumerate(op.getShapes())) {
+      new_dims.push_back(dim);
+      if (index == negative_index) continue;
+      non_negative_dims.push_back(dim);
+    }
+    auto non_negative_elements = getElementNums(non_negative_dims, &rewriter);
+    auto negative_dim =
+        rewriter.create<DivOp>(loc, TypeRange{all_elements.getType()},
+                               ValueRange{all_elements, non_negative_elements});
+    new_dims[negative_index] = negative_dim;
+    rewriter.replaceOpWithNewOp<ReshapeOp>(op, op.getType(), input, new_dims);
+  }
+};
 }  // namespace
 void ReshapeOp::getCanonicalizationPatterns(mlir::RewritePatternSet &results,
                                             MLIRContext *context) {
   results.add<FoldReshapeOp>(context);
+  results.add<ReshapeNegativeDimCalization>(context);
   results.add<NonsenseReshapeFoldOp>(context);
 }
 

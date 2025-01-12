@@ -20,6 +20,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <optional>
 #include <string>
 #include <utility>
 
@@ -41,6 +42,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
+#include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/AffineExpr.h"
 #include "mlir/IR/AffineMap.h"
@@ -68,6 +70,23 @@
 #include "symengine/symbol.h"
 
 namespace mlir::llh {
+namespace {
+
+::std::optional<DictionaryAttr> getArgAttrs(Value value) {
+  auto arg = llvm::cast<BlockArgument>(value);
+  auto index = arg.getArgNumber();
+  auto func =
+      llvm::cast_or_null<func::FuncOp>(value.getParentBlock()->getParentOp());
+  CHECK(llc::SymbolInfer, func);
+  auto maybe_attrs = func.getArgAttrs();
+  if (!maybe_attrs.has_value()) return std::nullopt;
+  auto attrs = maybe_attrs.value().getValue();
+  auto attr = llvm::cast<DictionaryAttr>(attrs[index]);
+  CHECK(llc::SymbolInfer, attr);
+  return attr;
+}
+
+};  // namespace
 
 std::mutex SymbolAnalysisManager::mutex_;
 SymbolAnalysisManager& SymbolAnalysisManager::getInstance() {
@@ -213,6 +232,12 @@ bool SymbolAnalysis::hasSymbolAttr(Operation* op) {
   return op->hasAttr(llc::SymbolIntAttr);
 }
 bool SymbolAnalysis::hasSymbolAttr(Value value) {
+  if (isa<BlockArgument>(value)) {
+    auto maybe_attr_dict = getArgAttrs(value);
+    if (!maybe_attr_dict.has_value()) return false;
+    auto attr_dict = maybe_attr_dict.value();
+    return attr_dict.getNamed(llc::FuncSymbolIntAttr).has_value();
+  }
   auto op = value.getDefiningOp();
   return hasSymbolAttr(op);
 }
@@ -289,6 +314,24 @@ SymbolicIntOp SymbolAnalysis::getOrBuildSymbol(const llvm::StringRef symbol,
 SymbolicIntOp SymbolAnalysis::getOrBuildConstSymbol(int64_t val) {
   llvm::SmallString<1> symbol("c" + std::to_string(val));
   return getOrBuildSymbol(symbol, true);
+}
+
+llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Operation* op) {
+  if (hasSymbolAttr(op)) return _getSymbolAttr(op);
+  return BuildSymbolAttrFrom(op);
+}
+
+llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Value value) {
+  if (isa<BlockArgument>(value)) {
+    auto maybe_attr_dict = getArgAttrs(value);
+    if (!maybe_attr_dict.has_value()) return UNKOW_SYMBOL;
+    auto attr_dict = maybe_attr_dict.value();
+    auto symbol = attr_dict.getAs<FlatSymbolRefAttr>(llc::FuncSymbolIntAttr);
+    CHECK(llc::SymbolInfer, symbol);
+    return symbol.getValue();
+  }
+  auto op = value.getDefiningOp();
+  return getOrBuildSymbolAttrFrom(op);
 }
 
 SymbolBindOp SymbolAnalysis::buildSymbolBindFromAttr(Value value) {

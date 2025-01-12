@@ -375,7 +375,6 @@ def build_symbol_inputs(
         if node.op != "placeholder":
             continue
         if node.type is torch.SymInt:
-            print(node.meta)
             symbol: torch.SymInt = node.meta["example_value"]
             raise ValueError
         elif node.type is None and isinstance(node.meta["val"], torch.SymInt):
@@ -444,22 +443,27 @@ def build_output(
     output_types: list,
     return_values: list,
 ):
+    def precess_arg(arg):
+        if isinstance(arg, torch.fx.node.Node):
+            type = get_result_type(arg)
+            if isinstance(type, FakeTensor) or isinstance(type, TensorMetadata):
+                output_types.append(value_map[arg.name][0].type)
+                return_values.append(value_map[arg.name][0])
+            # None 是一些不需要多余输出的aten生成的
+        elif arg is None:
+            pass
+        else:
+            raise NotImplementedError(type(arg))
+
     for node in graph.nodes:
         if node.op != "output":
             continue
         for arg in node.args:
-            if isinstance(arg, torch.fx.node.Node):
-                type = get_result_type(arg)
-                if isinstance(type, FakeTensor) or isinstance(type, TensorMetadata):
-                    output_types.append(value_map[arg.name][0].type)
-                    return_values.append(value_map[arg.name][0])
-                # None 是一些不需要多余输出的aten生成的
-            elif arg is None:
-                pass
+            if isinstance(arg, (list, tuple)):
+                for arg_i in arg:
+                    precess_arg(arg_i)
             else:
-                print(arg)
-                print(type(arg))
-                raise NotImplementedError(type(arg))
+                precess_arg(arg)
 
 
 def torch_build_func(
@@ -493,5 +497,4 @@ def torch_translate_to_mlir_module(model: torch.fx.GraphModule):
     func: FuncOp = torch_build_func(model, "main")
     func.attributes.update({"entrance": UnitAttr()})
     module = ModuleOp([func])
-    print(module)
     return module

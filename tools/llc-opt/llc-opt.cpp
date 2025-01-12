@@ -49,11 +49,9 @@ int main(int argc, char **argv) {
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
   mlir::bufferization::ex::registerBufferizationExtensionPasses();
-
   mlir::stablehlo::registerAllDialects(registry);
-
   llc::pipeline::registerTransformPipeline();
   mlir::asMainReturnCode(
-      mlir::MlirOptMain(argc, argv, "llc-compiler", registry));
+      mlir::MlirOptMain(argc, argv, "llc-opt", registry));
   return 0;
 }

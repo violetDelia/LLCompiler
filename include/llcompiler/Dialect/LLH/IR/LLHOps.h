@@ -41,6 +41,7 @@
 #include "mlir/IR/PatternMatch.h"
 #include "mlir/IR/SymbolTable.h"
 #include "mlir/IR/TypeUtilities.h"
+#include "mlir/IR/Value.h"
 #include "mlir/Interfaces/CastInterfaces.h"
 #include "mlir/Interfaces/InferTypeOpInterface.h"
 #include "mlir/Interfaces/LoopLikeInterface.h"
@@ -59,6 +60,9 @@ llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewrite,
                           size_t dim);
 llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
                                          LLHPatternRewriter* rewrite);
+
+Value getElementNums(mlir::Value operand, LLHPatternRewriter* rewrite);
+Value getElementNums(llvm::SmallVector<Value> dims, LLHPatternRewriter* rewrite);
 
 bool shapeIsSame(Value lhs, Value rhs);
 

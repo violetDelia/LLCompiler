@@ -120,29 +120,7 @@ bool SymbolAnalysis ::isSymbolicInferOp(Operation* op) {
   return isExtraSymbolicInferOp(op) || isa<SymbolicInferShapeOpInterface>(op);
 }
 
-llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Operation* op) {
-  if (hasSymbolAttr(op)) return _getSymbolAttr(op);
-  return BuildSymbolAttrFrom(op);
-}
 
-llvm::StringRef SymbolAnalysis::getOrBuildSymbolAttrFrom(Value value) {
-  if (isa<BlockArgument>(value)) {
-    auto arg = llvm::cast<BlockArgument>(value);
-    auto index = arg.getArgNumber();
-    auto func = llvm::cast_or_null<mlir::func::FuncOp>(
-        value.getParentBlock()->getParentOp());
-    CHECK(llc::SymbolInfer, func);
-    auto maybe_attrs = func.getArgAttrs();
-    CHECK(llc::SymbolInfer, maybe_attrs.has_value());
-    auto attrs = maybe_attrs.value().getValue();
-    auto attr = llvm::cast<DictionaryAttr>(attrs[index]);
-    auto symbol = attr.getAs<FlatSymbolRefAttr>(llc::FuncSymbolIntAttr);
-    CHECK(llc::SymbolInfer, symbol);
-    return symbol.getValue();
-  }
-  auto op = value.getDefiningOp();
-  return getOrBuildSymbolAttrFrom(op);
-}
 
 llvm::StringRef SymbolAnalysis::BuildSymbolAttrFrom(Operation* op) {
   if (isa<DimOp, mlir::tensor::DimOp>(op)) {
@@ -163,5 +141,6 @@ llvm::StringRef SymbolAnalysis::BuildSymbolAttrFrom(Value value) {
   auto op = value.getDefiningOp();
   return BuildSymbolAttrFrom(op);
 }
+
 
 }  // namespace mlir::llh

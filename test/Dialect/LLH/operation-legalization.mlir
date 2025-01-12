@@ -61,4 +61,10 @@ func.func @broadcast_to(%arg0: tensor<?x?xf32> {func.input_symbol_0 = "s0", func
     return %15 : tensor<?x?x?xf32>
 }
 
+// -----
+// CHECK-LABEL: add_symbol_int_args_attr
+// CHECK-SAME: symbol_int_arg_nums = 2 : i64
+func.func @add_symbol_int_args_attr(%arg0: i64, %arg1: i64 , %arg2: tensor<?x?xf32> {func.input_symbol_0 = "s0", func.input_symbol_1 = "s1"}) -> () attributes {entrance} {
+    return 
+}
 // /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --operation-legalization /home/lfr/LLCompiler/test/Dialect/LLH/operation-legalization.mlir

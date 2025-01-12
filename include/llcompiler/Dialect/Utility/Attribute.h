@@ -53,6 +53,11 @@ namespace llc {
   DEF_ATTR(name, Key)              \
   void add_##name##_attr(mlir::Operation* op, ::mlir::llh::Layout value);
 
+#define ADD_I64_ATTR(name, Key)                           \
+  DEF_ATTR(name, Key)                                     \
+  void add_##name##_attr(mlir::Operation* op, int value); \
+  int get_##name##_attr(mlir::Operation* op);
+
 extern const char* SymbolModule;
 extern const char* GloabalLayoutAttr;
 extern const char* GloabalModeKindAttr;
@@ -70,11 +75,12 @@ ADD_UNIT_ATTR(is_weight, IsWeightAttr)
 ADD_UNIT_ATTR(symbol_generate, SymbolGeneratedAttr)
 ADD_UNIT_ATTR(stop_run, StopRunAttr)
 ADD_UNIT_ATTR(entrance, EntranceAttr)
+ADD_I64_ATTR(symbol_int_arg_nums, SymbolIntArgNumsAttr)
 #undef ADD_LAYOUT_ATTR
 #undef ADD_STRING_ATTR
 #undef ADD_DENSE_I64_ATTR
 #undef ADD_UNIT_ATTR
 #undef DEF_ATTR
-
+#undef ADD_I64_ATTR
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_ATTRIBUTE_H_

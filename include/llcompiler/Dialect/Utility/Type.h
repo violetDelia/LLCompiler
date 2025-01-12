@@ -59,5 +59,6 @@ mlir::RankedTensorType getUnsqueezeTensor(mlir::RankedTensorType tensor,
                                           int dim = 0);
 mlir::RankedTensorType getSqueezeTensor(mlir::RankedTensorType tensor,
                                         int dim = 0);
+                                        
 }  // namespace llc
 #endif  // INCLUDE_LLCOMPILER_DIALECT_UTILITY_TYPE_H_

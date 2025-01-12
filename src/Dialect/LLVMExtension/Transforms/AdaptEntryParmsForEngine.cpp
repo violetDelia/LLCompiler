@@ -19,8 +19,10 @@
 #include <string>
 
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
+#include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
@@ -46,10 +48,10 @@ namespace {
 namespace {
 
 llvm::SmallVector<size_t> analysisOriginalMemrefStart(
-    llvm::ArrayRef<Type>& params) {
+    llvm::ArrayRef<Type>& params, size_t range_start) {
   llvm::SmallVector<size_t> original_memref_start;
   bool is_memref_begin = false;
-  for (size_t i = 0; i < params.size(); i++) {
+  for (size_t i = range_start; i < params.size(); i++) {
     auto type = params[i];
     if (llvm::dyn_cast<mlir::LLVM::LLVMPointerType>(type)) {
       if (is_memref_begin) continue;
@@ -63,12 +65,12 @@ llvm::SmallVector<size_t> analysisOriginalMemrefStart(
 }
 
 llvm::SmallVector<size_t> analysisOriginalMemrefRank(
-    llvm::ArrayRef<Type>& params) {
+    llvm::ArrayRef<Type>& params, size_t range_start) {
   llvm::SmallVector<size_t> original_memref_rank;
   bool pass_by_memref = false;
   size_t begin = 0;
   size_t end = 0;
-  for (int i = 0; i < params.size(); ++i) {
+  for (int i = range_start; i < params.size(); ++i) {
     auto type = params[i];
     if (llvm::dyn_cast<mlir::LLVM::LLVMPointerType>(type)) {
       if (pass_by_memref) {
@@ -89,11 +91,11 @@ llvm::SmallVector<size_t> analysisOriginalMemrefRank(
   return original_memref_rank;
 }
 
-void transformFunctionType(LLVM::LLVMFuncOp& enter_func,
-                           llvm::SmallVector<size_t>& original_memref_rank) {
+void transformFunctionType(LLVM::LLVMFuncOp& enter_func, size_t memref_nums) {
   auto new_params = llvm::SmallVector<Type>();
   auto contxt = enter_func->getContext();
-  for (auto _ : original_memref_rank) {
+  new_params.push_back(LLVM::LLVMPointerType::get(contxt));
+  for (auto _ : llvm::index_range(0, memref_nums)) {
     new_params.push_back(LLVM::LLVMPointerType::get(contxt));
     new_params.push_back(LLVM::LLVMPointerType::get(contxt));
     new_params.push_back(LLVM::LLVMPointerType::get(contxt));
@@ -103,6 +105,7 @@ void transformFunctionType(LLVM::LLVMFuncOp& enter_func,
   auto new_enter_type = LLVM::LLVMFunctionType::get(
       enter_func.getFunctionType().getReturnType(), new_params);
   enter_func.setType(new_enter_type);
+  enter_func.removeArgAttrsAttr();
 }
 
 void transformMemrefPtrs(size_t index, IRRewriter* rewriter, Block& block) {
@@ -146,15 +149,14 @@ void transformMemrefOffset(size_t index, IRRewriter* rewriter, Block& block) {
   rewriter->replaceAllUsesWith(offset, new_offset);
 }
 
-void transformMemrefSizesOrStrides(size_t index, size_t rank,
-                                   IRRewriter* rewriter, Block& block) {
+void transformElementsRangeToPtr(size_t strat, size_t nums,
+                                 IRRewriter* rewriter, Block& block) {
   auto context = rewriter->getContext();
-
   auto new_arg = block.addArgument(LLVM::LLVMPointerType::get(context),
                                    block.getArgument(0).getLoc());
-  for (size_t i = 0; i < rank; ++i) {
-    auto sizes_or_strides = block.getArgument(index);
-    auto loc = sizes_or_strides.getLoc();
+  for (size_t i = 0; i < nums; ++i) {
+    auto element = block.getArgument(strat + i);
+    auto loc = element.getLoc();
     auto const_op = rewriter->create<LLVM::ConstantOp>(
         loc, rewriter->getI64Type(), rewriter->getIndexAttr(i));
     auto get_element_ptr = rewriter->create<LLVM::GEPOp>(
@@ -162,34 +164,44 @@ void transformMemrefSizesOrStrides(size_t index, size_t rank,
         LLVM::LLVMPointerType::get(
             context,
             cast<LLVM::LLVMPointerType>(new_arg.getType()).getAddressSpace()),
-        rewriter->getI64Type(), new_arg, ArrayRef<Value>{const_op}, true);
-    auto new_sizes_or_strides = rewriter->create<LLVM::LoadOp>(
-        loc, sizes_or_strides.getType(), get_element_ptr);
-    block.push_front(new_sizes_or_strides);
+        element.getType(), new_arg, ArrayRef<Value>{const_op}, true);
+    auto new_element =
+        rewriter->create<LLVM::LoadOp>(loc, element.getType(), get_element_ptr);
+    block.push_front(new_element);
     block.push_front(get_element_ptr);
     block.push_front(const_op);
-    index++;
-    rewriter->replaceAllUsesWith(sizes_or_strides, new_sizes_or_strides);
+    rewriter->replaceAllUsesWith(element, new_element);
+  }
+}
+
+void transformSymbolInt(size_t start, size_t nums, IRRewriter* rewriter,
+                        Block& block) {
+  auto context = rewriter->getContext();
+  for (auto i : llvm::index_range(start, nums)) {
+    auto new_arg = block.addArgument(LLVM::LLVMPointerType::get(context),
+                                     block.getArgument(0).getLoc());
   }
 }
 
 void transformBlockArgs(Block& block, IRRewriter* rewriter,
                         llvm::SmallVector<size_t>& original_memref_start,
-                        llvm::SmallVector<size_t>& original_memref_rank) {
+                        llvm::SmallVector<size_t>& original_memref_rank,
+                        size_t symbol_int_nums) {
   auto context = block.back().getContext();
   auto loc = block.back().getLoc();
   auto arg_size = block.getNumArguments();
-  auto memref_size = original_memref_start.size();
-  for (int i = 0; i < memref_size; ++i) {
+  auto memref_nums = original_memref_start.size();
+  transformElementsRangeToPtr(0, symbol_int_nums, rewriter, block);
+  for (int i = 0; i < memref_nums; ++i) {
     auto index = original_memref_start[i];
     auto rank = original_memref_rank[i];
     transformMemrefPtrs(index, rewriter, block);
     index += 2;
     transformMemrefOffset(index, rewriter, block);
     index += 1;
-    transformMemrefSizesOrStrides(index, rank, rewriter, block);
+    transformElementsRangeToPtr(index, rank, rewriter, block);
     index += rank;
-    transformMemrefSizesOrStrides(index, rank, rewriter, block);
+    transformElementsRangeToPtr(index, rank, rewriter, block);
   }
   block.eraseArguments(0, arg_size);
 }
@@ -271,13 +283,22 @@ void AdaptEntryParmsForEnginePass::runOnOperation() {
   auto enter_type = enter_func.getFunctionType();
   auto& block = enter_func.getFunctionBody().getBlocks().front();
   auto params = enter_type.getParams();
-  auto original_memref_start = analysisOriginalMemrefStart(params);
-  auto original_memref_rank = analysisOriginalMemrefRank(params);
+  auto symbol_int_nums = 0;
+  if (enter_func->hasAttr(llc::SymbolIntArgNumsAttr)) {
+    symbol_int_nums = llc::get_symbol_int_arg_nums_attr(enter_func);
+  }
+  auto original_memref_start =
+      analysisOriginalMemrefStart(params, symbol_int_nums);
+  auto original_memref_rank =
+      analysisOriginalMemrefRank(params, symbol_int_nums);
+  for (auto [i, r] : llvm::zip(original_memref_start, original_memref_rank)) {
+    print_info << i << ":" << r;
+  }
   CHECK_EQ(llc::MLIR_PASS, original_memref_start.size(),
            original_memref_rank.size());
   transformBlockArgs(block, &rewriter, original_memref_start,
-                     original_memref_rank);
-  transformFunctionType(enter_func, original_memref_rank);
+                     original_memref_rank, symbol_int_nums);
+  transformFunctionType(enter_func, original_memref_rank.size());
   transformBlockArgsFinal(block, &rewriter);
   transformFunctionTypeFinal(enter_func);
   LLC_RUN_OUT_PASS

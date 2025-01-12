@@ -15,7 +15,7 @@ from inspect import isfunction
 from sympy.core.symbol import Symbol
 import sympy.core
 from torch.fx.passes.shape_prop import TensorMetadata
-
+from torch.fx.passes.fake_tensor_prop import FakeTensorProp
 
 def gen_outshape_form_faketensor(exp, symbol_dict: Dict[str, int]):
     if isinstance(exp, sympy.core.Number):
@@ -64,7 +64,7 @@ class GenOutput:
         raise NotImplementedError
 
     # TODO: support move inplace to out
-    def _fx_get_out_call(self, model: torch.fx.GraphModule):
+    def _fx_get_out_call_old(self, model: torch.fx.GraphModule):
         inputs_tensor_or_symbol = []
         outputs_tensor_or_symbol = []
         for node in model.graph.nodes:
@@ -149,6 +149,13 @@ class GenOutput:
             return (outs[0]) if len(outs) == 1 else outs
 
         return _get_out_form_inputs
+
+    def _fx_get_out_call(self, model: torch.fx.GraphModule):
+        def _fx_get_out_call_impl(*args):
+            out = FakeTensorProp(model).propagate(*args)
+            print(out)
+        
+        return _fx_get_out_call_impl
 
     def _torch_get_out_call(self, model: torch.nn.Module):
         return self._fx_get_out_call(model)

@@ -26,6 +26,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Interfaces/SymbolShapeOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/IR/BuiltinTypes.h"
@@ -59,26 +60,46 @@ llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
   return ranks;
 }
 
+Value getElementNums(mlir::Value operand, LLHPatternRewriter* rewrite) {
+  auto dims = buildTensorDims(operand, rewrite);
+  return getElementNums(dims, rewrite);
+}
+
+Value getElementNums(llvm::SmallVector<Value> dims,
+                     LLHPatternRewriter* rewrite) {
+  CHECK(llc::UTILITY, dims.size() != 0);
+  if (dims.size() == 1) return dims[0];
+  Value element_nums = dims[0];
+  auto loc = element_nums.getLoc();
+  for (auto index : llvm::index_range(1, dims.size())) {
+    element_nums =
+        rewrite->create<MulOp>(loc, TypeRange{element_nums.getType()},
+                               ValueRange{element_nums, dims[index]});
+  }
+  return element_nums;
+}
 bool isConstIntegerValue(Value value) {
-  if (llvm::isa<BlockArgument>(value)) return false;
   auto type = value.getType();
   if (!llvm::isa<IntegerType, IndexType>(type)) return false;
-  auto op = value.getDefiningOp();
-  if (isa<TorchSymbolicIntOp>(op)) return false;
-  if (llvm::isa<mlir::arith::ConstantOp>(op)) return true;
-  if (llvm::isa<DimOp>(op)) {
-    auto dim_op = cast<DimOp>(op);
+  if (!llvm::isa<BlockArgument>(value) &&
+      isa<MulOp, SubOp, AddOp, DivOp>(value.getDefiningOp())) {
+    return isConstIntegerValue(value.getDefiningOp()->getOperand(0)) &&
+           isConstIntegerValue(value.getDefiningOp()->getOperand(1));
+  }
+  if (!llvm::isa<BlockArgument>(value) &&
+      llvm::isa<DimOp>(value.getDefiningOp())) {
+    auto dim_op = cast<DimOp>(value.getDefiningOp());
     auto dim_type = llvm::cast<RankedTensorType>(dim_op.getInput().getType());
     CHECK(llc::MLIR, isConstIntegerValue(dim_op.getDim()));
     return !dim_type.isDynamicDim(getConstIntegerValue(dim_op.getDim()));
   }
+  if (llvm::isa<BlockArgument>(value)) return false;
+  auto op = value.getDefiningOp();
+  if (isa<TorchSymbolicIntOp>(op)) return false;
+  if (llvm::isa<mlir::arith::ConstantOp>(op)) return true;
   if (llvm::isa<ConstantOp>(op)) {
     auto constant_op = llvm::cast<ConstantOp>(op);
     return llvm::isa<IntegerAttr>(constant_op.getValueAttr());
-  }
-  if (isa<MulOp, SubOp, AddOp, DivOp>(op)) {
-    return isConstIntegerValue(op->getOperand(0)) &&
-           isConstIntegerValue(op->getOperand(1));
   }
   UNIMPLEMENTED(llc::UTILITY) << "unsupport check operator is const: "
                               << op->getName().getStringRef().str();
@@ -86,6 +107,7 @@ bool isConstIntegerValue(Value value) {
 }
 
 int64_t getConstIntegerValue(Value value) {
+  CHECK(llc::UTILITY, !isa<BlockArgument>(value));
   auto type = value.getType();
   if (!llvm::isa<IntegerType, IndexType>(type)) FATAL(llc::MLIR);
   auto op = value.getDefiningOp();

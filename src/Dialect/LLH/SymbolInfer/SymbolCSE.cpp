@@ -82,7 +82,7 @@ void foldSymbol(func::FuncOp func) {
     auto front_symbol_op = symbol_map[key][symbol.str()].getDefiningOp();
     if (front_symbol_op == op) return;
 
-    builder.replaceOp( op,front_symbol_op);
+    builder.replaceOp(op, front_symbol_op);
   };
   func->walk(init_map);
   func->walk(replace_symbol_value);
