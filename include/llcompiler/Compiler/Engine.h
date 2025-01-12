@@ -26,6 +26,7 @@
 #ifndef INCLUDE_LLCOMPILER_COMPILER_ENGINE_H_
 #define INCLUDE_LLCOMPILER_COMPILER_ENGINE_H_
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -39,7 +40,10 @@ extern "C" struct Engine {
 
   void debug_info();
 
-  int run(std::vector<Tensor*> &inputs, std::vector<Tensor*>& outs);
+  int run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs);
+
+  int run_with_symbols(std::vector<int64_t> &symbols, std::vector<Tensor*>& inputs,
+          std::vector<Tensor*>& outs);
 
   std::unique_ptr<llvm::orc::LLJIT> engine;
 };

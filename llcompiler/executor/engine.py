@@ -54,7 +54,7 @@ class Torch_ExecutionEngine(ExecutionEngine):
 
     def run(self, *args) -> Any:
         # ([inputs...]) case
-        
+
         print(args)
         if (
             isinstance(args, tuple)
@@ -62,10 +62,13 @@ class Torch_ExecutionEngine(ExecutionEngine):
             and (isinstance(args[0], list)) == 1
         ):
             args = args[0]
+        symbols = [arg for arg in args if isinstance(arg, int)]
         inputs = self.trans_to_tensor(*args)  # 将torch.Tensor 转变为C++定义的Tensor
-        outputs = self.gen_outs_call(*args)  # 推导输出的tensor信息，并分配好内存
+        outputs, multi_results = self.gen_outs_call(
+            *args
+        )  # 推导输出的tensor信息，并分配好内存
         outputs_ = self.trans_to_tensor(
             *outputs
         )  # 输出的torch.Tensor 转变为C++定义的Tensor
-        self.engine.run(inputs, outputs_)  # 调用执行函数
+        self.engine.run_with_symbols(symbols, inputs, outputs_)  # 调用执行函数
         return outputs

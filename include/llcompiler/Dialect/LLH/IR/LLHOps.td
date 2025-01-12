@@ -108,7 +108,7 @@ def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
         symbol 信息
     }];
     let arguments = (ins 
-       SymbolNameAttr:$sym_name,
+       SymbolNameAttr:$sym_name
        );
 }
 

@@ -60,4 +60,30 @@ int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
   return 0;
 }
 
+int Engine::run_with_symbols(std::vector<int64_t>& symbols, std::vector<Tensor*>& inputs,
+                std::vector<Tensor*>& outs) {
+  auto maybe_func = engine->lookup("main");  // 查找入口函数
+  CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
+  auto& func = maybe_func.get();
+  std::vector<void*> params;
+  if (symbols.size() != 0) params.push_back(static_cast<void*>(symbols.data()));
+  for (auto tensor : inputs) {
+    params.push_back(static_cast<void*>(tensor->base));
+    params.push_back(static_cast<void*>(tensor->data));
+    params.push_back(static_cast<void*>(&tensor->offset));
+    params.push_back(static_cast<void*>(tensor->size.data()));
+    params.push_back(static_cast<void*>(tensor->stride.data()));
+  }
+  for (auto tensor : outs) {
+    params.push_back(static_cast<void*>(tensor->base));
+    params.push_back(static_cast<void*>(tensor->data));
+    params.push_back(static_cast<void*>(&tensor->offset));
+    params.push_back(static_cast<void*>(tensor->size.data()));
+    params.push_back(static_cast<void*>(tensor->stride.data()));
+  }
+  auto run = func.toPtr<void(void**)>();  // 入口函数
+  run(static_cast<void**>(params.data()));
+  return 0;
+}
+
 }  // namespace llc::compiler

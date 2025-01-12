@@ -17,6 +17,7 @@ import sympy.core
 from torch.fx.passes.shape_prop import TensorMetadata
 from torch.fx.passes.fake_tensor_prop import FakeTensorProp
 
+
 def gen_outshape_form_faketensor(exp, symbol_dict: Dict[str, int]):
     if isinstance(exp, sympy.core.Number):
         return int(exp)
@@ -153,8 +154,18 @@ class GenOutput:
     def _fx_get_out_call(self, model: torch.fx.GraphModule):
         def _fx_get_out_call_impl(*args):
             out = FakeTensorProp(model).propagate(*args)
-            print(out)
-        
+            multi_results = False
+            if isinstance(out, (list, tuple)):
+                multi_results = True
+            if not multi_results:
+                raise NotImplementedError
+            outputs = [None] * len(out)
+            for index, output in enumerate(out):
+                if not isinstance(output, FakeTensor):
+                    continue
+                outputs[index] = torch.empty(output.shape, dtype=output.dtype)
+            return outputs, multi_results
+
         return _fx_get_out_call_impl
 
     def _torch_get_out_call(self, model: torch.nn.Module):

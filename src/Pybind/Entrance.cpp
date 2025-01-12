@@ -93,7 +93,8 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
 
   pybind11::class_<Engine>(entrance, "EngineInternel")
       .def("debug_info", &Engine::debug_info)
-      .def("run", &Engine::run);
+      .def("run", &Engine::run)
+      .def("run_with_symbols", &Engine::run_with_symbols);
 
   pybind11::class_<llc::compiler::CompilerOptions>(entrance, "CompilerOptions")
       .def(pybind11::init<>())

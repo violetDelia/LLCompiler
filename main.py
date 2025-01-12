@@ -70,8 +70,8 @@ module_dict = {
     # BatchNorm2D_Inference: [torch.ones(1, 3, 2, 2, device="cpu")],
     # Linear: [torch.randn((10, 100000), device="cpu")],
     # ElewiseFusion1: [torch.randn((2,2), device="cpu")],
-    Braodcast: [torch.randn((10, 20), device="cpu")],
-    # Matmul: [torch.randn((3,224,112), device="cpu")],
+    #Braodcast: [torch.randn((10, 20), device="cpu")],
+    Matmul: [torch.randn((1,3,3), device="cpu")],
     # Sqrt: [torch.randn((3,3,224,224), device="cpu")],
 }
 
