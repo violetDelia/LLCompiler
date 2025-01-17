@@ -440,9 +440,7 @@ struct ReshapeNegativeDimCalization : public LLHOpRewritePattern<ReshapeOp> {
       negative_index = index;
       break;
     }
-    op->dump();
     auto all_elements = getElementNums(input, &rewriter);
-    op->dump();
     for (auto [index, dim] : llvm::enumerate(op.getShapes())) {
       new_dims.push_back(dim);
       if (index == negative_index) continue;

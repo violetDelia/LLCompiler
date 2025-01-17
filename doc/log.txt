@@ -59,6 +59,7 @@
                 add reduce_sum to hlo
                 support aten::full
 TODO:
+    参数warp bug
     重构 编译链
     broadcast where
     run --> MHA

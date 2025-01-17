@@ -37,7 +37,6 @@ class Torch_ExecutionEngine(ExecutionEngine):
         for arg in args:
             if isinstance(arg, torch.Tensor):
                 offset = arg.storage_offset()
-                print(arg.data_ptr())
                 tensor = Tensor(
                     arg.data_ptr(),
                     arg.data_ptr() + offset,
@@ -69,15 +68,10 @@ class Torch_ExecutionEngine(ExecutionEngine):
         outputs_ = self.trans_to_tensor(
             *outputs
         )  # 输出的torch.Tensor 转变为C++定义的Tensor
-        print(args)
         if len(symbols) == 0:
-            print("run")
             self.engine.run(inputs, outputs_)
-            print("run")
-            print(outputs)
-            print(outputs[0].data_ptr())
         else:
             self.engine.run_with_symbols(symbols, inputs, outputs_)  # 调用执行函数
         if not multi_results:
-            return (outputs[0])
+            return outputs[0]
         return outputs

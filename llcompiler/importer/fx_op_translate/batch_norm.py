@@ -47,7 +47,7 @@ def batch_norm_convert(
     value_map: dict[str:[SSAValue]],
     block: Block,
 ):
-    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node))
+    result_type = torch_fake_or_mate_tensor_translate(get_result_type(node, 0))
     input = get_arg_value(node.args[0], value_map, block)
     weight = get_arg_value(node.args[1], value_map, block)
     bias = get_arg_value(node.args[2], value_map, block)

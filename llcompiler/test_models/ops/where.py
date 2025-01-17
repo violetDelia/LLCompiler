@@ -8,4 +8,5 @@ class Where(nn.Module):
 
     def forward(self, pre, x: torch.Tensor, y):
         x = x.where(pre, y)
+        x = x + y
         return x

@@ -23,14 +23,21 @@ LLC_DECOMPOSITIONS = {
     aten.masked_fill,
     aten._softmax,
     aten.where,
+    torch.ops.aten.squeeze.dim,
+    torch.ops.aten.squeeze.dims,
 }
 
 LLC_SUPPORT_DICT = {
+    # other
+    "_operator.getitem": None,
     # tensor transform
     "torch.ops.prims.broadcast_in_dim.default": None,
     "torch.ops.aten.view.default": None,
     "torch.ops.aten.permute.default": None,
     "torch.ops.aten.reshape.default": None,
+    "torch.ops.aten.t.default": None,
+    "torch.ops.prims.squeeze.default": None,
+    "torch.ops.aten.unsqueeze.default": None,
     # "torch.ops.aten.clone.default": None,
     # activation
     ""
@@ -42,12 +49,19 @@ LLC_SUPPORT_DICT = {
     "torch.ops.aten.relu.default": None,
     "torch.ops.aten.abs.default": None,
     "torch.ops.aten.select.int": None,
+    "torch.ops.prims.where.default": None,
+    "torch.ops.aten._native_batch_norm_legit_no_training.default": None,
     # "torch.ops.prims.where.default": None,
     # "torch.ops.aten.exp.default": None,
     # reduce
+    "torch.ops.aten.max_pool2d_with_indices.default": None,
+    "torch.ops.aten.amax.default": None,
+    "torch.ops.aten.sum.dim_IntList": None,
     # matmul
     "torch.ops.aten.bmm.default": None,
-    # "torch.ops.aten.mm.default": None,
+    "torch.ops.aten.mm.default": None,
+    # conv
+    "torch.ops.aten.convolution.default": None,
     # symbol
     "torch._sym_sqrt": None,
     "_operator.mul": None,
@@ -75,7 +89,6 @@ class LLCOperatorSupport(OperatorSupport):
             return False
         if node.op not in CALLABLE_NODE_OPS:
             return True
-
         target = get_node_target(submodules, node)
         # Target not found in _support_dict meaning that we don't support this op at all
         if target not in self._support_dict:

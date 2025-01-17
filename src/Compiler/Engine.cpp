@@ -41,6 +41,7 @@ int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
   CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
   auto& func = maybe_func.get();
   std::vector<void*> params;
+  params.push_back(static_cast<void*>(nullptr));
   for (auto tensor : inputs) {
     params.push_back(static_cast<void*>(tensor->base));
     params.push_back(static_cast<void*>(tensor->data));
@@ -60,13 +61,17 @@ int Engine::run(std::vector<Tensor*>& inputs, std::vector<Tensor*>& outs) {
   return 0;
 }
 
-int Engine::run_with_symbols(std::vector<int64_t>& symbols, std::vector<Tensor*>& inputs,
-                std::vector<Tensor*>& outs) {
+int Engine::run_with_symbols(std::vector<int64_t>& symbols,
+                             std::vector<Tensor*>& inputs,
+                             std::vector<Tensor*>& outs) {
   auto maybe_func = engine->lookup("main");  // 查找入口函数
   CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
   auto& func = maybe_func.get();
   std::vector<void*> params;
-  if (symbols.size() != 0) params.push_back(static_cast<void*>(symbols.data()));
+  if (symbols.size() != 0)
+    params.push_back(static_cast<void*>(symbols.data()));
+  else
+    params.push_back(static_cast<void*>(nullptr));
   for (auto tensor : inputs) {
     params.push_back(static_cast<void*>(tensor->base));
     params.push_back(static_cast<void*>(tensor->data));

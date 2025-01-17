@@ -11,3 +11,4 @@ from .braodcast import Braodcast
 from .matmul import Matmul
 from .where import Where
 from .reduce import RecudeMax, RecudeSum
+from .reduce_fusion import ReduceFusion1

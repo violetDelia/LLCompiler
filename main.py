@@ -57,9 +57,9 @@ loop_num = 10
 loop = False
 
 module_dict = {
-    Add: [torch.randn((1,2,2), device="cpu")],
+    # Abs: [torch.randn((1,2,2), device="cpu")],
     # Slice: [torch.randn((200, 200, 224, 224), device="cpu")],
-    # Conv2D_NCHW_FCHW :[torch.randn((1, 3, 3,3), device="cpu")],
+    Conv2D_NCHW_FCHW :[torch.randn((1, 3, 224,224), device="cpu")],
     # MaxPool2D: [torch.randn((3,3,224,224), device="cpu")],
     # MultiHeadedAttention: [
     #     torch.randn((2, 24, 8), device="cpu"),
@@ -70,7 +70,7 @@ module_dict = {
     # Resnet: [torch.randn((1, 3, 64, 64), device="cpu")]
     # BatchNorm2D_Inference: [torch.ones(1, 3, 2, 2, device="cpu")],
     # Linear: [torch.randn((10, 100000), device="cpu")],
-    # ElewiseFusion1: [torch.randn((2,2), device="cpu")],
+    # ReduceFusion1: [torch.randn((2,2,2), device="cpu")],
     # Braodcast: [torch.randn((10, 20), device="cpu")],
     # Matmul: [torch.randn((1,3,3), device="cpu")],
     # Sqrt: [torch.randn((3,3,224,224), device="cpu")],
@@ -80,7 +80,7 @@ module_dict = {
 def run_model_dict(dict):
     modes = [
         "inference",
-        # "training"
+        #"training"
     ]
     for mode in modes:
         for func, inputs in dict.items():

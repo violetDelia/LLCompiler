@@ -4,7 +4,7 @@ from llcompiler.executor import (
     GenOutput,
     Torch_ExecutionEngine,
 )
-from llcompiler.compiler import LLC_DECOMPOSITIONS,LLCOperatorSupport
+from llcompiler.compiler import LLC_DECOMPOSITIONS, LLCOperatorSupport
 from typing import Any, Union, List, Dict
 import sys
 from torch._functorch.aot_autograd import aot_module_simplified
@@ -23,6 +23,8 @@ from torch._inductor.compile_fx import (
     _recursive_joint_graph_passes,
     _graph_counter,
 )
+from torch._inductor.freezing import freeze
+from torch._inductor.fx_passes.freezing_patterns import freezing_passes
 from torch._inductor.fx_passes.dedupe_symint_uses import dedupe_symints
 from torch._inductor.fx_passes.reinplace import reinplace_inplaceable_ops
 from torch._functorch.partitioners import default_partition
@@ -101,10 +103,9 @@ class LLCompiler(Importer, GenOutput):
             _recursive_joint_graph_passes(model)
         model = _recursive_pre_grad_passes(model, inputs)
         _recursive_post_grad_passes(model, inputs)
-
         return model
 
-    def not_compiler(self, model: Any, inputs: List[torch.Tensor], **kwargs):
+    def not_compile(self, model: Any, inputs: List[torch.Tensor], **kwargs):
         return model
 
     def _gen_compiler_options(self):
@@ -138,11 +139,7 @@ class LLCompiler(Importer, GenOutput):
             executor = self.compiler_fx_submodule(submodule)
             model.delete_submodule(name)
             setattr(model, name, executor)
-
-        def run_model(args):
-            return model(*args)
-
-        return run_model
+        return model.forward
 
     def compiler_fx_submodule(self, model: torch.fx.GraphModule, **kwargs):
         self._mlir_module = self.importer(model)
@@ -162,18 +159,19 @@ class LLCompiler(Importer, GenOutput):
             if self.mode == "inference":
                 config.freezing = True
                 config.cpp.weight_prepack = False
-                inference_compiler = functools.partial(
-                    fw_compiler_freezing,
-                    dynamo_model=model,
-                    num_example_inputs=len(inputs),
-                    inner_compile=self.compiler_fx,
-                    cudagraphs=BoxedBool(config.triton.cudagraphs),
-                    graph_id=next(_graph_counter),
-                    forward_device=BoxedDeviceIndex(None),
-                )
+                # TODO: 常量冻结要改torch源码，要么自定义一个pass来实现
+                # fw_compiler = functools.partial(
+                #     fw_compiler_freezing,
+                #     dynamo_model=model,
+                #     num_example_inputs=len(inputs),
+                #     inner_compile=self.compiler_fx,
+                #     cudagraphs=BoxedBool(config.triton.cudagraphs),
+                #     graph_id=next(_graph_counter),
+                #     forward_device=BoxedDeviceIndex(None),
+                # )
+                bw_compiler = self.not_compile
             else:
                 config.freezing = False
-
             return aot_autograd(
                 fw_compiler=fw_compiler,
                 bw_compiler=bw_compiler,

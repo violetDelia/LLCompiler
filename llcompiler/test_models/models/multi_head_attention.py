@@ -30,7 +30,7 @@ def attention(
         scores = scores.masked_fill(mask == 0, -1e10)
     attention_score = F.softmax(scores, dim=-1)
     out = torch.matmul(attention_score, value)
-    return scores,out
+    return scores,attention_score
     return out, attention_score  # shape: (seq_len, v_dim), (seq_len, seq_lem)
 
 class MultiHeadedAttention(nn.Module):

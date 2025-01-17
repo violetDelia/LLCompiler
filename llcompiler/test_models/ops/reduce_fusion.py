@@ -2,7 +2,8 @@ import torch.nn as nn
 import torch
 
 
-class ElewiseFusion1(nn.Module):
+
+class ReduceFusion1(nn.Module):
     def __init__(self):
         super().__init__()
         self.rule = nn.ReLU()
@@ -11,7 +12,9 @@ class ElewiseFusion1(nn.Module):
         x = x + x
         x = x - 3
         x = x / 2
-        x_max = self.rule(x)
-        x = x_max * x
+        x= torch.softmax(x,1)
+        x = torch.matmul(x,x.transpose(-2, -1))
+        x = x + x
+        x = x - 3
+        x = x / 2
         return x
-

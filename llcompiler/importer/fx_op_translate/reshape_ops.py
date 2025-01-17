@@ -81,7 +81,7 @@ def unsqueeze_convert(
     res_tensor: FakeTensor = get_result_type(node)
     result_type = torch_fake_or_mate_tensor_translate(res_tensor)
     input = get_arg_value(node.args[0], value_map, block)
-    dims = get_fake_or_mate_tensor_dims(res_tensor)
+    dims = get_fake_or_mate_tensor_dims(res_tensor,block,value_map)
     op = ReshapeOp(operands=[input, dims], result_types=[result_type])
     return op
 

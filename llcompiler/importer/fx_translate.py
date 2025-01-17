@@ -119,50 +119,38 @@ def torch_symbol_translate(
     block: Block,
 ):
     if isinstance(symbol, torch.SymInt):
-        return torch_symbol_translate(symbol.node.expr, symbol_map, value_map, block)
+        return torch_symbol_translate(symbol.node.expr, value_map, block)
     elif isinstance(symbol, Symbol):
         name: str = symbol.name
-        if name not in symbol_map:
+        if name not in value_map:
             atts = {"sym_name": StringAttr(name)}
             op = TorchSymbolicIntOp(attributes=atts, result_types=[i64])
-            symbol_map[name] = op
+            value_map[name] = op.results
             block.add_op(op)
-        return symbol_map[name]
+        return value_map[name][0]
     elif isinstance(symbol, sympy.core.numbers.Integer):
         name: str = str(symbol)
         op = build_llh_constant(int(symbol))
         block.add_op(op)
-        return op
+        return op.results[0]
     elif isinstance(symbol, sympy.core.power.Pow):
         name: str = str(symbol)
-        if name not in symbol_map:
-            left_op = torch_symbol_translate(
-                symbol.args[0], symbol_map, value_map, block
-            )
-            right_op = torch_symbol_translate(
-                symbol.args[1], symbol_map, value_map, block
-            )
-            op = PowOp.build(
-                operands=[left_op.results[0], right_op.results[0]], result_types=[i64]
-            )
-            symbol_map[name] = op
+        if name not in value_map:
+            left_value = torch_symbol_translate(symbol.args[0], value_map, block)
+            right_value = torch_symbol_translate(symbol.args[1], value_map, block)
+            op = PowOp.build(operands=[left_value, right_value], result_types=[i64])
+            value_map[name] = op.results
             block.add_op(op)
-        return symbol_map[name]
+        return value_map[name][0]
     elif isinstance(symbol, sympy.core.mul.Mul):
         name: str = str(symbol)
-        if name not in symbol_map:
-            left_op = torch_symbol_translate(
-                symbol.args[0], symbol_map, value_map, block
-            )
-            right_op = torch_symbol_translate(
-                symbol.args[1], symbol_map, value_map, block
-            )
-            op = MulOp.build(
-                operands=[left_op.results[0], right_op.results[0]], result_types=[i64]
-            )
-            symbol_map[name] = op
+        if name not in value_map:
+            left_value = torch_symbol_translate(symbol.args[0], value_map, block)
+            right_value = torch_symbol_translate(symbol.args[1], value_map, block)
+            op = MulOp.build(operands=[left_value, right_value], result_types=[i64])
+            value_map[name] = op.results
             block.add_op(op)
-        return symbol_map[name]
+        return value_map[name][0]
     else:
         raise NotImplementedError(f"Unsupported type {type(symbol)}")
 
@@ -179,7 +167,7 @@ def get_fake_or_mate_tensor_dims(
             block.add_op(const)
             dims.append(const)
         elif isinstance(dim, torch.SymInt):
-            symbol = torch_symbol_translate(dim, symbol_map, value_map, block)
+            symbol = torch_symbol_translate(dim, value_map, block)
             dims.append(symbol)
     # shape=torch.Size([])
     if dims.__len__() == 0:
@@ -239,9 +227,9 @@ def make_input_symbol_attrs(symbol: torch.SymInt):
 aten = torch.ops.aten
 # 一些特殊的op,val里面有多个fake tensor，但是只需要使用1个返回值，保存返回的索引。
 SPECIAL_RESULT_FAKE_INDEX_MAP = {
-    aten.max_pool2d_with_indices.default: 0,
-    aten._native_batch_norm_legit_no_training.default: 0,
-    aten.native_dropout.default: 0,
+    # aten.max_pool2d_with_indices.default: 0,
+    # aten._native_batch_norm_legit_no_training.default: 0,
+    # aten.native_dropout.default: 0,
 }
 
 # 一些特殊的op，实际getitem 拿到是输入

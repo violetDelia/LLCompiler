@@ -191,9 +191,7 @@ void transformBlockArgs(Block& block, IRRewriter* rewriter,
   auto loc = block.back().getLoc();
   auto arg_size = block.getNumArguments();
   auto memref_nums = original_memref_start.size();
-  if (symbol_int_nums != 0) {
-    transformElementsRangeToPtr(0, symbol_int_nums, rewriter, block);
-  }
+  transformElementsRangeToPtr(0, symbol_int_nums, rewriter, block);
   for (int i = 0; i < memref_nums; ++i) {
     auto index = original_memref_start[i];
     auto rank = original_memref_rank[i];
