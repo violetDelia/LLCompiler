@@ -1,0 +1,24 @@
+#ifndef INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_H_
+#define INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_H_
+
+#include <map>
+#include <string>
+
+namespace llc::compiler {
+
+namespace {
+static const std::string OptPath = "@LLCOMPILER_LLVM_BUILD_TOOLS_DIR@/opt";
+static const std::string LlcPath = "@LLCOMPILER_LLVM_BUILD_TOOLS_DIR@/llc";
+static const std::string LlcOptPath = "@LLCOMPILER_BUILD_RUNTIME_DIR@/llc-opt";
+static const std::string LlcTranslatePath =
+    "@LLCOMPILER_BUILD_RUNTIME_DIR@/llc-translate";
+}  // namespace
+
+static const std::map<std::string, std::string> toolPathMap = {
+    {"opt", OptPath},
+    {"llc", LlcPath},
+    {"llc-opt", LlcOptPath},
+    {"llc-translate", LlcTranslatePath},
+};
+}  // namespace llc::compiler
+#endif  // INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_H_

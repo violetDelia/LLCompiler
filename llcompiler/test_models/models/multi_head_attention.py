@@ -30,7 +30,6 @@ def attention(
         scores = scores.masked_fill(mask == 0, -1e10)
     attention_score = F.softmax(scores, dim=-1)
     out = torch.matmul(attention_score, value)
-    return scores,attention_score
     return out, attention_score  # shape: (seq_len, v_dim), (seq_len, seq_lem)
 
 class MultiHeadedAttention(nn.Module):
@@ -58,10 +57,14 @@ class MultiHeadedAttention(nn.Module):
         query, key, value \
             = [proj_weight(x).view(batch_size, -1, self.num_heads, self.k_dim).transpose(1, 2)
                 for proj_weight, x in zip(self.proj_weights, [query, key, value])] 
-        out, self.attention_score = attention(query, key, value, mask=mask, 
-                                 dropout=self.dropout)
-        # out = out.transpose(1, 2).contiguous() \
-        #      .view(batch_size, -1, self.num_heads * self.k_dim)
-        # out = self.proj_weights[-1](out)
+        k_dim = query.size(-1)
+        scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(k_dim)
+        if mask is not None:
+            scores = scores.masked_fill(mask == 0, -1e10)
+        attention_score = F.softmax(scores, dim=-1)
+        out = torch.matmul(attention_score, value)
+        out = out.transpose(1, 2).contiguous() \
+             .view(batch_size, -1, self.num_heads * self.k_dim)
+        out = self.proj_weights[-1](out)
         return out
 

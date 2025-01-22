@@ -11,7 +11,8 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Compiler/Entrance.h"
+#include "llcompiler/Compiler/Command.h"
+#include "llcompiler/Compiler/Compiler.h"
 
 #include <pybind11/buffer_info.h>
 #include <pybind11/pytypes.h>
@@ -113,6 +114,8 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
       .def_readwrite("log_llvm", &CompilerOptions::log_llvm);
 
   entrance.def("do_compile", &do_compile);
+
+  entrance.def("get_tool", &getToolPath);
 }
 
 }  // namespace llc::compiler

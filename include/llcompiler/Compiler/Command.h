@@ -22,26 +22,32 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
-#include "llcompiler/Compiler/Compiler.h"
-#include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Support/Logger.h"
-#include "mlir/IR/DialectRegistry.h"
-#include "mlir/IR/MLIRContext.h"
 
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#ifndef INCLUDE_LLCOMPILER_COMPILER_COMMAND_H_
+#define INCLUDE_LLCOMPILER_COMPILER_COMMAND_H_
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "llvm/Support/Memory.h"
+#include "llvm/Support/Path.h"
 namespace llc::compiler {
-void load_dialect(mlir::MLIRContext& context);
 
-void add_extension_and_interface(mlir::DialectRegistry& registry);
+std::string getToolPath(const std::string &tool);
 
-void init_logger(const logger::LoggerOption& logger_option);
+struct Command {
+  std::string _path;
+  std::vector<std::string> _args;
 
-void init_frontend(const front::FrontEndOption& front_option,
-                   const logger::LoggerOption& logger_option);
+  explicit Command(std::string exe_path);
 
-void preprocess_mlir_module(mlir::OwningOpRef<mlir::ModuleOp>* module,
-                            CompilerOptions compiler_options);
+  Command &appendStr(const std::string &arg);
+  Command &appendStrOpt(const std::optional<std::string> &arg);
+  Command &appendList(const std::vector<std::string> &args);
+  Command &resetArgs();
+  void exec(std::string wdir = "") const;
+};
+
 }  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+
+#endif  // INCLUDE_LLCOMPILER_COMPILER_COMMAND_H_

@@ -16,7 +16,7 @@
 #include <iostream>
 #include <string>
 
-#include "llcompiler/Compiler/Entrance.h"
+#include "llcompiler/Compiler/Compiler.h"
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Conversion/Passes.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"

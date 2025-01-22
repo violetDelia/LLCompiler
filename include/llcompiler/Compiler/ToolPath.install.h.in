@@ -1,0 +1,24 @@
+#ifndef INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_INSTALL_H_
+#define INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_INSTALL_H_
+
+#include <map>
+#include <string>
+
+namespace llc::compiler {
+
+namespace {
+static const std::string OptPath = "@CMAKE_INSTALL_PREFIX@/bin/opt";
+static const std::string LlcPath = "@CMAKE_INSTALL_PREFIX@/bin/llc";
+static const std::string LlcOptPath = "@CMAKE_INSTALL_PREFIX@/bin/llc-opt";
+static const std::string LlcTranslatePath =
+    "@CMAKE_INSTALL_PREFIX@/bin/llc-translate";
+}  // namespace
+
+static const std::map<std::string, std::string> toolPathMap = {
+    {"opt", OptPath},
+    {"llc", LlcPath},
+    {"llc-opt", LlcOptPath},
+    {"llc-translate", LlcTranslatePath},
+};
+}  // namespace llc::compiler
+#endif  // INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_INSTALL_H_

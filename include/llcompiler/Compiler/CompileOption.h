@@ -23,13 +23,14 @@
  *
  */
 
-#ifndef INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
-#define INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+#ifndef INCLUDE_LLCOMPILER_COMPILER_COMPILEOPTION_H_
+#define INCLUDE_LLCOMPILER_COMPILER_COMPILEOPTION_H_
 #include <cstddef>
 #include <string>
 #include <vector>
 
 #include "llcompiler/Compiler/Engine.h"
+#include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "mlir/IR/BuiltinOps.h"
 
 namespace llc::compiler {
@@ -52,10 +53,5 @@ extern "C" struct CompilerOptions {
   bool log_llvm;              // 输出bitcode
 };
 
-extern "C" Engine do_compile(const char* xdsl_module,
-                             CompilerOptions compiler_options);
-
-
-
 }  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_ENTRANCE_H_
+#endif  // INCLUDE_LLCOMPILER_COMPILER_COMPILEOPTION_H_

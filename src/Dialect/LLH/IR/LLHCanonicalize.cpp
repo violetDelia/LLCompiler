@@ -451,8 +451,7 @@ struct ReshapeNegativeDimCalization : public LLHOpRewritePattern<ReshapeOp> {
         rewriter.create<DivOp>(loc, TypeRange{all_elements.getType()},
                                ValueRange{all_elements, non_negative_elements});
     new_dims[negative_index] = negative_dim;
-    op->dump();
-    rewriter.replaceOpWithNewOp<ReshapeOp>(op, op.getType(), input, new_dims)->dump();
+    rewriter.replaceOpWithNewOp<ReshapeOp>(op, op.getType(), input, new_dims);
   }
 };
 }  // namespace

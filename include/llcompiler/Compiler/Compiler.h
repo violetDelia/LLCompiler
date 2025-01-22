@@ -22,26 +22,34 @@
  * @copyright Copyright (c) 2024 时光丶人爱
  *
  */
-#include "llcompiler/Compiler/Compiler.h"
-#include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Support/Logger.h"
-#include "mlir/IR/DialectRegistry.h"
-#include "mlir/IR/MLIRContext.h"
 
-#ifndef INCLUDE_LLCOMPILER_COMPILER_INIT_H_
-#define INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#ifndef INCLUDE_LLCOMPILER_COMPILER_COMPILER_H_
+#define INCLUDE_LLCOMPILER_COMPILER_COMPILER_H_
+#include <cstddef>
+#include <optional>
+#include <string>
+#include <vector>
+
+#include "llcompiler/Compiler/CompileOption.h"
+#include "llcompiler/Compiler/Engine.h"
+#include "mlir/IR/BuiltinOps.h"
+#include "mlir/IR/OwningOpRef.h"
 namespace llc::compiler {
-void load_dialect(mlir::MLIRContext& context);
+class LLCCompiler {
+ public:
+  LLCCompiler();
 
-void add_extension_and_interface(mlir::DialectRegistry& registry);
+ private:
+  void optimizeMLIR(const char* module_str, CompilerOptions options,
+                    mlir::OwningOpRef<mlir::ModuleOp>& mlir_module);
 
-void init_logger(const logger::LoggerOption& logger_option);
+  void translateMLIRToLLVMBitcode();
 
-void init_frontend(const front::FrontEndOption& front_option,
-                   const logger::LoggerOption& logger_option);
+  void optimizeLLVMBitcode();
+};
 
-void preprocess_mlir_module(mlir::OwningOpRef<mlir::ModuleOp>* module,
-                            CompilerOptions compiler_options);
+extern "C" Engine do_compile(const char* xdsl_module,
+                             CompilerOptions compiler_options);
+
 }  // namespace llc::compiler
-#endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_
+#endif  // INCLUDE_LLCOMPILER_COMPILER_COMPILER_H_

@@ -7,9 +7,11 @@ get_property(translation_libs GLOBAL PROPERTY MLIR_TRANSLATION_LIBS)
 llcompiler_add_library(LLCompiler 
     SRC_FILES
     Init.cpp
-    Entrance.cpp
+    Compiler.cpp
     Engine.cpp
     Tensor.cpp
+    CompileOptions.cpp
+    Command.cpp
     #Utility.cpp
 
     ADDITIONAL_INCLUDE_DIRS

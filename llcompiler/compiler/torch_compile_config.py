@@ -51,8 +51,8 @@ LLC_SUPPORT_DICT = {
     "torch.ops.aten.select.int": None,
     "torch.ops.prims.where.default": None,
     "torch.ops.aten._native_batch_norm_legit_no_training.default": None,
-    # "torch.ops.prims.where.default": None,
-    # "torch.ops.aten.exp.default": None,
+    "torch.ops.prims.where.default": None,
+    "torch.ops.aten.exp.default": None,
     # reduce
     "torch.ops.aten.max_pool2d_with_indices.default": None,
     "torch.ops.aten.amax.default": None,

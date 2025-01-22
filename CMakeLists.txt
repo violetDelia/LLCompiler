@@ -8,7 +8,7 @@ unset(BUILD_LLCOMPILER_DOCS CACHE)
 unset(BUILD_LLCOMPILER_LOG CACHE)
 unset(CMAKE_EXPORT_COMPILE_COMMANDS CACHE)
 unset(LLCOMPILER_BUILD_WARNINGS CACHE)
-
+unset(DEVELOPER_MODE CACHE)
 # TODO: discard for remove onnx
 # unset(LLCOMPILER_BUILD_WITH_ONNX_ML CACHE)
 
@@ -20,7 +20,7 @@ option(BUILD_LLCOMPILER_DOCS "build examples" OFF)
 option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
-
+option(DEVELOPER_MODE "developer mode" ON)
 # option(LLCOMPILER_BUILD_WITH_ONNX_ML "if disable,will throw error when convert onnx model" OFF)
 
 # #---------- cmake setting ----------##
@@ -47,7 +47,7 @@ set(LLCOMPILER_BUILD_RUNTIME_DIR "${CMAKE_CURRENT_BINARY_DIR}/bin")
 set(LLCOMPILER_BUILD_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(LLCOMPILER_BUILD_ARCHIVE_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(LLCOMPILER_BUILD_TOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/tools")
-
+set(LLCOMPILER_LLVM_BUILD_TOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/bin")
 # #---------- define install absolute path ----------##
 set(LLCOMPILER_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
 set(LLCOMPILER_INSTALL_INCLUDE_DIR "${LLCOMPILER_INSTALL_DIR}/include")
@@ -110,7 +110,6 @@ include(CMakePackageConfigHelpers)
 # # 安装头文件
 install(DIRECTORY "${LLCOMPILER_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}"
     FILES_MATCHING
-    
     PATTERN "*.h"
     PATTERN "*.mlir"
 )
@@ -119,6 +118,8 @@ install(DIRECTORY "${LLCOMPILER_GENERATE_INCLUDE_DIR}/" DESTINATION "${LLCOMPILE
     FILES_MATCHING
     PATTERN "LibraryPath.h" EXCLUDE
     PATTERN "LibraryPath.install.h" EXCLUDE
+    PATTERN "ToolPath.h" EXCLUDE
+    PATTERN "ToolPath.install.h" EXCLUDE
     PATTERN "*.h"
     PATTERN "*.inc"
     PATTERN "*.inc.d"

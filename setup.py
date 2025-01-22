@@ -27,36 +27,36 @@ import setuptools.command.build_ext
 import setuptools.command.build_py
 import setuptools.command.develop
 
+
+################################################################################
+# Build options
+################################################################################
+BUILD_LLCOMPILER_TEST = False
+STATIC_WINDOWS_RUNTIME = True
+BUILD_LLCOMPILER_DOCS = True
+BUILD_LLCOMPILER_LOG = True
+CMAKE_EXPORT_COMPILE_COMMANDS = True
+LLCOMPILER_BUILD_WARNINGS = True
+DEVELOPER_MODE = False
+BUILD_SHARED_LIBS = True
+BUILD_TYPE = "Release"
 ################################################################################
 # Global variables
 ################################################################################
-
 VERSION = "0.0.1"
 TOP_DIR = os.path.realpath(os.path.dirname(__file__))
 CMAKE_BUILD_DIR = os.path.join(TOP_DIR, "build")
 WINDOWS = os.name == "nt"
 CMAKE = shutil.which("cmake3") or shutil.which("cmake")
 BUILDER = shutil.which("ninja")
-BUILD_SHARED_LIBS = True
-BUILD_TYPE = "Release"
 PYBIND_DIR = os.path.join(TOP_DIR, "src", "Pybind")
 INSTALL_DIR = os.path.join(TOP_DIR, "install")
 INCLUDE_DIRS = [os.path.join(INSTALL_DIR, "include")]
 LIBRARY_DIRS = [os.path.join(INSTALL_DIR, "lib")]
 RUNTIME_LIBRARY_DIRS = [os.path.join(INSTALL_DIR, "lib")]
-
-BUILD_LLCOMPILER_TEST = True
-STATIC_WINDOWS_RUNTIME = True
-BUILD_LLCOMPILER_DOCS = True
-BUILD_LLCOMPILER_LOG = True
-CMAKE_EXPORT_COMPILE_COMMANDS = True
-LLCOMPILER_BUILD_WARNINGS = True
-
-
 ################################################################################
 # Pre Check
 ################################################################################
-
 assert CMAKE, "Could not find cmake in PATH"
 assert BUILDER, "Could not find builder in PATH"
 ################################################################################
@@ -97,6 +97,11 @@ class CmakeBuild(setuptools.Command):
             self.jobs = os.getenv("MAX_JOBS")
         self.jobs = multiprocessing.cpu_count() if self.jobs is None else int(self.jobs)
 
+    def bool_arg(seld, option: str):
+        option_value = globals()[option]
+        arg = f"-D{option}=" + ("ON" if option_value else "OFF")
+        return arg
+
     def run(self):
         os.makedirs(CMAKE_BUILD_DIR, exist_ok=True)
 
@@ -105,20 +110,14 @@ class CmakeBuild(setuptools.Command):
             cmake_args = [CMAKE, "-G Ninja"]
             cmake_args.append(f"-DCMAKE_INSTALL_PREFIX={INSTALL_DIR}")
             cmake_args.append(f"-DCMAKE_BUILD_TYPE={BUILD_TYPE}")
-            if BUILD_SHARED_LIBS:
-                cmake_args.append("-DBUILD_SHARED_LIBS=ON")
-            if BUILD_LLCOMPILER_TEST:
-                cmake_args.append("-DBUILD_LLCOMPILER_TEST=ON")
-            if STATIC_WINDOWS_RUNTIME:
-                cmake_args.append("-DSTATIC_WINDOWS_RUNTIME=ON")
-            if BUILD_LLCOMPILER_DOCS:
-                cmake_args.append("-DBUILD_LLCOMPILER_DOCS=ON")
-            if BUILD_LLCOMPILER_LOG:
-                cmake_args.append("-DBUILD_LLCOMPILER_LOG=ON")
-            if CMAKE_EXPORT_COMPILE_COMMANDS:
-                cmake_args.append("-DCMAKE_EXPORT_COMPILE_COMMANDS=ON")
-            if LLCOMPILER_BUILD_WARNINGS:
-                cmake_args.append("-DLLCOMPILER_BUILD_WARNINGS=ON")
+            cmake_args.append(self.bool_arg("BUILD_SHARED_LIBS"))
+            cmake_args.append(self.bool_arg("BUILD_LLCOMPILER_TEST"))
+            cmake_args.append(self.bool_arg("STATIC_WINDOWS_RUNTIME"))
+            cmake_args.append(self.bool_arg("BUILD_LLCOMPILER_DOCS"))
+            cmake_args.append(self.bool_arg("BUILD_LLCOMPILER_LOG"))
+            cmake_args.append(self.bool_arg("CMAKE_EXPORT_COMPILE_COMMANDS"))
+            cmake_args.append(self.bool_arg("LLCOMPILER_BUILD_WARNINGS"))
+            cmake_args.append(self.bool_arg("DEVELOPER_MODE"))
             if "CMAKE_ARGS" in os.environ:
                 extra_cmake_args = shlex.split(os.environ["CMAKE_ARGS"])
                 # prevent crossfire with downstream scripts
@@ -159,7 +158,7 @@ source_files = glob.glob("{}/*.cpp".format(PYBIND_DIR), recursive=True)
 libraries = ["LLCompiler"]
 ext_modules = [
     Pybind11Extension(
-        "llcompiler_", 
+        "llcompiler_",
         source_files,
         include_dirs=INCLUDE_DIRS,
         library_dirs=LIBRARY_DIRS,
