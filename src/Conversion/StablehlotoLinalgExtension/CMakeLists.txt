@@ -9,7 +9,7 @@ llcompiler_add_library(LLCStablehlotoLinalgExtension
   LLCMLIRUtility
   MLIRIR
   MLIRLinalgDialect
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRFuncDialect
   StablehloOps
 )

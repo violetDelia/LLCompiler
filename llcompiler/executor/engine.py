@@ -1,4 +1,5 @@
-from llcompiler_.entrance import EngineInternel, Tensor
+from llcompiler_.executor import Execution
+from llcompiler_.tensor import Tensor
 import torch.fx
 from typing import Any, Union, List, Dict
 import ctypes
@@ -12,12 +13,10 @@ TORCH_DTYPE_TO_TYPE = {torch.float32: 4, torch.int64: 3, torch.bool: 6}
 
 # 负责执行c++的执行器
 class ExecutionEngine:
-    def __init__(self, ExecutionEngine):
-        self.engine = ExecutionEngine
+    def __init__(self, so_file):
+        self.executor = Execution()
+        self.executor.load(so_file)
         self.gen_outs_call = None
-
-    def debug_info(self):
-        self.engine.debug_info()
 
     def run(self, *args) -> Any:
         pass
@@ -29,8 +28,8 @@ class ExecutionEngine:
 # TODO 检测输入tensor的target是否合法，不合法转为合法的
 class Torch_ExecutionEngine(ExecutionEngine):
 
-    def __init__(self, ExecutionEngine):
-        super().__init__(ExecutionEngine)
+    def __init__(self, so_file):
+        super().__init__(so_file)
 
     def trans_to_tensor(self, *args):
         inputs = []
@@ -69,9 +68,9 @@ class Torch_ExecutionEngine(ExecutionEngine):
             *outputs
         )  # 输出的torch.Tensor 转变为C++定义的Tensor
         if len(symbols) == 0:
-            self.engine.run(inputs, outputs_)
+            self.executor.run(inputs, outputs_)
         else:
-            self.engine.run_with_symbols(symbols, inputs, outputs_)  # 调用执行函数
+            self.executor.run_with_symbols(symbols, inputs, outputs_)  # 调用执行函数
         if not multi_results:
             return outputs[0]
         return outputs

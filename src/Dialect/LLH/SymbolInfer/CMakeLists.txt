@@ -18,9 +18,9 @@ llcompiler_add_library(LLCSymbolInferTransforms
   LLHTransformLayoutToNHWCIncGen
 
   LINKS PUBLIC
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRPass
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRArithDialect
   MLIRTensorDialect
 )

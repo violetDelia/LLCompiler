@@ -11,9 +11,6 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Compiler/Command.h"
-#include "llcompiler/Compiler/Compiler.h"
-
 #include <pybind11/buffer_info.h>
 #include <pybind11/pytypes.h>
 
@@ -21,8 +18,10 @@
 #include <iostream>
 #include <vector>
 
+#include "llcompiler/Compiler/Command.h"
+#include "llcompiler/Compiler/Compiler.h"
+#include "llcompiler/Compiler/Execution.h"
 #include "llcompiler/Compiler/Tensor.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ExecutionEngine/Orc/LLJIT.h"
 #include "mlir-c/ExecutionEngine.h"
@@ -68,9 +67,8 @@ std::vector<size_t> get_stride_in(Tensor *tensor) {
 }  // namespace
 
 PYBIND11_MODULE(llcompiler_, llcompiler_) {
-  auto entrance = llcompiler_.def_submodule("entrance");
-  entrance.doc() = "entrance for compiler";  // optional module docstring
-  pybind11::class_<Tensor>(entrance, "Tensor", py::buffer_protocol())
+  auto tensor = llcompiler_.def_submodule("tensor");
+  pybind11::class_<Tensor>(tensor, "Tensor", py::buffer_protocol())
       .def_readwrite("data", &Tensor::data)
       .def(pybind11::init<size_t, size_t, size_t, size_t, std::vector<size_t> &,
                           std::vector<size_t> &>())
@@ -92,30 +90,33 @@ PYBIND11_MODULE(llcompiler_, llcompiler_) {
         return py::array(bufer);
       });
 
-  pybind11::class_<Engine>(entrance, "EngineInternel")
-      .def("debug_info", &Engine::debug_info)
-      .def("run", &Engine::run)
-      .def("run_with_symbols", &Engine::run_with_symbols);
+  auto compiler = llcompiler_.def_submodule("compiler");
 
-  pybind11::class_<llc::compiler::CompilerOptions>(entrance, "CompilerOptions")
+  pybind11::class_<llc::compiler::LLCCompiler>(compiler, "Compiler")
       .def(pybind11::init<>())
-      .def_readwrite("pipeline", &CompilerOptions::pipeline)
-      .def_readwrite("mode", &CompilerOptions::mode)
-      .def_readwrite("target", &CompilerOptions::target)
-      .def_readwrite("symbol_infer", &CompilerOptions::symbol_infer)
-      .def_readwrite("opt_level", &CompilerOptions::opt_level)
-      .def_readwrite("L3_cache_size", &CompilerOptions::L3_cache_size)
-      .def_readwrite("L2_cache_size", &CompilerOptions::L2_cache_size)
-      .def_readwrite("L1_cache_size", &CompilerOptions::L1_cache_size)
-      .def_readwrite("target_layout", &CompilerOptions::target_layout)
-      .def_readwrite("index_bit_width", &CompilerOptions::index_bit_width)
-      .def_readwrite("log_root", &CompilerOptions::log_root)
-      .def_readwrite("log_level", &CompilerOptions::log_level)
-      .def_readwrite("log_llvm", &CompilerOptions::log_llvm);
+      .def("compile_mlir_to_shared_lib",
+           &LLCCompiler::generateSharedLibFromMLIRStr);
 
-  entrance.def("do_compile", &do_compile);
+  pybind11::class_<llc::compiler::CompileOptions>(compiler, "CompileOptions")
+      .def(pybind11::init<>())
+      .def("set_log_root", &CompileOptions::setLogRoot)
+      .def("set_mode", &CompileOptions::setMode)
+      .def("set_target", &CompileOptions::setTarget)
+      .def("set_log_level", &CompileOptions::setLogLevel)
+      .def("set_pipeline", &CompileOptions::setPipeline)
+      .def("set_global_layout", &CompileOptions::setGlobalLayout)
+      .def("set_cpu", &CompileOptions::setCpu)
+      .def("set_mtriple", &CompileOptions::setMtriple)
+      .def("display_llvm_passes", &CompileOptions::displayLlvmPasses)
+      .def("display_mlir_passes", &CompileOptions::displayMlirPasses);
 
-  entrance.def("get_tool", &getToolPath);
+  auto executor = llcompiler_.def_submodule("executor");
+  executor.def("get_tool", &getToolPath);
+  pybind11::class_<llc::compiler::Execution>(executor, "Execution")
+      .def(pybind11::init<>())
+      .def("load", &Execution::load)
+      .def("run", &Execution::run)
+      .def("run_with_symbols", &Execution::run_with_symbols);
 }
 
 }  // namespace llc::compiler

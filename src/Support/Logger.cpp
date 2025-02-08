@@ -26,6 +26,7 @@
 #include <string>
 
 #include "llcompiler/Support/Core.h"
+#include "llcompiler/Support/Enums.h"
 #include "spdlog/common.h"
 #include "spdlog/logger.h"
 #include "spdlog/sinks/basic_file_sink.h"
@@ -43,40 +44,16 @@ const char *MLIR_PASS = "mlir_pass";
 const char *DEBUG = "debug";
 const char *SymbolInfer = "symbol_infer";
 const char *Entrance_Module = "entrance_module";
+const char *Executor = "executor";
 }  // namespace llc
 
 namespace llc::logger {
-
-const char *log_level_to_str(const LOG_LEVEL lever) {
-  switch (lever) {
-    case LOG_LEVEL::DEBUG_:
-      return "debug";
-    case LOG_LEVEL::INFO_:
-      return "info";
-    case LOG_LEVEL::WARN_:
-      return "warn";
-    case LOG_LEVEL::ERROR_:
-      return "error";
-    case LOG_LEVEL::FATAL_:
-      return "fatal";
-  }
-  UNIMPLEMENTED(UTILITY);
-}
-
-LOG_LEVEL str_to_log_level(const char *str) {
-  LLC_COMPARE_AND_RETURN(str, "debug", LOG_LEVEL::DEBUG_)
-  LLC_COMPARE_AND_RETURN(str, "info", LOG_LEVEL::INFO_)
-  LLC_COMPARE_AND_RETURN(str, "warn", LOG_LEVEL::WARN_)
-  LLC_COMPARE_AND_RETURN(str, "error", LOG_LEVEL::ERROR_)
-  LLC_COMPARE_AND_RETURN(str, "fatal", LOG_LEVEL::FATAL_)
-  UNIMPLEMENTED(UTILITY) << " convert:" << str;
-}
 
 void register_logger(const char *module, const LoggerOption &option) {
   using console_sink = spdlog::sinks::stdout_sink_st;
   using file_sink = spdlog::sinks::basic_file_sink_st;
   auto sink_c = std::make_shared<console_sink>();
-  sink_c->set_level(static_cast<spdlog::level>(llc::logger::LOG_LEVEL::WARN_));
+  sink_c->set_level(static_cast<spdlog::level>(llc::LogLevel::warn));
   std::vector<spdlog::sink_ptr> sinks;
   sinks.push_back(sink_c);
   std::string log_file;
@@ -102,7 +79,8 @@ void register_logger(const char *module, const LoggerOption &option) {
     logger->sinks().clear();
     logger->sinks().insert(logger->sinks().end(), sinks.begin(), sinks.end());
     INFO(GLOBAL) << "replace log module: " << module
-                 << "(lever:" << logger::log_level_to_str(option.level) << ")"
+                 << "(lever:" << llc::stringifyLogLevel(option.level).str()
+                 << ")"
                  << " -> " << log_file;
   } else {
     auto log =
@@ -111,12 +89,13 @@ void register_logger(const char *module, const LoggerOption &option) {
     log->set_level(static_cast<spdlog::level>(option.level));
     spdlog::register_logger(log);
     INFO(GLOBAL) << "regist log module: " << module
-                 << "(lever:" << logger::log_level_to_str(option.level) << ")"
+                 << "(lever:" << llc::stringifyLogLevel(option.level).str()
+                 << ")"
                  << " -> " << log_file;
   }
 }
 
-Logger::Logger(const char *module, const LOG_LEVEL level)
+Logger::Logger(const char *module, const llc::LogLevel level)
     : module_(module), level_(level) {}
 
 Logger::~Logger() {}
@@ -130,7 +109,7 @@ void Logger::info(const char *message) {
   if (logger) {
     logger->log(static_cast<spdlog::level>(this->level_), message);
   } else {
-    if (this->level_ >= LOG_LEVEL::ERROR_)
+    if (this->level_ >= llc::LogLevel::error)
       spdlog::log(static_cast<spdlog::level>(this->level_), message);
   }
 }

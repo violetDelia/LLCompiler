@@ -10,7 +10,7 @@ llcompiler_add_library(LLCFrontendCore
     LLVMOption
     LLCSupport
     MLIRTosaDialect
-    MLIRLLHDialect
+    LLCLLHDialect
     MLIRFuncDialect
     LLCIRExtension
 )

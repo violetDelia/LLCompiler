@@ -24,7 +24,6 @@
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/Transforms/Passes.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/TransFromPipeline.h"
 #include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"

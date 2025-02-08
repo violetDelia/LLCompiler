@@ -9,7 +9,7 @@ llcompiler_add_library(LLCLLHToTosa
   LLCMLIRUtility
   MLIRIR
   MLIRTosaDialect
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRFuncDialect
   MLIRPass
   MLIRTransformUtils

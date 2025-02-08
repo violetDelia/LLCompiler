@@ -1,8 +1,10 @@
 #ifndef INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_INSTALL_H_
 #define INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_INSTALL_H_
 
+#include <functional>
 #include <map>
 #include <string>
+#include <vector>
 
 namespace llc::compiler {
 
@@ -12,6 +14,8 @@ static const std::string LlcPath = "@CMAKE_INSTALL_PREFIX@/bin/llc";
 static const std::string LlcOptPath = "@CMAKE_INSTALL_PREFIX@/bin/llc-opt";
 static const std::string LlcTranslatePath =
     "@CMAKE_INSTALL_PREFIX@/bin/llc-translate";
+static const std::string CXXPath = "@CMAKE_CXX_COMPILER@";
+
 }  // namespace
 
 static const std::map<std::string, std::string> toolPathMap = {
@@ -19,6 +23,12 @@ static const std::map<std::string, std::string> toolPathMap = {
     {"llc", LlcPath},
     {"llc-opt", LlcOptPath},
     {"llc-translate", LlcTranslatePath},
+    {"cxx", CXXPath}};
+
+static const std::vector<std::string> defaultLibDirs = {
+    "@CMAKE_INSTALL_PREFIX@/lib",
 };
+
+static const std::vector<std::string> defaultLib = {"mlir_c_runner_utils"};
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_INSTALL_H_

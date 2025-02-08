@@ -8,7 +8,7 @@ llcompiler_add_library(LLCLLHToShape
   LINKS PUBLIC
   LLCMLIRUtility
   MLIRIR
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRFuncDialect
   MLIRShapeDialect
 )

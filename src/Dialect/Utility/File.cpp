@@ -39,8 +39,6 @@ void mlir_to_file(mlir::OwningOpRef<mlir::ModuleOp>* module, const char* file) {
 void file_to_mlir_module(mlir::MLIRContext& context,
                          mlir::OwningOpRef<mlir::ModuleOp>& module,
                          const char* file) {
-  // Handle '.toy' input to the compiler.
-
   if (!llvm::StringRef(file).ends_with(".mlir")) {
     UNIMPLEMENTED(UTILITY);
   }

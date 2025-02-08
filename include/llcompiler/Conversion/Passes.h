@@ -25,7 +25,6 @@
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/Dialect/SparseTensor/IR/SparseTensor.h"
 #include "mlir/Pass/PassRegistry.h"
-#include "stablehlo/dialect/ChloOps.h"
 
 namespace mlir {
 

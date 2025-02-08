@@ -29,9 +29,8 @@
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
-#include "llcompiler/Pipeline/CommonPipeline.h"
 #include "llcompiler/Pipeline/TransFromPipeline.h"
+#include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/Conversion/ControlFlowToLLVM/ControlFlowToLLVM.h"
 #include "mlir/Conversion/FuncToLLVM/ConvertFuncToLLVM.h"
@@ -78,9 +77,9 @@
 #include "mlir/Tools/mlir-opt/MlirOptMain.h"
 #include "mlir/Transforms/Passes.h"
 #include "stablehlo/dialect/ChloOps.h"
-#include "stablehlo/dialect/Register.h"
 #include "stablehlo/dialect/StablehloOps.h"
 #include "stablehlo/dialect/VhloOps.h"
+#include "stablehlo/reference/Tensor.h"
 
 namespace llc::compiler {
 
@@ -103,7 +102,6 @@ void load_dialect(mlir::MLIRContext& context) {
   context.getOrLoadDialect<mlir::scf::SCFDialect>();
 
   context.getOrLoadDialect<mlir::llh::LLHDialect>();
-
   context.getOrLoadDialect<mlir::chlo::ChloDialect>();
   context.getOrLoadDialect<mlir::stablehlo::StablehloDialect>();
   context.getOrLoadDialect<mlir::vhlo::VhloDialect>();
@@ -168,37 +166,40 @@ void init_logger(const logger::LoggerOption& logger_option) {
   logger::register_logger(DEBUG, logger_option);
   logger::register_logger(SymbolInfer, logger_option);
   logger::register_logger(Entrance_Module, logger_option);
+  logger::register_logger(Executor, logger_option);
   INFO(GLOBAL) << "log root is: " << logger_option.path;
   INFO(GLOBAL) << "log level is: "
-               << logger::log_level_to_str(logger_option.level);
+               << llc::stringifyLogLevel(logger_option.level).str();
 }
 
-void init_frontend(const front::FrontEndOption& front_option,
-                   const logger::LoggerOption& logger_option) {
-  logger::register_logger(IMPORTER, logger_option);
-  INFO(GLOBAL) << "frontend type is: "
-               << front::frontend_type_to_str(front_option.frontend_type);
-  INFO(GLOBAL) << "input file is: " << front_option.input_file;
-  INFO(GLOBAL) << "output file is: " << front_option.output_file;
-  INFO(GLOBAL) << "convert onnx: " << front_option.onnx_convert;
-  if (front_option.onnx_convert) {
-    INFO(GLOBAL) << "convert onnx to: " << front_option.onnx_convert_version;
-  }
-}
+// void init_frontend(const front::FrontEndOption& front_option,
+//                    const logger::LoggerOption& logger_option) {
+//   logger::register_logger(IMPORTER, logger_option);
+//   INFO(GLOBAL) << "frontend type is: "
+//                << front::frontend_type_to_str(front_option.frontend_type);
+//   INFO(GLOBAL) << "input file is: " << front_option.input_file;
+//   INFO(GLOBAL) << "output file is: " << front_option.output_file;
+//   INFO(GLOBAL) << "convert onnx: " << front_option.onnx_convert;
+//   if (front_option.onnx_convert) {
+//     INFO(GLOBAL) << "convert onnx to: " << front_option.onnx_convert_version;
+//   }
+// }
 
 void preprocess_mlir_module(mlir::OwningOpRef<mlir::ModuleOp>* module,
-                            CompilerOptions compiler_options) {
+                            CompileOptions compiler_options) {
   auto context = module->get()->getContext();
-  auto maybe_layout =
-      mlir::llh::symbolizeLayout(compiler_options.target_layout);
+  auto maybe_layout = mlir::llh::symbolizeLayout(
+      llc::stringifyGlobalLayout(compiler_options.global_layout));
   CHECK(llc::GLOBAL, maybe_layout.has_value())
-      << "Layout error: " << compiler_options.target_layout;
+      << "Layout error: "
+      << llc::stringifyGlobalLayout(compiler_options.global_layout).str();
   auto layout = maybe_layout.value();
   module->get()->setAttr(llc::GloabalLayoutAttr,
                          mlir::llh::LayoutAttr::get(context, layout));
-  auto maybe_mode = mlir::llh::symbolizeModeKind(compiler_options.mode);
+  auto maybe_mode = mlir::llh::symbolizeModeKind(
+      llc::stringifyModeKind(compiler_options.mode));
   CHECK(llc::GLOBAL, maybe_mode.has_value())
-      << "mode error: " << compiler_options.target_layout;
+      << "mode error: " << llc::stringifyModeKind(compiler_options.mode).str();
   auto mode = maybe_mode.value();
   module->get()->setAttr(llc::GloabalModeKindAttr,
                          mlir::llh::ModeKindAttr::get(context, mode));

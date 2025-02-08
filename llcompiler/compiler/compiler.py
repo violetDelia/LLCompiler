@@ -11,7 +11,7 @@ from torch._functorch.aot_autograd import aot_module_simplified
 from functorch.compile import make_boxed_func
 from torch._dynamo.backends.common import aot_autograd
 from xdsl.printer import Printer
-from llcompiler_.entrance import do_compile, CompilerOptions
+from llcompiler_.compiler import Compiler, CompileOptions
 import os
 import onnx
 from torch._decomp import get_decompositions
@@ -51,19 +51,17 @@ class LLCompiler(Importer, GenOutput):
     def __init__(
         self,
         mode: str = "inference",  # 推理/训练
-        target: str = "cpu",  # 执行平台
+        target: str = "x86_64",  # 执行平台
         pipeline: str = "transform",
         index_bit_width: int = 64,
         symbol_infer=True,
-        opt_level=3,
-        L3_cache_size=0,
-        L2_cache_size=0,
-        L1_cache_size=0,
         target_layout="NCHW",
         vebose_first_ir=False,  # 输出构建的xdsl IR
         log_root: str = "",  # 日志保存路径
         log_level: str = "debug",  # 日志级别
         log_llvm: bool = True,  #
+        cpu="",
+        mtriple="",
         **kwargs,
     ) -> None:
         """
@@ -72,25 +70,15 @@ class LLCompiler(Importer, GenOutput):
         """
         super().__init__(**kwargs)
         self.vebose_first_ir = vebose_first_ir
-        assert pipeline in ["basic", "transform"]
         self.pipeline = pipeline
-        assert mode in ["training", "inference"]
         self.mode = mode
         self.log_root = log_root
-        assert log_level in ["debug", "info", "warn", "error", "fatal"]
         self.log_level = log_level
-        assert target in ["cpu"]
         self.target = target
-        self.symbol_infer = symbol_infer
-        self.index_bit_width = index_bit_width
-        self.L3_cache_size = L3_cache_size
-        self.L2_cache_size = L2_cache_size
-        self.L1_cache_size = L1_cache_size
-        assert target_layout in ["NCHW", "NHWC"]
         self.target_layout = target_layout
-        assert opt_level > 0 and opt_level <= 3
-        self.opt_level = opt_level
         self.log_llvm = log_llvm
+        self.cpu = cpu
+        self.mtriple = mtriple
         self.compile_count = 0
 
     def _process_fx(
@@ -109,25 +97,19 @@ class LLCompiler(Importer, GenOutput):
         return model
 
     def _gen_compiler_options(self):
-        compiler_options = CompilerOptions()
-        compiler_options.pipeline = self.pipeline
-        compiler_options.mode = self.mode
-        compiler_options.target = self.target
-        compiler_options.symbol_infer = self.symbol_infer
-        compiler_options.opt_level = self.opt_level
-        compiler_options.L3_cache_size = self.L3_cache_size
-        compiler_options.L2_cache_size = self.L2_cache_size
-        compiler_options.L1_cache_size = self.L1_cache_size
-        compiler_options.target_layout = self.target_layout
-        compiler_options.index_bit_width = self.index_bit_width
-        compiler_options.log_root = (
+        compiler_options = CompileOptions()
+        compiler_options.set_log_root(
             self.log_root
             if self.log_root == ""
             else self.log_root + "_" + str(self.compile_count)
         )
-        self.compile_count = self.compile_count + 1
-        compiler_options.log_level = self.log_level
-        compiler_options.log_llvm = self.log_llvm
+        compiler_options.set_mode(self.mode)
+        compiler_options.set_target(self.target)
+        compiler_options.set_log_level(self.log_level)
+        compiler_options.set_pipeline(self.pipeline)
+        compiler_options.set_global_layout(self.target_layout)
+        compiler_options.set_cpu(self.cpu)
+        compiler_options.set_mtriple(self.mtriple)
         return compiler_options
 
     def compiler_fx(
@@ -146,8 +128,11 @@ class LLCompiler(Importer, GenOutput):
         if self.vebose_first_ir:
             print(self._mlir_module)
         compiler_options = self._gen_compiler_options()
-        engine = do_compile(self._mlir_module.__str__(), compiler_options)
-        executor = Torch_ExecutionEngine(engine)
+        compiler = Compiler()
+        so_file = compiler.compile_mlir_to_shared_lib(
+            self._mlir_module.__str__(), compiler_options
+        )
+        executor = Torch_ExecutionEngine(so_file)
         executor.gen_outs_call = self.get_out_call(model)
         return executor
 

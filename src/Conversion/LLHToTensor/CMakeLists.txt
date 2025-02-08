@@ -9,6 +9,6 @@ llcompiler_add_library(LLCCLLHToTensor
   LLCMLIRUtility
   MLIRIR
   MLIRTensorDialect
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRFuncDialect
 )

@@ -1,0 +1,5 @@
+set(LLVM_TARGET_DEFINITIONS Enums.td)
+mlir_tablegen(Eunms.h.inc -gen-enum-decls)
+mlir_tablegen(Eunms.cpp.inc -gen-enum-defs)
+add_public_tablegen_target(LLCEnumIncGen)
+add_dependencies(mlir-headers LLCEnumIncGen)

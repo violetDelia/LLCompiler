@@ -1,4 +1,4 @@
-llcompiler_add_library(MLIRLLHDialect
+llcompiler_add_library(LLCLLHDialect
     SRC_FILES
     LLHTypes.cpp
     LLHDialect.cpp

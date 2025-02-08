@@ -3,6 +3,7 @@
 
 #include <map>
 #include <string>
+#include <vector>
 
 namespace llc::compiler {
 
@@ -12,6 +13,7 @@ static const std::string LlcPath = "@LLCOMPILER_LLVM_BUILD_TOOLS_DIR@/llc";
 static const std::string LlcOptPath = "@LLCOMPILER_BUILD_RUNTIME_DIR@/llc-opt";
 static const std::string LlcTranslatePath =
     "@LLCOMPILER_BUILD_RUNTIME_DIR@/llc-translate";
+static const std::string CXXPath = "@CMAKE_CXX_COMPILER@";
 }  // namespace
 
 static const std::map<std::string, std::string> toolPathMap = {
@@ -19,6 +21,11 @@ static const std::map<std::string, std::string> toolPathMap = {
     {"llc", LlcPath},
     {"llc-opt", LlcOptPath},
     {"llc-translate", LlcTranslatePath},
-};
+    {"cxx", CXXPath}};
+
+static const std::vector<std::string> defaultLibDirs = {
+    "@LLCOMPILER_BUILD_LIBRARY_DIR@", "@LLCOMPILER_LLVM_BUILD_LIBS_DIR@"};
+
+static const std::vector<std::string> defaultLib = {"mlir_c_runner_utils"};
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_TOOLPATH_H_

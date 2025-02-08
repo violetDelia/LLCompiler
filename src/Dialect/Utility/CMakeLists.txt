@@ -11,7 +11,7 @@ llcompiler_add_library(LLCMLIRUtility
     MLIRParser
     MLIRIR
     LLCSupport
-    MLIRLLHDialect
+    LLCLLHDialect
 
 )
 

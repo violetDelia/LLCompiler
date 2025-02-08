@@ -24,7 +24,6 @@
  */
 #include "llcompiler/Compiler/Compiler.h"
 #include "llcompiler/Frontend/Core/Base.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Support/Logger.h"
 #include "mlir/IR/DialectRegistry.h"
 #include "mlir/IR/MLIRContext.h"
@@ -42,6 +41,6 @@ void init_frontend(const front::FrontEndOption& front_option,
                    const logger::LoggerOption& logger_option);
 
 void preprocess_mlir_module(mlir::OwningOpRef<mlir::ModuleOp>* module,
-                            CompilerOptions compiler_options);
+                            CompileOptions compiler_options);
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_INIT_H_

@@ -27,6 +27,8 @@
 #include <cstddef>
 #include <sstream>
 #include <string>
+
+#include "llcompiler/Support/Enums.h"
 namespace llc {
 
 /**********  log module extern  **********/
@@ -38,23 +40,14 @@ extern const char *MLIR_PASS;
 extern const char *DEBUG;
 extern const char *SymbolInfer;
 extern const char *Entrance_Module;
+extern const char *Executor;
 };  // namespace llc
 
 namespace llc::logger {
 
-enum class LOG_LEVEL {
-  DEBUG_ = 1,
-  INFO_ = 2,
-  WARN_ = 3,
-  ERROR_ = 4,
-  FATAL_ = 5,
-};
-const char *log_level_to_str(const LOG_LEVEL level);
-LOG_LEVEL str_to_log_level(const char *str);
-
 struct LoggerOption {
   std::string path;
-  LOG_LEVEL level;
+  llc::LogLevel level;
 };
 
 void register_logger(const char *module, const LoggerOption &option);
@@ -63,14 +56,14 @@ class LoggerStream;
 
 class Logger {
  public:
-  Logger(const char *module, const LOG_LEVEL level);
+  Logger(const char *module, const llc::LogLevel level);
   virtual ~Logger();
   LoggerStream stream(const bool emit_message);
   void info(const char *message);
 
  protected:
   const char *module_;
-  const LOG_LEVEL level_;
+  const llc::LogLevel level_;
 };
 
 class NullStream {
@@ -111,8 +104,8 @@ NullStream &NullStream::operator<<(const Ty val) {
   ::llc::logger::register_logger(module, root, lever);
 #define LLCOMPILER_LOG(module, lever) \
   ::llc::logger::Logger(module, lever).stream(true)
-#define LLCOMPILER_CHECK_LOG(module, condition, lever)                        \
-  ::llc::logger::Logger(module, static_cast<::llc::logger::LOG_LEVEL>(lever)) \
+#define LLCOMPILER_CHECK_LOG(module, condition, lever)               \
+  ::llc::logger::Logger(module, static_cast<::llc::LogLevel>(lever)) \
       .stream(!condition)
 #else
 #define LLCOMPILER_INIT_LOGGER(module, root, lever)
@@ -121,24 +114,23 @@ NullStream &NullStream::operator<<(const Ty val) {
   ::llc::logger::NullStream()
 #endif  // LLCOMPILER_HAS_LOG
 
-#define DINFO LLCOMPILER_LOG(llc::DEBUG, ::llc::logger::LOG_LEVEL::ERROR_)
-#define DEBUG(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::DEBUG_)
-#define INFO(module) LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::INFO_)
-#define WARN(module)                                      \
-  LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::WARN_) \
+#define DINFO LLCOMPILER_LOG(llc::DEBUG, ::llc::LogLevel::error)
+#define DEBUG(module) LLCOMPILER_LOG(module, ::llc::LogLevel::debug)
+#define INFO(module) LLCOMPILER_LOG(module, ::llc::LogLevel::info)
+#define WARN(module)                            \
+  LLCOMPILER_LOG(module, ::llc::LogLevel::warn) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
-#define WRONG(module)                                      \
-  LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::ERROR_) \
+#define WRONG(module)                            \
+  LLCOMPILER_LOG(module, ::llc::LogLevel::error) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
-#define FATAL(module)                                      \
-  LLCOMPILER_LOG(module, ::llc::logger::LOG_LEVEL::FATAL_) \
+#define FATAL(module)                            \
+  LLCOMPILER_LOG(module, ::llc::LogLevel::fatal) \
       << __FILE__ << "<" << __LINE__ << ">: \n\t"
 
-#define print_info \
-  LLCOMPILER_LOG(::llc::GLOBAL, ::llc::logger::LOG_LEVEL::ERROR_)
+#define print_info LLCOMPILER_LOG(::llc::GLOBAL, ::llc::LogLevel::error)
 
-#define CHECK(module, condition)                                            \
-  LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVEL::ERROR_) \
+#define CHECK(module, condition)                                  \
+  LLCOMPILER_CHECK_LOG(module, condition, ::llc::LogLevel::error) \
       << #condition << " : " << __FILE__ << "<" << __LINE__ << "> \n\t"
 #define CHECK_EQ(module, val1, val2) CHECK(module, (val1 == val2))
 #define CHECK_NE(module, val1, val2) CHECK(module, (val1 != val2))
@@ -148,7 +140,7 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define CHECK_GE(module, val1, val2) CHECK(module, (val1 >= val2))
 
 #define DCHECK(module, condition) \
-  LLCOMPILER_CHECK_LOG(module, condition, ::llc::logger::LOG_LEVEL::DEBUG_)
+  LLCOMPILER_CHECK_LOG(module, condition, ::: llc::LogLevel::debug)
 #define DCHECK_EQ(module, val1, val2) DCHECK(module, (val1 == val2))
 #define DCHECK_NE(module, val1, val2) DCHECK(module, (val1 != val2))
 #define DCHECK_LT(module, val1, val2) DCHECK(module, (val1 < val2))
@@ -189,7 +181,7 @@ NullStream &NullStream::operator<<(const Ty val) {
                        << " -----";
 #define LLC_RUN_IN_PATTERN \
   DEBUG(llc::MLIR_PASS) << "run in pattern " << this->getDebugName().str();
-#define LLC_RUN_OUT_PATTERN                                     \
+#define LLC_RUN_OUT_PATTERN                                          \
   DEBUG(llc::MLIR_PASS) << "rewrite " << op.getOperationName().str() \
-                   << " in pattern " << this->getDebugName().str();
+                        << " in pattern " << this->getDebugName().str();
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_

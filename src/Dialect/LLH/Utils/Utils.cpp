@@ -40,26 +40,6 @@ bool isLayoutSensitive(Operation* op) {
   return llvm::isa<llh::ConvOp, ConvBiasOp, MaxPoolOp>(op);
 }
 
-llh::DimOp buildTensorDim(mlir::Value operand, LLHPatternRewriter* rewriter,
-                          size_t dim) {
-  auto loc = operand.getLoc();
-  auto dim_const = rewriter->create<ConstantOp>(
-      loc, IntegerAttr::get(rewriter->getI64Type(), dim));
-  return rewriter->create<DimOp>(loc, ValueRange{operand, dim_const});
-}
-
-llvm::SmallVector<Value> buildTensorDims(mlir::Value operand,
-                                         LLHPatternRewriter* rewriter) {
-  auto tensor = llc::getRankTensorFrom(operand);
-  auto rank = tensor.getRank();
-  auto ranks = SmallVector<Value>();
-  for (int i{}; i < rank; i++) {
-    auto dim = buildTensorDim(operand, rewriter, i);
-    ranks.push_back(dim);
-  }
-  return ranks;
-}
-
 Value getElementNums(mlir::Value operand, LLHPatternRewriter* rewrite) {
   auto dims = buildTensorDims(operand, rewrite);
   return getElementNums(dims, rewrite);

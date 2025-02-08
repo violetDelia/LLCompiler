@@ -19,7 +19,7 @@ llcompiler_add_library(LLCLLHTransforms
   LLHTransformLayoutToNHWCIncGen
 
   LINKS PUBLIC
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRPass
   LLCIRExtension
   LLCMLIRUtility

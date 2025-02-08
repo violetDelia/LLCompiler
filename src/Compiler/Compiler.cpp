@@ -27,104 +27,28 @@
 #include <system_error>
 #include <utility>
 
-#include "llcompiler/Compiler/Engine.h"
+#include "llcompiler/Compiler/Command.h"
+#include "llcompiler/Compiler/CompileOption.h"
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Dialect/Utility/File.h"
-#include "llcompiler/Pipeline/BasicPipeline.h"
 #include "llcompiler/Pipeline/TransFromPipeline.h"
+#include "llcompiler/Support/Enums.h"
 #include "llcompiler/Support/Logger.h"
-#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/CodeGen/Register.h"
-#include "llvm/ExecutionEngine/Orc/Core.h"
-#include "llvm/ExecutionEngine/Orc/LLJIT.h"
-#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
-#include "llvm/ExecutionEngine/Orc/ThreadSafeModule.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
-#include "llvm/Support/CommandLine.h"
-#include "llvm/Support/TargetSelect.h"
-#include "llvm/Support/raw_ostream.h"
-#include "mlir/ExecutionEngine/ExecutionEngine.h"
-#include "mlir/ExecutionEngine/OptUtils.h"
-#include "mlir/Pass/Pass.h"
-#include "mlir/Pass/PassManager.h"
-#include "mlir/Target/LLVMIR/Export.h"
+#include "llvm/Support/FileSystem.h"
+#include "llvm/Support/FileUtilities.h"
+#include "llvm/Support/Path.h"
+#include "mlir/IR/OperationSupport.h"
+
 namespace llc::compiler {
 
+namespace {
 
-void generatePipelineOptions(
-    CompilerOptions& options,
-    llc::pipeline::BasicPipelineOptions& pipleline_options) {
-  // config env error
-  //  if (options.L1_cache_size == 0) {
-
-  //   pipleline_options.L1CacheSize = sysconf(_SC_LEVEL1_DCACHE_SIZE);
-  // } else {
-  //   pipleline_options.L1CacheSize = options.L1_cache_size;
-  // }
-  // if (options.L2_cache_size == 0) {
-  //   pipleline_options.L2CacheSize = sysconf(_SC_LEVEL2_CACHE_SIZE);
-  // } else {
-  //   pipleline_options.L2CacheSize = options.L2_cache_size;
-  // }
-  // if (options.L3_cache_size == 0) {
-  //   pipleline_options.L3CacheSize = sysconf(_SC_LEVEL3_CACHE_SIZE);
-  // } else {
-  //   pipleline_options.L3CacheSize = options.L3_cache_size;
-  // }
-  INFO(llc::GLOBAL) << "L3 Cache Size: "
-                    << pipleline_options.L3CacheSize.getValue();
-  INFO(llc::GLOBAL) << "L2 Cache Size: "
-                    << pipleline_options.L2CacheSize.getValue();
-  INFO(llc::GLOBAL) << "L1 Cache Size: "
-                    << pipleline_options.L1CacheSize.getValue();
-  pipleline_options.runMode = str_to_mode(options.mode.c_str());
-  pipleline_options.target = str_to_target(options.target.c_str());
-  pipleline_options.symbolInfer = options.symbol_infer;
-  pipleline_options.irTreeDir = options.log_root;
-  pipleline_options.indexBitWidth = options.index_bit_width;
-  auto maybe_target_layout = mlir::llh::symbolizeLayout(options.target_layout);
-  CHECK(llc::GLOBAL, maybe_target_layout.has_value());
-  pipleline_options.targetLayout = maybe_target_layout.value();
-}
-
-void generatePipelineOptions(
-    CompilerOptions& options,
-    llc::pipeline::TransformPipelineOptions& pipleline_options) {
-  // config env error
-  //  if (options.L1_cache_size == 0) {
-
-  //   pipleline_options.L1CacheSize = sysconf(_SC_LEVEL1_DCACHE_SIZE);
-  // } else {
-  //   pipleline_options.L1CacheSize = options.L1_cache_size;
-  // }
-  // if (options.L2_cache_size == 0) {
-  //   pipleline_options.L2CacheSize = sysconf(_SC_LEVEL2_CACHE_SIZE);
-  // } else {
-  //   pipleline_options.L2CacheSize = options.L2_cache_size;
-  // }
-  // if (options.L3_cache_size == 0) {
-  //   pipleline_options.L3CacheSize = sysconf(_SC_LEVEL3_CACHE_SIZE);
-  // } else {
-  //   pipleline_options.L3CacheSize = options.L3_cache_size;
-  // }
-  INFO(llc::GLOBAL) << "L3 Cache Size: "
-                    << pipleline_options.L3CacheSize.getValue();
-  INFO(llc::GLOBAL) << "L2 Cache Size: "
-                    << pipleline_options.L2CacheSize.getValue();
-  INFO(llc::GLOBAL) << "L1 Cache Size: "
-                    << pipleline_options.L1CacheSize.getValue();
-  pipleline_options.target = str_to_target(options.target.c_str());
-  pipleline_options.symbolInfer = options.symbol_infer;
-  auto maybe_target_layout = mlir::llh::symbolizeLayout(options.target_layout);
-  CHECK(llc::GLOBAL, maybe_target_layout.has_value());
-  pipleline_options.targetLayout = maybe_target_layout.value();
-}
-
-void setIRDumpConfig(CompilerOptions& options, mlir::PassManager& pm) {
+void setIRDumpConfig(CompileOptions& options, mlir::PassManager& pm) {
   if (options.log_root.empty()) return;
+  if (!options.display_mlir_passes) return;
   if (!std::filesystem::exists(options.log_root))
     std::filesystem::create_directory(options.log_root);
   INFO(GLOBAL) << "mlir ir tree dir is: " << options.log_root;
@@ -134,18 +58,37 @@ void setIRDumpConfig(CompilerOptions& options, mlir::PassManager& pm) {
       false, options.log_root, mlir::OpPrintingFlags());
 }
 
-void runBasicPipeline(CompilerOptions& options,
-                      mlir::OwningOpRef<mlir::ModuleOp>& module) {
-  pipeline::BasicPipelineOptions pipleline_options;
-  generatePipelineOptions(options, pipleline_options);
-  // ********* process in mlir *********//
-  mlir::PassManager pm(module.get()->getName());
-  setIRDumpConfig(options, pm);
-  pipeline::buildBasicPipeline(pm, pipleline_options);
-  CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
+void generatePipelineOptions(
+    CompileOptions& options,
+    llc::pipeline::TransformPipelineOptions& pipleline_options) {
+  if (options.L1_cache_size == 0) {
+    pipleline_options.L1CacheSize = sysconf(_SC_LEVEL1_DCACHE_SIZE);
+  } else {
+    pipleline_options.L1CacheSize = options.L1_cache_size;
+  }
+  if (options.L2_cache_size == 0) {
+    pipleline_options.L2CacheSize = sysconf(_SC_LEVEL2_CACHE_SIZE);
+  } else {
+    pipleline_options.L2CacheSize = options.L2_cache_size;
+  }
+  if (options.L3_cache_size == 0) {
+    pipleline_options.L3CacheSize = sysconf(_SC_LEVEL3_CACHE_SIZE);
+  } else {
+    pipleline_options.L3CacheSize = options.L3_cache_size;
+  }
+  INFO(llc::GLOBAL) << "L3 Cache Size: "
+                    << pipleline_options.L3CacheSize.getValue();
+  INFO(llc::GLOBAL) << "L2 Cache Size: "
+                    << pipleline_options.L2CacheSize.getValue();
+  INFO(llc::GLOBAL) << "L1 Cache Size: "
+                    << pipleline_options.L1CacheSize.getValue();
+  auto maybe_target_layout = mlir::llh::symbolizeLayout(
+      llc::stringifyGlobalLayout(options.global_layout));
+  CHECK(llc::GLOBAL, maybe_target_layout.has_value());
+  pipleline_options.targetLayout = maybe_target_layout.value();
 }
 
-void runTransformPipeline(CompilerOptions& options,
+void runTransformPipeline(CompileOptions& options,
                           mlir::OwningOpRef<mlir::ModuleOp>& module) {
   pipeline::TransformPipelineOptions pipleline_options;
   generatePipelineOptions(options, pipleline_options);
@@ -155,137 +98,247 @@ void runTransformPipeline(CompilerOptions& options,
   pipeline::buildTransformPipeline(pm, pipleline_options);
   CHECK(MLIR, mlir::succeeded(pm.run(*module))) << "Failed to run pipeline";
 }
+}  // namespace
 
-Engine do_compile(const char* xdsl_module, CompilerOptions options) {
-  // ********* init logger *********//
+LLCCompiler::LLCCompiler() {}
+
+void LLCCompiler::registerLogger(CompileOptions options) {
   logger::LoggerOption logger_option;
-  logger_option.level = logger::str_to_log_level(options.log_level.c_str());
-  logger_option.path = options.log_root;
-  init_logger(logger_option);
-  INFO(llc::Entrance_Module) << "\n" << xdsl_module;
-  // ********* init mlir context *********//
+  auto log_dir = llvm::SmallString<128>(options.log_root);
+  llvm::sys::path::append(log_dir, "log");
+  if (!llvm::sys::fs::exists(log_dir)) {
+    INFO(GLOBAL) << "create folder: " << log_dir.c_str();
+    llvm::sys::fs::create_directory(log_dir);
+  }
+  logger_option.path = log_dir.c_str();
+  logger_option.level = options.log_level;
+  logger::register_logger(GLOBAL, logger_option);
+  logger::register_logger(UTILITY, logger_option);
+  logger::register_logger(IMPORTER, logger_option);
+  logger::register_logger(MLIR, logger_option);
+  logger::register_logger(MLIR_PASS, logger_option);
+  logger::register_logger(DEBUG, logger_option);
+  logger::register_logger(SymbolInfer, logger_option);
+  logger::register_logger(Entrance_Module, logger_option);
+  INFO(GLOBAL) << "log root is: " << logger_option.path;
+  INFO(GLOBAL) << "log level is: "
+               << llc::stringifyLogLevel(logger_option.level).str();
+};
+
+void LLCCompiler::optimizeMLIRFile(std::string module_file,
+                                   CompileOptions options,
+                                   std::string opted_module_file) {
   mlir::DialectRegistry registry;
   add_extension_and_interface(registry);
   mlir::MLIRContext context(registry, mlir::MLIRContext::Threading::DISABLED);
   load_dialect(context);
-  // ********* load to mlir *********//
   mlir::OwningOpRef<mlir::ModuleOp> module;
-  file::str_to_mlir_module(context, module, xdsl_module);
+  file::file_to_mlir_module(context, module, module_file.c_str());
+  optimizeMLIR(module, options, opted_module_file);
+};
+
+void LLCCompiler::optimizeMLIR(mlir::OwningOpRef<mlir::ModuleOp>& module,
+                               CompileOptions options,
+                               std::string opted_module_file) {
   preprocess_mlir_module(&module, options);
-  // ********* run mlir *********//
-  if (options.pipeline == "basic") {
-    runBasicPipeline(options, module);
-  } else if (options.pipeline == "transform") {
+  if (options.pipeline == "transform") {
     runTransformPipeline(options, module);
   } else {
     UNIMPLEMENTED(llc::GLOBAL);
   }
-  // ********* convert to llvm ir *********//
-  auto llvm_context = std::make_unique<llvm::LLVMContext>();
-  auto llvm_module = mlir::translateModuleToLLVMIR(module.get(), *llvm_context);
-  CHECK(llc::GLOBAL, llvm_module) << "Failed to emit LLVM IR\n";
-  if (options.log_llvm && options.log_root != "") {
-    file::llvm_module_to_file(llvm_module.get(),
-                              (options.log_root + "/original.ll").c_str());
-  }
-  llvm::InitializeNativeTarget();
-  llvm::InitializeNativeTargetAsmPrinter();
-  llvm::InitializeNativeTargetAsmParser();
-  auto tmBuilderOrError = llvm::orc::JITTargetMachineBuilder::detectHost();
-  CHECK(llc::GLOBAL, tmBuilderOrError)
-      << "Could not create JITTargetMachineBuilder\n";
-  auto tmOrError = tmBuilderOrError->createTargetMachine();
-  CHECK(llc::GLOBAL, tmOrError) << "Could not create TargetMachine\n";
-  mlir::ExecutionEngine::setupTargetTripleAndDataLayout(llvm_module.get(),
-                                                        tmOrError.get().get());
-  auto optPipeline = mlir::makeOptimizingTransformer(
-      /*optLevel=*/options.opt_level, /*sizeLevel=*/0,
-      /*targetMachine=*/nullptr);
-  CHECK(llc::GLOBAL, !optPipeline(llvm_module.get()))
-      << "Failed to optimize LLVM IR "
-      << "\n";
-  if (options.log_llvm && options.log_root != "") {
-    file::llvm_module_to_file(llvm_module.get(),
-                              (options.log_root + "/final.ll").c_str());
-  }
+  file::mlir_to_file(&module, opted_module_file.c_str());
+};
 
-  // ********* link *********//
-  // TODO(lfr): need to refine
-  llvm::SmallVector<llvm::SmallString<256>, 4> sharedLibPaths;
-  sharedLibPaths.push_back(llvm::StringRef(
-      "/home/lfr/LLCompiler/build/third_party/llvm-project/llvm/lib/"
-      "libmlir_c_runner_utils.so"));
-  llvm::StringMap<void*> exportSymbols;
-  llvm::SmallVector<mlir::ExecutionEngine::LibraryDestroyFn> destroyFns;
-  llvm::SmallVector<llvm::StringRef> jitDyLibPaths;
-  for (auto& libPath : sharedLibPaths) {
-    auto lib = llvm::sys::DynamicLibrary::getPermanentLibrary(
-        libPath.str().str().c_str());
-    void* initSym =
-        lib.getAddressOfSymbol(mlir::ExecutionEngine::kLibraryInitFnName);
-    void* destroySim =
-        lib.getAddressOfSymbol(mlir::ExecutionEngine::kLibraryDestroyFnName);
-    if (!initSym || !destroySim) {
-      jitDyLibPaths.push_back(libPath);
-      continue;
-    }
-    auto initFn =
-        reinterpret_cast<mlir::ExecutionEngine::LibraryInitFn>(initSym);
-    initFn(exportSymbols);
-    auto destroyFn =
-        reinterpret_cast<mlir::ExecutionEngine::LibraryDestroyFn>(destroySim);
-    destroyFns.push_back(destroyFn);
-  }
-  auto objectLinkingLayerCreator = [&](llvm::orc::ExecutionSession& session,
-                                       const llvm::Triple& tt) {
-    auto objectLayer = std::make_unique<llvm::orc::RTDyldObjectLinkingLayer>(
-        session, [sectionMemoryMapper = nullptr]() {
-          return std::make_unique<llvm::SectionMemoryManager>(
-              sectionMemoryMapper);
-        });
-    llvm::Triple targetTriple(llvm::Twine(llvm_module->getTargetTriple()));
-    if (targetTriple.isOSBinFormatCOFF()) {
-      objectLayer->setOverrideObjectFlagsWithResponsibilityFlags(true);
-      objectLayer->setAutoClaimResponsibilityForObjectSymbols(true);
-    }
+void LLCCompiler::optimizeMLIRStr(std::string module_string,
+                                  CompileOptions options,
+                                  std::string opted_module_file) {
+  mlir::DialectRegistry registry;
+  add_extension_and_interface(registry);
+  mlir::MLIRContext context(registry, mlir::MLIRContext::Threading::DISABLED);
+  load_dialect(context);
+  mlir::OwningOpRef<mlir::ModuleOp> module;
+  file::str_to_mlir_module(context, module, module_string.c_str());
+  optimizeMLIR(module, options, opted_module_file);
+};
 
-    for (auto& libPath : jitDyLibPaths) {
-      auto mb = llvm::MemoryBuffer::getFile(libPath);
-      if (!mb) {
-        FATAL(llc::GLOBAL) << "Failed to create MemoryBuffer for: "
-                           << libPath.str()
-                           << "\nError: " << mb.getError().message() << "\n";
-        continue;
-      }
-      auto& jd = session.createBareJITDylib(std::string(libPath));
-      auto loaded = llvm::orc::DynamicLibrarySearchGenerator::Load(
-          libPath.str().c_str(),
-          llvm_module->getDataLayout().getGlobalPrefix());
-      if (!loaded) {
-        FATAL(llc::GLOBAL) << "Could not load " << libPath.str() << ":\n  "
-                           << "\n";
-        continue;
-      }
-      jd.addGenerator(std::move(*loaded));
-      cantFail(objectLayer->add(jd, std::move(mb.get())));
-    }
-    return objectLayer;
-  };
-  // ********* engine *********//
-  // TODO(lfr): AOT and preload
-  auto maybe_jit = llvm::orc::LLJITBuilder()
-                       .setObjectLinkingLayerCreator(objectLinkingLayerCreator)
-                       .setNumCompileThreads(8)
-                       .create();
-  CHECK(llc::GLOBAL, maybe_jit) << "Failed to create JIT";
-  auto& jit = maybe_jit.get();
-  auto error = jit->addIRModule(llvm::orc::ThreadSafeModule(
-      std::move(llvm_module), std::move(llvm_context)));
-  CHECK(llc::GLOBAL, !error) << "Failed to add module!";
-  auto maybe_func = jit->lookup("main");
-  CHECK(llc::GLOBAL, maybe_func) << "count not find function!";
-  Engine engine(std::move(jit));
-  return engine;
+void LLCCompiler::translateMLIRToLLVMIR(std::string mlir_file,
+                                        CompileOptions options,
+                                        std::string llvm_ir_file) {
+  Command translate_mlir(getToolPath("llc-translate"));
+  translate_mlir.appendStr(mlir_file)
+      .appendStr("-mlir-to-llvmir")
+      .appendStr("-allow-unregistered-dialect")
+      .appendList({"-o", llvm_ir_file})
+      .exec();
+}
+
+void LLCCompiler::optimizeLLVMIR(std::string llvm_ir_file,
+                                 CompileOptions options,
+                                 std::string opted_llvm_ir_file) {
+  Command optimize_bitcode(getToolPath("opt"));
+  optimize_bitcode.appendStr(llvm_ir_file)
+      .appendList({"-o", opted_llvm_ir_file})
+      .appendStr(getOptimizationLevelOption(options))
+      .appendStr("-S")
+      .appendStr(getTargetArchOption(options))
+      .appendStr(getCPUOption(options))
+      .appendStr(getMtripleOption(options));
+  if (options.display_llvm_passes) {
+    llvm::SmallString<128> all_passes_file(opted_llvm_ir_file);
+    llvm::SmallString<128> llvm_ir_dir =
+        llvm::sys::path::parent_path(opted_llvm_ir_file);
+    llvm::sys::path::append(llvm_ir_dir, "llvm_dump");
+    optimize_bitcode.appendStr("-print-before-all");
+    optimize_bitcode.appendList({"-ir-dump-directory", llvm_ir_dir.c_str()});
+  }
+  optimize_bitcode.exec();
+}
+
+void LLCCompiler::translateLLVMIRToBitcode(std::string opted_llvm_ir_file,
+                                           CompileOptions options,
+                                           std::string llvm_bitcode_file) {
+  Command translate_to_bitcode(getToolPath("opt"));
+  translate_to_bitcode.appendStr(opted_llvm_ir_file)
+      .appendList({"-o", llvm_bitcode_file})
+      .appendStr(getTargetArchOption(options))
+      .appendStr(getCPUOption(options))
+      .appendStr(getMtripleOption(options))
+      .exec();
+}
+
+void LLCCompiler::translateBitcodeToObject(std::string llvm_bitcode_file,
+                                           CompileOptions options,
+                                           std::string object_file) {
+  Command bitcode_to_object(getToolPath("llc"));
+  bitcode_to_object.appendStr(llvm_bitcode_file)
+      .appendList({"-o", object_file})
+      .appendStr("-filetype=obj")
+      .appendStr("-relocation-model=pic")
+      .appendStr(getTargetArchOption(options))
+      .appendStr(getCPUOption(options))
+      .appendStr(getMtripleOption(options))
+      .exec();
+}
+
+void LLCCompiler::generateSharedLib(std::vector<std::string> objs,
+                                    CompileOptions options,
+                                    std::string shared_lib_file) {
+  Command link(getToolPath("cxx"));
+  link.appendList(objs)
+      .appendList({"-o", shared_lib_file})
+      .appendList({"-shared", "-fPIC"});
+  for (auto lib : options.libs) {
+    link.appendStr("-l" + lib);
+  }
+  for (auto lib_dir : options.libdirs) {
+    link.appendStr("-L" + lib_dir);
+  }
+  link.exec();
+}
+
+std::string LLCCompiler::generateSharedLibFromMLIRFile(std::string module_file,
+                                                       CompileOptions options) {
+  registerLogger(options);
+  mlir::DialectRegistry registry;
+  add_extension_and_interface(registry);
+  mlir::MLIRContext context(registry, mlir::MLIRContext::Threading::DISABLED);
+  load_dialect(context);
+  mlir::OwningOpRef<mlir::ModuleOp> module;
+  file::file_to_mlir_module(context, module, module_file.c_str());
+  llvm::SmallString<4> file_prefix;
+  if (options.log_root.empty()) {
+    llvm::sys::path::system_temp_directory(true, file_prefix);
+    auto hash = std::to_string(llvm::hash_value(module_file));
+    llvm::sys::path::append(file_prefix, hash);
+  } else {
+    file_prefix = options.log_root;
+    llvm::sys::path::append(file_prefix, "llc_module");
+  }
+  auto opted_mlir_file(file_prefix);
+  llvm::sys::path::replace_extension(opted_mlir_file, ".opted.mlir");
+  optimizeMLIR(module, options, opted_mlir_file.str().str());
+  auto llvm_ir_file(file_prefix);
+  llvm::sys::path::replace_extension(llvm_ir_file, ".ll");
+  translateMLIRToLLVMIR(opted_mlir_file.str().str(), options,
+                        llvm_ir_file.str().str());
+  auto opted_llvm_ir_file(file_prefix);
+  llvm::sys::path::replace_extension(opted_llvm_ir_file, "opted.ll");
+  optimizeLLVMIR(llvm_ir_file.str().str(), options,
+                 opted_llvm_ir_file.str().str());
+  auto bitcode_file(file_prefix);
+  llvm::sys::path::replace_extension(bitcode_file, ".bc");
+  translateLLVMIRToBitcode(opted_llvm_ir_file.str().str(), options,
+                           bitcode_file.str().str());
+  auto obj_file(file_prefix);
+  llvm::sys::path::replace_extension(obj_file, ".o");
+  translateBitcodeToObject(bitcode_file.str().str(), options,
+                           obj_file.str().str());
+  auto shared_lib_file(file_prefix);
+  llvm::sys::path::replace_extension(shared_lib_file, ".so");
+  generateSharedLib({obj_file.str().str()}, options,
+                    shared_lib_file.str().str());
+  if (options.log_root.empty()) {
+    llvm::FileRemover opted_mlir_remover(opted_mlir_file);
+    llvm::FileRemover llvm_ir_remover(llvm_ir_file);
+    llvm::FileRemover opted_llvm_ir_remover(opted_llvm_ir_file);
+    llvm::FileRemover bitcode_remover(bitcode_file);
+    llvm::FileRemover obj_remover(obj_file);
+  }
+  return shared_lib_file.str().str();
+};
+
+std::string LLCCompiler::generateSharedLibFromMLIRStr(std::string module_str,
+                                                      CompileOptions options) {
+  registerLogger(options);
+  if (!options.log_root.empty()) {
+    INFO(llc::Entrance_Module) << module_str;
+  }
+  mlir::DialectRegistry registry;
+  add_extension_and_interface(registry);
+  mlir::MLIRContext context(registry, mlir::MLIRContext::Threading::DISABLED);
+  load_dialect(context);
+  mlir::OwningOpRef<mlir::ModuleOp> module;
+  file::str_to_mlir_module(context, module, module_str.c_str());
+  llvm::SmallString<4> file_prefix;
+  if (options.log_root.empty()) {
+    llvm::sys::path::system_temp_directory(true, file_prefix);
+    auto hash = std::to_string(llvm::hash_value(module_str));
+    llvm::sys::path::append(file_prefix, hash);
+  } else {
+    file_prefix = options.log_root;
+    llvm::sys::path::append(file_prefix, "llc_module");
+  }
+  auto opted_mlir_file(file_prefix);
+  llvm::sys::path::replace_extension(opted_mlir_file, ".opted.mlir");
+  optimizeMLIR(module, options, opted_mlir_file.str().str());
+  auto llvm_ir_file(file_prefix);
+  llvm::sys::path::replace_extension(llvm_ir_file, ".ll");
+  translateMLIRToLLVMIR(opted_mlir_file.str().str(), options,
+                        llvm_ir_file.str().str());
+  auto opted_llvm_ir_file(file_prefix);
+  llvm::sys::path::replace_extension(opted_llvm_ir_file, "opted.ll");
+  optimizeLLVMIR(llvm_ir_file.str().str(), options,
+                 opted_llvm_ir_file.str().str());
+  auto bitcode_file(file_prefix);
+  llvm::sys::path::replace_extension(bitcode_file, ".bc");
+  translateLLVMIRToBitcode(opted_llvm_ir_file.str().str(), options,
+                           bitcode_file.str().str());
+  auto obj_file(file_prefix);
+  llvm::sys::path::replace_extension(obj_file, ".o");
+  translateBitcodeToObject(bitcode_file.str().str(), options,
+                           obj_file.str().str());
+  auto shared_lib_file(file_prefix);
+  llvm::sys::path::replace_extension(shared_lib_file, ".so");
+  generateSharedLib({obj_file.str().str()}, options,
+                    shared_lib_file.str().str());
+  if (options.log_root.empty()) {
+    llvm::FileRemover opted_mlir_remover(opted_mlir_file);
+    llvm::FileRemover llvm_ir_remover(llvm_ir_file);
+    llvm::FileRemover opted_llvm_ir_remover(opted_llvm_ir_file);
+    llvm::FileRemover bitcode_remover(bitcode_file);
+    llvm::FileRemover obj_remover(obj_file);
+  }
+  return shared_lib_file.str().str();
 }
 
 }  // namespace llc::compiler

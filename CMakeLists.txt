@@ -9,6 +9,7 @@ unset(BUILD_LLCOMPILER_LOG CACHE)
 unset(CMAKE_EXPORT_COMPILE_COMMANDS CACHE)
 unset(LLCOMPILER_BUILD_WARNINGS CACHE)
 unset(DEVELOPER_MODE CACHE)
+
 # TODO: discard for remove onnx
 # unset(LLCOMPILER_BUILD_WITH_ONNX_ML CACHE)
 
@@ -21,6 +22,7 @@ option(BUILD_LLCOMPILER_LOG "build has log" ON)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "export compiler_commands" ON)
 option(LLCOMPILER_BUILD_WARNINGS "open wraning when build llcompiler" ON)
 option(DEVELOPER_MODE "developer mode" ON)
+
 # option(LLCOMPILER_BUILD_WITH_ONNX_ML "if disable,will throw error when convert onnx model" OFF)
 
 # #---------- cmake setting ----------##
@@ -48,6 +50,7 @@ set(LLCOMPILER_BUILD_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(LLCOMPILER_BUILD_ARCHIVE_DIR "${CMAKE_CURRENT_BINARY_DIR}/lib")
 set(LLCOMPILER_BUILD_TOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/tools")
 set(LLCOMPILER_LLVM_BUILD_TOOLS_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/bin")
+set(LLCOMPILER_LLVM_BUILD_LIBS_DIR "${CMAKE_CURRENT_BINARY_DIR}/third_party/llvm-project/llvm/lib")
 # #---------- define install absolute path ----------##
 set(LLCOMPILER_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}")
 set(LLCOMPILER_INSTALL_INCLUDE_DIR "${LLCOMPILER_INSTALL_DIR}/include")
@@ -116,10 +119,10 @@ install(DIRECTORY "${LLCOMPILER_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL
 
 install(DIRECTORY "${LLCOMPILER_GENERATE_INCLUDE_DIR}/" DESTINATION "${LLCOMPILER_INSTALL_INCLUDE_DIR}"
     FILES_MATCHING
-    PATTERN "LibraryPath.h" EXCLUDE
-    PATTERN "LibraryPath.install.h" EXCLUDE
-    PATTERN "ToolPath.h" EXCLUDE
-    PATTERN "ToolPath.install.h" EXCLUDE
+    # PATTERN "LibraryPath.h" EXCLUDE
+    # PATTERN "LibraryPath.install.h" EXCLUDE
+    # PATTERN "ToolPath.h" EXCLUDE
+    # PATTERN "ToolPath.install.h" EXCLUDE
     PATTERN "*.h"
     PATTERN "*.inc"
     PATTERN "*.inc.d"
@@ -157,6 +160,13 @@ message(STATUS CMAKE_INSTALL_PREFIX: ${CMAKE_INSTALL_PREFIX})
 # #---------- this is something for quick test ----------##
 llcompiler_add_executable(main
     "${CMAKE_CURRENT_SOURCE_DIR}/main.cpp"
+
+    ADDITIONAL_INCLUDE_DIRS
+    ${STABLEHLO_INCLUDE_DIRS}
+
+    LINKS
+    $<TARGET_OBJECTS:LLCLLHUtils>
+    $<TARGET_OBJECTS:LLCLLHDialect>
+    $<TARGET_OBJECTS:LLCMLIRUtility>
+    LLCompiler
 )
-target_include_directories(main PRIVATE ${SYMENGINE_INCLUDE_DIRS})
-target_link_libraries(main PUBLIC symengine)

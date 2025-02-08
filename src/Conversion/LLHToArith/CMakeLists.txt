@@ -9,6 +9,6 @@ llcompiler_add_library(LLCCLLHToArith
   LLCMLIRUtility
   MLIRIR
   MLIRArithDialect
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRFuncDialect
 )

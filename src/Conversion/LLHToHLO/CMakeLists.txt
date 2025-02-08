@@ -15,7 +15,7 @@ llcompiler_add_library(LLCLLHToHLO
   LLCMLIRUtility
   MLIRIR
   MLIRTensorDialect
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRFuncDialect
   StablehloOps
 )

@@ -8,7 +8,7 @@
 在这个函数内部里面，会将Module 翻译成mlir 格式的 Moduel，然后进行数个Pass转换为LLVM的IR，同时将设备端的IR翻译为硬件运行指令集，最后链接必要的运行时库和算子库，这样整个模型的编译流程就结束了。最后返回一个执行器，执行器的作用是运行已经编译好的模型文件，从python中接受tensor数据进行执行编译后的模型并返回结果。
 
 ```cpp
-ExecuteEngine * (const str * xdsl_module, CompilerOptions * option,...); 
+ExecuteEngine * (const str * xdsl_module, CompileOptions * option,...); 
 ```
 
 然后通过pythondbind11将这个函数打包为动态库在python中调用。

@@ -49,8 +49,9 @@ void Command::exec(std::string work_dir) const {
   llvm::sys::fs::make_absolute(cur_work_dir, new_work_dir);
 
   std::error_code ec = llvm::sys::fs::set_current_path(new_work_dir);
-  CHECK(llc::GLOBAL, ec.value())
-      << llvm::StringRef(new_work_dir).str() << ": " << ec.message() << "\n";
+  CHECK(llc::GLOBAL, ec.value() == 0)
+      << llvm::StringRef(new_work_dir).str() << ": " << ec.message()
+      << ec.value() << "\n";
   INFO(llc::GLOBAL) << "[" << llvm::StringRef(new_work_dir).str() << "] "
                     << _path << ": " << llvm::join(args, " ") << "\n";
 
@@ -58,7 +59,7 @@ void Command::exec(std::string work_dir) const {
   CHECK(llc::GLOBAL, llvm::sys::ExecuteAndWait(
                          _path, llvm::ArrayRef(args),
                          /*Env=*/std::nullopt, /*Redirects=*/std::nullopt,
-                         /*SecondsToWait=*/0, /*MemoryLimit=*/0, &errMsg) != 0)
+                         /*SecondsToWait=*/0, /*MemoryLimit=*/0, &errMsg) == 0)
       << llvm::join(args, " ") << "\n"
       << "Error message: " << errMsg << "\n"
       << "Program path: " << _path << "\n"

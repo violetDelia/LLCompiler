@@ -12,17 +12,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 
-/**
- * @file Init.h
- * @brief initializing compiler
- * @author 时光丶人爱 (1733535832@qq.com)
- * @version 1.0
- * @date 2024-07-01
- *
- * @copyright Copyright (c) 2024 时光丶人爱
- *
- */
-
 #ifndef INCLUDE_LLCOMPILER_COMPILER_TENSOR_H_
 #define INCLUDE_LLCOMPILER_COMPILER_TENSOR_H_
 

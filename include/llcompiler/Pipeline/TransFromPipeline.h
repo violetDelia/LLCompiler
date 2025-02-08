@@ -27,10 +27,12 @@ struct TransformPipelineOptions
   Option<bool> symbolInfer{*this, "symbol-infer",
                            llvm::cl::desc("symbol-infer"),
                            llvm::cl::init(false)};
-  Option<TARGET> target{*this, "target", llvm::cl::desc("target ir"),
-                        llvm::cl::init(TARGET::CPU),
-                        llvm::cl::values(clEnumValN(
-                            TARGET::CPU, target_to_str(TARGET::CPU), "cpu"))};
+  Option<llc::Target> target{
+      *this, "target", llvm::cl::desc("target ir"),
+      llvm::cl::init(llc::Target::x86_64),
+      llvm::cl::values(clEnumValN(llc::Target::x86_64,
+                                  llc::stringifyTarget(llc::Target::x86_64),
+                                  llc::stringifyTarget(llc::Target::x86_64)))};
   Option<uint64_t> L3CacheSize = {*this, "L3 bytes size",
                                   llvm::cl::desc("L3 bytes size"),
                                   llvm::cl::init(37748736)};

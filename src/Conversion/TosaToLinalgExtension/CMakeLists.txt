@@ -9,6 +9,6 @@ llcompiler_add_library(MLIRTosaToLinalgExtension
   LLCMLIRUtility
   MLIRIR
   MLIRLinalgDialect
-  MLIRLLHDialect
+  LLCLLHDialect
   MLIRFuncDialect
 )

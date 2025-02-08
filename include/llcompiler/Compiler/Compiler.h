@@ -31,25 +31,46 @@
 #include <vector>
 
 #include "llcompiler/Compiler/CompileOption.h"
-#include "llcompiler/Compiler/Engine.h"
+#include "llvm/ADT/StringRef.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/OwningOpRef.h"
 namespace llc::compiler {
 class LLCCompiler {
  public:
   LLCCompiler();
+  std::string generateSharedLibFromMLIRFile(std::string module_file,
+                                            CompileOptions options);
+  std::string generateSharedLibFromMLIRStr(std::string module_str,
+                                           CompileOptions options);
 
  private:
-  void optimizeMLIR(const char* module_str, CompilerOptions options,
-                    mlir::OwningOpRef<mlir::ModuleOp>& mlir_module);
+  void registerLogger(CompileOptions options);
 
-  void translateMLIRToLLVMBitcode();
+  void optimizeMLIRFile(std::string module_file, CompileOptions options,
+                        std::string opted_module_file);
 
-  void optimizeLLVMBitcode();
+  void optimizeMLIRStr(std::string module_string, CompileOptions options,
+                       std::string opted_module_file);
+  void optimizeMLIR(mlir::OwningOpRef<mlir::ModuleOp>& module,
+                    CompileOptions options, std::string opted_module_file);
+
+  void translateMLIRToLLVMIR(std::string mlir_file, CompileOptions options,
+                             std::string llvm_bitcode_file);
+
+  void optimizeLLVMIR(std::string llvm_ir_file, CompileOptions options,
+                      std::string opted_llvm_ir_file);
+
+  void translateLLVMIRToBitcode(std::string opted_llvm_ir_file,
+                                CompileOptions options,
+                                std::string llvm_bitcode_file);
+
+  void translateBitcodeToObject(std::string llvm_bitcode_file,
+                                CompileOptions options,
+                                std::string object_file);
+
+  void generateSharedLib(std::vector<std::string> objs, CompileOptions options,
+                         std::string shared_lib_file);
 };
-
-extern "C" Engine do_compile(const char* xdsl_module,
-                             CompilerOptions compiler_options);
 
 }  // namespace llc::compiler
 #endif  // INCLUDE_LLCOMPILER_COMPILER_COMPILER_H_

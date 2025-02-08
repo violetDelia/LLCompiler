@@ -1,8 +1,10 @@
 llcompiler_add_library(LLCSupport
     SRC_FILES
     Logger.cpp
-    Option.cpp
     Enums.cpp
+
+    DEPENDS
+    LLCEnumIncGen
 
     LINKS PUBLIC
     LLVMOption

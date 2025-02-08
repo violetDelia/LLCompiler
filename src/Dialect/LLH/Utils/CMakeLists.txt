@@ -13,5 +13,5 @@ llcompiler_add_library(LLCLLHUtils
   
 
   LINKS PUBLIC
-  MLIRLLHDialect
+  LLCLLHDialect
 )
