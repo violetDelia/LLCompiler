@@ -110,6 +110,7 @@ class LLCompiler(Importer, GenOutput):
         compiler_options.set_global_layout(self.target_layout)
         compiler_options.set_cpu(self.cpu)
         compiler_options.set_mtriple(self.mtriple)
+        self.compile_count += 1
         return compiler_options
 
     def compiler_fx(

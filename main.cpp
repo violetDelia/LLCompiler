@@ -25,6 +25,7 @@ int main() {
   options.setPipeline("transform");
   options.setCpu("tigerlake");
   options.setMtriple("x86_64-linux-gnu");
+  std::cout<<"a";
   auto compiler = llc::compiler::LLCCompiler();
   auto so_file =  compiler.generateSharedLibFromMLIRFile(mlir_module_file, options);
   auto executor = llc::compiler::Execution();

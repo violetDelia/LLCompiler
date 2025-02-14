@@ -15,6 +15,7 @@
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/BuiltinTypes.h"
+#include "mlir/IR/Types.h"
 
 namespace mlir::llh {
 #define COMPUTABLE_BINARY_VERIFY(OP)                                          \
@@ -53,5 +54,26 @@ COMPUTABLE_BINARY_VERIFY(MulOp)
 COMPUTABLE_BINARY_VERIFY(MaxOp)
 COMPUTABLE_BINARY_VERIFY(MinOp)
 COMPUTABLE_BINARY_VERIFY(PowOp)
+
+::llvm::LogicalResult ScalarCastOP::verify() {
+  auto input = getInput();
+  MemRefType memref_type;
+  Type element_type;
+  auto input_type = input.getType();
+  auto res_type = getType();
+  if (isa<MemRefType>(input_type)) {
+    memref_type = cast<MemRefType>(input_type);
+    element_type = res_type;
+  } else if (isa<MemRefType>(res_type)) {
+    memref_type = cast<MemRefType>(res_type);
+    element_type = input_type;
+  } else {
+    return llvm::failure();
+  }
+  if (memref_type.getElementType() == element_type) {
+    return llvm::success();
+  }
+  return llvm::failure();
+}
 #undef COMPUTABLE_BINARY_VERIFY
 }  // namespace mlir::llh

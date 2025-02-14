@@ -112,6 +112,15 @@ def LLH_SymbolicIntOp : LLH_Op<"symbolic_int",[Symbol]>{
        );
 }
 
+def LLH_ScalarCastOP   : LLH_Op<"scalar_cast", []>{
+    let arguments = (ins 
+        LLH_Computable_Type:$input
+        );
+    let results = (outs 
+        LLH_Computable_Type);
+    let hasVerifier = 1;
+}
+
 def LLH_SymbolicCastOp: LLH_Op<"symbolic_cast",[DeclareOpInterfaceMethods<CastOpInterface>]>{
     let arguments = (ins 
        LLH_Symbolic_Type:$operand);

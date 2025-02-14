@@ -35,7 +35,6 @@ struct TensorTypeStorage : public ::mlir::TypeStorage {
   TensorTypeStorage(::llvm::ArrayRef<::mlir::llh::DynamicDim> dims,
                     ::mlir::Type type)
       : dims(std::move(dims)), type(std::move(type)) {
-    print_info << __func__;
   }
 
   static ::llvm::ArrayRef<::mlir::llh::DynamicDim *> new_dims(
@@ -48,25 +47,21 @@ struct TensorTypeStorage : public ::mlir::TypeStorage {
   }
 
   KeyTy getAsKey() const {
-    print_info << __func__;
     return KeyTy(dims, type);
   }
 
   bool operator==(const KeyTy &tblgenKey) const {
-    print_info << __func__;
     return (new_dims(dims) == new_dims(std::get<0>(tblgenKey))) &&
            (type == std::get<1>(tblgenKey));
   }
 
   static ::llvm::hash_code hashKey(const KeyTy &tblgenKey) {
-    print_info << __func__;
     return ::llvm::hash_combine(new_dims(std::get<0>(tblgenKey)),
                                 std::get<1>(tblgenKey));
   }
 
   static TensorTypeStorage *construct(::mlir::TypeStorageAllocator &allocator,
                                       KeyTy &&tblgenKey) {
-    print_info << __func__;
     auto dims = std::move(std::get<0>(tblgenKey));
     auto type = std::move(std::get<1>(tblgenKey));
     dims = allocator.copyInto(dims);
