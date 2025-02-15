@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/BufferizationExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -108,7 +109,7 @@ void allocToArg(func::FuncOp funcOp) {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct AllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
+struct MemrefAllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
   using OpRewritePattern<mlir::memref::CopyOp>::OpRewritePattern;
 
   LogicalResult match(mlir::memref::CopyOp op) const {
@@ -137,41 +138,9 @@ struct AllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
     return nullptr;
   }
 };
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateAllocToArgPassPatterns(RewritePatternSet &patterns) {
-  auto context = patterns.getContext();
-  patterns.add<AllocToArg>(context);
-}
-
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct AllocToArgPass
-    : ::mlir::bufferization::ex::impl::AllocToArgPassBase<AllocToArgPass> {
-  void runOnOperation() override;
-};
-}  // namespace
-
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-
-void AllocToArgPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-
-  auto *context = &getContext();
-  auto module = getOperation();
-  // auto funcs = module.getOps<func::FuncOp>();
-  // for (auto func : funcs) {
-  //   allocToArg(func);
-  // }
-  RewritePatternSet patterns(context);
-  populateAllocToArgPassPatterns(patterns);
-  auto op = getOperation();
-  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace ::mlir::bufferization::ex::impl;
+LLC_DEFINR_PASS(AllocToArg, { LLC_ADD_PATTERN(MemrefAllocToArg); }, {}, {})

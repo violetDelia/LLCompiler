@@ -47,3 +47,9 @@ func.func @fold_from_elements(%arg0: tensor<?x?x?x?xf32>) ->(tensor<?x?x?x?xf32>
     %4 = "mhlo.dynamic_broadcast_in_dim"(%cst, %from_elements) <{broadcast_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>, known_expanding_dimensions = dense<[0, 1, 2, 3]> : tensor<4xi64>, known_nonexpanding_dimensions = dense<> : tensor<0xi64>}> : (tensor<1x1x1x1xf32>, tensor<4xi64>) -> tensor<?x?x?x?xf32>
     return %4 : tensor<?x?x?x?xf32>
 }
+
+// -----
+func.func @fold_func_arg(%arg0: i64 {func.symbol_int = @s0}) ->(index) attributes {entrance}{
+    %1 = arith.index_cast %arg0 : i64 to index
+    return %1 : index
+}

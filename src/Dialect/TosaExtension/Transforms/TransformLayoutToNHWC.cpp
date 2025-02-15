@@ -150,7 +150,7 @@ namespace {
 //   }
 
 //   void rewrite(SourceOp op, PatternRewriter& rewriter) const final {
-//     LLC_RUN_IN_PATTERN
+//     
 //     auto loc = op->getLoc();
 //     auto attrs = op->getAttrs();
 //     auto out = op->getResult(0);
@@ -186,7 +186,7 @@ namespace {
 //         &rewriter, new_op, llc::layout_to_str(llc::LAYOUT::NHWC), layout,
 //         loc);
 //     rewriter.replaceOp(op, out_transpose);
-//     LLC_RUN_OUT_PATTERN
+//     
 //   }
 // };
 

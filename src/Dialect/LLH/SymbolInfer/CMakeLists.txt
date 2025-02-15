@@ -15,6 +15,7 @@ llcompiler_add_library(LLCSymbolInferTransforms
   DEPENDS
   LLCLLHDialectIncGen
   LLCLLHPassIncGen
+  LLCSymbolInferPassIncGen
   LLHTransformLayoutToNHWCIncGen
 
   LINKS PUBLIC

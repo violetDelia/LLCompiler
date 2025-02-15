@@ -26,6 +26,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -194,7 +195,7 @@ bool check_div_legal(Operation* op) {
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
-struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
+struct LLHBroadCastToOpToHLO : public OpConversionPattern<BroadCastToOp> {
   using OpConversionPattern<BroadCastToOp>::OpConversionPattern;
 
   LogicalResult matchAndRewrite(BroadCastToOp op, OpAdaptor adaptor,
@@ -217,7 +218,7 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
   }
 };
 
-struct ConvOpLowing : public OpConversionPattern<ConvOp> {
+struct LLHConvOpToHLO : public OpConversionPattern<ConvOp> {
   using OpConversionPattern<ConvOp>::OpConversionPattern;
   // curent only supported, need add layout attr and layout pass for more
   LogicalResult matchAndRewrite(ConvOp op, OpAdaptor adaptor,
@@ -275,7 +276,7 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   }
 };
 
-struct BatchNormInferenceOpLowing
+struct LLHBatchNormInferenceOpHLO
     : public OpConversionPattern<BatchNormInferenceOp> {
   using OpConversionPattern<BatchNormInferenceOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(BatchNormInferenceOp op, OpAdaptor adaptor,
@@ -298,7 +299,7 @@ struct BatchNormInferenceOpLowing
   }
 };
 
-struct MaxPoolOpLowing : public OpConversionPattern<MaxPoolOp> {
+struct LLHMaxPoolOpHLO : public OpConversionPattern<MaxPoolOp> {
   using OpConversionPattern<MaxPoolOp>::OpConversionPattern;
 
   LogicalResult match(MaxPoolOp op) const { return llvm::success(); }
@@ -347,7 +348,7 @@ struct MaxPoolOpLowing : public OpConversionPattern<MaxPoolOp> {
   }
 };
 
-struct SliceOpLowing : public OpConversionPattern<StrideSliceOp> {
+struct LLHSliceOpToHLO : public OpConversionPattern<StrideSliceOp> {
   using OpConversionPattern<StrideSliceOp>::OpConversionPattern;
 
   LogicalResult match(StrideSliceOp op) const { return llvm::success(); }
@@ -370,7 +371,7 @@ struct SliceOpLowing : public OpConversionPattern<StrideSliceOp> {
   }
 };
 
-struct BatchMatMulOpLowing : public OpConversionPattern<BatchMatMulOp> {
+struct LLHBatchMatMulOpToHLO : public OpConversionPattern<BatchMatMulOp> {
   using OpConversionPattern<BatchMatMulOp>::OpConversionPattern;
 
   LogicalResult match(BatchMatMulOp op) const { return llvm::success(); }
@@ -391,7 +392,7 @@ struct BatchMatMulOpLowing : public OpConversionPattern<BatchMatMulOp> {
   }
 };
 
-struct CompareOpLowing : public OpConversionPattern<CompareOp> {
+struct LLHCompareOpHLO : public OpConversionPattern<CompareOp> {
   using OpConversionPattern<CompareOp>::OpConversionPattern;
 
   LogicalResult match(CompareOp op) const { return llvm::success(); }
@@ -482,91 +483,74 @@ struct ReduceOplwoing : public OpConversionPattern<RecudeOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateConvertLLHToHLOPassPatterns(TypeConverter& converter,
-                                         RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<SimplyFullLowing<ConstantOp, stablehlo::ConstantOp>>(converter,
-                                                                    context);
-  patterns.add<SimplyFullLowing<SubOp, stablehlo::SubtractOp>>(converter,
-                                                               context);
-  patterns.add<SimplyFullLowing<AddOp, stablehlo::AddOp>>(converter, context);
-  patterns.add<SimplyFullLowing<MulOp, stablehlo::MulOp>>(converter, context);
-  patterns.add<SimplyFullLowing<DivOp, stablehlo::DivOp>>(converter, context);
-  patterns.add<SimplyFullLowing<MaxOp, stablehlo::MaxOp>>(converter, context);
-  patterns.add<SimplyFullLowing<MatMulOp, stablehlo::DotOp>>(converter,
-                                                             context);
-  patterns.add<SimplyFullLowing<AbsOp, stablehlo::AbsOp>>(converter, context);
-  patterns.add<SimplyFullLowing<WhereOp, stablehlo::SelectOp>>(converter,
-                                                               context);
-  patterns.add<SimplyFullLowing<SqrtOp, stablehlo::SqrtOp>>(converter, context);
-  patterns.add<SimplyFullLowing<ConvertToOp, stablehlo::ConvertOp>>(converter,
-                                                                    context);
-  patterns.add<SimplyFullLowing<ExpOp, stablehlo::ExpOp>>(converter, context);
-  patterns.add<ConvOpLowing>(converter, context);
-  patterns.add<TransposeOpLowing>(context);
-  patterns.add<BatchNormInferenceOpLowing>(converter, context);
-  patterns.add<MaxPoolOpLowing>(converter, context);
-  patterns.add<BroadCastToOpToOpLowing>(converter, context);
-  patterns.add<SliceOpLowing>(converter, context);
-  patterns.add<BatchMatMulOpLowing>(converter, context);
-  patterns.add<CompareOpLowing>(converter, context);
-  patterns.add<ReduceOplwoing<ReduceMaxOp>>(converter, context);
-  patterns.add<ReduceOplwoing<ReduceSumOp>>(converter, context);
-}
-
 //===----------------------------------------------------------------------===//
-// config target
+// addIllegalOp
 //===----------------------------------------------------------------------===//
-void configConvertLLHToHLOPassTarget(ConversionTarget& target) {
-  target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
+void convertLLHToHLOPassTargetaddIllegalOp(ConversionTarget& target) {
   target.addIllegalOp<DivOp, SubOp, AddOp, MulOp, MaxOp, CompareOp, ReluOp,
                       BatchNormOp, AbsOp, SqrtOp, BatchNormInferenceOp, ConvOp,
                       MaxPoolOp, MatMulOp, BatchMatMulOp, TransposeOp,
                       BroadCastToOp, SliceOp, WhereOp, ConvertToOp, ReduceMaxOp,
                       ReduceSumOp>();
-  target.addLegalDialect<stablehlo::StablehloDialect>();
-  target.addLegalDialect<mlir::arith::ArithDialect>();
-  target.addLegalDialect<mlir::tensor::TensorDialect>();
-  target.addLegalDialect<mlir::func::FuncDialect>();
 }
-
-//===----------------------------------------------------------------------===//
-// init typeconvert
-//===----------------------------------------------------------------------===//
-void initConvertLLHToHLOPassTypeConverter(TypeConverter& converter) {
-  auto type_replace = [](Type type) { return type; };
-  auto int_replace = [](IntegerType type) { return type; };
-  auto index_replace = [](IndexType type) { return type; };
-  converter.addConversion(type_replace);
-  converter.addConversion(int_replace);
-  converter.addConversion(index_replace);
-}
-
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct ConvertLLHToHLOPass
-    : impl::ConvertLLHToHLOPassBase<ConvertLLHToHLOPass> {
-  using impl::ConvertLLHToHLOPassBase<
-      ConvertLLHToHLOPass>::ConvertLLHToHLOPassBase;
-  void runOnOperation() override;
-};
-}  // namespace
+using LLHConstantOpToHLO = SimplyFullLowing<ConstantOp, stablehlo::ConstantOp>;
+using LLHSubOpToHLO = SimplyFullLowing<SubOp, stablehlo::SubtractOp>;
+using LLHAddOpToHLO = SimplyFullLowing<AddOp, stablehlo::AddOp>;
+using LLHMulOpToHLO = SimplyFullLowing<MulOp, stablehlo::MulOp>;
+using LLHDivOpToHLO = SimplyFullLowing<DivOp, stablehlo::DivOp>;
+using LLHMaxOpToHLO = SimplyFullLowing<MaxOp, stablehlo::MaxOp>;
+using LLHMatMulOpToHLO = SimplyFullLowing<MatMulOp, stablehlo::DotOp>;
+using LLHAbsOpToHLO = SimplyFullLowing<AbsOp, stablehlo::AbsOp>;
+using LLHWhereOpToHLO = SimplyFullLowing<WhereOp, stablehlo::SelectOp>;
+using LLHSqrtOpToHLO = SimplyFullLowing<SqrtOp, stablehlo::SqrtOp>;
+using LLHConvertToOpToHLO = SimplyFullLowing<ConvertToOp, stablehlo::ConvertOp>;
+using LLHExpOpToHLO = SimplyFullLowing<ExpOp, stablehlo::ExpOp>;
+using LLHReduceMaxOpToHLO = ReduceOplwoing<ReduceMaxOp>;
+using LLHReduceSumOpToHLO = ReduceOplwoing<ReduceSumOp>;
+LLC_DEFINR_CONVERSION_PASS(
+    ConvertLLHToHLO,
+    {
+      LLC_ADD_CONVERSION(LLHConstantOpToHLO);
+      LLC_ADD_CONVERSION(LLHSubOpToHLO);
+      LLC_ADD_CONVERSION(LLHAddOpToHLO);
+      LLC_ADD_CONVERSION(LLHMulOpToHLO);
+      LLC_ADD_CONVERSION(LLHDivOpToHLO);
+      LLC_ADD_CONVERSION(LLHMaxOpToHLO);
+      LLC_ADD_CONVERSION(LLHMatMulOpToHLO);
+      LLC_ADD_CONVERSION(LLHAbsOpToHLO);
+      LLC_ADD_CONVERSION(LLHWhereOpToHLO);
+      LLC_ADD_CONVERSION(LLHSqrtOpToHLO);
+      LLC_ADD_CONVERSION(LLHConvertToOpToHLO);
+      LLC_ADD_CONVERSION(LLHExpOpToHLO);
+      LLC_ADD_CONVERSION(LLHConvOpToHLO);
+      LLC_ADD_CONVERSION(LLHBatchNormInferenceOpHLO);
+      LLC_ADD_CONVERSION(LLHBroadCastToOpToHLO);
+      LLC_ADD_CONVERSION(LLHSliceOpToHLO);
+      LLC_ADD_CONVERSION(LLHBatchMatMulOpToHLO);
+      LLC_ADD_CONVERSION(LLHMaxPoolOpHLO);
+      LLC_ADD_CONVERSION(LLHCompareOpHLO);
+      LLC_ADD_CONVERSION(LLHReduceMaxOpToHLO);
+      LLC_ADD_CONVERSION(LLHReduceSumOpToHLO);
 
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void ConvertLLHToHLOPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  ConversionTarget target(getContext());
-  configConvertLLHToHLOPassTarget(target);
-  TypeConverter converter;
-  initConvertLLHToHLOPassTypeConverter(converter);
-  RewritePatternSet patterns(&getContext());
-  populateConvertLLHToHLOPassPatterns(converter, patterns);
-  if (failed(
-          applyPartialConversion(getOperation(), target, std::move(patterns))))
-    signalPassFailure();
-  RewritePatternSet patterns_special(&getContext());
-  LLC_RUN_OUT_PASS
-}
+      LLC_ADD_PATTERN(LLHTransposeOpToHLO);
+    },
+    {
+      target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
+      convertLLHToHLOPassTargetaddIllegalOp(target);
+      target.addLegalDialect<stablehlo::StablehloDialect>();
+      target.addLegalDialect<mlir::arith::ArithDialect>();
+      target.addLegalDialect<mlir::tensor::TensorDialect>();
+      target.addLegalDialect<mlir::func::FuncDialect>();
+    },
+    {
+      auto type_replace = [](Type type) { return type; };
+      auto int_replace = [](IntegerType type) { return type; };
+      auto index_replace = [](IndexType type) { return type; };
+      converter.addConversion(type_replace);
+      converter.addConversion(int_replace);
+      converter.addConversion(index_replace);
+    })

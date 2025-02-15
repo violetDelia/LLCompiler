@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -71,7 +72,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
-struct ReluOpSwitch : public LLHOpRewritePattern<ReluOp> {
+struct LLHReluOpSwitch : public LLHOpRewritePattern<ReluOp> {
   using LLHOpRewritePattern<ReluOp>::LLHOpRewritePattern;
   LogicalResult match(ReluOp op) const final { return llvm::success(); }
   void rewrite(ReluOp op, LLHPatternRewriter& rewriter) const final {
@@ -98,7 +99,7 @@ struct ReluOpSwitch : public LLHOpRewritePattern<ReluOp> {
   }
 };
 
-struct ExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
+struct LLHExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
   using LLHOpRewritePattern<ExtractOp>::LLHOpRewritePattern;
   LogicalResult match(ExtractOp op) const final {
     auto input = op.getInput();
@@ -137,37 +138,14 @@ struct ExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
     }
   }
 };
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateLLHPreprocessingForHLOPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<ReluOpSwitch>(context);
-  patterns.add<ExtractOpSwitch>(context);
-}
+}  // namespace
 
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct LLHPreprocessingForHLOPass
-    : impl::LLHPreprocessingForHLOPassBase<LLHPreprocessingForHLOPass> {
-  using impl::LLHPreprocessingForHLOPassBase<
-      LLHPreprocessingForHLOPass>::LLHPreprocessingForHLOPassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void LLHPreprocessingForHLOPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  populateLLHPreprocessingForHLOPassPatterns(patterns);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+LLC_DEFINR_PASS(LLHPreprocessingForHLO,
+                {
+                  LLC_ADD_PATTERN(LLHReluOpSwitch);
+                  LLC_ADD_PATTERN(LLHExtractOpSwitch);
+                },
+                {}, {})

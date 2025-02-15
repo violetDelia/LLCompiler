@@ -20,6 +20,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -48,63 +49,19 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-
 //===----------------------------------------------------------------------===//
 // legal func
 //===----------------------------------------------------------------------===//
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
-
+}  // namespace
 //===----------------------------------------------------------------------===//
-// pattern population
+// pass defination
 //===----------------------------------------------------------------------===//
-void populateConvertTosaToLinalgExtensionPassPatterns(
-    TypeConverter& converter, RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-}
-
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configConvertTosaToLinalgExtensionPassTarget(ConversionTarget& target) {}
-
-//===----------------------------------------------------------------------===//
-// init typeconvert
-//===----------------------------------------------------------------------===//
-void initConvertTosaToLinalgExtensionPassTypeConverter(
-    TypeConverter& converter) {
+LLC_DEFINR_CONVERSION_PASS(ConvertTosaToLinalgExtension, {}, {}, {
   auto shaped_repalce = [](ShapedType type) { return type; };
   auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
   converter.addConversion(ranked_tensor_replace);
   converter.addConversion(shaped_repalce);
-}
-
-//===----------------------------------------------------------------------===//
-// pass defination
-//===----------------------------------------------------------------------===//
-struct ConvertTosaToLinalgExtensionPass
-    : impl::ConvertTosaToLinalgExtensionPassBase<
-          ConvertTosaToLinalgExtensionPass> {
-  using impl::ConvertTosaToLinalgExtensionPassBase<
-      ConvertTosaToLinalgExtensionPass>::ConvertTosaToLinalgExtensionPassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void ConvertTosaToLinalgExtensionPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  ConversionTarget target(getContext());
-  configConvertTosaToLinalgExtensionPassTarget(target);
-  TypeConverter converter;
-  initConvertTosaToLinalgExtensionPassTypeConverter(converter);
-  RewritePatternSet patterns(&getContext());
-  populateConvertTosaToLinalgExtensionPassPatterns(converter, patterns);
-  if (failed(
-          applyPartialConversion(getOperation(), target, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+})

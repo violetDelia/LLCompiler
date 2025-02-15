@@ -27,6 +27,7 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -131,7 +132,7 @@ void generateEntranceTensorEncoding(ModuleOp module) {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct replaceFlattenOp : public LLHOpRewritePattern<FlattenOp> {
+struct LLHFlattenOpReplace : public LLHOpRewritePattern<FlattenOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(FlattenOp op) const final { return llvm::success(); }
   void rewrite(FlattenOp op, LLHPatternRewriter& rewriter) const final {
@@ -183,7 +184,7 @@ std::pair<std::vector<std::string>, mlir::AffineExpr*> generateBindShapeMapKey(
 }
 
 // TODO:(lfr) this pattern need check int input symbol
-struct replaceTorchSymbolicIntOp
+struct LLHTorchSymbolicIntOpReplace
     : public LLHOpRewritePattern<TorchSymbolicIntOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(TorchSymbolicIntOp op) const final {
@@ -241,7 +242,7 @@ struct replaceTorchSymbolicIntOp
   }
 };
 
-struct replaceSymbolicBindOp : public LLHOpRewritePattern<SymbolicBindOp> {
+struct LLHSymbolicBindOpReplace : public LLHOpRewritePattern<SymbolicBindOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(SymbolicBindOp op) const final {
     if (op->hasAttr(llc::StopRunAttr)) return llvm::failure();
@@ -253,46 +254,15 @@ struct replaceSymbolicBindOp : public LLHOpRewritePattern<SymbolicBindOp> {
   }
 };
 
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateRemoveRedundantOpsPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<replaceFlattenOp>(context);
-  patterns.add<replaceTorchSymbolicIntOp>(context);
-  patterns.add<replaceSymbolicBindOp>(context);
-  // patterns.add<replaceSymbolicBindOp>(context);
-}
-
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configRemoveRedundantOpsPassConversionTarget(ConversionTarget& target) {
-  // target.addIllegalOp<llh::SymbolicBindOp>();
-}
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct RemoveRedundantOpsPass
-    : llh::impl::RemoveRedundantOpsPassBase<RemoveRedundantOpsPass> {
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-
-void RemoveRedundantOpsPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  // generateEntranceTensorEncoding(module);
-  RewritePatternSet patterns(context);
-  populateRemoveRedundantOpsPassPatterns(patterns);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(RemoveRedundantOps,
+                {
+                  LLC_ADD_PATTERN(LLHFlattenOpReplace);
+                  LLC_ADD_PATTERN(LLHTorchSymbolicIntOpReplace);
+                  LLC_ADD_PATTERN(LLHSymbolicBindOpReplace);
+                },
+                {}, {})

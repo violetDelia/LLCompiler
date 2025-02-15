@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -59,7 +60,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
-struct DimOpLowing : public OpConversionPattern<DimOp> {
+struct LLHDimOpToShape : public OpConversionPattern<DimOp> {
   using OpConversionPattern<DimOp>::OpConversionPattern;
   LogicalResult match(DimOp op) const final { return llvm::success(); }
 
@@ -80,64 +81,24 @@ struct DimOpLowing : public OpConversionPattern<DimOp> {
     rewriter.replaceOp(op, index_out);
   }
 };
-
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateConvertLLHToShapePassPatterns(TypeConverter& converter,
-                                           RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<DimOpLowing>(converter, context);
-}
-
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configConvertLLHToShapePassTarget(ConversionTarget& target) {
-  target.addLegalDialect<mlir::arith::ArithDialect>();
-  target.addLegalDialect<mlir::func::FuncDialect>();
-  target.addLegalDialect<mlir::index::IndexDialect>();
-  target.addLegalDialect<mlir::shape::ShapeDialect>();
-  target.addIllegalOp<DimOp>();
-}
-
-//===----------------------------------------------------------------------===//
-// init typeconvert
-//===----------------------------------------------------------------------===//
-void initConvertLLHToShapePassTypeConverter(TypeConverter& converter) {
-  auto type_replace = [](Type type) { return type; };
-  auto int_replace = [](IntegerType type) { return type; };
-  auto index_replace = [](IndexType type) { return type; };
-  converter.addConversion(type_replace);
-  converter.addConversion(int_replace);
-  converter.addConversion(index_replace);
-}
-
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct ConvertLLHToShapePass
-    : impl::ConvertLLHToShapePassBase<ConvertLLHToShapePass> {
-  using impl::ConvertLLHToShapePassBase<
-      ConvertLLHToShapePass>::ConvertLLHToShapePassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void ConvertLLHToShapePass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  ConversionTarget target(getContext());
-  configConvertLLHToShapePassTarget(target);
-  TypeConverter converter;
-  initConvertLLHToShapePassTypeConverter(converter);
-  RewritePatternSet patterns(&getContext());
-  populateConvertLLHToShapePassPatterns(converter, patterns);
-  if (failed(
-          applyPartialConversion(getOperation(), target, std::move(patterns))))
-    signalPassFailure();
-  RewritePatternSet patterns_special(&getContext());
-  LLC_RUN_OUT_PASS
-}
+LLC_DEFINR_CONVERSION_PASS(
+    ConvertLLHToShape, {LLC_ADD_CONVERSION(LLHDimOpToShape)},
+    {
+      target.addLegalDialect<mlir::arith::ArithDialect>();
+      target.addLegalDialect<mlir::func::FuncDialect>();
+      target.addLegalDialect<mlir::index::IndexDialect>();
+      target.addLegalDialect<mlir::shape::ShapeDialect>();
+      target.addIllegalOp<DimOp>();
+    },
+    {
+      auto type_replace = [](Type type) { return type; };
+      auto int_replace = [](IntegerType type) { return type; };
+      auto index_replace = [](IndexType type) { return type; };
+      converter.addConversion(type_replace);
+      converter.addConversion(int_replace);
+      converter.addConversion(index_replace);
+    })

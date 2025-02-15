@@ -161,9 +161,10 @@ class GenOutput:
                 return [torch.empty(out.shape, dtype=out.dtype)], multi_results
             outputs = [None] * len(out)
             for index, output in enumerate(out):
-                if not isinstance(output, FakeTensor):
-                    continue
-                outputs[index] = torch.empty(output.shape, dtype=output.dtype)
+                if isinstance(output, FakeTensor):
+                    outputs[index] = torch.empty(output.shape, dtype=output.dtype)
+                if isinstance(output, int):
+                    outputs[index] = output
             return outputs, multi_results
 
         return _fx_get_out_call_impl

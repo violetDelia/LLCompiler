@@ -25,6 +25,7 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -142,7 +143,7 @@ mlir::DenseElementsAttr loadWeightFile(mlir::ShapedType type,
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct LoadWeightOp : public LLHOpRewritePattern<WeightOp> {
+struct LLCWeightOpLoad : public LLHOpRewritePattern<WeightOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(WeightOp op) const final { return llvm::success(); }
   void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {
@@ -159,35 +160,10 @@ struct LoadWeightOp : public LLHOpRewritePattern<WeightOp> {
     rewriter.replaceOp(op, const_op);
   }
 };
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateLoadWeightPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.insert<LoadWeightOp>(context);
-}
 
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct LoadWeightPass : llh::impl::LoadWeightPassBase<LoadWeightPass> {
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-
-void LoadWeightPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  RewritePatternSet patterns(context);
-  populateLoadWeightPassPatterns(patterns);
-  auto op = getOperation();
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns), config)))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(LoadWeight, { LLC_ADD_PATTERN(LLCWeightOpLoad); }, {}, {})

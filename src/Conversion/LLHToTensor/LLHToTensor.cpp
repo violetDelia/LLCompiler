@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -63,7 +64,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
-struct DimOpLowing : public OpConversionPattern<DimOp> {
+struct LLHDimOpToTensor : public OpConversionPattern<DimOp> {
   using OpConversionPattern<DimOp>::OpConversionPattern;
   LogicalResult match(DimOp op) const final { return llvm::success(); }
 
@@ -85,7 +86,7 @@ struct DimOpLowing : public OpConversionPattern<DimOp> {
   }
 };
 
-struct ReshapeOpLowing : public OpConversionPattern<ReshapeOp> {
+struct LLHReshapeOpToTensor : public OpConversionPattern<ReshapeOp> {
   using OpConversionPattern::OpConversionPattern;
   LogicalResult match(ReshapeOp op) const final { return llvm::success(); }
 
@@ -102,7 +103,7 @@ struct ReshapeOpLowing : public OpConversionPattern<ReshapeOp> {
   }
 };
 
-struct EmptyOpLowing : public OpConversionPattern<EmptyOp> {
+struct LLHEmptyOpToTensor : public OpConversionPattern<EmptyOp> {
   using OpConversionPattern::OpConversionPattern;
   LogicalResult match(EmptyOp op) const final { return llvm::success(); }
 
@@ -123,69 +124,31 @@ struct EmptyOpLowing : public OpConversionPattern<EmptyOp> {
     rewriter.replaceOp(op, new_reshape);
   }
 };
-
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateConvertLLHToTensorPassPatterns(TypeConverter& converter,
-                                            RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  // llh.dim -> shape.dim
-  patterns.add<DimOpLowing>(converter, context);
-  patterns.add<ReshapeOpLowing>(converter, context);
-  patterns.add<EmptyOpLowing>(converter, context);
-}
-
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configConvertLLHToTensorPassTarget(ConversionTarget& target) {
-  target.addLegalDialect<mlir::arith::ArithDialect>();
-  target.addLegalDialect<mlir::func::FuncDialect>();
-  target.addLegalDialect<mlir::index::IndexDialect>();
-  target.addLegalDialect<mlir::tensor::TensorDialect>();
-  target.addIllegalOp<DimOp>();
-  target.addIllegalOp<ReshapeOp>();
-  target.addIllegalOp<EmptyOp>();
-}
-
-//===----------------------------------------------------------------------===//
-// init typeconvert
-//===----------------------------------------------------------------------===//
-void initConvertLLHToTensorPassTypeConverter(TypeConverter& converter) {
-  auto type_replace = [](Type type) { return type; };
-  auto int_replace = [](IntegerType type) { return type; };
-  auto index_replace = [](IndexType type) { return type; };
-  converter.addConversion(type_replace);
-  converter.addConversion(int_replace);
-  converter.addConversion(index_replace);
-}
-
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct ConvertLLHToTensorPass
-    : impl::ConvertLLHToTensorPassBase<ConvertLLHToTensorPass> {
-  using impl::ConvertLLHToTensorPassBase<
-      ConvertLLHToTensorPass>::ConvertLLHToTensorPassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void ConvertLLHToTensorPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  ConversionTarget target(getContext());
-  configConvertLLHToTensorPassTarget(target);
-  TypeConverter converter;
-  initConvertLLHToTensorPassTypeConverter(converter);
-  RewritePatternSet patterns(&getContext());
-  populateConvertLLHToTensorPassPatterns(converter, patterns);
-  if (failed(
-          applyPartialConversion(getOperation(), target, std::move(patterns))))
-    signalPassFailure();
-  RewritePatternSet patterns_special(&getContext());
-  LLC_RUN_OUT_PASS
-}
+LLC_DEFINR_CONVERSION_PASS(
+    ConvertLLHToTensor,
+    {
+      LLC_ADD_CONVERSION(LLHDimOpToTensor);
+      LLC_ADD_CONVERSION(LLHReshapeOpToTensor);
+      LLC_ADD_CONVERSION(LLHEmptyOpToTensor);
+    },
+    {
+      target.addIllegalOp<DimOp>();
+      target.addIllegalOp<ReshapeOp>();
+      target.addIllegalOp<EmptyOp>();
+      target.addLegalDialect<mlir::arith::ArithDialect>();
+      target.addLegalDialect<mlir::func::FuncDialect>();
+      target.addLegalDialect<mlir::index::IndexDialect>();
+      target.addLegalDialect<mlir::tensor::TensorDialect>();
+    },
+    {
+      auto type_replace = [](Type type) { return type; };
+      auto int_replace = [](IntegerType type) { return type; };
+      auto index_replace = [](IndexType type) { return type; };
+      converter.addConversion(type_replace);
+      converter.addConversion(int_replace);
+      converter.addConversion(index_replace);
+    })

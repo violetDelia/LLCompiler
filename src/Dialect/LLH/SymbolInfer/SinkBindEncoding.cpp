@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -38,7 +39,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 namespace mlir::llh {
-#define GEN_PASS_DEF_SINKBINDENCODING
+#define GEN_PASS_DEF_SINKBINDENCODINGPASS
 #include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -51,7 +52,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct SinkEncodingBind : public LLHOpRewritePattern<EncodingBindOp> {
+struct LLHEncodingBindOpSink : public LLHOpRewritePattern<EncodingBindOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(EncodingBindOp op) const final {
     auto operand = op.getOperand();
@@ -68,32 +69,10 @@ struct SinkEncodingBind : public LLHOpRewritePattern<EncodingBindOp> {
     op.setOperand(val);
   }
 };
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateSinkBindEncodingPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<SinkEncodingBind>(context);
-  // populateWithGenerated(patterns);
-}
 }  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-namespace {
-struct SinkBindEncodingPass
-    : llh::impl::SinkBindEncodingBase<SinkBindEncodingPass> {
-  void runOnOperation() override;
-};
-
-}  // namespace
-void SinkBindEncodingPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  populateSinkBindEncodingPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(SinkBindEncoding, { LLC_ADD_PATTERN(LLHEncodingBindOpSink); },
+                {}, {})

@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -59,7 +60,7 @@ void foldSymbol(func::FuncOp func) {
   std::map<int, std::map<std::string, mlir::Value>> symbol_map;
   auto builder = LLHPatternRewriter(func);
   auto init_map = [&symbol_map](Operation* op) {
-    if (!SymbolAnalysis::isExtraSymbolAttrInferOp(op)) return;
+    if (!SymbolAnalysis::isSymbolicInferOp(op)) return;
     auto maybe_symbol_attr = op->getAttr(llc::SymbolIntAttr);
     if (!maybe_symbol_attr) return;
     auto symbol_attr =
@@ -71,7 +72,7 @@ void foldSymbol(func::FuncOp func) {
     symbol_map[key][symbol.str()] = op->getResult(0);
   };
   auto replace_symbol_value = [&symbol_map, &builder](Operation* op) {
-    if (!SymbolAnalysis::isExtraSymbolAttrInferOp(op)) return;
+    if (!SymbolAnalysis::isSymbolicInferOp(op)) return;
     auto maybe_symbol_attr = op->getAttr(llc::SymbolIntAttr);
     if (!maybe_symbol_attr) return;
     auto symbol_attr =
@@ -81,7 +82,6 @@ void foldSymbol(func::FuncOp func) {
     auto key = getKeyOf(op->getResult(0).getType());
     auto front_symbol_op = symbol_map[key][symbol.str()].getDefiningOp();
     if (front_symbol_op == op) return;
-
     builder.replaceOp(op, front_symbol_op);
   };
   func->walk(init_map);
@@ -90,33 +90,16 @@ void foldSymbol(func::FuncOp func) {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateSymbolCSEPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  // populateWithGenerated(patterns);
-}
 }  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-namespace {
-struct SymbolCSEPass : llh::impl::SymbolCSEPassBase<SymbolCSEPass> {
-  void runOnOperation() override;
-};
-
-}  // namespace
-void SymbolCSEPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  auto fold_symbol_dim = [](func::FuncOp func) { foldSymbol(func); };
-  module->walk(fold_symbol_dim);
-  RewritePatternSet patterns(context);
-  populateSymbolCSEPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(SymbolCSE, {},
+                {
+                  auto fold_symbol_dim = [](func::FuncOp func) {
+                    foldSymbol(func);
+                  };
+                  module->walk(fold_symbol_dim);
+                },
+                {})

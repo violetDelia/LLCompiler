@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -59,7 +60,7 @@ namespace {
 // operation lowing
 //===----------------------------------------------------------------------===//
 // delete check for bound
-struct RealDynamicSliceConverter final
+struct HLORealDynamicSliceOpToLinalg final
     : OpConversionPattern<mlir::stablehlo::RealDynamicSliceOp> {
   using OpConversionPattern::OpConversionPattern;
 
@@ -125,66 +126,25 @@ struct RealDynamicSliceConverter final
         op, res_type, input, offsets, sizes, strides);
   }
 };
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateConvertStablehloToLinalgExtensionPassPatterns(
-    TypeConverter& converter, RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<RealDynamicSliceConverter>(converter,context);
-}
-
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configConvertStablehloToLinalgExtensionPassTarget(
-    ConversionTarget& target) {
-      target.addLegalDialect<arith::ArithDialect>();
-      target.addLegalDialect<tensor::TensorDialect>();
-  target.addIllegalOp<stablehlo::RealDynamicSliceOp>();
-}
-
-//===----------------------------------------------------------------------===//
-// init typeconvert
-//===----------------------------------------------------------------------===//
-void initConvertStablehloToLinalgExtensionPassTypeConverter(
-    TypeConverter& converter) {
-  auto index_repalce = [](IndexType type) { return type; };
-  auto int_repalce = [](IntegerType type) { return type; };
-  auto shaped_repalce = [](ShapedType type) { return type; };
-  auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
-  converter.addConversion(ranked_tensor_replace);
-  converter.addConversion(shaped_repalce);
-  converter.addConversion(int_repalce);
-  converter.addConversion(index_repalce);
-}
-
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct ConvertStablehloToLinalgExtensionPass
-    : impl::ConvertStablehloToLinalgExtensionPassBase<
-          ConvertStablehloToLinalgExtensionPass> {
-  using impl::ConvertStablehloToLinalgExtensionPassBase<
-      ConvertStablehloToLinalgExtensionPass>::
-      ConvertStablehloToLinalgExtensionPassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void ConvertStablehloToLinalgExtensionPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  ConversionTarget target(getContext());
-  configConvertStablehloToLinalgExtensionPassTarget(target);
-  TypeConverter converter;
-  initConvertStablehloToLinalgExtensionPassTypeConverter(converter);
-  RewritePatternSet patterns(&getContext());
-  populateConvertStablehloToLinalgExtensionPassPatterns(converter, patterns);
-  if (failed(
-          applyPartialConversion(getOperation(), target, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+LLC_DEFINR_CONVERSION_PASS(
+    ConvertStablehloToLinalgExtension,
+    {LLC_ADD_CONVERSION(HLORealDynamicSliceOpToLinalg)},
+    {
+      target.addIllegalOp<stablehlo::RealDynamicSliceOp>();
+      target.addLegalDialect<arith::ArithDialect>();
+      target.addLegalDialect<tensor::TensorDialect>();
+    },
+    {
+      auto index_repalce = [](IndexType type) { return type; };
+      auto int_repalce = [](IntegerType type) { return type; };
+      auto shaped_repalce = [](ShapedType type) { return type; };
+      auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
+      converter.addConversion(ranked_tensor_replace);
+      converter.addConversion(shaped_repalce);
+      converter.addConversion(int_repalce);
+      converter.addConversion(index_repalce);
+    })

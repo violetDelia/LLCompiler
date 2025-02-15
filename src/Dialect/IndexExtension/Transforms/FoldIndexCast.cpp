@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
@@ -53,7 +54,7 @@ namespace {
 // transform patterns
 //===----------------------------------------------------------------------===//
 template <class CastOp>
-struct FoldCastOp : public OpRewritePattern<CastOp> {
+struct FoldDoubleCastOp : public OpRewritePattern<CastOp> {
   using OpRewritePattern<CastOp>::OpRewritePattern;
   LogicalResult matchAndRewrite(CastOp op, PatternRewriter& rewriter) const {
     if (isa<BlockArgument>(op->getOperand(0))) return llvm::failure();
@@ -68,7 +69,7 @@ struct FoldCastOp : public OpRewritePattern<CastOp> {
   }
 };
 
-struct ConstOpToArith : public OpRewritePattern<ConstantOp> {
+struct IndexConstOpToArith : public OpRewritePattern<ConstantOp> {
   using OpRewritePattern<ConstantOp>::OpRewritePattern;
 
   LogicalResult match(ConstantOp op) const { return llvm::success(); }
@@ -79,7 +80,8 @@ struct ConstOpToArith : public OpRewritePattern<ConstantOp> {
   }
 };
 
-struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
+struct ShapeFromElementsOpIndexFoldOn
+    : public OpRewritePattern<tensor::FromElementsOp> {
   using OpRewritePattern<tensor::FromElementsOp>::OpRewritePattern;
 
   LogicalResult match(tensor::FromElementsOp op) const {
@@ -129,39 +131,18 @@ struct FoldFromElements : public OpRewritePattern<tensor::FromElementsOp> {
     rewriter.replaceOp(op, new_op);
   }
 };
-
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateFoldIndexCastPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<FoldCastOp<CastSOp>>(context, 2);
-  patterns.add<FoldCastOp<CastUOp>>(context, 2);
-  patterns.add<ConstOpToArith>(context);
-  patterns.add<FoldFromElements>(context);
-}
-
+}  // namespace
+using IndexCastSOpDoubleFold = FoldDoubleCastOp<CastSOp>;
+using IndexCastUOpDoubleFold = FoldDoubleCastOp<CastUOp>;
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct FoldIndexCastPass
-    : ::mlir::index::ex::impl::FoldIndexCastPassBase<FoldIndexCastPass> {
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-
-void FoldIndexCastPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  populateFoldIndexCastPassPatterns(patterns);
-  auto op = getOperation();
-  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::index::ex::impl;
+LLC_DEFINR_PASS(FoldIndexCast,
+                {
+                  LLC_ADD_PATTERN(IndexConstOpToArith);
+                  LLC_ADD_PATTERN(ShapeFromElementsOpIndexFoldOn);
+                  LLC_ADD_PATTERN_WITH_BENEFIT(IndexCastUOpDoubleFold, 2);
+                  LLC_ADD_PATTERN_WITH_BENEFIT(IndexCastSOpDoubleFold, 2);
+                },
+                {}, {})

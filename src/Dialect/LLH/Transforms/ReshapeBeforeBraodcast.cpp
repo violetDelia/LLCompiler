@@ -30,6 +30,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Interfaces/BraodcastableOpInterfaces.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/Hashing.h"
@@ -73,46 +74,25 @@ namespace {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateReshapeBeforeBraodcastPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<SimplyBinaryOpReshape<AddOp>>(context);
-  patterns.add<SimplyBinaryOpReshape<SubOp>>(context);
-  patterns.add<SimplyBinaryOpReshape<DivOp>>(context);
-  patterns.add<SimplyBinaryOpReshape<MulOp>>(context);
-  patterns.add<SimplyBinaryOpReshape<MaxOp>>(context);
-  patterns.add<SimplyBinaryOpReshape<MinOp>>(context);
-}
-
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configReshapeBeforeBraodcastPassConversionTarget(
-    ConversionTarget& target) {
-  // target.addIllegalOp<llh::SymbolicBindOp>();
-}
+}  // namespace
+using LLHAddOpReshapeInsert = SimplyBinaryOpReshape<AddOp>;
+using LLHSubOpReshapeInsert = SimplyBinaryOpReshape<SubOp>;
+using LLHDivOpReshapeInsert = SimplyBinaryOpReshape<DivOp>;
+using LLHMulOpReshapeInsert = SimplyBinaryOpReshape<MulOp>;
+using LLHMaxOpReshapeInsert = SimplyBinaryOpReshape<MaxOp>;
+using LLHMinOpReshapeInsert = SimplyBinaryOpReshape<MinOp>;
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
 
-struct ReshapeBeforeBraodcastPass
-    : llh::impl::ReshapeBeforeBraodcastPassBase<ReshapeBeforeBraodcastPass> {
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-
-void ReshapeBeforeBraodcastPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  populateReshapeBeforeBraodcastPassPatterns(patterns);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  populateSymbolCanonicalizePatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(ReshapeBeforeBraodcast,
+                {
+                  LLC_ADD_PATTERN(LLHAddOpReshapeInsert);
+                  LLC_ADD_PATTERN(LLHSubOpReshapeInsert);
+                  LLC_ADD_PATTERN(LLHDivOpReshapeInsert);
+                  LLC_ADD_PATTERN(LLHMulOpReshapeInsert);
+                  LLC_ADD_PATTERN(LLHMaxOpReshapeInsert);
+                  LLC_ADD_PATTERN(LLHMinOpReshapeInsert);
+                },
+                {}, {})

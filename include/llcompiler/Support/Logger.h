@@ -172,16 +172,4 @@ NullStream &NullStream::operator<<(const Ty val) {
 #define INFO_UNIMPLEMENTED(module)                         \
   INFO(module) << __FILE__ << "<" << __LINE__ << ">: \n\t" \
                << "function [" << __func__ << "] Unimplemented!"
-
-#define LLC_RUN_IN_PASS                                                      \
-  INFO(llc::MLIR_PASS) << "----- run in pass: " << this->getPassName().str() \
-                       << " -----";
-#define LLC_RUN_OUT_PASS                                                      \
-  INFO(llc::MLIR_PASS) << "----- run out pass: " << this->getPassName().str() \
-                       << " -----";
-#define LLC_RUN_IN_PATTERN \
-  DEBUG(llc::MLIR_PASS) << "run in pattern " << this->getDebugName().str();
-#define LLC_RUN_OUT_PATTERN                                          \
-  DEBUG(llc::MLIR_PASS) << "rewrite " << op.getOperationName().str() \
-                        << " in pattern " << this->getDebugName().str();
 #endif  // INCLUDE_LLCOMPILER_SUPPORT_LOGGER_H_

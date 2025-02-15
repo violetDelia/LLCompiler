@@ -24,7 +24,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
-#include "llcompiler/Dialect/Utility/Macro.h"
+#include "llcompiler/Support/Macro.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Frontend/Core/Base.h"
 #include "llcompiler/Frontend/Core/Builder.h"

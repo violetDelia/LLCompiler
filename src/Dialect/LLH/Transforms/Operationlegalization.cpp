@@ -25,6 +25,7 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -147,7 +148,7 @@ struct ResultScaleRefine : public LLHOpRewritePattern<Op> {
   }
 };
 
-struct RefineBroadcast : public LLHOpRewritePattern<BroadCastToOp> {
+struct LLHBroadcastOpRefine : public LLHOpRewritePattern<BroadCastToOp> {
   using LLHOpRewritePattern<BroadCastToOp>::LLHOpRewritePattern;
   LogicalResult match(BroadCastToOp op) const final {
     auto cast_dims = op.getCastDims();
@@ -193,7 +194,7 @@ struct RefineBroadcast : public LLHOpRewritePattern<BroadCastToOp> {
   }
 };
 
-struct AddSymbolIntArgNumsAttr : public LLHOpRewritePattern<func::FuncOp> {
+struct LLHAddSymbolIntArgNumsAttr : public LLHOpRewritePattern<func::FuncOp> {
   using LLHOpRewritePattern<func::FuncOp>::LLHOpRewritePattern;
   LogicalResult match(func::FuncOp op) const final {
     if (!op->hasAttr(llc::EntranceAttr)) return llvm::failure();
@@ -215,45 +216,18 @@ struct AddSymbolIntArgNumsAttr : public LLHOpRewritePattern<func::FuncOp> {
   }
 };
 
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateOperationlegalizatioPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  // patterns.add<BraodcastableScalarToTensor>(context);
-  patterns.add<ResultScaleRefine<WeightOp>>(context);
-  patterns.add<ResultScaleRefine<ExtractOp>>(context);
-  patterns.add<RefineBroadcast>(context);
-  patterns.add<AddSymbolIntArgNumsAttr>(context);
-}
-
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configOperationlegalizatioConversionTarget(ConversionTarget& target) {
-  // target.addIllegalOp<llh::SymbolicBindOp>();
-}
+}  // namespace
+using LLHWeightOpScaleRefine = ResultScaleRefine<WeightOp>;
+using LLHExtractOpScaleRefine = ResultScaleRefine<ExtractOp>;
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct OperationlegalizatioPass
-    : llh::impl::OperationlegalizationPassBase<OperationlegalizatioPass> {
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void OperationlegalizatioPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  populateOperationlegalizatioPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(Operationlegalization,
+                {
+                  LLC_ADD_PATTERN(LLHWeightOpScaleRefine);
+                  LLC_ADD_PATTERN(LLHExtractOpScaleRefine);
+                  LLC_ADD_PATTERN(LLHBroadcastOpRefine);
+                  LLC_ADD_PATTERN(LLHAddSymbolIntArgNumsAttr);
+                },
+                {}, {})

@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/LLH/Utils/CommonRewrite.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/IR/BuiltinAttributes.h"
@@ -51,47 +52,25 @@ namespace {
 // transform patterns
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateInsertBroadCastPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<SimplyBinaryOpInsertBroadcast<AddOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBroadcast<SubOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBroadcast<DivOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBroadcast<MulOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBroadcast<MaxOp>>(context);
-  patterns.add<SimplyBinaryOpInsertBroadcast<MinOp>>(context);
-}
-
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configInsertBroadCastPassConversionTarget(ConversionTarget& target) {
-}
+}  // namespace
+using LLHAddOpBroadcastInsert = SimplyBinaryOpInsertBroadcast<AddOp>;
+using LLHSubOpBroadcastInsert = SimplyBinaryOpInsertBroadcast<SubOp>;
+using LLHDivOpBroadcastInsert = SimplyBinaryOpInsertBroadcast<DivOp>;
+using LLHMulOpBroadcastInsert = SimplyBinaryOpInsertBroadcast<MulOp>;
+using LLHMaxOpBroadcastInsert = SimplyBinaryOpInsertBroadcast<MaxOp>;
+using LLHMinOpBroadcastInsert = SimplyBinaryOpInsertBroadcast<MinOp>;
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct InsertBroadCastPass
-    : llh::impl::InsertBroadCastPassBase<InsertBroadCastPass> {
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-#include <iostream>
-void InsertBroadCastPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  populateInsertBroadCastPassPatterns(patterns);
-  populateSymbolCanonicalizePatterns(patterns);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(
+    InsertBroadCast,
+    {
+      LLC_ADD_PATTERN(LLHAddOpBroadcastInsert);
+      LLC_ADD_PATTERN(LLHSubOpBroadcastInsert);
+      LLC_ADD_PATTERN(LLHDivOpBroadcastInsert);
+      LLC_ADD_PATTERN(LLHMulOpBroadcastInsert);
+      LLC_ADD_PATTERN(LLHMaxOpBroadcastInsert);
+      LLC_ADD_PATTERN(LLHMinOpBroadcastInsert);
+    },
+    { populateSymbolCanonicalizePatterns(patterns); }, {})

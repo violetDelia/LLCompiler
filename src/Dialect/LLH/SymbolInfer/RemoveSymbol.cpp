@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -91,51 +92,36 @@ struct RemoveSymbolAttrOp : public OpRewritePattern<Op> {
                                     new_attrs);
   }
 };
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateRemoveSymbolPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<RemoveOp<SymbolicIntOp>>(context);
-  patterns.add<RemoveOp<SymbolicCastOp>>(context);
-  patterns.add<RemoveOp<SymbolBindOp>>(context);
-  patterns.add<RemoveOp<SymbolRelationMapOp>>(context);
-  patterns.add<RemoveOp<SymbolRelationOp>>(context);
-  patterns.add<RemoveOp<SymbolBinaryRelationOp>>(context);
-  patterns.add<RemoveOp<EncodingBindOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<MulOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<AddOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<DivOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<SubOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<ConstantOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<DimOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<arith::MulIOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<arith::SubIOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<arith::DivUIOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<arith::DivSIOp>>(context);
-  patterns.add<RemoveSymbolAttrOp<arith::MulIOp>>(context);
-}
+
 }  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-namespace {
-struct RemoveSymbolPass : llh::impl::RemoveSymbolPassBase<RemoveSymbolPass> {
-  void runOnOperation() override;
-};
-
-}  // namespace
-void RemoveSymbolPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  populateRemoveSymbolPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-  auto analysis = SymbolAnalysis::getInstance(module);
-  analysis->cleanCache();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(
+    RemoveSymbol,
+    {
+      patterns.add<RemoveOp<SymbolicIntOp>>(context);
+      patterns.add<RemoveOp<SymbolicCastOp>>(context);
+      patterns.add<RemoveOp<SymbolBindOp>>(context);
+      patterns.add<RemoveOp<SymbolRelationMapOp>>(context);
+      patterns.add<RemoveOp<SymbolRelationOp>>(context);
+      patterns.add<RemoveOp<SymbolBinaryRelationOp>>(context);
+      patterns.add<RemoveOp<EncodingBindOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<MulOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<AddOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<DivOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<SubOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<ConstantOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<DimOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<arith::MulIOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<arith::SubIOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<arith::DivUIOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<arith::DivSIOp>>(context);
+      patterns.add<RemoveSymbolAttrOp<arith::MulIOp>>(context);
+    },
+    { populateRemoveSymbolPassPatterns(patterns); },
+    {
+      auto analysis = SymbolAnalysis::getInstance(module);
+      analysis->cleanCache();
+    })

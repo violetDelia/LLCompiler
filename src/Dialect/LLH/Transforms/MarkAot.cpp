@@ -17,6 +17,7 @@
 
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinOps.h"
 #include "mlir/IR/PatternMatch.h"
@@ -36,31 +37,10 @@ namespace {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateMarkAotPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-}
+
 }  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-namespace {
-struct MarkAotPass : llh::impl::MarkAotPassBase<MarkAotPass> {
-  void runOnOperation() override;
-};
-
-}  // namespace
-void MarkAotPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  populateMarkAotPassPatterns(patterns);
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(MarkAot, {}, {}, {})

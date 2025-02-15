@@ -55,14 +55,14 @@ def SymbolCSEPass : Pass<"symbol-cse","ModuleOp"> {
                             "::mlir::memref::MemRefDialect"];
 }
 
-def UnloadAndBindEncoding : Pass<"unload-and-bind-encoding","ModuleOp">{
+def UnloadAndBindEncodingPass : Pass<"unload-and-bind-encoding","ModuleOp">{
   let summary = "卸载tensor上的EncodingAttr到EncodingBindOp代替";
   let description = [{
     1.防止与其他第三方库和标准MLIR不兼容。
   }];
 }
 
-def SinkBindEncoding : Pass<"sink-bind-encoding","ModuleOp">{
+def SinkBindEncodingPass : Pass<"sink-bind-encoding","ModuleOp">{
   let summary = "Bufferize的预处理";
   let description = [{
     

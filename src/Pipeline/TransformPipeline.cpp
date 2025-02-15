@@ -116,6 +116,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createMarkAotPass());
   pm.addPass(mlir::llh::createInferSymbolShapePass(
       {.CleanSymbolCache = false, .UseEncoding = true}));
+  pm.addPass(mlir::llh::createSymbolCSEPass());
   pm.addPass(mlir::llh::createDecomposeOpsPass());
   pm.addPass(mlir::llh::createLoadWeightPass());
   pm.addPass(mlir::createCanonicalizerPass());
@@ -123,7 +124,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   pm.addPass(mlir::llh::createTransformLayoutPass(options.targetLayout));
   pm.addPass(mlir::createLLHPreprocessingForHLOPass());
   pm.addPass(mlir::createCanonicalizerPass());
-  pm.addPass(mlir::llh::createUnloadAndBindEncoding());
+  pm.addPass(mlir::llh::createUnloadAndBindEncodingPass());
   pm.addPass(mlir::llh::createRemoveSymbolPass());
   //===----------------------------------------------------------------------===//
   //  lowing llh

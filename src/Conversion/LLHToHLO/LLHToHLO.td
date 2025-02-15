@@ -21,7 +21,7 @@ include "llcompiler/Dialect/Utility/CommonUtility.td"
 include "mlir/IR/PatternBase.td"
 include "stablehlo/dialect/StablehloOps.td"
 
-def TransposeOpLowing : Pat<(LLH_TransposeOp:$res $input, $perms),
+def LLHTransposeOpToHLO : Pat<(LLH_TransposeOp:$res $input, $perms),
                             (StableHLO_TransposeOp $input, $perms),
                             []>;
 

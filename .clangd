@@ -8,7 +8,8 @@ CompileFlags:
   -I/home/lfr/LLCompiler/third_party/llvm-project/llvm/include/,
   -I/home/lfr/LLCompiler/third_party/llvm-project/mlir/include/,
   -I/home/lfr/LLCompiler/third_party/symengine/,
-  -I/home/lfr/LLCompiler/build/third_party/symengine/,
+  -I/home/lfr/LLCompiler/build/include/llcompiler/,
+  -I/home/lfr/LLCompiler/build/src/,
   ]
 Diagnostics:
   UnusedIncludes: Strict

@@ -29,6 +29,7 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -107,7 +108,7 @@ BroadCastToOp reshapeAndBroadcastTo(LLHPatternRewriter& rewriter,
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-struct DecomposeBatchNormInferenceOp
+struct LLHBatchNormInferenceOpDecomposition
     : public LLHOpRewritePattern<BatchNormInferenceOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
 
@@ -151,37 +152,11 @@ struct DecomposeBatchNormInferenceOp
   }
 };
 
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateDecomposeOpsPassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<DecomposeBatchNormInferenceOp>(context);
-}
-
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct DecomposeOpsPass : llh::impl::DecomposeOpsPassBase<DecomposeOpsPass> {
-  using DecomposeOpsPassBase::DecomposeOpsPassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void DecomposeOpsPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  RewritePatternSet patterns(context);
-  populateDecomposeOpsPassPatterns(patterns);
-  populateSymbolCanonicalizePatterns(patterns);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(
+    DecomposeOps, { LLC_ADD_PATTERN(LLHBatchNormInferenceOpDecomposition); },
+    { populateSymbolCanonicalizePatterns(patterns); }, {})

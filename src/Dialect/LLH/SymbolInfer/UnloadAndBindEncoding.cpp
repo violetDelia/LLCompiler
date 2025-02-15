@@ -17,12 +17,13 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/SymbolInfer/Utils/SymbolAnalysis.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -37,7 +38,7 @@
 #include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 
 namespace mlir::llh {
-#define GEN_PASS_DEF_UNLOADANDBINDENCODING
+#define GEN_PASS_DEF_UNLOADANDBINDENCODINGPASS
 #include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h.inc"
 }  // namespace mlir::llh
 using namespace ::mlir;
@@ -103,46 +104,31 @@ void unloadAndBindEncodingFuncOp(func::FuncOp &func,
 // transform patterns
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateUnloadAndBindEncodingPassPatterns(RewritePatternSet &patterns) {
-  auto context = patterns.getContext();
-  // populateWithGenerated(patterns);
-}
 }  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-namespace {
-struct UnloadAndBindEncodingPass
-    : llh::impl::UnloadAndBindEncodingBase<UnloadAndBindEncodingPass> {
-  void runOnOperation() override;
-};
-
-}  // namespace
-void UnloadAndBindEncodingPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto &context = getContext();
-  auto module = getOperation();
-  auto builder = LLHPatternRewriter(module);
-  auto unloda_and_bind_func_attr = [&builder](func::FuncOp func) {
-    unloadAndBindEncodingFuncOp(func, &builder);
-  };
-  auto analysis = SymbolAnalysis::getInstance(module);
-  auto unloda_and_bind_encoding = [&analysis, &builder](Operation *op) {
-    if (isa<func::FuncOp>(op)) return;
-    if (op->getNumResults() == 0) return;
-    analysis->buildEncodingBindFrom(op);
-    analysis->unloadEncoding(op);
-  };
-  auto unloda_and_bind_symbol = [&analysis, &builder](Operation *op) {
-    if (isa<func::FuncOp>(op)) return;
-    if (op->getNumResults() != 1) return;
-    analysis->buildSymbolBindFromAttr(op->getResult(0));
-  };
-  module->walk(unloda_and_bind_func_attr);
-  module->walk(unloda_and_bind_encoding);
-  module->walk(unloda_and_bind_symbol);
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(UnloadAndBindEncoding, {},
+                {
+                  auto builder = LLHPatternRewriter(module);
+                  auto unloda_and_bind_func_attr = [&](func::FuncOp func) {
+                    unloadAndBindEncodingFuncOp(func, &builder);
+                  };
+                  auto analysis = SymbolAnalysis::getInstance(module);
+                  auto unloda_and_bind_encoding = [&](Operation *op) {
+                    if (isa<func::FuncOp>(op)) return;
+                    if (op->getNumResults() == 0) return;
+                    analysis->buildEncodingBindFrom(op);
+                    analysis->unloadEncoding(op);
+                  };
+                  auto unloda_and_bind_symbol = [&](Operation *op) {
+                    if (isa<func::FuncOp>(op)) return;
+                    if (op->getNumResults() != 1) return;
+                    analysis->buildSymbolBindFromAttr(op->getResult(0));
+                  };
+                  module->walk(unloda_and_bind_func_attr);
+                  module->walk(unloda_and_bind_encoding);
+                  module->walk(unloda_and_bind_symbol);
+                },
+                {})

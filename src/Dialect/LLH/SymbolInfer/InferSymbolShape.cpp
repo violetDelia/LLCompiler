@@ -28,6 +28,7 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -149,46 +150,26 @@ void generateEntranceSymbol(ModuleOp module, bool use_binding = false) {
 // transform patterns
 //===----------------------------------------------------------------------===//
 
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateInferSymbolShapePassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-}
-
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct InferSymbolShapePass
-    : llh::impl::InferSymbolShapePassBase<InferSymbolShapePass> {
-  using InferSymbolShapePassBase::InferSymbolShapePassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void InferSymbolShapePass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  auto module = getOperation();
-  auto analysis = SymbolAnalysis::getInstance(module);
-  if (UseEncoding) {
-    generateEntranceSymbol(module);
-  } else {
-    generateEntranceSymbol(module, true);
-  }
-  module.walk([](Operation* op) { checkAndInferSymbol(op); });
-  RewritePatternSet patterns(context);
-  populateSymbolCanonicalizePatterns(patterns);
-  auto config = GreedyRewriteConfig();
-  config.useTopDownTraversal = true;
-  if (failed(applyPatternsAndFoldGreedily(module, std::move(patterns), config)))
-    signalPassFailure();
-  if (CleanSymbolCache) {
-    INFO(llc::SymbolInfer) << "CleanSymbolCache";
-    analysis->cleanCache();
-  }
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(
+    InferSymbolShape, {},
+    {
+      auto analysis = SymbolAnalysis::getInstance(module);
+      if (UseEncoding) {
+        generateEntranceSymbol(module);
+      } else {
+        generateEntranceSymbol(module, true);
+      }
+      module->walk([](Operation* op) { checkAndInferSymbol(op); });
+    },
+    {
+      auto analysis = SymbolAnalysis::getInstance(module);
+      if (CleanSymbolCache) {
+        INFO(llc::SymbolInfer) << "CleanSymbolCache";
+        analysis->cleanCache();
+      }
+    })

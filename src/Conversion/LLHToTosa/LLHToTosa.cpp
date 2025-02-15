@@ -24,6 +24,7 @@
 #include "llcompiler/Dialect/Utility/Tool.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -136,7 +137,6 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
   LogicalResult match(ReluOp op) const final { return success(); }
   void rewrite(ReluOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
     auto input = adaptor.getInput();
     auto out = op.getResult().getType();
@@ -149,7 +149,6 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
         loc, ::mlir::TypeRange{out},
         ::mlir::ValueRange{input, const_op->getResult(0)}, attrs);
     rewriter.replaceOp(op, new_op);
-    LLC_RUN_OUT_PATTERN
   }
 };
 
@@ -158,7 +157,7 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
 //   LogicalResult match(WeightOp op) const final { return success(); }
 //   void rewrite(WeightOp op, OpAdaptor adaptor,
 //                ConversionPatternRewriter& rewriter) const final {
-//     LLC_RUN_IN_PATTERN
+//
 //     auto loc = op.getLoc();
 //     auto out = op.getResult().getType();
 //     auto attrs = op->getAttrs();
@@ -168,7 +167,7 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
 //     new_op.setValueAttr(adaptor.getValueAttr());
 //     llc::add_is_weight_attr(new_op, true);
 //     rewriter.replaceOp(op, new_op);
-//     LLC_RUN_OUT_PATTERN
+//
 //   }
 // };
 
@@ -177,7 +176,6 @@ struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
   LogicalResult match(MatMulOp op) const final { return success(); }
   void rewrite(MatMulOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
     auto out = op.getResult();
     auto out_type = cast<ShapedType>(out.getType());
@@ -205,16 +203,14 @@ struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
           loc, out_type, matmul_op, GetShape(out));
       rewriter.replaceOp(op, reshape_op);
     }
-    LLC_RUN_OUT_PATTERN
   }
 };
 
-struct ConvOpLowering : public OpConversionPattern<ConvOp> {
+struct LLHConvOpToTosa : public OpConversionPattern<ConvOp> {
   using OpConversionPattern<ConvOp>::OpConversionPattern;
   LogicalResult match(ConvOp op) const final { return success(); }
   void rewrite(ConvOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
     auto res = op.getResult();
     auto res_type = cast<ShapedType>(res.getType());
@@ -237,7 +233,6 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
                                                   bias, pad, stride, dilation,
                                                   TypeAttr::get(res_ele_type));
     }
-    LLC_RUN_OUT_PATTERN
   };
 };
 
@@ -246,7 +241,6 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
   LogicalResult match(TransposeOp op) const final { return success(); }
   void rewrite(TransposeOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
     auto out = op.getResult();
     auto input = op.getInput();
@@ -260,16 +254,14 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
         loc, ::mlir::TypeRange{out.getType()},
         ::mlir::ValueRange{input, const_op}, atrrs);
     rewriter.replaceOp(op, new_op);
-    LLC_RUN_OUT_PATTERN
   };
 };
 
-struct MulOpLowing : public OpConversionPattern<MulOp> {
+struct LLHMulOpToTosa : public OpConversionPattern<MulOp> {
   using OpConversionPattern<MulOp>::OpConversionPattern;
   LogicalResult match(MulOp op) const final { return success(); }
   void rewrite(MulOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
     auto types = op->getResultTypes();
     auto operands = op->getOperands();
@@ -277,16 +269,14 @@ struct MulOpLowing : public OpConversionPattern<MulOp> {
     auto new_op = rewriter.create<tosa::MulOp>(loc, types, operands, attrs);
     new_op->setAttr("shift", rewriter.getI8IntegerAttr(0));
     rewriter.replaceOp(op, new_op);
-    LLC_RUN_OUT_PATTERN
   };
 };
 
-struct DivOpLowing : public OpConversionPattern<DivOp> {
+struct LLHDivOpToTosa : public OpConversionPattern<DivOp> {
   using OpConversionPattern<DivOp>::OpConversionPattern;
   LogicalResult match(DivOp op) const final { return success(); }
   void rewrite(DivOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    LLC_RUN_IN_PATTERN
     auto loc = op.getLoc();
     auto types = op->getResultTypes();
     auto rhs = op.getRhs();
@@ -297,77 +287,43 @@ struct DivOpLowing : public OpConversionPattern<DivOp> {
                                                ValueRange{lhs, new_rhs}, attrs);
     new_op->setAttr("shift", rewriter.getI8IntegerAttr(0));
     rewriter.replaceOp(op, new_op);
-    LLC_RUN_OUT_PATTERN
   };
 };
 
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateConvertLLHToTosaPassPatterns(TypeConverter& converter,
-                                          RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<SimplyFullLowing<AddOp, tosa::AddOp>>(converter, context);
-  patterns.add<SimplyFullLowing<SubOp, tosa::SubOp>>(converter, context);
-  patterns.add<SimplyFullLowing<ConstantOp, tosa::ConstOp>>(converter, context);
-  patterns.add<MulOpLowing>(converter, context);
-  patterns.add<DivOpLowing>(converter, context);
-  patterns.add<ConvOpLowering>(converter, context);
-  // patterns.add<ConstantOpLowering>(converter, context);
-  // patterns.add<MatMulOpLowering>(converter, context);
-  // patterns.add<ConvOpLowering>(converter, context);
-  // patterns.add<TransposeOpLowering>(converter, context);
-  // populateWithGenerated(patterns);
-}
 
+}  // namespace
 //===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configConvertLLHToTosaPassTarget(ConversionTarget& target) {
-  target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
-  target.addIllegalOp<AddOp>();
-  target.addIllegalOp<SubOp>();
-  target.addIllegalOp<MulOp>();
-  target.addIllegalOp<DivOp>();
-  target.addIllegalOp<ConvOp>();
-  target.addLegalDialect<mlir::tosa::TosaDialect>();
-  target.addLegalDialect<mlir::func::FuncDialect>();
-}
-
-//===----------------------------------------------------------------------===//
-// init typeconvert
-//===----------------------------------------------------------------------===//
-void initConvertLLHToTosaPassTypeConverter(TypeConverter& converter) {
-  auto shaped_repalce = [](ShapedType type) { return type; };
-  auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
-  converter.addConversion(ranked_tensor_replace);
-  converter.addConversion(shaped_repalce);
-}
-
-//===----------------------------------------------------------------------===//
+using LLHAddOpToTosa = SimplyFullLowing<AddOp, tosa::AddOp>;
+using LLHSubOpToTosa = SimplyFullLowing<SubOp, tosa::SubOp>;
+using LLHConstantOpToTosa = SimplyFullLowing<ConstantOp, tosa::ConstOp>;
 // pass defination
 //===----------------------------------------------------------------------===//
-struct ConvertLLHToTosaPass
-    : impl::ConvertLLHToTosaPassBase<ConvertLLHToTosaPass> {
-  using impl::ConvertLLHToTosaPassBase<
-      ConvertLLHToTosaPass>::ConvertLLHToTosaPassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void ConvertLLHToTosaPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  ConversionTarget target(getContext());
-  configConvertLLHToTosaPassTarget(target);
-  TypeConverter converter;
-  initConvertLLHToTosaPassTypeConverter(converter);
-  RewritePatternSet patterns(&getContext());
-  populateConvertLLHToTosaPassPatterns(converter, patterns);
-  if (failed(
-          applyPartialConversion(getOperation(), target, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+LLC_DEFINR_CONVERSION_PASS(
+    ConvertLLHToTosa,
+    {
+      LLC_ADD_CONVERSION(LLHAddOpToTosa);
+      LLC_ADD_CONVERSION(LLHSubOpToTosa);
+      LLC_ADD_CONVERSION(LLHConstantOpToTosa)
+      LLC_ADD_CONVERSION(LLHMulOpToTosa);
+      LLC_ADD_CONVERSION(LLHDivOpToTosa);
+      LLC_ADD_CONVERSION(LLHConvOpToTosa);
+    },
+    {
+      target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
+      target.addIllegalOp<AddOp>();
+      target.addIllegalOp<SubOp>();
+      target.addIllegalOp<MulOp>();
+      target.addIllegalOp<DivOp>();
+      target.addIllegalOp<ConvOp>();
+      target.addLegalDialect<mlir::tosa::TosaDialect>();
+      target.addLegalDialect<mlir::func::FuncDialect>();
+    },
+    {
+      auto shaped_repalce = [](ShapedType type) { return type; };
+      auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
+      converter.addConversion(ranked_tensor_replace);
+      converter.addConversion(shaped_repalce);
+    })

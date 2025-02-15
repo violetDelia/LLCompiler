@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -181,35 +182,16 @@ struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
 void populateTransformLayoutPassPatterns(RewritePatternSet& patterns,
                                          Layout target_layout) {
   auto context = patterns.getContext();
-  patterns.add<ConvOpConvertLayout>(context, target_layout);
+  LLC_ADD_PATTERN(ConvOpConvertLayout, target_layout);
 }
 }  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-namespace {
-struct TransformLayoutPass
-    : llh::impl::TransformLayoutPassBase<TransformLayoutPass> {
-  using llh::impl::TransformLayoutPassBase<
-      TransformLayoutPass>::TransformLayoutPassBase;
-  void runOnOperation() override;
-};
-
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void TransformLayoutPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto* context = &getContext();
-  RewritePatternSet patterns(context);
-  populateTransformLayoutPassPatterns(patterns, TargetLayout);
-  populateSymbolCanonicalizePatterns(patterns);
-  auto op = getOperation();
-  if (failed(applyPatternsAndFoldGreedily(op, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using namespace mlir::llh::impl;
+LLC_DEFINR_PASS(
+    TransformLayout, { LLC_ADD_PATTERN(ConvOpConvertLayout, TargetLayout); },
+    { populateSymbolCanonicalizePatterns(patterns); }, {})
 //===----------------------------------------------------------------------===//
 // create pass
 //===----------------------------------------------------------------------===//

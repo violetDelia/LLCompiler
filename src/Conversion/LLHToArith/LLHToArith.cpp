@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -102,64 +103,41 @@ struct SimplyBinaryOpLowing : public OpConversionPattern<FromOp> {
 //===----------------------------------------------------------------------===//
 // pattern population
 //===----------------------------------------------------------------------===//
-void populateConvertLLHToArithPassPatterns(TypeConverter& converter,
-                                           RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  patterns.add<SimplyFullLowing<ConstantOp, arith::ConstantOp>>(converter,
-                                                                context);
-  patterns.add<SimplyBinaryOpLowing<AddOp, arith::AddIOp>>(converter, context);
-  patterns.add<SimplyBinaryOpLowing<MulOp, arith::MulIOp>>(converter, context);
-  patterns.add<SimplyBinaryOpLowing<SubOp, arith::SubIOp>>(converter, context);
-  patterns.add<SimplyBinaryOpLowing<DivOp, arith::DivUIOp>>(converter, context);
-}
 
-//===----------------------------------------------------------------------===//
-// config target
-//===----------------------------------------------------------------------===//
-void configConvertLLHToArithPassTarget(ConversionTarget& target) {
-  target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
-  target.addDynamicallyLegalOp<AddOp, MulOp, DivOp, SubOp>(check_binary_legal);
-  target.addLegalDialect<mlir::arith::ArithDialect>();
-  target.addLegalDialect<mlir::func::FuncDialect>();
-  target.addLegalDialect<mlir::index::IndexDialect>();
-}
-
-//===----------------------------------------------------------------------===//
-// init typeconvert
-//===----------------------------------------------------------------------===//
-void initConvertLLHToArithPassTypeConverter(TypeConverter& converter) {
-  auto shaped_repalce = [](ShapedType type) { return type; };
-  auto int_repalce = [](IntegerType type) { return type; };
-  auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
-  converter.addConversion(ranked_tensor_replace);
-  converter.addConversion(shaped_repalce);
-  converter.addConversion(int_repalce);
-}
-
+}  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-struct ConvertLLHToArithPass
-    : impl::ConvertLLHToArithPassBase<ConvertLLHToArithPass> {
-  using impl::ConvertLLHToArithPassBase<
-      ConvertLLHToArithPass>::ConvertLLHToArithPassBase;
-  void runOnOperation() override;
-};
-}  // namespace
-
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-void ConvertLLHToArithPass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  ConversionTarget target(getContext());
-  configConvertLLHToArithPassTarget(target);
-  TypeConverter converter;
-  initConvertLLHToArithPassTypeConverter(converter);
-  RewritePatternSet patterns(&getContext());
-  populateConvertLLHToArithPassPatterns(converter, patterns);
-  if (failed(
-          applyPartialConversion(getOperation(), target, std::move(patterns))))
-    signalPassFailure();
-  LLC_RUN_OUT_PASS
-}
+using LLHConstantOpToArith =
+    SimplyFullLowing<llh::ConstantOp, arith::ConstantOp>;
+using LLHMulOpToArith = SimplyBinaryOpLowing<llh::MulOp, arith::MulIOp>;
+using LLHSubOpToArith = SimplyBinaryOpLowing<llh::SubOp, arith::SubIOp>;
+using LLHAddOpToArith = SimplyBinaryOpLowing<llh::AddOp, arith::AddIOp>;
+using LLHDivOpToArith = SimplyBinaryOpLowing<llh::DivOp, arith::DivUIOp>;
+LLC_DEFINR_CONVERSION_PASS(
+    ConvertLLHToArith,
+    {
+      LLC_ADD_CONVERSION(LLHConstantOpToArith);
+      LLC_ADD_CONVERSION(LLHMulOpToArith);
+      LLC_ADD_CONVERSION(LLHSubOpToArith);
+      LLC_ADD_CONVERSION(LLHDivOpToArith);
+      LLC_ADD_CONVERSION(LLHAddOpToArith);
+    },
+    {
+      target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
+      target.addDynamicallyLegalOp<AddOp>(check_binary_legal);
+      target.addDynamicallyLegalOp<MulOp>(check_binary_legal);
+      target.addDynamicallyLegalOp<DivOp>(check_binary_legal);
+      target.addDynamicallyLegalOp<SubOp>(check_binary_legal);
+      target.addLegalDialect<mlir::arith::ArithDialect>();
+      target.addLegalDialect<mlir::func::FuncDialect>();
+      target.addLegalDialect<mlir::index::IndexDialect>();
+    },
+    {
+      auto shaped_repalce = [](ShapedType type) { return type; };
+      auto int_repalce = [](IntegerType type) { return type; };
+      auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
+      converter.addConversion(ranked_tensor_replace);
+      converter.addConversion(shaped_repalce);
+      converter.addConversion(int_repalce);
+    })

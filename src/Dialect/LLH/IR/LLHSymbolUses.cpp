@@ -12,7 +12,7 @@
 //    limitations under the License.
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/Utility/Macro.h"
+#include "llcompiler/Support/Macro.h"
 #include "llcompiler/Support/Logger.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/TypeSwitch.h"

@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/Macro.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
@@ -35,6 +36,7 @@
 #include "mlir/IR/Types.h"
 #include "mlir/IR/Value.h"
 #include "mlir/Support/LLVM.h"
+#include "mlir/Transforms/GreedyPatternRewriteDriver.h"
 namespace mlir::LLVM::ex {
 #define GEN_PASS_DEF_ADAPTENTRYPARMSFORENGINEPASS
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h.inc"
@@ -45,8 +47,6 @@ namespace {
 //===----------------------------------------------------------------------===//
 // common func
 //===----------------------------------------------------------------------===//
-namespace {
-
 llvm::SmallVector<size_t> analysisOriginalMemrefStart(
     llvm::ArrayRef<Type>& params, size_t range_start) {
   llvm::SmallVector<size_t> original_memref_start;
@@ -253,30 +253,10 @@ void transformFunctionTypeFinal(LLVM::LLVMFuncOp& enter_func) {
 //===----------------------------------------------------------------------===//
 
 //===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateAdaptEntryParmsForEnginePassPatterns(RewritePatternSet& patterns) {
-  auto context = patterns.getContext();
-  // patterns.add<AdaptReturnOp>(context);
-}
-
-//===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-
-struct AdaptEntryParmsForEnginePass
-    : ::LLVM::ex::impl::AdaptEntryParmsForEnginePassBase<
-          AdaptEntryParmsForEnginePass> {
-  void runOnOperation() override;
-};
-}  // namespace
-//===----------------------------------------------------------------------===//
-// pass implement
-//===----------------------------------------------------------------------===//
-
-void AdaptEntryParmsForEnginePass::runOnOperation() {
-  LLC_RUN_IN_PASS
-  auto module = getOperation();
+using namespace mlir::LLVM::ex::impl;
+LLC_DEFINR_PASS(AdaptEntryParmsForEngine, {}, {}, {
   IRRewriter rewriter(module->getContext());
   auto enter_func = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("main");
   CHECK(llc::MLIR_PASS, enter_func);
@@ -298,5 +278,4 @@ void AdaptEntryParmsForEnginePass::runOnOperation() {
   transformFunctionType(enter_func, original_memref_rank.size());
   transformBlockArgsFinal(block, &rewriter);
   transformFunctionTypeFinal(enter_func);
-  LLC_RUN_OUT_PASS
-}
+})
