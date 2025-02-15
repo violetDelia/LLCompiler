@@ -21,8 +21,7 @@ def TransformLayoutToNHWC : Pass<"transform-layout-to-nhwc","ModuleOp"> {
   let description = [{
   }];
   let constructor = "mlir::tosa_ex::createTransformLayoutToNHWCPass()";
-  let dependentDialects = [ "::mlir::tosa::TosaDialect",
-                            "::mlir::tosa_ex::TosaExDialect"];
+  let dependentDialects = [ "::mlir::tosa::TosaDialect"];
 }
 
 

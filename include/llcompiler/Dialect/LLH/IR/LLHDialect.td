@@ -34,7 +34,7 @@ def LLH_Dialect : Dialect{
         void registerTypes();
         void registerAttributes();
     }];
-    let dependentDialects = ["mlir::ex::IRExtensionDialect"];
+    let dependentDialects = [];
     
 }
 

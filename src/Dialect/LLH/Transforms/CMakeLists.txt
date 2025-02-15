@@ -21,7 +21,7 @@ llcompiler_add_library(LLCLLHTransforms
   LINKS PUBLIC
   LLCLLHDialect
   MLIRPass
-  LLCIRExtension
+  #LLCIRExtension
   LLCMLIRUtility
   LLCLLHUtils
   LLCPatternRewriter

@@ -226,13 +226,16 @@ struct ConvOpLowering : public OpConversionPattern<ConvOp> {
     auto dilation = op.getDilationAttr();
     auto pad = op.getPadAttr();
     auto stride = op.getStrideAttr();
+
     if (res_type.getRank() == 4) {
       rewriter.replaceOpWithNewOp<tosa::Conv2DOp>(op, res_type, input, weight,
-                                                  bias, pad, stride, dilation);
+                                                  bias, pad, stride, dilation,
+                                                  TypeAttr::get(res_ele_type));
     }
     if (res_type.getRank() == 5) {
       rewriter.replaceOpWithNewOp<tosa::Conv3DOp>(op, res_type, input, weight,
-                                                  bias, pad, stride, dilation);
+                                                  bias, pad, stride, dilation,
+                                                  TypeAttr::get(res_ele_type));
     }
     LLC_RUN_OUT_PATTERN
   };

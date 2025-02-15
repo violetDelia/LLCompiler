@@ -25,7 +25,7 @@ llcompiler_add_library(LLCPipelines
 
     LLCLLVMExtensionTransforms
     LLCIndexExtensionTransforms
-    LLCTosaExtensionTransforms
+    # LLCTosaExtensionTransforms
     LLCBufferizationExtensionTransforms
 
     # MhloDialect

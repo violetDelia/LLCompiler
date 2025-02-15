@@ -56,7 +56,7 @@ class MultiHeadedAttention(nn.Module):
         query, key, value \
             = [proj_weight(x).view(batch_size, -1, self.num_heads, self.k_dim).transpose(1, 2)
                 for proj_weight, x in zip(self.proj_weights, [query, key, value])] 
-        return query
+        return query,key,value
         k_dim = query.size(-1)
         scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(k_dim)
         return scores

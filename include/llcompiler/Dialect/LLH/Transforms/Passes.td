@@ -21,7 +21,7 @@ def TransformLayoutPass : Pass<"transform-layout","ModuleOp"> {
   let summary = "trans some llh op layout to nhwc for lowing to tosa";
   let description = [{
   }];
-  let dependentDialects = [ "mlir::ex::IRExtensionDialect"];
+  let dependentDialects = [];
   let options = [
     Option<"TargetLayout", "target-layout", "::mlir::llh::Layout", /*default=*/"::mlir::llh::Layout::NHWC",
            "">,

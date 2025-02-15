@@ -33,7 +33,7 @@ Builder::Builder(mlir::MLIRContext* context) : builder_(context) {
   LOAD_DIALECT(mlir::func::FuncDialect);
   LOAD_DIALECT(mlir::tosa::TosaDialect);
   LOAD_DIALECT(mlir::llh::LLHDialect);
-  LOAD_DIALECT(mlir::ex::IRExtensionDialect);
+  // LOAD_DIALECT(mlir::ex::IRExtensionDialect);
 }
 
 #undef LOAD_DIALECT

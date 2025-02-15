@@ -36,8 +36,8 @@
 int main(int argc, char **argv) {
   mlir::DialectRegistry registry;
   registry.insert<mlir::llh::LLHDialect>();
-  registry.insert<mlir::ex::IRExtensionDialect>();
-  registry.insert<mlir::tosa_ex::TosaExDialect>();
+  // registry.insert<mlir::ex::IRExtensionDialect>();
+  // registry.insert<mlir::tosa_ex::TosaExDialect>();
   registry.insert<mlir::stablehlo::StablehloDialect>();
   mlir::registerAllDialects(registry);
   mlir::registerAllPasses();
