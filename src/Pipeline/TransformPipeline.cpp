@@ -145,7 +145,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //  lowing shape
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::createConvertShapeToStandardPass());
-  pm.addNestedPass<mlir::func::FuncOp>(mlir::createShapeToShapeLowering());
+  // pm.addNestedPass<mlir::func::FuncOp>(mlir::createShapeToShapeLowering());
   //===----------------------------------------------------------------------===//
   //  tensor lowing
   //===----------------------------------------------------------------------===//
