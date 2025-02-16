@@ -276,7 +276,7 @@ struct LLHConvOpToHLO : public OpConversionPattern<ConvOp> {
   }
 };
 
-struct LLHBatchNormInferenceOpHLO
+struct LLHBatchNormInferenceOpToHLO
     : public OpConversionPattern<BatchNormInferenceOp> {
   using OpConversionPattern<BatchNormInferenceOp>::OpConversionPattern;
   LogicalResult matchAndRewrite(BatchNormInferenceOp op, OpAdaptor adaptor,
@@ -392,7 +392,7 @@ struct LLHBatchMatMulOpToHLO : public OpConversionPattern<BatchMatMulOp> {
   }
 };
 
-struct LLHCompareOpHLO : public OpConversionPattern<CompareOp> {
+struct LLHCompareOpToHLO : public OpConversionPattern<CompareOp> {
   using OpConversionPattern<CompareOp>::OpConversionPattern;
 
   LogicalResult match(CompareOp op) const { return llvm::success(); }
@@ -437,30 +437,24 @@ struct LLHCompareOpHLO : public OpConversionPattern<CompareOp> {
     }
     UNIMPLEMENTED(llc::MLIR);
   }
+#define GET_HLO_ComparisonDirectionAttr(LLHKind, HLOKind)          \
+  if (kind == CompareKind::LLHKind) {                              \
+    return mlir::stablehlo::ComparisonDirectionAttr::get(          \
+        context, ::mlir::stablehlo::ComparisonDirection::HLOKind); \
+  }
 
   mlir::stablehlo::ComparisonDirectionAttr switchCompareAttr(
       mlir::MLIRContext* context, mlir::llh::CompareKind kind) const {
-    if (kind == CompareKind::EQ)
-      return mlir::stablehlo::ComparisonDirectionAttr::get(
-          context, ::mlir::stablehlo::ComparisonDirection::EQ);
-    if (kind == CompareKind::NE)
-      return mlir::stablehlo::ComparisonDirectionAttr::get(
-          context, ::mlir::stablehlo::ComparisonDirection::NE);
-    if (kind == CompareKind::GE)
-      return mlir::stablehlo::ComparisonDirectionAttr::get(
-          context, ::mlir::stablehlo::ComparisonDirection::GE);
-    if (kind == CompareKind::GT)
-      return mlir::stablehlo::ComparisonDirectionAttr::get(
-          context, ::mlir::stablehlo::ComparisonDirection::GT);
-    if (kind == CompareKind::LE)
-      return mlir::stablehlo::ComparisonDirectionAttr::get(
-          context, ::mlir::stablehlo::ComparisonDirection::LE);
-    if (kind == CompareKind::LT)
-      return mlir::stablehlo::ComparisonDirectionAttr::get(
-          context, ::mlir::stablehlo::ComparisonDirection::LT);
+    GET_HLO_ComparisonDirectionAttr(EQ, EQ);
+    GET_HLO_ComparisonDirectionAttr(NE, NE);
+    GET_HLO_ComparisonDirectionAttr(GE, GE);
+    GET_HLO_ComparisonDirectionAttr(GT, GT);
+    GET_HLO_ComparisonDirectionAttr(LE, LE);
+    GET_HLO_ComparisonDirectionAttr(LT, LT);
     UNIMPLEMENTED(llc::MLIR);
   }
 };
+#undef GET_HLO_ComparisonDirectionAttr
 
 template <class RecudeOp>
 struct ReduceOplwoing : public OpConversionPattern<RecudeOp> {
@@ -479,10 +473,6 @@ struct ReduceOplwoing : public OpConversionPattern<RecudeOp> {
     rewriter.replaceOp(op, reduce_res);
   }
 };
-
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
 //===----------------------------------------------------------------------===//
 // addIllegalOp
 //===----------------------------------------------------------------------===//
@@ -511,7 +501,7 @@ using LLHConvertToOpToHLO = SimplyFullLowing<ConvertToOp, stablehlo::ConvertOp>;
 using LLHExpOpToHLO = SimplyFullLowing<ExpOp, stablehlo::ExpOp>;
 using LLHReduceMaxOpToHLO = ReduceOplwoing<ReduceMaxOp>;
 using LLHReduceSumOpToHLO = ReduceOplwoing<ReduceSumOp>;
-LLC_DEFINR_CONVERSION_PASS(
+LLC_DEFINE_CONVERSION_PASS(
     ConvertLLHToHLO,
     {
       LLC_ADD_CONVERSION(LLHConstantOpToHLO);
@@ -527,12 +517,12 @@ LLC_DEFINR_CONVERSION_PASS(
       LLC_ADD_CONVERSION(LLHConvertToOpToHLO);
       LLC_ADD_CONVERSION(LLHExpOpToHLO);
       LLC_ADD_CONVERSION(LLHConvOpToHLO);
-      LLC_ADD_CONVERSION(LLHBatchNormInferenceOpHLO);
+      LLC_ADD_CONVERSION(LLHBatchNormInferenceOpToHLO);
       LLC_ADD_CONVERSION(LLHBroadCastToOpToHLO);
       LLC_ADD_CONVERSION(LLHSliceOpToHLO);
       LLC_ADD_CONVERSION(LLHBatchMatMulOpToHLO);
       LLC_ADD_CONVERSION(LLHMaxPoolOpHLO);
-      LLC_ADD_CONVERSION(LLHCompareOpHLO);
+      LLC_ADD_CONVERSION(LLHCompareOpToHLO);
       LLC_ADD_CONVERSION(LLHReduceMaxOpToHLO);
       LLC_ADD_CONVERSION(LLHReduceSumOpToHLO);
 

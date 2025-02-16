@@ -259,7 +259,7 @@ struct LLHSymbolicBindOpReplace : public LLHOpRewritePattern<SymbolicBindOp> {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(RemoveRedundantOps,
+LLC_DEFINE_PASS(RemoveRedundantOps,
                 {
                   LLC_ADD_PATTERN(LLHFlattenOpReplace);
                   LLC_ADD_PATTERN(LLHTorchSymbolicIntOpReplace);

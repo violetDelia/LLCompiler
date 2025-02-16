@@ -1,5 +1,5 @@
 // RUN: llc-opt --split-input-file --fold-index-cast -allow-unregistered-dialect %s| FileCheck %s
-// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --fold-index-cast  /home/lfr/LLCompiler/test/Dialect/IndexExtension/foldcast.mlir
+// /home/lfr/LLCompiler/build/bin/llc-opt --split-input-file --fold-index-cast -allow-unregistered-dialect /home/lfr/LLCompiler/test/Dialect/IndexExtension/foldcast.mlir
 
 func.func @cast() ->(index) attributes {entrance}{
     %c3 = arith.constant 3 : index
@@ -49,7 +49,7 @@ func.func @fold_from_elements(%arg0: tensor<?x?x?x?xf32>) ->(tensor<?x?x?x?xf32>
 }
 
 // -----
-func.func @fold_func_arg(%arg0: i64 {func.symbol_int = @s0}) ->(index) attributes {entrance}{
+func.func @fold_func_arg(%arg0: i64 {func.symbol_int = @s0}, %arg1: tensor<?x?x?x?xf32>) ->(index) attributes {entrance}{
     %1 = arith.index_cast %arg0 : i64 to index
     return %1 : index
 }

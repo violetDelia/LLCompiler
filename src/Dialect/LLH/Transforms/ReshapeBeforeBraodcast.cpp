@@ -86,7 +86,7 @@ using LLHMinOpReshapeInsert = SimplyBinaryOpReshape<MinOp>;
 //===----------------------------------------------------------------------===//
 
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(ReshapeBeforeBraodcast,
+LLC_DEFINE_PASS(ReshapeBeforeBraodcast,
                 {
                   LLC_ADD_PATTERN(LLHAddOpReshapeInsert);
                   LLC_ADD_PATTERN(LLHSubOpReshapeInsert);

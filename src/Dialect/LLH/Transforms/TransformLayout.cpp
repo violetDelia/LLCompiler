@@ -189,7 +189,7 @@ void populateTransformLayoutPassPatterns(RewritePatternSet& patterns,
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(
+LLC_DEFINE_PASS(
     TransformLayout, { LLC_ADD_PATTERN(ConvOpConvertLayout, TargetLayout); },
     { populateSymbolCanonicalizePatterns(patterns); }, {})
 //===----------------------------------------------------------------------===//

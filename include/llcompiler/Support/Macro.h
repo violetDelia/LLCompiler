@@ -59,13 +59,22 @@
 #define LLC_ADD_PATTERN_WITH_BENEFIT(PATTERN, benefit, ...) \
   patterns.addWithLabel<PATTERN>({#PATTERN}, context, benefit, ##__VA_ARGS__);
 
+#define LLC_DEFINR_PATTERN(NAME, ROOT, match_code, rewrite_code)      \
+  struct NAME : public LLHOpRewritePattern<ROOT> {                    \
+    using LLHOpRewritePattern<ROOT>::LLHOpRewritePattern;             \
+    LogicalResult match(ROOT op) const final { match_code }           \
+    void rewrite(ROOT op, LLHPatternRewriter& rewriter) const final { \
+      rewrite_code                                                    \
+    }                                                                 \
+  };
+
 #define LLC_ADD_PATTERN(PATTERN, ...) \
   patterns.addWithLabel<PATTERN>({#PATTERN}, context, ##__VA_ARGS__);
 
 #define LLC_ADD_CONVERSION(PATTERN) \
   patterns.addWithLabel<PATTERN>({#PATTERN}, converter, context);
 
-#define LLC_DEFINR_CONVERSION_PASS(NAME, addPatterns, configTarget,            \
+#define LLC_DEFINE_CONVERSION_PASS(NAME, addPatterns, configTarget,            \
                                    initTypeConverter)                          \
   using namespace mlir::impl;                                                  \
   namespace {                                                                  \
@@ -107,7 +116,7 @@
     LLC_RUN_OUT_PASS                                                           \
   }
 
-#define LLC_DEFINR_PASS(NAME, addPatterns, beforeApplyPatterns,                \
+#define LLC_DEFINE_PASS(NAME, addPatterns, beforeApplyPatterns,                \
                         afterApplyPatterns)                                    \
   using namespace mlir::impl;                                                  \
   namespace {                                                                  \

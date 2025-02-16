@@ -63,7 +63,7 @@ using LLHMinOpBroadcastInsert = SimplyBinaryOpInsertBroadcast<MinOp>;
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(
+LLC_DEFINE_PASS(
     InsertBroadCast,
     {
       LLC_ADD_PATTERN(LLHAddOpBroadcastInsert);

@@ -143,7 +143,7 @@ struct LLHExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-LLC_DEFINR_PASS(LLHPreprocessingForHLO,
+LLC_DEFINE_PASS(LLHPreprocessingForHLO,
                 {
                   LLC_ADD_PATTERN(LLHReluOpSwitch);
                   LLC_ADD_PATTERN(LLHExtractOpSwitch);

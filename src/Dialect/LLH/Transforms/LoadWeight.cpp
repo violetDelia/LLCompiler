@@ -166,4 +166,4 @@ struct LLCWeightOpLoad : public LLHOpRewritePattern<WeightOp> {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(LoadWeight, { LLC_ADD_PATTERN(LLCWeightOpLoad); }, {}, {})
+LLC_DEFINE_PASS(LoadWeight, { LLC_ADD_PATTERN(LLCWeightOpLoad); }, {}, {})

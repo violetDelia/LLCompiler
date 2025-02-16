@@ -95,7 +95,7 @@ void foldSymbol(func::FuncOp func) {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(SymbolCSE, {},
+LLC_DEFINE_PASS(SymbolCSE, {},
                 {
                   auto fold_symbol_dim = [](func::FuncOp func) {
                     foldSymbol(func);

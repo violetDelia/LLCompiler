@@ -256,7 +256,7 @@ void transformFunctionTypeFinal(LLVM::LLVMFuncOp& enter_func) {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::LLVM::ex::impl;
-LLC_DEFINR_PASS(AdaptEntryParmsForEngine, {}, {}, {
+LLC_DEFINE_PASS(AdaptEntryParmsForEngine, {}, {}, {
   IRRewriter rewriter(module->getContext());
   auto enter_func = module.lookupSymbol<mlir::LLVM::LLVMFuncOp>("main");
   CHECK(llc::MLIR_PASS, enter_func);

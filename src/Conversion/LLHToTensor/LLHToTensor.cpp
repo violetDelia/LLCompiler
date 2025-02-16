@@ -128,7 +128,7 @@ struct LLHEmptyOpToTensor : public OpConversionPattern<EmptyOp> {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-LLC_DEFINR_CONVERSION_PASS(
+LLC_DEFINE_CONVERSION_PASS(
     ConvertLLHToTensor,
     {
       LLC_ADD_CONVERSION(LLHDimOpToTensor);

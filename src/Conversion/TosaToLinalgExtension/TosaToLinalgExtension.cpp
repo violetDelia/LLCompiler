@@ -59,7 +59,7 @@ namespace {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-LLC_DEFINR_CONVERSION_PASS(ConvertTosaToLinalgExtension, {}, {}, {
+LLC_DEFINE_CONVERSION_PASS(ConvertTosaToLinalgExtension, {}, {}, {
   auto shaped_repalce = [](ShapedType type) { return type; };
   auto ranked_tensor_replace = [](RankedTensorType type) { return type; };
   converter.addConversion(ranked_tensor_replace);

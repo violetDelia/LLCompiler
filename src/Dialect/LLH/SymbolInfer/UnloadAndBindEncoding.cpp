@@ -109,7 +109,7 @@ void unloadAndBindEncodingFuncOp(func::FuncOp &func,
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(UnloadAndBindEncoding, {},
+LLC_DEFINE_PASS(UnloadAndBindEncoding, {},
                 {
                   auto builder = LLHPatternRewriter(module);
                   auto unloda_and_bind_func_attr = [&](func::FuncOp func) {

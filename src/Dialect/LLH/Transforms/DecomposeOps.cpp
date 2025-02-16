@@ -157,6 +157,6 @@ struct LLHBatchNormInferenceOpDecomposition
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(
+LLC_DEFINE_PASS(
     DecomposeOps, { LLC_ADD_PATTERN(LLHBatchNormInferenceOpDecomposition); },
     { populateSymbolCanonicalizePatterns(patterns); }, {})

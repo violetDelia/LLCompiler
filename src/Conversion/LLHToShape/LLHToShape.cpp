@@ -85,7 +85,7 @@ struct LLHDimOpToShape : public OpConversionPattern<DimOp> {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-LLC_DEFINR_CONVERSION_PASS(
+LLC_DEFINE_CONVERSION_PASS(
     ConvertLLHToShape, {LLC_ADD_CONVERSION(LLHDimOpToShape)},
     {
       target.addLegalDialect<mlir::arith::ArithDialect>();

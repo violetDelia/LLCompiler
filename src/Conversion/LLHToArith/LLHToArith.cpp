@@ -114,7 +114,7 @@ using LLHMulOpToArith = SimplyBinaryOpLowing<llh::MulOp, arith::MulIOp>;
 using LLHSubOpToArith = SimplyBinaryOpLowing<llh::SubOp, arith::SubIOp>;
 using LLHAddOpToArith = SimplyBinaryOpLowing<llh::AddOp, arith::AddIOp>;
 using LLHDivOpToArith = SimplyBinaryOpLowing<llh::DivOp, arith::DivUIOp>;
-LLC_DEFINR_CONVERSION_PASS(
+LLC_DEFINE_CONVERSION_PASS(
     ConvertLLHToArith,
     {
       LLC_ADD_CONVERSION(LLHConstantOpToArith);

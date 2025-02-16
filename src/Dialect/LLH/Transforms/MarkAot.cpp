@@ -43,4 +43,4 @@ namespace {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(MarkAot, {}, {}, {})
+LLC_DEFINE_PASS(MarkAot, {}, {}, {})

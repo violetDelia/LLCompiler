@@ -143,4 +143,4 @@ struct MemrefAllocToArg : public OpRewritePattern<mlir::memref::CopyOp> {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace ::mlir::bufferization::ex::impl;
-LLC_DEFINR_PASS(AllocToArg, { LLC_ADD_PATTERN(MemrefAllocToArg); }, {}, {})
+LLC_DEFINE_PASS(AllocToArg, { LLC_ADD_PATTERN(MemrefAllocToArg); }, {}, {})

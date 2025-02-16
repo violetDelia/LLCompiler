@@ -155,7 +155,7 @@ void generateEntranceSymbol(ModuleOp module, bool use_binding = false) {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(
+LLC_DEFINE_PASS(
     InferSymbolShape, {},
     {
       auto analysis = SymbolAnalysis::getInstance(module);

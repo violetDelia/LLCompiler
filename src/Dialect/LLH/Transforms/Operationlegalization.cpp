@@ -215,7 +215,6 @@ struct LLHAddSymbolIntArgNumsAttr : public LLHOpRewritePattern<func::FuncOp> {
     llc::add_symbol_int_arg_nums_attr(op, symbol_int_nums);
   }
 };
-
 }  // namespace
 using LLHWeightOpScaleRefine = ResultScaleRefine<WeightOp>;
 using LLHExtractOpScaleRefine = ResultScaleRefine<ExtractOp>;
@@ -223,7 +222,7 @@ using LLHExtractOpScaleRefine = ResultScaleRefine<ExtractOp>;
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(Operationlegalization,
+LLC_DEFINE_PASS(Operationlegalization,
                 {
                   LLC_ADD_PATTERN(LLHWeightOpScaleRefine);
                   LLC_ADD_PATTERN(LLHExtractOpScaleRefine);

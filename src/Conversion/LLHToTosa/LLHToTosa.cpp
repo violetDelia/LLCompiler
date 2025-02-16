@@ -301,7 +301,7 @@ using LLHSubOpToTosa = SimplyFullLowing<SubOp, tosa::SubOp>;
 using LLHConstantOpToTosa = SimplyFullLowing<ConstantOp, tosa::ConstOp>;
 // pass defination
 //===----------------------------------------------------------------------===//
-LLC_DEFINR_CONVERSION_PASS(
+LLC_DEFINE_CONVERSION_PASS(
     ConvertLLHToTosa,
     {
       LLC_ADD_CONVERSION(LLHAddOpToTosa);

@@ -74,5 +74,5 @@ struct LLHEncodingBindOpSink : public LLHOpRewritePattern<EncodingBindOp> {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(SinkBindEncoding, { LLC_ADD_PATTERN(LLHEncodingBindOpSink); },
+LLC_DEFINE_PASS(SinkBindEncoding, { LLC_ADD_PATTERN(LLHEncodingBindOpSink); },
                 {}, {})

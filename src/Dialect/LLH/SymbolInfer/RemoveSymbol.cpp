@@ -98,7 +98,7 @@ struct RemoveSymbolAttrOp : public OpRewritePattern<Op> {
 // pass defination
 //===----------------------------------------------------------------------===//
 using namespace mlir::llh::impl;
-LLC_DEFINR_PASS(
+LLC_DEFINE_PASS(
     RemoveSymbol,
     {
       patterns.add<RemoveOp<SymbolicIntOp>>(context);

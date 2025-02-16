@@ -130,7 +130,7 @@ struct HLORealDynamicSliceOpToLinalg final
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-LLC_DEFINR_CONVERSION_PASS(
+LLC_DEFINE_CONVERSION_PASS(
     ConvertStablehloToLinalgExtension,
     {LLC_ADD_CONVERSION(HLORealDynamicSliceOpToLinalg)},
     {
