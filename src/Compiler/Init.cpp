@@ -172,19 +172,6 @@ void init_logger(const logger::LoggerOption& logger_option) {
                << llc::stringifyLogLevel(logger_option.level).str();
 }
 
-// void init_frontend(const front::FrontEndOption& front_option,
-//                    const logger::LoggerOption& logger_option) {
-//   logger::register_logger(IMPORTER, logger_option);
-//   INFO(GLOBAL) << "frontend type is: "
-//                << front::frontend_type_to_str(front_option.frontend_type);
-//   INFO(GLOBAL) << "input file is: " << front_option.input_file;
-//   INFO(GLOBAL) << "output file is: " << front_option.output_file;
-//   INFO(GLOBAL) << "convert onnx: " << front_option.onnx_convert;
-//   if (front_option.onnx_convert) {
-//     INFO(GLOBAL) << "convert onnx to: " << front_option.onnx_convert_version;
-//   }
-// }
-
 void preprocess_mlir_module(mlir::OwningOpRef<mlir::ModuleOp>* module,
                             CompileOptions compiler_options) {
   auto context = module->get()->getContext();

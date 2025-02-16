@@ -11,12 +11,11 @@
 //    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
-#include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
-
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
 
+#include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
@@ -30,6 +29,7 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Index/IR/IndexOps.h"
+#include "mlir/Dialect/Math/IR/Math.h"
 #include "mlir/Dialect/Tosa/IR/TosaOps.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
@@ -43,7 +43,7 @@
 #include "mlir/Transforms/DialectConversion.h"
 
 namespace mlir {
-#define GEN_PASS_DEF_CONVERTLLHTOARITHPASS
+#define GEN_PASS_DEF_CONVERTLLHTOMATHPASS
 #include "llcompiler/Conversion/Passes.h.inc"
 
 }  // namespace mlir
@@ -58,20 +58,6 @@ namespace {
 //===----------------------------------------------------------------------===//
 // legal func
 //===----------------------------------------------------------------------===//
-bool check_const_legal(Operation* op) {
-  auto type = op->getResult(0).getType();
-  return isa<RankedTensorType>(type);
-}
-
-bool check_binary_legal(Operation* op) {
-  auto res_type = op->getResult(0).getType();
-  auto lhs_type = op->getOperand(0).getType();
-  auto rhs_type = op->getOperand(1).getType();
-  if (isa<IntegerType>(lhs_type) && isa<IntegerType>(rhs_type) &&
-      isa<IntegerType>(res_type))
-    return false;
-  return true;
-}
 bool check_unary_legal(Operation* op) {
   auto res_type = op->getResult(0).getType();
   auto input_type = op->getOperand(0).getType();
@@ -81,29 +67,31 @@ bool check_unary_legal(Operation* op) {
 //===----------------------------------------------------------------------===//
 // operation lowing
 //===----------------------------------------------------------------------===//
-template <class FromOp, class ToOp>
-struct SimplyBinaryOpLowing : public OpConversionPattern<FromOp> {
-  using OpConversionPattern<FromOp>::OpConversionPattern;
-  using OpAdaptor = typename FromOp::Adaptor;
+struct LLHSqrtOpToMath : public OpConversionPattern<SqrtOp> {
+  using OpConversionPattern<SqrtOp>::OpConversionPattern;
 
-  LogicalResult match(FromOp op) const final { return success(); }
+  LogicalResult match(SqrtOp op) const final { return success(); }
 
-  void rewrite(FromOp op, OpAdaptor adaptor,
+  void rewrite(SqrtOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
-    auto res = op->getResult(0);
-    auto lhs = op->getOperand(0);
-    auto rhs = op->getOperand(1);
-    auto index_lhs =
-        rewriter.create<arith::IndexCastOp>(loc, rewriter.getIndexType(), lhs);
-    auto index_rhs =
-        rewriter.create<arith::IndexCastOp>(loc, rewriter.getIndexType(), rhs);
-    auto new_add = rewriter.create<ToOp>(
-        loc, TypeRange{rewriter.getIndexType()},
-        ValueRange{index_lhs, index_rhs}, op->getAttrDictionary().getValue());
-    auto index_res =
-        rewriter.create<arith::IndexCastOp>(loc, res.getType(), new_add);
-    rewriter.replaceOp(op, index_res);
+    op->dump();
+    auto loc = op->getLoc();
+    auto input = op.getInput();
+    auto input_type = input.getType();
+    auto fast_math = arith::FastMathFlagsAttr::get(
+        op->getContext(), ::mlir::arith::FastMathFlags::none);
+    if (isa<IntegerType>(input_type)) {
+      CHECK(llc::MLIR_PASS, !llvm::cast<IntegerType>(input_type).isUnsigned())
+          << "Invalid input";
+      auto f32 = rewriter.getF32Type();
+      auto si_to_fp = rewriter.create<arith::SIToFPOp>(loc, f32, input);
+
+      auto sqrt = rewriter.create<math::SqrtOp>(loc, f32, si_to_fp, fast_math);
+      rewriter.replaceOpWithNewOp<arith::FPToSIOp>(op, input_type, sqrt);
+    } else {
+      rewriter.replaceOpWithNewOp<math::SqrtOp>(op, input_type, input,
+                                                fast_math);
+    }
   }
 };
 //===----------------------------------------------------------------------===//
@@ -114,27 +102,12 @@ struct SimplyBinaryOpLowing : public OpConversionPattern<FromOp> {
 //===----------------------------------------------------------------------===//
 // pass defination
 //===----------------------------------------------------------------------===//
-using LLHConstantOpToArith =
-    SimplyFullLowing<llh::ConstantOp, arith::ConstantOp>;
-using LLHMulOpToArith = SimplyBinaryOpLowing<llh::MulOp, arith::MulIOp>;
-using LLHSubOpToArith = SimplyBinaryOpLowing<llh::SubOp, arith::SubIOp>;
-using LLHAddOpToArith = SimplyBinaryOpLowing<llh::AddOp, arith::AddIOp>;
-using LLHDivOpToArith = SimplyBinaryOpLowing<llh::DivOp, arith::DivUIOp>;
+
 LLC_DEFINE_CONVERSION_PASS(
-    ConvertLLHToArith,
+    ConvertLLHToMath, { LLC_ADD_CONVERSION(LLHSqrtOpToMath); },
     {
-      LLC_ADD_CONVERSION(LLHConstantOpToArith);
-      LLC_ADD_CONVERSION(LLHMulOpToArith);
-      LLC_ADD_CONVERSION(LLHSubOpToArith);
-      LLC_ADD_CONVERSION(LLHDivOpToArith);
-      LLC_ADD_CONVERSION(LLHAddOpToArith);
-    },
-    {
-      target.addDynamicallyLegalOp<ConstantOp>(check_const_legal);
-      target.addDynamicallyLegalOp<AddOp>(check_binary_legal);
-      target.addDynamicallyLegalOp<MulOp>(check_binary_legal);
-      target.addDynamicallyLegalOp<DivOp>(check_binary_legal);
-      target.addDynamicallyLegalOp<SubOp>(check_binary_legal);
+      target.addDynamicallyLegalOp<SqrtOp>(check_unary_legal);
+      target.addLegalDialect<mlir::math::MathDialect>();
       target.addLegalDialect<mlir::arith::ArithDialect>();
       target.addLegalDialect<mlir::func::FuncDialect>();
       target.addLegalDialect<mlir::index::IndexDialect>();

@@ -17,11 +17,12 @@ llcompiler_add_library(LLCPipelines
     LLCLLHTransforms
     LLCSymbolInferTransforms
     LLCLLHToTosa
-    LLCCLLHToArith
-    LLCCLLHToTensor
+    LLCLLHToArith
+    LLCLLHToTensor
     LLCLLHToHLO
     LLCLLHToShape
     LLCStablehlotoLinalgExtension
+    LLCLLHToMath
 
     LLCLLVMExtensionTransforms
     LLCIndexExtensionTransforms

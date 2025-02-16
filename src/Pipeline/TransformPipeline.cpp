@@ -13,6 +13,7 @@
 //    limitations under the License.
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
+#include "llcompiler/Conversion/LLHToMath/LLHToMath.h"
 #include "llcompiler/Conversion/LLHToHLO/LLHToHLO.h"
 #include "llcompiler/Conversion/LLHToTensor/LLHToTensor.h"
 #include "llcompiler/Conversion/LLHToTosa/LLHToTosa.h"
@@ -130,6 +131,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //  lowing llh
   //===----------------------------------------------------------------------===//
   pm.addPass(mlir::createConvertLLHToArithPass());
+  pm.addPass(mlir::createConvertLLHToMathPass());
   pm.addPass(mlir::createConvertLLHToTensorPass());
   pm.addPass(mlir::createConvertLLHToHLOPass());
   pm.addPass(mlir::index::ex::createFoldIndexCastPass());

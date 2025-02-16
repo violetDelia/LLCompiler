@@ -129,5 +129,19 @@ def ConvertStablehloToLinalgExtensionPass : Pass<"convert-stablehlo-to-linalg-ex
                             ];
 }
 
+//===----------------------------------------------------------------------===//
+// llh --> math
+//===----------------------------------------------------------------------===//
+def ConvertLLHToMathPass : Pass<"convert-llh-to-math"> {
+  let summary = "convert tosa to linalg IR";
+  let description = [{
+
+  }];
+  let dependentDialects = [ "::mlir::tensor::TensorDialect",
+                            "::mlir::func::FuncDialect",
+                            "::mlir::arith::ArithDialect",
+                            "::mlir::math::MathDialect"
+                            ];
+}
 
 #endif // INCLUDE_LLCOMPILER_CONVERSION_PASSES_TD_

@@ -1,6 +1,6 @@
-llcompiler_add_library(LLCLLHToArith
+llcompiler_add_library(LLCLLHToMath
   SRC_FILES
-  LLHToArith.cpp
+  LLHToMath.cpp
 
   DEPENDS
   LLCConversionPassIncGen
@@ -11,4 +11,5 @@ llcompiler_add_library(LLCLLHToArith
   MLIRArithDialect
   LLCLLHDialect
   MLIRFuncDialect
+  MLIRMathDialect
 )

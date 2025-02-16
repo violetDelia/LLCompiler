@@ -50,13 +50,14 @@ class MultiHeadedAttention(nn.Module):
                 key: Tensor, 
                 value: Tensor, 
                 mask:Optional[Tensor]=None):
+        k_dim = query.size(-1)
+        return query/math.sqrt(k_dim)
         if mask is not None:
             mask = mask.unsqueeze(1)
         batch_size = query.size(0)
         query, key, value \
             = [proj_weight(x).view(batch_size, -1, self.num_heads, self.k_dim).transpose(1, 2)
                 for proj_weight, x in zip(self.proj_weights, [query, key, value])] 
-        return query,key,value
         k_dim = query.size(-1)
         scores = torch.matmul(query, key.transpose(-2, -1)) / math.sqrt(k_dim)
         return scores

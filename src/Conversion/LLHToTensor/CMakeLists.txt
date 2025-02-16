@@ -1,4 +1,4 @@
-llcompiler_add_library(LLCCLLHToTensor
+llcompiler_add_library(LLCLLHToTensor
   SRC_FILES
   LLHToTensor.cpp
 

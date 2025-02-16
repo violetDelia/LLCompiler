@@ -296,7 +296,7 @@ def commond_build_op(
 ):
     out = get_result_type(node)
     if isinstance(out, (TensorMetadata, FakeTensor)):
-        result_type = torch_fake_or_mate_tensor_translate(out)
+        result_type: TensorType = torch_fake_or_mate_tensor_translate(out)
         operands = [
             get_arg_value(
                 node.args[n],
@@ -314,7 +314,14 @@ def commond_build_op(
                     result_types=[TensorType(element_type=operand.type, shape=[1])],
                 )
                 block.add_op(scalar_cast)
-                operands[index] = scalar_cast.result
+                convert = ConvertToOp.build(
+                    operands=[scalar_cast.result],
+                    result_types=[
+                        TensorType(element_type=result_type.element_type, shape=[1])
+                    ],
+                )
+                block.add_op(convert)
+                operands[index] = convert.result
         return op_build(operands=operands, result_types=[result_type], attributes=attrs)
     if isinstance(out, torch.SymInt) or isinstance(out, torch.SymFloat):
         return op_build(

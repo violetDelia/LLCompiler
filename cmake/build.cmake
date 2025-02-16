@@ -84,7 +84,7 @@ function(llcompiler_add_library name)
 
     set_property(GLOBAL APPEND PROPERTY LLCOMPILER_ALL_TARGETS ${name})
 
-    if(NOT DISABLE_INSTALL)
+    if(NOT ARG_DISABLE_INSTALL)
         llcompiler_install_target(${name})
     endif()
 endfunction()
@@ -96,7 +96,7 @@ function(llcompiler_install_target name)
         LIBRARY_OUTPUT_DIRECTORY ${LLCOMPILER_BUILD_LIBRARY_DIR}
         RUNTIME_OUTPUT_DIRECTORY ${LLCOMPILER_BUILD_RUNTIME_DIR}
         INSTALL_RPATH ${LLCOMPILER_INSTALL_LIBRARY_DIR}
-        )
+    )
 
     install(TARGETS ${name}
         EXPORT ${name}Targets

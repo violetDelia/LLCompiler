@@ -253,7 +253,13 @@ std::string LLCCompiler::generateSharedLibFromMLIRFile(std::string module_file,
   } else {
     file_prefix = options.log_root;
     llvm::sys::path::append(file_prefix, "llc_module");
+    auto mlir_file(file_prefix);
+    llvm::sys::path::replace_extension(mlir_file, ".mlir");
+    file::mlir_to_file(&module, mlir_file.c_str());
   }
+  auto mlir_file(file_prefix);
+  llvm::sys::path::replace_extension(mlir_file, ".mlir");
+  file::mlir_to_file(&module, mlir_file.c_str());
   auto opted_mlir_file(file_prefix);
   llvm::sys::path::replace_extension(opted_mlir_file, ".opted.mlir");
   optimizeMLIR(module, options, opted_mlir_file.str().str());
@@ -290,9 +296,6 @@ std::string LLCCompiler::generateSharedLibFromMLIRFile(std::string module_file,
 std::string LLCCompiler::generateSharedLibFromMLIRStr(std::string module_str,
                                                       CompileOptions options) {
   registerLogger(options);
-  if (!options.log_root.empty()) {
-    INFO(llc::Entrance_Module) << module_str;
-  }
   mlir::DialectRegistry registry;
   add_extension_and_interface(registry);
   mlir::MLIRContext context(registry, mlir::MLIRContext::Threading::DISABLED);
@@ -307,6 +310,9 @@ std::string LLCCompiler::generateSharedLibFromMLIRStr(std::string module_str,
   } else {
     file_prefix = options.log_root;
     llvm::sys::path::append(file_prefix, "llc_module");
+    auto mlir_file(file_prefix);
+    llvm::sys::path::replace_extension(mlir_file, ".mlir");
+    file::mlir_to_file(&module, mlir_file.c_str());
   }
   auto opted_mlir_file(file_prefix);
   llvm::sys::path::replace_extension(opted_mlir_file, ".opted.mlir");

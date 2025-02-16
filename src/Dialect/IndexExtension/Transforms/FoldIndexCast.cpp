@@ -93,13 +93,17 @@ struct ShapeFromElementsOpIndexFold
     if (isa<IndexType>(ele_type)) return llvm::failure();
     auto operands = op.getElements();
     for (auto operand : operands) {
-      if (isa<BlockArgument>(operand)) return llvm::failure();
+      if (isa<BlockArgument>(operand)) {
+        if (isa<IndexType>(operand.getType()))
+          continue;
+        else
+          return llvm::failure();
+      };
       if (!isa<CastUOp, CastSOp, arith::ConstantOp, arith::IndexCastOp>(
               operand.getDefiningOp()))
         return llvm::failure();
       if (isa<CastUOp, CastSOp, arith::IndexCastOp>(operand.getDefiningOp())) {
         auto value = operand.getDefiningOp()->getOperand(0);
-        if (isa<BlockArgument>(value)) return llvm::failure();
         auto type = value.getType();
         if (!isa<IndexType>(type)) return llvm::failure();
       }
@@ -164,13 +168,14 @@ struct FuncFuncOpCastIntArgToIndex
     auto& block = op.getFunctionBody().getBlocks().front();
     auto loc = block.back().getLoc();
     auto args_size = block.getNumArguments();
+    IRRewriter builder(op->getContext());
     for (auto i : llvm::index_range(0, args_size)) {
       auto arg = block.getArgument(i);
       auto arg_type = arg.getType();
       if (!isa<IntegerType>(arg_type)) {
-        block.addArgument(arg_type, loc).dump();
+        auto new_arg = block.addArgument(arg_type, loc);
+        builder.replaceAllUsesWith(arg, new_arg);
       } else {
-        IRRewriter builder(op->getContext());
         auto new_arg = block.addArgument(builder.getIndexType(), loc);
         auto cast = builder.create<arith::IndexCastOp>(builder.getUnknownLoc(),
                                                        arg_type, new_arg);
@@ -190,7 +195,7 @@ using IndexCastUOpDoubleFold = FoldDoubleCastOp<CastUOp>;
 using namespace mlir::index::ex::impl;
 LLC_DEFINE_PASS(FoldIndexCast,
                 {
-                  LLC_ADD_PATTERN(FuncFuncOpCastIntArgToIndex)
+                  LLC_ADD_PATTERN_WITH_BENEFIT(FuncFuncOpCastIntArgToIndex, 3)
                   LLC_ADD_PATTERN(IndexConstOpToArith);
                   LLC_ADD_PATTERN(ShapeFromElementsOpIndexFold);
                   LLC_ADD_PATTERN_WITH_BENEFIT(IndexCastUOpDoubleFold, 2);

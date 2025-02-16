@@ -58,19 +58,18 @@
                 add reduce_max to hlo
                 add reduce_sum to hlo
                 support aten::full
+2024.12.17      重构 编译链
+                add llh to math
+                update stablohlo and llvm version
+                add llh.scalar_cast
+                llh.sqrt --> math.sqrt
 TODO:
-    参数warp bug
-    重构 编译链
-    broadcast where
+    llh.scalar_cast --> linalg.fill
     run --> MHA
-    slice     
-    torch 框架 support op list, 将graph 的输出去除，防止分配过多内存
+    conv2d to img2col
+    memref copy call  
 备忘：
-    哪些指令不能并行？
-    动态conv 代码生成。
-    batch norm traing op 
-    添加GPU后端。
-    int8量化。int4 量化。
+    
     
     
     
