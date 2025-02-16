@@ -71,9 +71,6 @@ namespace {
 //===----------------------------------------------------------------------===//
 // transform patterns
 //===----------------------------------------------------------------------===//
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
 }  // namespace
 using LLHAddOpReshapeInsert = SimplyBinaryOpReshape<AddOp>;
 using LLHSubOpReshapeInsert = SimplyBinaryOpReshape<SubOp>;

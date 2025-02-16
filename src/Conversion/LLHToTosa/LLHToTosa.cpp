@@ -290,10 +290,6 @@ struct LLHDivOpToTosa : public OpConversionPattern<DivOp> {
   };
 };
 
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-
 }  // namespace
 //===----------------------------------------------------------------------===//
 using LLHAddOpToTosa = SimplyFullLowing<AddOp, tosa::AddOp>;

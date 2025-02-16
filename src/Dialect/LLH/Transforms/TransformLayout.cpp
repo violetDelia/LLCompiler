@@ -176,14 +176,6 @@ struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
   Layout target;
 };
 
-//===----------------------------------------------------------------------===//
-// pattern population
-//===----------------------------------------------------------------------===//
-void populateTransformLayoutPassPatterns(RewritePatternSet& patterns,
-                                         Layout target_layout) {
-  auto context = patterns.getContext();
-  LLC_ADD_PATTERN(ConvOpConvertLayout, target_layout);
-}
 }  // namespace
 //===----------------------------------------------------------------------===//
 // pass defination

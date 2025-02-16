@@ -56,22 +56,22 @@ COMPUTABLE_BINARY_VERIFY(MinOp)
 COMPUTABLE_BINARY_VERIFY(PowOp)
 
 ::llvm::LogicalResult ScalarCastOP::verify() {
-  return llvm::success();
   auto input = getInput();
-  TensorType tensor_type;
+  RankedTensorType tensor_type;
   Type element_type;
   auto input_type = input.getType();
   auto res_type = getType();
-  if (isa<TensorType>(input_type)) {
-    tensor_type = cast<TensorType>(input_type);
+  if (isa<RankedTensorType>(input_type)) {
+    tensor_type = cast<RankedTensorType>(input_type);
     element_type = res_type;
-  } else if (isa<TensorType>(res_type)) {
-    tensor_type = cast<TensorType>(res_type);
+  } else if (isa<RankedTensorType>(res_type)) {
+    tensor_type = cast<RankedTensorType>(res_type);
     element_type = input_type;
   } else {
     return llvm::failure();
   }
-  if (tensor_type.getType() == element_type) {
+  return llvm::success();
+  if (tensor_type.getElementType() == element_type) {
     return llvm::success();
   }
   return llvm::failure();
