@@ -10,7 +10,7 @@ def find_runtime(name):
     path = ""
     for prefix in ["", "lib"]:
         path = os.path.join(
-            config.llvm_shlib_dir, f"{prefix}{name}{config.llvm_shlib_ext}"
+            config.llvm_lib_dir, f"{prefix}{name}{config.llvm_shlib_ext}"
         )
         if os.path.isfile(path):
             break

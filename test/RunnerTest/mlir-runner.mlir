@@ -20,6 +20,9 @@ module{
         linalg.yield %3 : f32
         }
         %U = memref.cast %alloc : memref<1xf32> to memref<*xf32>
+        // CHECK: Unranked Memref
+        // CHECK-SAME: rank = 1 offset = 0 sizes = [1] strides = [1] data =
+        // CHECK-NEXT: [4]
         call @printMemrefF32(%U) : (memref<*xf32>) -> ()
         call @printNewline() : () -> ()
     return 
