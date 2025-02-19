@@ -2,9 +2,7 @@
 
 // CHECK-LABEL: sqrt
 func.func @sqrt(%arg0: i64) ->(i64) attributes {entrance}{
-  // CHECK: arith.sitofp
-  // CHECK: math.sqrt
-  // CHECK: arith.fptosi
+  // CHECK: arith.muli
   %0 = "llh.sqrt"(%arg0) : (i64) -> i64
   return %0: i64
 }

@@ -70,7 +70,6 @@ struct LLHScalarCastOPToLinalg : public OpConversionPattern<ScalarCastOP> {
 
   void rewrite(ScalarCastOP op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    op->dump();
     auto loc = op->getLoc();
     auto input = op.getInput();
     auto input_type = input.getType();
@@ -84,7 +83,6 @@ struct LLHScalarCastOPToLinalg : public OpConversionPattern<ScalarCastOP> {
     } else {
       UNIMPLEMENTED(llc::MLIR_PASS);
     }
-    op->getParentOp()->dump();
   }
 };
 

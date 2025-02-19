@@ -51,7 +51,7 @@ class MultiHeadedAttention(nn.Module):
                 value: Tensor, 
                 mask:Optional[Tensor]=None):
         k_dim = query.size(-1)
-        return query/math.sqrt(k_dim)
+        return query/math.sqrt(k_dim) +query
         if mask is not None:
             mask = mask.unsqueeze(1)
         batch_size = query.size(0)

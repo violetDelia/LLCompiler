@@ -128,11 +128,6 @@ install(DIRECTORY "${LLCOMPILER_GENERATE_INCLUDE_DIR}/" DESTINATION "${LLCOMPILE
     PATTERN "*.inc.d"
 )
 
-# 生成setup.cfg文件
-configure_file("${CMAKE_CURRENT_SOURCE_DIR}/setup.cfg.in"
-    "${CMAKE_CURRENT_SOURCE_DIR}/setup.cfg"
-)
-
 # 生成Config.cmake文件并安装
 configure_package_config_file("${LLCOMPILER_CMAKE_DIR}/LLCompilerConfig.cmake.in"
     "${CMAKE_CURRENT_BINARY_DIR}/LLCompilerConfig.cmake"

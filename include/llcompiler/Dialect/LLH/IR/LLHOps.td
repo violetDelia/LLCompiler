@@ -61,6 +61,11 @@ class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type Operand
         LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
 
 
+def LLH_PrintOp   : LLH_Op<"print", []>{
+    let arguments = (ins    LLH_AnyType:$input,
+                            LLH_StringAttr:$prefix_description);
+}
+
 def LLH_TorchSymbolicIntOp  : LLH_Op<"torch_symbolic_int",[]>{
     let description = [{
         torch 框架从fx_graph直接获取的符号信息。
@@ -546,5 +551,6 @@ def LLH_ReduceSumOp   : LLH_SymbolOp<"reduce_sum", [SameOperandsAndResultElement
     let results = (outs 
         LLH_Tensor);
 }
+
 
 #endif // INCLUDE_LLCOMPILER_DIALECT_LLH_IR_LLHOPS_TD_

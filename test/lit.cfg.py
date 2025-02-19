@@ -6,7 +6,18 @@ from lit.llvm import llvm_config
 from lit.llvm.subst import ToolSubst
 import lit.util
 
-# Configuration file for the 'lit' test runner.
+def find_runtime(name):
+    path = ""
+    for prefix in ["", "lib"]:
+        path = os.path.join(
+            config.llvm_shlib_dir, f"{prefix}{name}{config.llvm_shlib_ext}"
+        )
+        if os.path.isfile(path):
+            break
+    return path
+
+def add_runtime(name):
+    return ToolSubst(f"%{name}", find_runtime(name))
 
 # name: The name of this test suite.
 config.name = 'LLC_MLIR'
@@ -44,5 +55,7 @@ tools = [
     'llc-opt',
     'llc-translate',
     ToolSubst("%PYTHON", config.python_executable, unresolved="ignore"),
+    add_runtime("mlir_runner_utils"),
+    add_runtime("mlir_c_runner_utils"),
 ]
 llvm_config.add_tool_substitutions(tools, tool_dirs)

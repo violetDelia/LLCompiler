@@ -10,6 +10,10 @@ configure_lit_site_cfg(
 set(LLCOMPILER_TEST_DEPENDS
   FileCheck count not
   llc-opt
+  mlir-runner
+  mlir-opt
+  mlir_c_runner_utils
+  mlir_runner_utils
 )
 
 add_lit_testsuite(check-llcompiler "Running the llcompiler regression tests..."

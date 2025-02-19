@@ -74,21 +74,18 @@ struct LLHSqrtOpToMath : public OpConversionPattern<SqrtOp> {
 
   void rewrite(SqrtOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    op->dump();
     auto loc = op->getLoc();
     auto input = op.getInput();
     auto input_type = input.getType();
-    auto fast_math = arith::FastMathFlagsAttr::get(
-        op->getContext(), ::mlir::arith::FastMathFlags::none);
+    auto context = op.getContext();
     if (isa<IntegerType>(input_type)) {
-      CHECK(llc::MLIR_PASS, !llvm::cast<IntegerType>(input_type).isUnsigned())
-          << "Invalid input";
-      auto f32 = rewriter.getF32Type();
-      auto si_to_fp = rewriter.create<arith::SIToFPOp>(loc, f32, input);
-
-      auto sqrt = rewriter.create<math::SqrtOp>(loc, f32, si_to_fp, fast_math);
-      rewriter.replaceOpWithNewOp<arith::FPToSIOp>(op, input_type, sqrt);
+      auto overflow = arith::IntegerOverflowFlagsAttr::get(
+          context, ::mlir::arith::IntegerOverflowFlags::none);
+      rewriter.replaceOpWithNewOp<arith::MulIOp>(op, input_type, input, input,
+                                                 overflow);
     } else {
+      auto fast_math = arith::FastMathFlagsAttr::get(
+          context, ::mlir::arith::FastMathFlags::none);
       rewriter.replaceOpWithNewOp<math::SqrtOp>(op, input_type, input,
                                                 fast_math);
     }
