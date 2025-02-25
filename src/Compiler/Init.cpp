@@ -24,6 +24,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHAttrs.h"
 #include "llcompiler/Dialect/LLH/IR/LLHEnums.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
+#include "llcompiler/Dialect/LLH/Transforms/BufferizableOpInterfaceImpl.h"
 #include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
@@ -122,6 +123,8 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
       registry);
   mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::vector::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::llh::registerBufferizableOpInterfaceExternalModels(registry);
+
 
   mlir::registerConvertMemRefToLLVMInterface(registry);
   mlir::registerConvertFuncToLLVMInterface(registry);
@@ -155,6 +158,7 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::transform::registerIRDLExtension(registry);
   mlir::transform::registerLoopExtension(registry);
   mlir::transform::registerPDLExtension(registry);
+
 }
 
 void init_logger(const logger::LoggerOption& logger_option) {

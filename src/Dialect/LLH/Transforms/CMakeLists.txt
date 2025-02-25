@@ -9,6 +9,7 @@ llcompiler_add_library(LLCLLHTransforms
   InsetBraodCastPass.cpp
   MarkAot.cpp
   DecomposeOps.cpp
+  BufferizableOpInterfaceImpl.cpp
 
   ADDITIONAL_INCLUDE_DIRS
   ${SYMENGINE_INCLUDE_DIRS}

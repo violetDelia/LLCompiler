@@ -14,12 +14,13 @@
 
 #include "llcompiler/Compiler/Init.h"
 #include "llcompiler/Conversion/Passes.h"
+#include "llcompiler/Dialect/BufferizationExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/IRExtension/IR/Dialect.h"
 #include "llcompiler/Dialect/IndexExtension/Transforms/Passes.h"
-#include "llcompiler/Dialect/BufferizationExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
-#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLH/SymbolInfer/Passes.h"
+#include "llcompiler/Dialect/LLH/Transforms/BufferizableOpInterfaceImpl.h"
+#include "llcompiler/Dialect/LLH/Transforms/Passes.h"
 #include "llcompiler/Dialect/LLVMExtension/Transforms/Passes.h"
 #include "llcompiler/Dialect/TosaExtension/IR/TosaExDialect.h"
 #include "llcompiler/Pipeline/TransFromPipeline.h"
@@ -45,13 +46,15 @@ int main(int argc, char **argv) {
 
   mlir::llh::registerLLHOptPasses();
   mlir::llh::registerLLCSymbolOptPasses();
+
   mlir::registerLLCConversionPasses();
   mlir::index::ex::registerIndexExtensionPasses();
   mlir::LLVM::ex::registerLLVMExtensionPasses();
   mlir::bufferization::ex::registerBufferizationExtensionPasses();
   mlir::stablehlo::registerAllDialects(registry);
   llc::pipeline::registerTransformPipeline();
-  mlir::asMainReturnCode(
-      mlir::MlirOptMain(argc, argv, "llc-opt", registry));
+
+  mlir::llh::registerBufferizableOpInterfaceExternalModels(registry);
+  mlir::asMainReturnCode(mlir::MlirOptMain(argc, argv, "llc-opt", registry));
   return 0;
 }
