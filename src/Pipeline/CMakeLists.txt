@@ -24,6 +24,7 @@ llcompiler_add_library(LLCPipelines
     LLCStablehlotoLinalgExtension
     LLCLLHToMath
     LLCLLHToLinalg
+    LLCLLHToFunc
 
     LLCLLVMExtensionTransforms
     LLCIndexExtensionTransforms

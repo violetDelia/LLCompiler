@@ -12,7 +12,6 @@
 //    See the License for the specific language governing permissions and
 //    limitations under the License.
 #include "llcompiler/Conversion/TosaToLinalgExtension/TosaToLinalgExtension.h"
-
 #include <cstdint>
 #include <cstdio>
 #include <iostream>
@@ -26,6 +25,7 @@
 #include "mlir/Dialect/Func/IR/FuncOps.h"
 #include "mlir/Dialect/Index/IR/IndexDialect.h"
 #include "mlir/Dialect/Linalg/IR/Linalg.h"
+#include "mlir/Dialect/MemRef/IR/MemRef.h"
 #include "mlir/Dialect/Tensor/IR/Tensor.h"
 #include "mlir/IR/BuiltinAttributes.h"
 #include "mlir/IR/BuiltinTypeInterfaces.h"
@@ -36,7 +36,6 @@
 #include "mlir/Pass/Pass.h"
 #include "mlir/Support/LLVM.h"
 #include "mlir/Transforms/DialectConversion.h"
-
 namespace mlir {
 #define GEN_PASS_DEF_CONVERTTOSATOLINALGEXTENSIONPASS
 #include "llcompiler/Conversion/Passes.h.inc"

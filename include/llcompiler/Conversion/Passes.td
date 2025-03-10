@@ -158,4 +158,19 @@ def ConvertLLHToLinalgPass : Pass<"convert-llh-to-linalg"> {
                             "::mlir::linalg::LinalgDialect",
                             ];
 }
+//===----------------------------------------------------------------------===//
+// llh --> func
+//===----------------------------------------------------------------------===//
+def ConvertLLHToFuncPass : Pass<"convert-llh-to-func"> {
+  let summary = "convert llh to func IR";
+  let description = [{
+
+  }];
+  let dependentDialects = [ "::mlir::tensor::TensorDialect",
+                            "::mlir::func::FuncDialect",
+                            "::mlir::arith::ArithDialect",
+                            "::mlir::memref::MemRefDialect",
+                            "::mlir::linalg::LinalgDialect",
+                            ];
+}
 #endif // INCLUDE_LLCOMPILER_CONVERSION_PASSES_TD_

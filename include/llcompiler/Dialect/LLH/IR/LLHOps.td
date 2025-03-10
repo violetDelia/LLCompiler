@@ -61,7 +61,7 @@ class LLH_BinaryElementwiseOp <string mnemonic, list<Trait> traits, Type Operand
         LLH_BinaryOp<mnemonic,traits# [], OperandType, ResultType, attributes>;
 
 
-def LLH_PrintOp   : LLH_Op<"print", []>{
+def LLH_PrintOp   : Op<LLH_Dialect, "print", [MemoryEffects<[MemWrite,MemRead]>]>{
     let arguments = (ins    LLH_AnyType:$input,
                             LLH_StringAttr:$prefix_description);
 }

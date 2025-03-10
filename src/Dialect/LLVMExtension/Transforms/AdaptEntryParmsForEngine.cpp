@@ -68,17 +68,19 @@ llvm::SmallVector<size_t> analysisOriginalMemrefRank(
     llvm::ArrayRef<Type>& params, size_t range_start) {
   llvm::SmallVector<size_t> original_memref_rank;
   bool pass_by_memref = false;
-  size_t begin = 0;
-  size_t end = 0;
+  bool has_memref = false;
+  size_t begin = range_start;
+  size_t end = range_start;
   for (int i = range_start; i < params.size(); ++i) {
     auto type = params[i];
     if (llvm::dyn_cast<mlir::LLVM::LLVMPointerType>(type)) {
+      has_memref = true;
       if (pass_by_memref) {
         end = i;
         continue;
       }
       pass_by_memref = true;
-      if (!(begin == end && begin == 0)) {
+      if (!(begin == end && begin == range_start)) {
         original_memref_rank.push_back((end - begin - 2) / 2);
       }
       begin = i;
@@ -87,7 +89,7 @@ llvm::SmallVector<size_t> analysisOriginalMemrefRank(
       end = i;
     }
   }
-  original_memref_rank.push_back((params.size() - begin - 3) / 2);
+  if (has_memref) original_memref_rank.push_back((end - begin - 2) / 2);
   return original_memref_rank;
 }
 
@@ -273,6 +275,7 @@ LLC_DEFINE_PASS(AdaptEntryParmsForEngine, {}, {}, {
       analysisOriginalMemrefRank(params, symbol_int_nums);
   CHECK_EQ(llc::MLIR_PASS, original_memref_start.size(),
            original_memref_rank.size());
+  if (symbol_int_nums + original_memref_rank.size() == 0) return;
   transformBlockArgs(block, &rewriter, original_memref_start,
                      original_memref_rank, symbol_int_nums);
   transformFunctionType(enter_func, original_memref_rank.size());

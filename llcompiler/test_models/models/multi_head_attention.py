@@ -44,12 +44,14 @@ class MultiHeadedAttention(nn.Module):
         self.proj_weights = clones(nn.Linear(d_model, d_model), 4)
         self.attention_score = None
         self.dropout = nn.Dropout(p=dropout)
+        self.attention = torch.nn.MultiheadAttention(8,2)
         
     def forward(self, 
                 query:Tensor, 
                 key: Tensor, 
                 value: Tensor, 
                 mask:Optional[Tensor]=None):
+        return self.attention(query, key, value, mask)
         k_dim = query.size(-1)
         return query/math.sqrt(k_dim) +query
         if mask is not None:

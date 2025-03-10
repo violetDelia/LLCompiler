@@ -170,7 +170,6 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   // bufferization
   //===----------------------------------------------------------------------===//
   applyInterpreter(pm, __LLC_TRANSFORM_LINALG_BASIC_BUFFERIZATION__);
-
   //===----------------------------------------------------------------------===//
   // lowing linalg
   //===----------------------------------------------------------------------===//
@@ -218,6 +217,7 @@ void buildTransformPipeline(::mlir::OpPassManager &pm,
   //===----------------------------------------------------------------------===//
   //  lowing to llvm
   //===----------------------------------------------------------------------===//
+  pm.addPass(mlir::createConvertLLHToFuncPass());
   applyInterpreter(pm, __LLC_TRANSFORM_LLVM_LOWING__);
   //===----------------------------------------------------------------------===//
   // LLVM opt

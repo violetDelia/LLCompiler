@@ -15,6 +15,7 @@
 #ifndef INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
 #define INCLUDE_LLCOMPILER_CONVERSION_PASSES_H_
 #include "llcompiler/Conversion/LLHToArith/LLHToArith.h"
+#include "llcompiler/Conversion/LLHToFunc/LLHToFunc.h"
 #include "llcompiler/Conversion/LLHToMath/LLHToMath.h"
 #include "llcompiler/Conversion/LLHToLinalg/LLHToLinalg.h"
 #include "llcompiler/Conversion/LLHToHLO/LLHPreprocessingForHLO.h"
