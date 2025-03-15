@@ -17,6 +17,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Dialect/LLH/Utils/Utils.h"
 #include "llcompiler/Dialect/Utility/Type.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/APInt.h"
 #include "llvm/ADT/SmallVector.h"
@@ -33,14 +34,14 @@ OpFoldResult ConstantOp::fold(FoldAdaptor adaptor) { return getValueAttr(); }
 
 OpFoldResult DimOp::fold(FoldAdaptor adaptor) {
   auto input = getInput();
+  auto context = getContext();
   if (!isa<RankedTensorType>(input.getType())) return {};
   auto maybe_const_dim = getDim();
   if (!llh::isConstIntegerValue(maybe_const_dim)) return {};
   auto type = llc::getRankTensorFrom(input);
   auto dim = llh::getConstIntegerValue(maybe_const_dim);
   if (type.isDynamicDim(dim)) return {};
-  return IntegerAttr::get(IntegerType::get(getContext(), 64),
-                          type.getDimSize(dim));
+  return IntegerAttr::get(I64_Ty, type.getDimSize(dim));
 }
 
 namespace {

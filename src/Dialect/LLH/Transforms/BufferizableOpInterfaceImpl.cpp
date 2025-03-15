@@ -16,6 +16,7 @@
 
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Affine/IR/AffineOps.h"
@@ -74,14 +75,14 @@ struct PrintOpInterface
 
   LogicalResult bufferize(Operation *op, RewriterBase &rewriter,
                           const BufferizationOptions &options) const {
+    Loc_And_Context;;
     auto print = cast<llh::PrintOp>(op);
     auto input = print.getInput();
     auto input_type = input.getType();
     if (auto tensor_type =
             llvm::dyn_cast_or_null<mlir::TensorType>(input_type)) {
       auto memref_type = bufferization::getBufferType(input, options);
-      auto to_memref = rewriter.create<bufferization::ToMemrefOp>(
-          print->getLoc(), *memref_type, input, true);
+      auto to_memref = ToMemref(*memref_type, input, true);
       replaceOpWithNewBufferizedOp<llh::PrintOp>(
           rewriter, op, to_memref->getResult(0), print.getPrefixDescription());
       return llvm::success();

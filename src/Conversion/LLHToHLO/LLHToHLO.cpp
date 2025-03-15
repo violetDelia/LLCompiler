@@ -27,6 +27,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -79,6 +80,7 @@ llvm::SmallVector<Value> castToIndex(ConversionPatternRewriter* rewriter,
 
 Value createInitialValueForReduceOp(Operation* op, Type element_type,
                                     PatternRewriter& rewriter) {
+  Loc_And_Context;;
   auto const_type = RankedTensorType::get({}, element_type);
   if (isa<ReduceSumOp>(op)) {
     if (isa<mlir::FloatType>(element_type)) {
@@ -87,13 +89,11 @@ Value createInitialValueForReduceOp(Operation* op, Type element_type,
           {APFloat::getZero(
               cast<mlir::FloatType>(element_type).getFloatSemantics(),
               /*negative=*/false)});
-      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
-                                                    const_value);
+      return HLO_Constant(const_type, const_value);
     } else if (isa<mlir::IntegerType>(element_type)) {
       auto const_value = DenseElementsAttr::get(
           const_type, {APInt::getZero(element_type.getIntOrFloatBitWidth())});
-      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
-                                                    const_value);
+      return HLO_Constant(const_type, const_value);
     }
   }
 
@@ -104,14 +104,12 @@ Value createInitialValueForReduceOp(Operation* op, Type element_type,
           {APFloat::getInf(
               cast<mlir::FloatType>(element_type).getFloatSemantics(),
               /*negative=*/true)});
-      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
-                                                    const_value);
+      return HLO_Constant(const_type, const_value);
     } else if (isa<mlir::IntegerType>(element_type)) {
       auto const_value = DenseElementsAttr::get(
           const_type,
           {APInt::getSignedMinValue(element_type.getIntOrFloatBitWidth())});
-      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
-                                                    const_value);
+      return HLO_Constant(const_type, const_value);
     }
   }
 
@@ -122,14 +120,12 @@ Value createInitialValueForReduceOp(Operation* op, Type element_type,
           {APFloat::getInf(
               cast<mlir::FloatType>(element_type).getFloatSemantics(),
               /*negative=*/false)});
-      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
-                                                    const_value);
+      return HLO_Constant(const_type, const_value);
     } else if (isa<mlir::IntegerType>(element_type)) {
       auto const_value = DenseElementsAttr::get(
           const_type,
           {APInt::getSignedMaxValue(element_type.getIntOrFloatBitWidth())});
-      return rewriter.create<stablehlo::ConstantOp>(op->getLoc(), const_type,
-                                                    const_value);
+      return HLO_Constant(const_type, const_value);
     }
   }
   UNIMPLEMENTED(llc::MLIR_PASS);
@@ -139,14 +135,14 @@ Value createInitialValueForReduceOp(Operation* op, Type element_type,
 Value createReduceOpWithSingleRegionOp(Operation* op, Value input,
                                        Type out_type, ArrayRef<int64_t> dims,
                                        PatternRewriter& rewriter) {
+  Loc_And_Context;;
   auto input_type = llc::getRankTensorFrom(input);
   Value init_value =
       createInitialValueForReduceOp(op, input_type.getElementType(), rewriter);
   if (!init_value) return nullptr;
 
-  stablehlo::ReduceOp reduce = rewriter.create<stablehlo::ReduceOp>(
-      op->getLoc(), out_type, input, init_value,
-      rewriter.getDenseI64ArrayAttr(dims));
+  stablehlo::ReduceOp reduce = HLO_Reduce(out_type, input, init_value,
+                                          rewriter.getDenseI64ArrayAttr(dims));
 
   Block& block = reduce.getBody().emplaceBlock();
   auto block_arg_type = RankedTensorType::get({}, input_type.getElementType());
@@ -160,19 +156,16 @@ Value createReduceOpWithSingleRegionOp(Operation* op, Value input,
     rewriter.setInsertionPointToStart(&block);
     Value result;
     if (isa<ReduceMaxOp>(op)) {
-      result = rewriter.create<stablehlo::MaxOp>(op->getLoc(), block_arg_type,
-                                                 *first_arg, *second_arg);
+      result = HLO_Max(block_arg_type, *first_arg, *second_arg);
     } else if (isa<ReduceMinOp>(op)) {
-      result = rewriter.create<stablehlo::MinOp>(op->getLoc(), block_arg_type,
-                                                 *first_arg, *second_arg);
+      result = HLO_Min(block_arg_type, *first_arg, *second_arg);
     } else if (isa<ReduceSumOp>(op)) {
-      result = rewriter.create<stablehlo::AddOp>(op->getLoc(), block_arg_type,
-                                                 *first_arg, *second_arg);
+      result = HLO_Add(block_arg_type, *first_arg, *second_arg);
     } else {
       UNIMPLEMENTED(llc::MLIR_PASS);
       return nullptr;
     }
-    rewriter.create<stablehlo::ReturnOp>(op->getLoc(), result);
+    HLO_Return(result);
   }
   return reduce.getResults()[0];
 }
@@ -200,18 +193,18 @@ struct LLHBroadCastToOpToHLO : public OpConversionPattern<BroadCastToOp> {
 
   LogicalResult matchAndRewrite(BroadCastToOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto res = op.getResult();
     auto res_type = llc::getRankTensorFrom(res);
     auto out_shapes = op.getOutShapes();
     auto operand = op.getInput();
-    auto output_dimensions = rewriter.create<tensor::FromElementsOp>(
-        loc, castToIndex(&rewriter, out_shapes, loc));
+    auto output_dimensions =
+        FromElements(castToIndex(&rewriter, out_shapes, loc));
     auto broadcast_dimensions_attr = op.getCastDimsAttr();
     auto unexpand_dims_attr = op.getNoexpandDimsAttr();
     auto known_expanding_dimensions_attr = op.getExpandDimsAttr();
-    auto new_op = rewriter.create<stablehlo::DynamicBroadcastInDimOp>(
-        loc, res_type, operand, output_dimensions, broadcast_dimensions_attr,
+    auto new_op = HLO_DynamicBroadcastInDim(
+        res_type, operand, output_dimensions, broadcast_dimensions_attr,
         known_expanding_dimensions_attr, unexpand_dims_attr);
     rewriter.replaceOp(op, new_op);
     return success();
@@ -306,7 +299,7 @@ struct LLHMaxPoolOpHLO : public OpConversionPattern<MaxPoolOp> {
 
   void rewrite(MaxPoolOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto stride = op.getStride();
     auto padding = op.getPadAttr();
     auto kernel_shape = op.getKernelShape();
@@ -317,10 +310,8 @@ struct LLHMaxPoolOpHLO : public OpConversionPattern<MaxPoolOp> {
     auto input = op.getInput();
     auto input_type = llc::getRankTensorFrom(input);
     auto input_ele_type = input_type.getElementType();
-
     auto zore_value = llc::genSplatElementAttr({}, res_ele_type, 0);
-    auto init_value = rewriter.create<stablehlo::ConstantOp>(loc, zore_value);
-
+    auto init_value = HLO_Constant(zore_value);
     auto layout = op.getLayoutAttr();
     auto window_dimensions =
         rewriter.getDenseI64ArrayAttr(layout.addBatchAndFeature(kernel_shape));
@@ -330,8 +321,8 @@ struct LLHMaxPoolOpHLO : public OpConversionPattern<MaxPoolOp> {
         rewriter.getDenseI64ArrayAttr(layout.addBatchAndFeature(dilation));
     auto base_dilations = DenseI64ArrayAttr();
     auto window_padding = llc::GenWindowPadIntElementsAttr(padding);
-    auto reduce_winodw_op = rewriter.create<stablehlo::ReduceWindowOp>(
-        loc, res_type, input, init_value, window_dimensions, window_strides,
+    auto reduce_winodw_op = HLO_ReduceWindow(
+        res_type, input, init_value, window_dimensions, window_strides,
         base_dilations, window_dilations, window_padding);
 
     auto& block = reduce_winodw_op.getBody().emplaceBlock();
@@ -341,9 +332,8 @@ struct LLHMaxPoolOpHLO : public OpConversionPattern<MaxPoolOp> {
     block.addArgument(block_arg2_type, loc);
 
     rewriter.setInsertionPointToEnd(&block);
-    auto max = rewriter.create<stablehlo::MaxOp>(loc, block.getArgument(0),
-                                                 block.getArgument(1));
-    rewriter.create<stablehlo::ReturnOp>(loc, ValueRange{max});
+    auto max = HLO_Max(block.getArgument(0), block.getArgument(1));
+    HLO_Return(ValueRange{max});
     rewriter.replaceOp(op, reduce_winodw_op);
   }
 };
@@ -355,19 +345,18 @@ struct LLHSliceOpToHLO : public OpConversionPattern<StrideSliceOp> {
 
   void rewrite(StrideSliceOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto start_index = op.getStartIndex();
     auto end_index = op.getEndIndex();
     auto strides = op.getStrides();
-    auto new_satrt_index = rewriter.create<tensor::FromElementsOp>(
-        loc, castToIndex(&rewriter, start_index, loc));
-    auto new_limits_index = rewriter.create<tensor::FromElementsOp>(
-        loc, castToIndex(&rewriter, end_index, loc));
-    auto new_strides = rewriter.create<tensor::FromElementsOp>(
-        loc, castToIndex(&rewriter, strides, loc));
-    rewriter.replaceOpWithNewOp<stablehlo::RealDynamicSliceOp>(
-        op, op.getType(), op.getInput(), new_satrt_index, new_limits_index,
-        new_strides);
+    auto new_satrt_index =
+        FromElements(castToIndex(&rewriter, start_index, loc));
+    auto new_limits_index =
+        FromElements(castToIndex(&rewriter, end_index, loc));
+    auto new_strides = FromElements(castToIndex(&rewriter, strides, loc));
+    rewriter.replaceOp(
+        op, HLO_RealDynamicSlice(op.getType(), op.getInput(), new_satrt_index,
+                                 new_limits_index, new_strides));
   }
 };
 

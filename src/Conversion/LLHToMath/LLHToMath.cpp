@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -74,20 +75,15 @@ struct LLHSqrtOpToMath : public OpConversionPattern<SqrtOp> {
 
   void rewrite(SqrtOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
+    Loc_And_Context;
     auto input = op.getInput();
     auto input_type = input.getType();
-    auto context = op.getContext();
     if (isa<IntegerType>(input_type)) {
-      auto overflow = arith::IntegerOverflowFlagsAttr::get(
-          context, ::mlir::arith::IntegerOverflowFlags::none);
       rewriter.replaceOpWithNewOp<arith::MulIOp>(op, input_type, input, input,
-                                                 overflow);
+                                                 None_Overflow_Attr);
     } else {
-      auto fast_math = arith::FastMathFlagsAttr::get(
-          context, ::mlir::arith::FastMathFlags::none);
       rewriter.replaceOpWithNewOp<math::SqrtOp>(op, input_type, input,
-                                                fast_math);
+                                                None_FastMath_Attr);
     }
   }
 };

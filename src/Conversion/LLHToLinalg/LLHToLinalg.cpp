@@ -21,6 +21,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -70,13 +71,12 @@ struct LLHScalarCastOPToLinalg : public OpConversionPattern<ScalarCastOP> {
 
   void rewrite(ScalarCastOP op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto input = op.getInput();
     auto input_type = input.getType();
     if (isa<IntegerType, FloatType>(input_type)) {
       auto result_type = cast<ShapedType>(op.getType()).getElementType();
-      auto empty = rewriter.create<tensor::EmptyOp>(
-          loc, llvm::SmallVector<int64_t>{1}, result_type);
+      auto empty = Tensor_Empty(llvm::SmallVector<int64_t>{1}, result_type);
       auto fill = rewriter.replaceOpWithNewOp<linalg::FillOp>(
           op, ValueRange{input}, ValueRange{empty});
 

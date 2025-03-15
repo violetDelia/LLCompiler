@@ -26,6 +26,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -68,7 +69,7 @@ ConstantOp buildConstTensorFromScalar(ConstantOp op,
   auto user_ele_type = user_type.getElementType();
   auto tensor_type = RankedTensorType::get({1}, user_ele_type);
   auto const_type = op->getResult(0).getType();
-  auto loc = op->getLoc();
+  Loc_And_Context;;
   DenseElementsAttr new_value;
   if (user_ele_type.isInteger()) {
     if (const_type.isInteger()) {
@@ -159,7 +160,7 @@ struct LLHBroadcastOpRefine : public LLHOpRewritePattern<BroadCastToOp> {
   }
 
   void rewrite(BroadCastToOp op, LLHPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto input = op.getInput();
     auto cast_dims = op.getCastDims();
     auto res = op.getResult();
@@ -168,8 +169,7 @@ struct LLHBroadcastOpRefine : public LLHOpRewritePattern<BroadCastToOp> {
     auto ele_type = res_tensor.getElementType();
     auto res_rank = res_tensor.getRank();
     auto new_cast_dims = llvm::SmallVector<int64_t>();
-    auto one = rewriter.create<ConstantOp>(
-        loc, IntegerAttr::get(rewriter.getI64Type(), 1));
+    auto one = LLH_Constant(IntegerAttr::get(rewriter.getI64Type(), 1));
     auto reshape_dims = llvm::SmallVector<Value>(res_rank, one);
     auto reshape_res_shapes = llvm::SmallVector<int64_t>(res_rank, 1);
     for (int i = 0; i < res_rank; i++) {
@@ -185,11 +185,9 @@ struct LLHBroadcastOpRefine : public LLHOpRewritePattern<BroadCastToOp> {
       }
     }
     auto reshape_res_type = RankedTensorType::get(reshape_res_shapes, ele_type);
-    auto reshape =
-        rewriter.create<ReshapeOp>(loc, reshape_res_type, input, reshape_dims);
-    auto new_braodcast = rewriter.create<BroadCastToOp>(
-        loc, res_tensor, reshape, dims, new_cast_dims, DenseI64ArrayAttr(),
-        DenseI64ArrayAttr());
+    auto reshape = Reshape(reshape_res_type, input, reshape_dims);
+    auto new_braodcast = BroadCastTo(res_tensor, reshape, dims, new_cast_dims,
+                                     DenseI64ArrayAttr(), DenseI64ArrayAttr());
     rewriter.replaceOp(op, new_braodcast);
   }
 };

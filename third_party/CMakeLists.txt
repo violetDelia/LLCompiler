@@ -5,7 +5,7 @@ else()
 endif()
 
 if(BUILD_LLCOMPILER_TEST)
-    build_googletest("${CMAKE_CURRENT_SOURCE_DIR}/googletest")
+    # build_googletest("${CMAKE_CURRENT_SOURCE_DIR}/googletest")
 endif()
 
 #build_abseil("${CMAKE_CURRENT_SOURCE_DIR}/abseil-cpp")

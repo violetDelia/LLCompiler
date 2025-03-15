@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -90,19 +91,16 @@ struct SimplyBinaryOpLowing : public OpConversionPattern<FromOp> {
 
   void rewrite(FromOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto res = op->getResult(0);
     auto lhs = op->getOperand(0);
     auto rhs = op->getOperand(1);
-    auto index_lhs =
-        rewriter.create<arith::IndexCastOp>(loc, rewriter.getIndexType(), lhs);
-    auto index_rhs =
-        rewriter.create<arith::IndexCastOp>(loc, rewriter.getIndexType(), rhs);
-    auto new_add = rewriter.create<ToOp>(
-        loc, TypeRange{rewriter.getIndexType()},
-        ValueRange{index_lhs, index_rhs}, op->getAttrDictionary().getValue());
-    auto index_res =
-        rewriter.create<arith::IndexCastOp>(loc, res.getType(), new_add);
+    auto index_lhs = IndexCast(Index_Ty, lhs);
+    auto index_rhs = IndexCast(Index_Ty, rhs);
+    auto new_add = rewriter.create<ToOp>(loc, TypeRange{Index_Ty},
+                                         ValueRange{index_lhs, index_rhs},
+                                         op->getAttrDictionary().getValue());
+    auto index_res = IndexCast(res.getType(), new_add);
     rewriter.replaceOp(op, index_res);
   }
 };

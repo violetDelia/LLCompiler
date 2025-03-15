@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/LLH/IR/LLHOps.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -113,7 +114,7 @@ struct ShapeFromElementsOpIndexFold
   }
 
   void rewrite(tensor::FromElementsOp op, PatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto elements = op.getElements();
     llvm::SmallVector<Value, 0> new_elements;
     for (auto operand : elements) {
@@ -124,8 +125,7 @@ struct ShapeFromElementsOpIndexFold
         auto value = const_op.getValue();
         CHECK(llc::MLIR_PASS, isa<IntegerAttr>(value));
         auto int_value = cast<IntegerAttr>(value);
-        auto new_const = rewriter.create<arith::ConstantIndexOp>(
-            loc, *int_value.getValue().getRawData());
+        auto new_const = ConstantIndex(*int_value.getValue().getRawData());
         new_elements.push_back(new_const);
       } else if (isa<arith::ConstantOp>(operand.getDefiningOp())) {
       } else {
@@ -133,7 +133,7 @@ struct ShapeFromElementsOpIndexFold
             << operand.getDefiningOp()->getName().getStringRef().str();
       }
     }
-    auto new_op = rewriter.create<tensor::FromElementsOp>(loc, new_elements);
+    auto new_op = FromElements(new_elements);
     rewriter.replaceAllUsesWith(op, new_op);
     rewriter.replaceOp(op, new_op);
   }
@@ -153,12 +153,13 @@ struct FuncFuncOpCastIntArgToIndex
   }
 
   void rewrite(mlir::func::FuncOp op, PatternRewriter& rewriter) const {
+    Loc_And_Context;
     auto func_type = op.getFunctionType();
     auto input_types = func_type.getInputs();
     llvm::SmallVector<Type> new_input_types;
     for (auto type : input_types) {
       if (isa<IntegerType>(type))
-        new_input_types.push_back(rewriter.getIndexType());
+        new_input_types.push_back(Index_Ty);
       else
         new_input_types.push_back(type);
     }
@@ -166,7 +167,6 @@ struct FuncFuncOpCastIntArgToIndex
     auto new_func_type = func_type.clone(new_input_types, result_types);
     op.setFunctionType(new_func_type);
     auto& block = op.getFunctionBody().getBlocks().front();
-    auto loc = block.back().getLoc();
     auto args_size = block.getNumArguments();
     IRRewriter builder(op->getContext());
     for (auto i : llvm::index_range(0, args_size)) {

@@ -27,6 +27,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -343,12 +344,11 @@ struct ExtractOpRefine : public LLHOpRewritePattern<ExtractOp> {
     return llvm::success();
   }
   void rewrite(ExtractOp op, LLHPatternRewriter &rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto index = op.getIndex();
     auto input = op.getInput();
-    auto dim = rewriter.create<DimOp>(loc, input, 0);
-    auto new_index = rewriter.create<AddOp>(loc, rewriter.getI64Type(),
-                                            ValueRange{dim, index});
+    auto dim = Dim(input, 0);
+    auto new_index = LLH_Add(I64_Ty, ValueRange{dim, index});
     op->setOperand(1, new_index);
   }
 };
@@ -430,7 +430,7 @@ struct ReshapeNegativeDimCalization : public LLHOpRewritePattern<ReshapeOp> {
   void rewrite(ReshapeOp op, LLHPatternRewriter &rewriter) const final {
     auto negative_index = 0;
     auto input = op.getInput();
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     llvm::SmallVector<Value> non_negative_dims;
     llvm::SmallVector<Value> new_dims;
     for (auto [index, dim] : llvm::enumerate(op.getShapes())) {
@@ -447,9 +447,8 @@ struct ReshapeNegativeDimCalization : public LLHOpRewritePattern<ReshapeOp> {
       non_negative_dims.push_back(dim);
     }
     auto non_negative_elements = getElementNums(non_negative_dims, &rewriter);
-    auto negative_dim =
-        rewriter.create<DivOp>(loc, TypeRange{all_elements.getType()},
-                               ValueRange{all_elements, non_negative_elements});
+    auto negative_dim = LLH_Div(TypeRange{all_elements.getType()},
+                            ValueRange{all_elements, non_negative_elements});
     new_dims[negative_index] = negative_dim;
     rewriter.replaceOpWithNewOp<ReshapeOp>(op, op.getType(), input, new_dims);
   }

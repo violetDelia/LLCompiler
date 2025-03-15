@@ -25,6 +25,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -137,7 +138,7 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
   LogicalResult match(ReluOp op) const final { return success(); }
   void rewrite(ReluOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto input = adaptor.getInput();
     auto out = op.getResult().getType();
     auto out_shape = cast<ShapedType>(out).getShape();
@@ -158,7 +159,7 @@ struct ReluOpLowering : public OpConversionPattern<ReluOp> {
 //   void rewrite(WeightOp op, OpAdaptor adaptor,
 //                ConversionPatternRewriter& rewriter) const final {
 //
-//     auto loc = op.getLoc();
+//     Loc_And_Context;
 //     auto out = op.getResult().getType();
 //     auto attrs = op->getAttrs();
 //     auto types = ::mlir::TypeRange{out};
@@ -176,7 +177,7 @@ struct MatMulOpLowering : public OpConversionPattern<MatMulOp> {
   LogicalResult match(MatMulOp op) const final { return success(); }
   void rewrite(MatMulOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto out = op.getResult();
     auto out_type = cast<ShapedType>(out.getType());
     auto attrs = op->getAttrs();
@@ -211,7 +212,7 @@ struct LLHConvOpToTosa : public OpConversionPattern<ConvOp> {
   LogicalResult match(ConvOp op) const final { return success(); }
   void rewrite(ConvOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto res = op.getResult();
     auto res_type = cast<ShapedType>(res.getType());
     auto res_ele_type = res_type.getElementType();
@@ -241,7 +242,7 @@ struct TransposeOpLowering : public OpConversionPattern<TransposeOp> {
   LogicalResult match(TransposeOp op) const final { return success(); }
   void rewrite(TransposeOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto out = op.getResult();
     auto input = op.getInput();
     auto perms = op.getPermsAttr();
@@ -262,7 +263,7 @@ struct LLHMulOpToTosa : public OpConversionPattern<MulOp> {
   LogicalResult match(MulOp op) const final { return success(); }
   void rewrite(MulOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto types = op->getResultTypes();
     auto operands = op->getOperands();
     auto attrs = op->getAttrs();
@@ -277,7 +278,7 @@ struct LLHDivOpToTosa : public OpConversionPattern<DivOp> {
   LogicalResult match(DivOp op) const final { return success(); }
   void rewrite(DivOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto types = op->getResultTypes();
     auto rhs = op.getRhs();
     auto lhs = op.getLhs();

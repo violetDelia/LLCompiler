@@ -89,7 +89,7 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
   LogicalResult matchAndRewrite(BroadCastToOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
     auto mode = op->getParentOfType<ModuleOp>();
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto res = op.getResult();
     auto res_type = llc::getRankTensorFrom(res);
     auto out_shapes = op.getOutShapes();
@@ -100,7 +100,7 @@ struct BroadCastToOpToOpLowing : public OpConversionPattern<BroadCastToOp> {
     llvm::SmallVector<int64_t> broadcast_dimensions;
     for (auto shape : out_shapes) {
       auto dim_val = rewriter.create<mlir::arith::IndexCastOp>(
-          loc, rewriter.getIndexType(), shape);
+          loc, Index_Ty, shape);
       out_dims.push_back(dim_val);
     }
     auto rank = res_type.getRank();
@@ -142,7 +142,7 @@ struct ConvOpLowing : public OpConversionPattern<ConvOp> {
   // curent only supported, need add layout attr and layout pass for more
   LogicalResult matchAndRewrite(ConvOp op, OpAdaptor adaptor,
                                 ConversionPatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto input = op.getX();
     auto weight = op.getW();
     auto kernal_shape = op.getKernelShape();
@@ -240,7 +240,7 @@ struct MaxPoolOpLowing : public OpConversionPattern<MaxPoolOp> {
 
   void rewrite(MaxPoolOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto stride = op.getStrideAttr();
     auto padding = op.getPadAttr();
     auto kernel_shape = op.getKernelShapeAttr();

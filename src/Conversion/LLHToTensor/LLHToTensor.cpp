@@ -24,6 +24,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -70,18 +71,15 @@ struct LLHDimOpToTensor : public OpConversionPattern<DimOp> {
 
   void rewrite(DimOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto input = op.getInput();
     auto dim = op.getDim();
     auto attrs = op->getAttrs();
     auto res = op->getResult(0);
-    auto index_dim = rewriter.create<mlir::arith::IndexCastOp>(
-        loc, rewriter.getIndexType(), dim);
-    auto new_dim = rewriter.create<tensor::DimOp>(
-        loc, rewriter.getIndexType(), ::mlir::ValueRange{input, index_dim},
-        attrs);
-    auto index_out = rewriter.create<mlir::arith::IndexCastOp>(
-        loc, op->getResultTypes(), new_dim);
+    auto index_dim = IndexCast(Index_Ty, dim);
+    auto new_dim = Tensor_Dim(Index_Ty,
+                              ::mlir::ValueRange{input, index_dim}, attrs);
+    auto index_out = IndexCast(op->getResultTypes(), new_dim);
     rewriter.replaceOp(op, index_out);
   }
 };
@@ -92,13 +90,13 @@ struct LLHReshapeOpToTensor : public OpConversionPattern<ReshapeOp> {
 
   void rewrite(ReshapeOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto input = op.getInput();
     auto shapes = op.getShapes();
     auto attrs = op->getAttrs();
-    auto new_shape = rewriter.create<tensor::FromElementsOp>(loc, shapes);
-    auto new_reshape = rewriter.create<tensor::ReshapeOp>(
-        loc, op->getResultTypes(), ::mlir::ValueRange{input, new_shape}, attrs);
+    auto new_shape = FromElements(shapes);
+    auto new_reshape = Tensor_Reshape(
+        op->getResultTypes(), ::mlir::ValueRange{input, new_shape}, attrs);
     rewriter.replaceOp(op, new_reshape);
   }
 };
@@ -109,18 +107,17 @@ struct LLHEmptyOpToTensor : public OpConversionPattern<EmptyOp> {
 
   void rewrite(EmptyOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto shapes = op.getShapes();
     auto attrs = op->getAttrs();
     llvm::SmallVector<Value> new_shapes;
     for (auto shape : shapes) {
       if (llh::isConstIntegerValue(shape)) continue;
-      auto dim_val = rewriter.create<mlir::arith::IndexCastOp>(
-          loc, rewriter.getIndexType(), shape);
+      auto dim_val = IndexCast(Index_Ty, shape);
       new_shapes.push_back(dim_val);
     }
-    auto new_reshape = rewriter.create<tensor::EmptyOp>(
-        loc, op->getResultTypes(), ::mlir::ValueRange{new_shapes}, attrs);
+    auto new_reshape = Tensor_Empty(op->getResultTypes(),
+                                    ::mlir::ValueRange{new_shapes}, attrs);
     rewriter.replaceOp(op, new_reshape);
   }
 };

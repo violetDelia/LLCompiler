@@ -26,6 +26,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -147,6 +148,7 @@ struct LLCWeightOpLoad : public LLHOpRewritePattern<WeightOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(WeightOp op) const final { return llvm::success(); }
   void rewrite(WeightOp op, LLHPatternRewriter& rewriter) const final {
+    Loc_And_Context;;
     auto weight_file = op.getWeightFile();
     auto type = op->getResult(0).getType();
     CHECK(llc::MLIR, isa<ShapedType>(type));
@@ -155,7 +157,7 @@ struct LLCWeightOpLoad : public LLHOpRewritePattern<WeightOp> {
         RankedTensorType::get(shape.getShape(), shape.getElementType());
     INFO(llc::DEBUG) << weight_file.str();
     auto value = loadWeightFile(tensor, weight_file, &rewriter);
-    auto const_op = rewriter.create<llh::ConstantOp>(op->getLoc(), value);
+    auto const_op = LLH_Constant(value);
     std::cout << std::endl << std::endl;
     rewriter.replaceOp(op, const_op);
   }

@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/Utility/Builder.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -66,18 +67,15 @@ struct LLHDimOpToShape : public OpConversionPattern<DimOp> {
 
   void rewrite(DimOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
+    Loc_And_Context;
     auto input = op.getInput();
     auto dim = op.getDim();
     auto attrs = op->getAttrs();
     auto res = op->getResult(0);
-    auto index_dim = rewriter.create<mlir::arith::IndexCastOp>(
-        loc, rewriter.getIndexType(), dim);
-    auto new_dim = rewriter.create<shape::DimOp>(
-        loc, rewriter.getIndexType(), ::mlir::ValueRange{input, index_dim},
-        attrs);
-    auto index_out = rewriter.create<mlir::arith::IndexCastOp>(
-        loc, op->getResultTypes(), new_dim);
+    auto index_dim = IndexCast(Index_Ty, dim);
+    auto new_dim = Shape_Dim(Index_Ty,
+                             ::mlir::ValueRange{input, index_dim}, attrs);
+    auto index_out = IndexCast(op->getResultTypes(), new_dim);
     rewriter.replaceOp(op, index_out);
   }
 };

@@ -151,7 +151,7 @@ namespace {
 
 //   void rewrite(SourceOp op, PatternRewriter& rewriter) const final {
 //     
-//     auto loc = op->getLoc();
+//     Loc_And_Context;;
 //     auto attrs = op->getAttrs();
 //     auto out = op->getResult(0);
 //     auto operand_nums = op->getNumOperands();

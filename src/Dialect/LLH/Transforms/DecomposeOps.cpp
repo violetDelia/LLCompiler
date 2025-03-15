@@ -30,6 +30,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -67,7 +68,8 @@ ConstantOp genOneTenorConst(LLHPatternRewriter& rewriter, Type float_type,
   auto new_value = rewriter.getFloatAttr(float_type, double_value).getValue();
   auto one_tensor = RankedTensorType::get({1}, float_type);
   auto value_attr = DenseElementsAttr::get(one_tensor, {new_value});
-  auto const_op = rewriter.create<ConstantOp>(loc, value_attr);
+
+  auto const_op = LLH_Constant(value_attr);
   return const_op;
 }
 
@@ -76,8 +78,7 @@ BroadCastToOp reshapeAndBroadcastTo(LLHPatternRewriter& rewriter,
                                     Value value, Location loc) {
   auto input_type = llc::getRankTensorFrom(input);
   auto rank = input_type.getRank();
-  auto one_const = rewriter.create<ConstantOp>(
-      loc, IntegerAttr::get(rewriter.getI64Type(), 1));
+  auto one_const = LLH_Constant(IntegerAttr::get(rewriter.getI64Type(), 1));
   auto reshape_shapes = llvm::SmallVector<int64_t>();
   auto reshape_dims = llvm::SmallVector<mlir::Value>();
   for (auto i = 0; i < rank; ++i) {
@@ -98,11 +99,9 @@ BroadCastToOp reshapeAndBroadcastTo(LLHPatternRewriter& rewriter,
   }
   auto dims = llh::buildTensorDims(input, &rewriter);
 
-  auto reshape =
-      rewriter.create<ReshapeOp>(loc, reshape_type, value, reshape_dims);
-  auto broadcast_to =
-      rewriter.create<BroadCastToOp>(loc, input_type, reshape, dims, cast_dims,
-                                     DenseI64ArrayAttr{}, DenseI64ArrayAttr{});
+  auto reshape = Reshape(reshape_type, value, reshape_dims);
+  auto broadcast_to = BroadCastTo(input_type, reshape, dims, cast_dims,
+                                  DenseI64ArrayAttr{}, DenseI64ArrayAttr{});
   return broadcast_to;
 }
 //===----------------------------------------------------------------------===//
@@ -118,16 +117,15 @@ struct LLHBatchNormInferenceOpDecomposition
     auto val_type = llc::getRankTensorFrom(val);
     auto float_type = val_type.getElementType();
     if (!isa<FloatType>(float_type)) return llvm::failure();
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto input = op.getInput();
     auto input_type = llc::getRankTensorFrom(input);
     auto epsilon = op.getEpsilonAttr();
     auto feature_index = op.getFeatureIndex();
     auto epsilon_const = genOneTenorConst(rewriter, float_type, epsilon, loc);
-    auto fined_val = rewriter.create<AddOp>(loc, TypeRange{val.getType()},
-                                            ValueRange{val, epsilon_const});
-    auto stddev = rewriter.create<SqrtOp>(loc, fined_val.getType(), fined_val);
-
+    auto fined_val =
+        LLH_Add(TypeRange{val.getType()}, ValueRange{val, epsilon_const});
+    auto stddev = Sqrt(fined_val.getType(), fined_val);
     auto mean = reshapeAndBroadcastTo(rewriter, feature_index, input,
                                       op.getInputMean(), loc);
     auto scale = reshapeAndBroadcastTo(rewriter, feature_index, input,
@@ -140,14 +138,11 @@ struct LLHBatchNormInferenceOpDecomposition
 
     // scale * (input - mean) / stddev + bias
     Value result;
-    result = rewriter.create<mlir::llh::SubOp>(loc, TypeRange{input_type},
-                                               ValueRange{input, mean});
-    result = rewriter.create<MulOp>(loc, TypeRange{input_type},
-                                    ValueRange{result, scale});
-    result = rewriter.create<DivOp>(loc, TypeRange{input_type},
-                                    ValueRange{result, broadcast_stddev});
-    rewriter.replaceOpWithNewOp<AddOp>(op, TypeRange{input_type},
-                                       ValueRange{result, bias});
+    result = LLH_Sub(TypeRange{input_type}, ValueRange{input, mean});
+    result = LLH_Mul(TypeRange{input_type}, ValueRange{result, scale});
+    result = LLH_Div(TypeRange{input_type}, ValueRange{result, broadcast_stddev});
+    result = LLH_Add(TypeRange{input_type}, ValueRange{result, bias});
+    rewriter.replaceOp(op, result);
     return llvm::success();
   }
 };

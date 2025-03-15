@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/Utility/Attribute.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -91,8 +92,8 @@ void allocToArg(func::FuncOp funcOp) {
         // buffer.
         rewriter.setInsertionPoint(allocOp);
         Value arg = funcOp.getArguments().back();
-        Value collapsedArg = rewriter.create<memref::CollapseShapeOp>(
-            loc, arg, expandOp.getReassociationIndices());
+        Value collapsedArg =
+            Mem_CollapseShape(arg, expandOp.getReassociationIndices());
 
         // Replace alloc and its expansion.
         rewriter.replaceOp(allocOp, collapsedArg);

@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/Utility/RewritePattern.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
@@ -66,13 +67,13 @@ func::FuncOp lookupOrCreateFn(Operation* module, StringRef name,
                               ArrayRef<Type> result_types,
                               bool sym_private = true) {
   CHECK(llc::MLIR, module->hasTrait<OpTrait::SymbolTable>());
+  auto context = module->getContext();
   auto func = llvm::dyn_cast_or_null<func::FuncOp>(
       SymbolTable::lookupSymbolIn(module, name));
   if (func) return func;
   auto builder = OpBuilder(module->getRegion(0));
   auto func_op = builder.create<func::FuncOp>(
-      module->getLoc(), name,
-      FunctionType::get(module->getContext(), input_types, result_types));
+      module->getLoc(), name, Function_Ty(input_types, result_types));
   if (sym_private) func_op.setPrivate();
   return func_op;
 }
@@ -94,18 +95,18 @@ struct LLHHostPrintOpToFunc : public OpConversionPattern<PrintOp> {
 
   void rewrite(PrintOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const {
-    auto loc = op->getLoc();
+    Loc_And_Context;
     auto input = op.getInput();
     auto input_type = input.getType();
     auto description = op.getPrefixDescription();
-    rewriter.create<vector::PrintOp>(loc, description );
-    rewriter.create<vector::PrintOp>(loc, "\n" );
+    Vec_Print(description);
+    Vec_Print("\n");
     if (auto memref_type = llvm::cast_or_null<MemRefType>(input_type)) {
       auto element_type = memref_type.getElementType();
       auto memref_space = memref_type.getMemorySpaceAsInt();
       auto unranked_memref =
           UnrankedMemRefType::get(element_type, memref_space);
-      auto cast = rewriter.create<memref::CastOp>(loc, unranked_memref, input);
+      auto cast = Mem_Cast(unranked_memref, input);
       func::FuncOp print;
       if (element_type.isF32()) {
         print = lookupOrCreateFn(op->getParentOfType<ModuleOp>(),
@@ -113,7 +114,7 @@ struct LLHHostPrintOpToFunc : public OpConversionPattern<PrintOp> {
       } else {
         UNIMPLEMENTED(llc::MLIR_PASS) << "Unimplemented type";
       }
-      rewriter.create<func::CallOp>(loc, print, cast->getOpResult(0));
+      Fun_Call(print, cast->getOpResult(0));
       rewriter.eraseOp(op);
       return;
     }

@@ -28,6 +28,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/APFloat.h"
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/SmallVector.h"
@@ -136,7 +137,7 @@ struct LLHFlattenOpReplace : public LLHOpRewritePattern<FlattenOp> {
   using LLHOpRewritePattern::LLHOpRewritePattern;
   LogicalResult match(FlattenOp op) const final { return llvm::success(); }
   void rewrite(FlattenOp op, LLHPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto operand = op->getOperand(0);
     auto result_type = op->getResult(0).getType();
     auto dim_value = op.getDim();
@@ -157,14 +158,13 @@ struct LLHFlattenOpReplace : public LLHOpRewritePattern<FlattenOp> {
       Value rear_dim_sum = dims[index];
       index++;
       while (index < dims.size()) {
-        rear_dim_sum = rewriter.create<MulOp>(
-            loc, rewriter.getI64Type(), ValueRange{rear_dim_sum, dims[index]});
+        rear_dim_sum =
+            LLH_Mul(rewriter.getI64Type(), ValueRange{rear_dim_sum, dims[index]});
         index++;
       }
       reshape_operands.push_back(rear_dim_sum);
     }
-    auto reshape =
-        rewriter.create<ReshapeOp>(loc, result_type, operand, reshape_operands);
+    auto reshape = Reshape(result_type, operand, reshape_operands);
     rewriter.replaceOp(op, reshape);
   }
 };
@@ -194,7 +194,7 @@ struct LLHTorchSymbolicIntOpReplace
                LLHPatternRewriter& rewriter) const final {
     auto func = op->getParentOfType<func::FuncOp>();
     CHECK(llc::MLIR, func);
-    auto loc = op->getLoc();
+    Loc_And_Context;;
     auto symbol = op.getSymName();
     auto maybe_attrs = func.getArgAttrs();
     auto& blocks = func.getBlocks();

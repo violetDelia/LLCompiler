@@ -23,6 +23,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/Support/Casting.h"
 #include "llvm/Support/LogicalResult.h"
@@ -76,7 +77,7 @@ struct LLHReluOpSwitch : public LLHOpRewritePattern<ReluOp> {
   using LLHOpRewritePattern<ReluOp>::LLHOpRewritePattern;
   LogicalResult match(ReluOp op) const final { return llvm::success(); }
   void rewrite(ReluOp op, LLHPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
+    Loc_And_Context;
     auto input = op.getInput();
     auto res = op.getResult();
     auto res_type = llc::getRankTensorFrom(res.getType());
@@ -92,7 +93,7 @@ struct LLHReluOpSwitch : public LLHOpRewritePattern<ReluOp> {
     } else {
       UNIMPLEMENTED(llc::MLIR_PASS);
     }
-    auto zore = rewriter.create<ConstantOp>(loc, value);
+    auto zore = LLH_Constant(value);
     rewriter.replaceOpWithNewOp<MaxOp>(op, TypeRange{res_type},
                                        ValueRange{input, zore},
                                        op->getAttrDictionary().getValue());
@@ -110,9 +111,9 @@ struct LLHExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
   }
 
   void rewrite(ExtractOp op, LLHPatternRewriter& rewriter) const final {
-    auto loc = op->getLoc();
-    auto one = rewriter.create<ConstantOp>(loc, rewriter.getI64IntegerAttr(1));
-    auto zore = rewriter.create<ConstantOp>(loc, rewriter.getI64IntegerAttr(0));
+    Loc_And_Context;
+    auto one = LLH_Constant(I64_Attr(1));
+    auto zore = LLH_Constant(I64_Attr(0));
     auto input = op.getInput();
     auto input_type = llc::getRankTensorFrom(input);
     auto rank = input_type.getRank();
@@ -121,17 +122,16 @@ struct LLHExtractOpSwitch : public LLHOpRewritePattern<ExtractOp> {
     auto index = op.getIndex();
     llvm::SmallVector<Value> start(rank, zore);
     start[0] = index;
-    auto end_index = rewriter.create<AddOp>(loc, TypeRange{index.getType()},
-                                            ValueRange{index, one});
+    auto end_index =
+        LLH_Add(TypeRange{index.getType()}, ValueRange{index, one});
     dims[0] = end_index;
     llvm::SmallVector<Value> stride(rank, one);
     slice_out_shape[0] = 1;
     auto slice_out_type = input_type.clone(slice_out_shape);
-    auto slice = rewriter.create<StrideSliceOp>(loc, slice_out_type, input,
-                                                start, dims, stride);
+    auto slice = StrideSlice(slice_out_type, input, start, dims, stride);
     if (rank != 1) {
       dims.erase(dims.begin());
-      auto reshape = rewriter.create<ReshapeOp>(loc, op.getType(), slice, dims);
+      auto reshape = Reshape(op.getType(), slice, dims);
       rewriter.replaceOp(op, reshape);
     } else {
       rewriter.replaceOp(op, slice);

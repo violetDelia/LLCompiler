@@ -22,6 +22,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/Support/LogicalResult.h"
 #include "mlir/Dialect/Arith/IR/Arith.h"
 #include "mlir/Dialect/Func/IR/FuncOps.h"
@@ -65,11 +66,10 @@ struct HLORealDynamicSliceOpToLinalg final
   using OpConversionPattern::OpConversionPattern;
 
   static Value computeSize(Location loc, Value start, Value limit, Value stride,
-                           ConversionPatternRewriter& builder) {
-    Value delta = builder.create<arith::SubIOp>(loc, limit, start);
-    Value ret = builder.create<arith::CeilDivUIOp>(loc, delta, stride);
+                           ConversionPatternRewriter& rewriter) {
+    Value ret = Arith_CeilDivUI(Arith_SubI(limit, start), stride);
     if (ret.getType().isIndex()) return ret;
-    return builder.create<arith::IndexCastOp>(loc, builder.getIndexType(), ret);
+    return IndexCast(rewriter.getIndexType(), ret);
   }
 
   LogicalResult match(mlir::stablehlo::RealDynamicSliceOp op) const final {
@@ -85,41 +85,32 @@ struct HLORealDynamicSliceOpToLinalg final
 
   void rewrite(mlir::stablehlo::RealDynamicSliceOp op, OpAdaptor adaptor,
                ConversionPatternRewriter& rewriter) const override {
-    Location loc = op.getLoc();
+    Loc_And_Context;
     auto input = adaptor.getOperand();
     auto input_type = llc::getRankTensorFrom(input);
     auto start_indexs = adaptor.getStartIndices();
     auto element_type = getElementTypeOrSelf(start_indexs);
-    auto arith_type =
-        element_type.isIndex() ? rewriter.getI64Type() : element_type;
-    auto index_type = rewriter.getIndexType();
+    auto arith_type = element_type.isIndex() ? I64_Ty : element_type;
     auto res_type = llvm::cast<RankedTensorType>(
         this->typeConverter->convertType(op.getType()));
     SmallVector<OpFoldResult> offsets, sizes, strides;
     SmallVector<Type, 3> clamp_type(3, arith_type);
     for (auto i : llvm::seq<unsigned>(0, input_type.getRank())) {
-      Value dim = rewriter.create<arith::ConstantIndexOp>(loc, i);
-      Value start = rewriter.create<tensor::ExtractOp>(
-          loc, adaptor.getStartIndices(), dim);
-      Value limit = rewriter.create<tensor::ExtractOp>(
-          loc, adaptor.getLimitIndices(), dim);
-      Value stride =
-          rewriter.create<tensor::ExtractOp>(loc, adaptor.getStrides(), dim);
+      Value dim = ConstantIndex(i);
+      Value start = Tensor_Extract(adaptor.getStartIndices(), dim);
+      Value limit = Tensor_Extract(adaptor.getLimitIndices(), dim);
+      Value stride = Tensor_Extract(adaptor.getStrides(), dim);
       auto res_dim = res_type.getDimSize(i);
       Value size = ShapedType::isDynamic(res_dim)
                        ? computeSize(loc, start, limit, stride, rewriter)
-                       : rewriter.create<arith::ConstantIndexOp>(loc, res_dim);
-      if (!start.getType().isIndex())
-        start = rewriter.create<arith::IndexCastOp>(
-            loc, rewriter.getIndexType(), start);
+                       : ConstantIndex(res_dim);
+      if (!start.getType().isIndex()) start = IndexCast(Index_Ty, start);
       offsets.push_back(start);
       if (ShapedType::isDynamic(res_dim))
         sizes.push_back(size);
       else
-        sizes.push_back(IntegerAttr::get(index_type, res_dim));
-      if (!stride.getType().isIndex())
-        stride =
-            rewriter.createOrFold<arith::IndexCastOp>(loc, index_type, stride);
+        sizes.push_back(Index_Attr(res_dim));
+      if (!stride.getType().isIndex()) stride = IndexCast(Index_Ty, stride);
       strides.push_back(stride);
     }
     rewriter.replaceOpWithNewOp<tensor::ExtractSliceOp>(

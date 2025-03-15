@@ -24,6 +24,7 @@
 #include "llcompiler/Dialect/Utility/Type.h"
 #include "llcompiler/Support/Logger.h"
 #include "llcompiler/Support/Macro.h"
+#include "llcompiler/Support/MlirUtility.h"
 #include "llvm/ADT/SmallString.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
@@ -149,8 +150,7 @@ struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
     return llvm::failure();
   }
   void rewrite(ConvOp op, LLHPatternRewriter& rewriter) const final {
-    auto loc = op.getLoc();
-    auto context = op->getContext();
+    Loc_And_Context;
     auto maybe_layout = op.getLayout();
     CHECK(llc::MLIR_PASS, maybe_layout.has_value());
     auto layout = maybe_layout.value();
@@ -162,11 +162,11 @@ struct ConvOpConvertLayout : public LLHOpRewritePattern<ConvOp> {
     auto new_weights =
         buildTrnasposeOpFromLayoutTo(rewriter, weights, layout, target);
     auto new_res_type = getReturnTensorFromLayoutTo(res, layout, target);
-    auto new_conv = rewriter.create<ConvOp>(
-        loc, new_res_type, new_input->getResult(0), new_weights->getResult(0),
-        op.getDilation(), op.getKernelShape(), op.getPad(), op.getStride(),
-        op.getGroup(), LayoutAttr::get(context, Layout::NHWC),
-        LayoutAttr::get(context, Layout::NHWC));
+    auto new_conv =
+        Conv(new_res_type, new_input->getResult(0), new_weights->getResult(0),
+             op.getDilation(), op.getKernelShape(), op.getPad(), op.getStride(),
+             op.getGroup(), LayoutAttr::get(context, Layout::NHWC),
+             LayoutAttr::get(context, Layout::NHWC));
     auto res_transpose =
         buildTrnasposeOpFromLayoutTo(rewriter, new_conv, target, layout);
     rewriter.replaceOp(op, res_transpose);
