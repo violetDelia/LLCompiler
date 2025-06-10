@@ -87,7 +87,7 @@ class MLIR_Builder:
         output_types = [
             onnx_value_translate(value, symbol_map) for value in model.output
         ]
-        func = FuncOp("mian", (input_types, output_types))
+        func = FuncOp("main", (input_types, output_types))
         for weight in model.initializer:
             op = onnx_weight_translate(weight)
             op_map[weight.name] = op
