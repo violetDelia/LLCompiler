@@ -119,9 +119,6 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::scf::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::shape::registerBufferizableOpInterfaceExternalModels(registry);
-  mlir::bufferization::func_ext::registerBufferizableOpInterfaceExternalModels(
-      registry);
-  mlir::linalg::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::vector::registerBufferizableOpInterfaceExternalModels(registry);
   mlir::llh::registerBufferizableOpInterfaceExternalModels(registry);
 
@@ -146,7 +143,6 @@ void add_extension_and_interface(mlir::DialectRegistry& registry) {
   mlir::affine::registerTransformDialectExtension(registry);
   mlir::func::registerTransformDialectExtension(registry);
   mlir::bufferization::registerTransformDialectExtension(registry);
-  mlir::func::registerTransformDialectExtension(registry);
   mlir::gpu::registerTransformDialectExtension(registry);
   mlir::linalg::registerTransformDialectExtension(registry);
   mlir::memref::registerTransformDialectExtension(registry);
